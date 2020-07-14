@@ -1,0 +1,175 @@
+/* THIS FILE IS FROM GRAPHVIEW BUT CONTAINS MODIFICATIONS */
+
+PortView {
+    height: 24;
+    align-items: center;
+    padding-left: 4;
+    padding-right: 4;
+    port-color: rgb(200, 200, 200);
+    disabled-port-color: rgb(70, 70, 70);
+}
+
+PortView.input {
+    flex-direction: row;
+}
+
+PortView.output {
+    flex-direction: row-reverse;
+}
+
+PortView > #connector {
+    border-color: rgb(70, 70, 70);
+    background-color: #212121;
+    width: 8;
+    height: 8;
+    border-radius: 8;
+    align-items: center;
+    justify-content: center;
+
+    margin-left: 4;
+    margin-right: 4;
+    border-left-width:1;
+    border-top-width:1;
+    border-right-width:1;
+    border-bottom-width:1;
+}
+
+PortView > #connector:hover {
+    border-color:  #f0f0f0
+}
+
+PortView > #connector > #cap
+{
+    background-color: #212121;
+    width: 4;
+    height: 4;
+    border-radius: 4;
+}
+
+PortView > #connector > #cap:hover
+{
+    background-color: #f0f0f0;
+}
+
+PortView > #connector.portHighlight {
+    border-color: #f0f0f0;
+}
+
+PortView > #type {
+    text-color: #c1c1c1;
+    font-size:11;
+    height:16;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 4;
+    margin-right: 4;
+}
+
+PortView.input > #type {
+    text-alignment: middle-left;
+}
+
+PortView.output > #type {
+    text-alignment:middle-right;
+}
+
+/*******************************/
+/* LogicPorts colors by types */
+/*******************************/
+
+PortView.typeTexture {
+    port-color:#FF8B8B;
+}
+
+PortView.typeTexture2D {
+    /* Same as typeTexture */
+    port-color:#FF8B8B;
+}
+
+PortView.typeCubemap {
+	/* Same as typeTexture */
+    port-color:#FF8B8B;
+}
+
+PortView.typeFloat4 {
+    port-color:#FBCBF4;
+}
+
+PortView.typeVector4 {
+    /* Same as typeFloat4 */
+    port-color:#FBCBF4;
+}
+
+PortView.typeQuaternion {
+    /* Same as typeFloat4 */
+    port-color:#FBCBF4;
+}
+
+PortView.typeColor {
+    /* Same as typeFloat4 */
+    port-color:#FBCBF4;
+}
+
+PortView.typeInt {
+    port-color:#9481E6;
+}
+
+PortView.typeInt32 {
+    /* Same as typeInt */
+    port-color:#9481E6;
+}
+
+PortView.typeBoolean {
+    port-color:#9481E6;
+}
+
+PortView.typeMatrix {
+    port-color:#8FC1DF;
+}
+
+PortView.typeMatrix4x4 {
+    /* Same as typeMatrix */
+    port-color:#8FC1DF;
+}
+
+PortView.typeFloat1 {
+    /* Same as typeFloat */
+    port-color:#84E4E7;
+}
+
+PortView.typeSingle {
+    /* Same as typeFloat */
+    port-color:#84E4E7;
+}
+
+PortView.typeDouble {
+    /* Same as typeFloat */
+    /* todo we might want to differentiate that from float */
+    port-color:#84E4E7;
+}
+
+PortView.typeFloat2 {
+    port-color:#9AEF92;
+}
+
+PortView.typeVector2 {
+    /* Same as typeFloat2 */
+    port-color:#9AEF92;
+}
+
+PortView.typeComponent {
+    port-color:#C9F774;
+}
+
+PortView.typeFloat3 {
+    port-color:#F6FF9A;
+}
+
+PortView.typeVector3 {
+    /* Same as typeFloat3 */
+    port-color:#F6FF9A;
+}
+
+PortView.typeString {
+    port-color:#FCD76E;
+}

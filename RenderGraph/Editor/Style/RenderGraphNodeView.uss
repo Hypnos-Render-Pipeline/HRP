@@ -1,0 +1,154 @@
+RenderGraphNodeView {
+  width: 300;
+}
+
+RenderGraphNodeView.graphElement.node.MaterialNode {
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+RenderGraphNodeView #collapsible-area {
+    width: 0;
+    height: 0;
+}
+
+RenderGraphNodeView #previewFiller.expanded {
+    width: 200;
+    padding-bottom: 200;
+}
+
+RenderGraphNodeView #previewFiller,
+RenderGraphNodeView #controls {
+    background-color: rgba(63, 63, 63, 0.8);
+}
+
+RenderGraphNodeView #controls > #items {
+    padding-top: 4;
+    padding-bottom: 4;
+}
+
+
+RenderGraphNodeView > #previewContainer {
+    position-type: absolute;
+    position-bottom: 4;
+    position-left: 4;
+    border-radius: 6;
+    padding-top: 6;
+}
+
+RenderGraphNodeView > #previewContainer > #preview  {
+    width: 200;
+    height: 200;
+    align-items:center;
+}
+
+RenderGraphNodeView > #previewContainer > #preview > #collapse {
+    background-color: #000;
+    border-color: #F0F0F0;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    border-radius: 1;
+    border-top-width: 1;
+    border-bottom-width: 1;
+    border-left-width: 1;
+    border-right-width: 1;
+    margin-top: 4;
+    align-items:center;
+    justify-content:center;
+}
+
+
+RenderGraphNodeView:hover > #previewContainer > #preview > #collapse {
+    width: 20;
+    height: 20;
+    opacity: 0.6;
+}
+
+RenderGraphNodeView > #previewContainer > #preview > #collapse > #icon  {
+    background-image : resource("GraphView/Nodes/PreviewCollapse.png");
+    width: 16;
+    height: 16;
+}
+
+RenderGraphNodeView > #previewContainer > #preview > #collapse:hover {
+    opacity: 1.0;
+}
+
+RenderGraphNodeView #previewFiller > #expand {
+    align-self: center;
+    width: 56;
+    height: 16;
+    flex-direction: row;
+    justify-content:center;
+}
+
+RenderGraphNodeView #previewFiller > #expand > #icon {
+    align-self: center;
+    background-image : resource("GraphView/Nodes/PreviewExpand.png");
+    width: 16;
+    height: 16;
+}
+
+RenderGraphNodeView #previewFiller.collapsed > #expand:hover {
+    background-color: #2B2B2B;
+}
+
+RenderGraphNodeView #previewFiller.expanded > #expand {
+    height: 0;
+}
+
+
+RenderGraphNodeView > #resize {
+    background-image : resource("GraphView/Nodes/NodeChevronLeft.png");
+    position-type: absolute;
+    position-right: 5;
+    position-bottom: 5;
+    width: 10;
+    height: 10;
+    cursor: resize-up-left;
+}
+
+RenderGraphNodeView > #portInputContainer {
+    position-type: absolute;
+    width: 212;
+    position-left: -200;
+    position-top: 46;
+}
+
+RenderGraphNodeView > #settings-container {
+	background-color : rgb(63, 63, 63);
+}
+
+#settings-button {
+    width: 16;
+    align-self: center;
+    justify-content: center;
+    padding-left: 8;
+}
+
+#settings-button > #icon {
+    width : 12;
+    height : 12;
+    align-self: center;
+    visibility: hidden;
+    background-image : resource("Icons/SettingsIcons");
+}
+
+.node:hover #settings-button > #icon {
+    visibility: visible;
+}
+
+#settings-button:hover > #icon {
+    align-self: center;
+    background-color: #2B2B2B;
+    background-image : resource("Icons/SettingsIcons_hover");
+}
+
+#settings-button.clicked > #icon{
+    background-color: #2B2B2B;
+    background-image : resource("Icons/SettingsIcons_hover");
+    visibility: visible;
+}
