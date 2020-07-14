@@ -16,6 +16,9 @@ namespace HypnosRenderPipeline.RenderGraph
 
         EditorWindow m_editorWindow;
         RenderGraphView m_graphView;
+
+        string assetName = "unnamed";
+
         public RenderGraphEditorView(EditorWindow editorWindow)
         {
             m_editorWindow = editorWindow;
@@ -46,6 +49,10 @@ namespace HypnosRenderPipeline.RenderGraph
                     Save();
                 }
 
+                GUILayout.Space(26);
+
+                GUILayout.Label(assetName);
+
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
             });
@@ -71,15 +78,29 @@ namespace HypnosRenderPipeline.RenderGraph
             }
 
             Add(content);
+
+            StyleEnum<ScaleMode> a = new StyleEnum<ScaleMode>();
+            a.value = ScaleMode.ScaleAndCrop;
+            m_graphView.style.unityBackgroundScaleMode = a;
+            m_graphView.style.unityBackgroundImageTintColor = new StyleColor(new Color(0.7f, 0.7f, 0.8f));
         }
-        
+
         void KeyDown(KeyDownEvent e)
         {
             //Debug.Log("KeyDown");
         }
 
+        public void New()
+        {
+            if (assetName != "unnamed") Save();
+            m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
+            m_graphView.SetGraphInfo(m_renderGraphInfo);
+            assetName = "unnamed";
+        }
+
         public void Load(string path)
         {
+            if (assetName != "unnamed") Save();
             RenderGraphInfo info;
             try
             {
@@ -92,6 +113,8 @@ namespace HypnosRenderPipeline.RenderGraph
             }
             m_renderGraphInfo = info;
             m_graphView.SetGraphInfo(info);
+
+            assetName = path;
         }
 
         public void Load()
@@ -123,19 +146,14 @@ namespace HypnosRenderPipeline.RenderGraph
             }
         }
 
-        public void New()
-        {
-            m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
-            m_graphView.SetGraphInfo(m_renderGraphInfo);
-        }
-
         public void Save()
         {
-            Debug.Log("Saved");
+            Debug.Log("Saved: " + assetName);
             if (AssetDatabase.Contains(m_renderGraphInfo))
             {
                 EditorUtility.SetDirty(m_renderGraphInfo);
                 AssetDatabase.SaveAssets();
+                assetName = AssetDatabase.GetAssetPath(m_renderGraphInfo);
             }
             else
             {
@@ -165,6 +183,7 @@ namespace HypnosRenderPipeline.RenderGraph
                         AssetDatabase.DeleteAsset(path);
                     }
                     AssetDatabase.CreateAsset(m_renderGraphInfo, path);
+                    assetName = path;
                 }
             }
         }

@@ -17,6 +17,7 @@ namespace HypnosRenderPipeline.RenderGraph
             var window = GetWindow<RenderGraphViewWindow>();
             window.minSize = new Vector2(800, 500);
             window.name = "RenderGraph";
+            window.titleContent = new GUIContent("RenderGraph");
             window.OnEnable();
             return window;
         }
@@ -26,6 +27,11 @@ namespace HypnosRenderPipeline.RenderGraph
             m_view = new RenderGraphEditorView(this);
             rootVisualElement.Clear();
             rootVisualElement.Add(m_view);
+        }
+
+        private void OnDisable()
+        {
+            m_view.New();
         }
 
         public void Load(string path)
