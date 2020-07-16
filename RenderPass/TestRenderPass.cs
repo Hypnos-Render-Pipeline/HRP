@@ -21,7 +21,7 @@ namespace HypnosRenderPipeline.RenderPass
         [Tooltip("AA")]
         public int k;
 
-        public override void Render()
+        public override void OnRender(RenderContext RenderingContext)
         {
 
         }
