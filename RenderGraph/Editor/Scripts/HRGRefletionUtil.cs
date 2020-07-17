@@ -86,6 +86,11 @@ namespace HypnosRenderPipeline.RenderGraph
                 var pinInfo = field.GetCustomAttribute<BaseRenderNode.NodePinAttribute>();
                 if (pinInfo != null)
                 {
+                    if (field.FieldType.IsValueType)
+                    {
+                        Debug.LogError("Pin can only be a Reference Type. It can lead to undefined behavior.\n" + nodeType.ToString() + " + " + field.Name);
+                    }
+
                     if (pinInfo.type != BaseRenderNode.PinType.Out)
                         input_fields.Add(field);
                     if (pinInfo.type != BaseRenderNode.PinType.In)
