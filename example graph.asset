@@ -1,0 +1,383 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
+  m_Name: example graph
+  m_EditorClassIdentifier: 
+  nodes:
+  - nodeName: TestRenderPass
+    parameters:
+    - name: k
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e36303c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    inputs:
+    - name: inoutPin
+      info: It's a test inout pin.
+      mustConnect: 0
+    - name: mustConnectedPin
+      info: 
+      mustConnect: 1
+    outputs:
+    - name: inoutPin
+      info: It's a test inout pin.
+      mustConnect: 0
+    positon:
+      serializedVersion: 2
+      x: -422.6824
+      y: -2260
+      width: 300
+      height: 152
+    nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass
+  - nodeName: TestRenderPass2
+    parameters:
+    - name: k
+      type_str: UnityEngine.Color
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e30353732343931393c2f723e0d0a20203c673e313c2f673e0d0a20203c623e303c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    inputs:
+    - name: inoutPin
+      info: It's a test inout pin.
+      mustConnect: 0
+    outputs:
+    - name: inoutPin
+      info: It's a test inout pin.
+      mustConnect: 0
+    - name: outpin
+      info: 
+      mustConnect: 0
+    positon:
+      serializedVersion: 2
+      x: -67.56471
+      y: -2269.521
+      width: 300
+      height: 152
+    nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass2
+  - nodeName: TestRenderNode
+    parameters: []
+    inputs: []
+    outputs:
+    - name: outpin
+      info: 
+      mustConnect: 0
+    positon:
+      serializedVersion: 2
+      x: -746.8775
+      y: -2087.545
+      width: 300
+      height: 86
+    nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderNode
+  - nodeName: TestRenderPass
+    parameters:
+    - name: k
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e2d37303c2f696e743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    inputs:
+    - name: inoutPin
+      info: It's a test inout pin.
+      mustConnect: 0
+    - name: mustConnectedPin
+      info: 
+      mustConnect: 1
+    outputs:
+    - name: inoutPin
+      info: It's a test inout pin.
+      mustConnect: 0
+    positon:
+      serializedVersion: 2
+      x: -67.99999
+      y: -2108
+      width: 300
+      height: 152
+    nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass
+  - nodeName: TestOutputNode
+    parameters: []
+    inputs:
+    - name: input
+      info: 
+      mustConnect: 0
+    outputs: []
+    positon:
+      serializedVersion: 2
+      x: 273.71506
+      y: -2220.935
+      width: 300
+      height: 86
+    nodeType_str: HypnosRenderPipeline.RenderPass.TestOutputNode
+  edges:
+  - output:
+      node:
+        nodeName: TestRenderPass
+        parameters:
+        - name: k
+          type_str: System.Int32
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e36303c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        inputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        - name: mustConnectedPin
+          info: 
+          mustConnect: 1
+        outputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -422.6824
+          y: -2260
+          width: 300
+          height: 152
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass
+      name: inoutPin
+    input:
+      node:
+        nodeName: TestRenderPass2
+        parameters:
+        - name: k
+          type_str: UnityEngine.Color
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e30353732343931393c2f723e0d0a20203c673e313c2f673e0d0a20203c623e303c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        inputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        outputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        - name: outpin
+          info: 
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -67.56471
+          y: -2269.521
+          width: 300
+          height: 152
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass2
+      name: inoutPin
+  - output:
+      node:
+        nodeName: TestRenderPass
+        parameters:
+        - name: k
+          type_str: System.Int32
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e36303c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        inputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        - name: mustConnectedPin
+          info: 
+          mustConnect: 1
+        outputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -422.6824
+          y: -2260
+          width: 300
+          height: 152
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass
+      name: inoutPin
+    input:
+      node:
+        nodeName: TestRenderPass
+        parameters:
+        - name: k
+          type_str: System.Int32
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e2d37303c2f696e743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        inputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        - name: mustConnectedPin
+          info: 
+          mustConnect: 1
+        outputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -67.99999
+          y: -2108
+          width: 300
+          height: 152
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass
+      name: inoutPin
+  - output:
+      node:
+        nodeName: TestRenderNode
+        parameters: []
+        inputs: []
+        outputs:
+        - name: outpin
+          info: 
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -746.8775
+          y: -2087.545
+          width: 300
+          height: 86
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderNode
+      name: outpin
+    input:
+      node:
+        nodeName: TestRenderPass
+        parameters:
+        - name: k
+          type_str: System.Int32
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e2d37303c2f696e743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        inputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        - name: mustConnectedPin
+          info: 
+          mustConnect: 1
+        outputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -67.99999
+          y: -2108
+          width: 300
+          height: 152
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass
+      name: mustConnectedPin
+  - output:
+      node:
+        nodeName: TestRenderNode
+        parameters: []
+        inputs: []
+        outputs:
+        - name: outpin
+          info: 
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -746.8775
+          y: -2087.545
+          width: 300
+          height: 86
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderNode
+      name: outpin
+    input:
+      node:
+        nodeName: TestRenderPass
+        parameters:
+        - name: k
+          type_str: System.Int32
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e36303c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        inputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        - name: mustConnectedPin
+          info: 
+          mustConnect: 1
+        outputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -422.6824
+          y: -2260
+          width: 300
+          height: 152
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass
+      name: mustConnectedPin
+  - output:
+      node:
+        nodeName: TestRenderPass2
+        parameters:
+        - name: k
+          type_str: UnityEngine.Color
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e30353732343931393c2f723e0d0a20203c673e313c2f673e0d0a20203c623e303c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        inputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        outputs:
+        - name: inoutPin
+          info: It's a test inout pin.
+          mustConnect: 0
+        - name: outpin
+          info: 
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -67.56471
+          y: -2269.521
+          width: 300
+          height: 152
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderPass2
+      name: outpin
+    input:
+      node:
+        nodeName: TestOutputNode
+        parameters: []
+        inputs:
+        - name: input
+          info: 
+          mustConnect: 0
+        outputs: []
+        positon:
+          serializedVersion: 2
+          x: 273.71506
+          y: -2220.935
+          width: 300
+          height: 86
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestOutputNode
+      name: input
+  edgeRecs:
+  - i: 1
+    o: 0
+    i_n: inoutPin
+    o_n: inoutPin
+  - i: 3
+    o: 0
+    i_n: inoutPin
+    o_n: inoutPin
+  - i: 3
+    o: 2
+    i_n: mustConnectedPin
+    o_n: outpin
+  - i: 0
+    o: 2
+    i_n: mustConnectedPin
+    o_n: outpin
+  - i: 4
+    o: 1
+    i_n: input
+    o_n: outpin
+  node_edgeRecs:
+  - node: 0
+    in_edges: 03000000
+    out_edge: 0000000001000000
+  - node: 1
+    in_edges: 00000000
+    out_edge: 04000000
+  - node: 2
+    in_edges: 
+    out_edge: 0200000003000000
+  - node: 3
+    in_edges: 0100000002000000
+    out_edge: 
+  - node: 4
+    in_edges: 04000000
+    out_edge: 

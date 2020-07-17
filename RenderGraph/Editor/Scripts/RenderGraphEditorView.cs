@@ -49,6 +49,14 @@ namespace HypnosRenderPipeline.RenderGraph
                     Save();
                 }
 
+                GUILayout.Space(6);
+
+                if (GUILayout.Button("Test", EditorStyles.toolbarButton))
+                {
+                    HRGDynamicExecutor executor = new HRGDynamicExecutor(m_renderGraphInfo);
+                    Debug.Log(executor.Excute(new RenderPass.RenderContext()));
+                }
+
                 GUILayout.Space(26);
 
                 GUILayout.Label(assetName);

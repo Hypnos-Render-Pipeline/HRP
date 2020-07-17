@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
@@ -53,6 +55,49 @@ namespace HypnosRenderPipeline.RenderGraph
         public static FieldInfo[] GetAllPublicProperties(Type t)
         {
             return t.GetFields(BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        public static Tuple<List<FieldInfo>, List<FieldInfo>, List<FieldInfo>> GetFieldInfo(Type nodeType)
+        {
+
+            List<FieldInfo> public_fields = new List<FieldInfo>();
+
+            FieldInfo[] fieldInfos;
+            fieldInfos = ReflectionUtil.GetAllPublicProperties(nodeType);
+            foreach (var field in fieldInfos)
+            {
+                if (field.GetCustomAttribute<HideInInspector>() == null)
+                {
+                    public_fields.Add(field);
+                }
+            }
+            if (fieldInfos.Length == 0)
+            {
+                Debug.LogWarning(string.Format("Load RenderNode \"{0}\" Warnning! Empty Node will be ignored.", nodeType.Name));
+                return null;
+            }
+
+            List<FieldInfo> input_fields = new List<FieldInfo>();
+            List<FieldInfo> output_fields = new List<FieldInfo>();
+            List<FieldInfo> param_fields = new List<FieldInfo>();
+
+            foreach (var field in public_fields)
+            {
+                var pinInfo = field.GetCustomAttribute<BaseRenderNode.NodePinAttribute>();
+                if (pinInfo != null)
+                {
+                    if (pinInfo.type != BaseRenderNode.PinType.Out)
+                        input_fields.Add(field);
+                    if (pinInfo.type != BaseRenderNode.PinType.In)
+                        output_fields.Add(field);
+                }
+                else
+                {
+                    param_fields.Add(field);
+                }
+            }
+
+            return new Tuple<List<FieldInfo>, List<FieldInfo>, List<FieldInfo>>(input_fields, output_fields, param_fields);
         }
     }
 

@@ -15,15 +15,15 @@ namespace HypnosRenderPipeline.RenderPass
         [Tooltip("It's a test inout pin.")]
         public int inoutPin;
 
-        [NodePin(mustConnect: true, outPin: false)]
+        [NodePin(mustConnect: true, type: PinType.In)]
         public InputClass mustConnectedPin;
 
         [Tooltip("AA")]
         public int k;
 
-        public override void OnRender(RenderContext RenderingContext)
+        public override void Excute(RenderContext RenderingContext)
         {
-
+            Debug.Log("TestRenderPass: Render " + k.ToString());
         }
     }
 
@@ -39,19 +39,35 @@ namespace HypnosRenderPipeline.RenderPass
         public Color k;
 
           
-        [NodePin(inPin: false)]
+        [NodePin(type: PinType.Out)]
         public InputClass outpin;
+
+        public override void Excute(RenderContext RenderingContext)
+        {
+            Debug.Log("TestRenderPass2: Render " + k.ToString());
+        }
     }
 
     public class TestRenderNode : BaseToolNode
     {
-        [NodePin(inPin: false)]
+        [NodePin(type: PinType.Out)]
         public InputClass outpin;
-        public override void Excute()
-        {
 
+        public override void Excute(RenderContext RenderingContext)
+        {
+            Debug.Log("TestRenderNode: Generate output");
         }
     }
 
-    
+
+    public class TestOutputNode : BaseOutputNode
+    {
+        [NodePin(type: PinType.In)]
+        public InputClass input;
+
+        public override void Excute(RenderContext RenderingContext)
+        {
+            Debug.Log("TestOutputNode: Output to screen " + target.ToString());
+        }
+    }
 }

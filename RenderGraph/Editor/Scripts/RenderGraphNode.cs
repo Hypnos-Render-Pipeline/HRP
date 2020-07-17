@@ -125,7 +125,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 string tips = tipattri != null ? tipattri.tooltip : "";
                 var pinInfo = info.GetCustomAttribute<BaseRenderNode.NodePinAttribute>();
 
-                string name = info.Name + " (" + ReflectionUtil.GetLastNameOfType(info.FieldType) + ")";
+                string name = info.Name;// + " (" + ReflectionUtil.GetLastNameOfType(info.FieldType) + ")";
 
                 slots.Add(new Slot()
                 {
@@ -165,42 +165,11 @@ namespace HypnosRenderPipeline.RenderGraph
                 return;
             }
 
-            List<FieldInfo> public_fields = new List<FieldInfo>();
+            var field_infos = ReflectionUtil.GetFieldInfo(nodeType);
+            var input_fields = field_infos.Item1;
+            var output_fields = field_infos.Item2;
+            var param_fields = field_infos.Item3;
 
-            FieldInfo[] fieldInfos;
-            fieldInfos = ReflectionUtil.GetAllPublicProperties(t);
-            foreach (var field in fieldInfos)
-            {
-                if (field.GetCustomAttribute<HideInInspector>() == null)
-                {
-                    public_fields.Add(field);
-                }
-            }
-            if (fieldInfos.Length == 0)
-            {
-                Debug.LogWarning(string.Format("Load RenderNode \"{0}\" Warnning! Empty Node will be ignored.", nodeName));
-                return;
-            }
-
-            List<FieldInfo> input_fields = new List<FieldInfo>();
-            List<FieldInfo> output_fields = new List<FieldInfo>();
-            List<FieldInfo> param_fields = new List<FieldInfo>();
-
-            foreach (var field in public_fields)
-            {
-                var pinInfo = field.GetCustomAttribute<BaseRenderNode.NodePinAttribute>();
-                if (pinInfo != null)
-                {
-                    if (pinInfo.inPin)
-                        input_fields.Add(field);
-                    if (pinInfo.outPin)
-                        output_fields.Add(field);
-                }
-                else
-                {
-                    param_fields.Add(field);
-                }
-            }
             BindSlots(input_fields, inputs);
             BindSlots(output_fields, outputs);
 
@@ -209,7 +178,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
             foreach (var parm in param_fields)
             {
-                string name = parm.Name + " (" + ReflectionUtil.GetLastNameOfType(parm.FieldType) + ")";
+                string name = parm.Name;// + " (" + ReflectionUtil.GetLastNameOfType(parm.FieldType) + ")";
                 bool find_saved = false;
                 if (parameters != null)
                 {

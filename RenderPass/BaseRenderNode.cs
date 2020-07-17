@@ -29,24 +29,20 @@ namespace HypnosRenderPipeline.RenderGraph
     [RenderNodeInformation("")]
     public abstract class BaseRenderNode
     {
+        public enum PinType { In, Out, InOut };
+
         [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
         public class NodePinAttribute : Attribute
         {
-            public bool inPin { private set; get; } = true;
-            public bool outPin { private set; get; } = true;
+            public PinType type { private set; get; } = PinType.InOut;
             public bool mustConnect { private set; get; } = false;
-            public NodePinAttribute(bool inPin = true, bool outPin = true, bool mustConnect = false)
+            public NodePinAttribute(PinType type = PinType.InOut, bool mustConnect = false)
             {
-                this.inPin = inPin;
-                this.outPin = outPin;
+                this.type = type;
                 this.mustConnect = mustConnect;
             }
         }
 
-        [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-        public class MustConnectAttribute : Attribute { }
-
-        internal virtual void Init() { }
-        internal virtual void Release() { }
+        public virtual void Excute(RenderContext RenderingContext) { }
     }
 }
