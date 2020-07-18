@@ -153,9 +153,9 @@ namespace HypnosRenderPipeline.RenderGraph
                                         parm.value = EditorGUILayout.ColorField(parm.name, (Color)parm.value);
                                     }
                                 }
-                                else if (parm.type == typeof(Texture2D))
+                                else if (ReflectionUtil.IsEngineObject(parm.type))
                                 {
-                                    parm.value = EditorGUILayout.ObjectField(parm.value as Texture2D, parm.type, allowSceneObjects: false);
+                                    parm.value = EditorGUILayout.ObjectField(parm.name, parm.value as UnityEngine.Object, parm.type, allowSceneObjects: false);
                                 }
                             }
                             if (EditorGUI.EndChangeCheck())

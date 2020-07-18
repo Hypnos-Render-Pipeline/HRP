@@ -32,7 +32,7 @@ MonoBehaviour:
     - name: tex
       type_str: UnityEngine.Texture2D
       value_bytes: 
-      tex_ref: {fileID: 2800000, guid: b049663cfb4d0364e83dba009971a463, type: 3}
+      obj_ref: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
     inputs: []
     outputs:
     - name: FullResOutput
@@ -50,7 +50,7 @@ MonoBehaviour:
     - name: k
       type_str: UnityEngine.Color
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3234333038363336383c2f723e0d0a20203c673e302e323235363134313c2f673e0d0a20203c623e302e3733353834393c2f623e0d0a20203c613e303c2f613e0d0a3c2f436f6c6f723e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-      tex_ref: {fileID: 0}
+      obj_ref: {fileID: 0}
     inputs:
     - name: EighthResInOut
       info: It's a test inout pin.
@@ -61,8 +61,8 @@ MonoBehaviour:
       mustConnect: 0
     positon:
       serializedVersion: 2
-      x: -1281.65
-      y: -2774.15
+      x: -1284.3003
+      y: -2722.25
       width: 300.00006
       height: 128
     nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
@@ -74,7 +74,7 @@ MonoBehaviour:
         - name: tex
           type_str: UnityEngine.Texture2D
           value_bytes: 
-          tex_ref: {fileID: 2800000, guid: b049663cfb4d0364e83dba009971a463, type: 3}
+          obj_ref: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
         inputs: []
         outputs:
         - name: FullResOutput

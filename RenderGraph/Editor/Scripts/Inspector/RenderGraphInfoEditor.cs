@@ -13,7 +13,7 @@ namespace HypnosRenderPipeline.RenderGraph
     {
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
+            //base.OnInspectorGUI();
         }
 
         [OnOpenAsset(0)]

@@ -32,15 +32,14 @@ namespace HypnosRenderPipeline.RenderGraph
             [SerializeField]
             byte[] value_bytes = null;
             [SerializeField]
-            Texture2D tex_ref = null;
+            public UnityEngine.Object obj_ref = null;
             public void OnAfterDeserialize()
             {
                 type = ReflectionUtil.GetTypeFromName(type_str);
                 if (type == null) return;
                 if (ReflectionUtil.IsEngineObject(type))
                 {
-                    if (type == typeof(Texture2D))
-                        value = tex_ref;
+                    value = obj_ref;
                 }
                 else if (value_bytes != null && value_bytes.Length != 0)
                 {
@@ -64,8 +63,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     if (ReflectionUtil.IsEngineObject(type))
                     {
-                        if (type == typeof(Texture2D))
-                            tex_ref = value as Texture2D;
+                        obj_ref = value as UnityEngine.Object;
                     }
                     else
                     {
