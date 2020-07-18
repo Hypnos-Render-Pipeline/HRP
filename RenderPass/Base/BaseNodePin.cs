@@ -56,6 +56,7 @@ namespace HypnosRenderPipeline.RenderPass
         {
             if (desc.sizeScale != TexturePinDesc.SizeScale.Custom)
             {
+                Debug.Log(context.RenderCamera.pixelWidth);
                 desc.basicDesc.width = context.RenderCamera.pixelWidth / (int)desc.sizeScale;
                 desc.basicDesc.height = context.RenderCamera.pixelHeight / (int)desc.sizeScale;
             }
@@ -68,15 +69,18 @@ namespace HypnosRenderPipeline.RenderPass
         {
             var desc2 = (pin as TexturePin).desc;
 
-            Vector2Int descSize;
-            if (desc.sizeScale != TexturePinDesc.SizeScale.Custom)
+            if (desc.sizeMode == TexturePinDesc.SizeCastMode.Fixed)
             {
-                descSize = new Vector2Int(renderContext.RenderCamera.pixelWidth, renderContext.RenderCamera.pixelHeight);
-                descSize /= (int)desc.sizeScale;
-            }
-            else descSize = new Vector2Int(desc.basicDesc.width, desc.basicDesc.height);
+                Vector2Int descSize;
+                if (desc.sizeScale != TexturePinDesc.SizeScale.Custom)
+                {
+                    descSize = new Vector2Int(renderContext.RenderCamera.pixelWidth, renderContext.RenderCamera.pixelHeight);
+                    descSize /= (int)desc.sizeScale;
+                }
+                else descSize = new Vector2Int(desc.basicDesc.width, desc.basicDesc.height);
 
-            if (descSize != new Vector2Int(desc2.basicDesc.width, desc2.basicDesc.height)) return false;
+                if (descSize != new Vector2Int(desc2.basicDesc.width, desc2.basicDesc.height)) return false;
+            }
 
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension
                 || desc.basicDesc.colorFormat != desc2.basicDesc.colorFormat

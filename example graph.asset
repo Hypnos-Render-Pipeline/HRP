@@ -22,17 +22,17 @@ MonoBehaviour:
     outputs: []
     positon:
       serializedVersion: 2
-      x: -811.75
-      y: -2622.65
-      width: 300.00006
-      height: 86.000015
+      x: -660
+      y: -2583
+      width: 300
+      height: 86
     nodeType_str: HypnosRenderPipeline.RenderPass.TestOutputNode
   - nodeName: TestRenderNode
     parameters:
     - name: tex
       type_str: UnityEngine.Texture2D
       value_bytes: 
-      obj_ref: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
+      obj_ref: {fileID: 2800000, guid: b049663cfb4d0364e83dba009971a463, type: 3}
     inputs: []
     outputs:
     - name: FullResOutput
@@ -40,16 +40,16 @@ MonoBehaviour:
       mustConnect: 0
     positon:
       serializedVersion: 2
-      x: -1289
-      y: -2521
-      width: 300.00006
-      height: 104
+      x: -2008.8049
+      y: -2799.8967
+      width: 300
+      height: 150
     nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderNode
   - nodeName: ClearWithColor
     parameters:
     - name: k
       type_str: UnityEngine.Color
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3234333038363336383c2f723e0d0a20203c673e302e323235363134313c2f673e0d0a20203c623e302e3733353834393c2f623e0d0a20203c613e303c2f613e0d0a3c2f436f6c6f723e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3132363539383037353c2f723e0d0a20203c673e302e3138383637393231383c2f673e0d0a20203c623e302e3132353438393438383c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     inputs:
     - name: EighthResInOut
@@ -61,11 +61,47 @@ MonoBehaviour:
       mustConnect: 0
     positon:
       serializedVersion: 2
-      x: -1284.3003
-      y: -2722.25
+      x: -1449.6503
+      y: -2965.6663
       width: 300.00006
       height: 128
     nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
+  - nodeName: TextureDebug
+    parameters:
+    - name: texture
+      type_str: UnityEngine.RenderTexture
+      value_bytes: 
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: tex
+      info: 
+      mustConnect: 1
+    outputs: []
+    positon:
+      serializedVersion: 2
+      x: -1522.9288
+      y: -2466.9565
+      width: 300
+      height: 275.99997
+    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  - nodeName: TextureDebug
+    parameters:
+    - name: texture
+      type_str: UnityEngine.RenderTexture
+      value_bytes: 
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: tex
+      info: 
+      mustConnect: 1
+    outputs: []
+    positon:
+      serializedVersion: 2
+      x: -1053.0157
+      y: -2458.7424
+      width: 300
+      height: 275.99997
+    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   edges:
   - output:
       node:
@@ -74,7 +110,7 @@ MonoBehaviour:
         - name: tex
           type_str: UnityEngine.Texture2D
           value_bytes: 
-          obj_ref: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
+          obj_ref: {fileID: 2800000, guid: b049663cfb4d0364e83dba009971a463, type: 3}
         inputs: []
         outputs:
         - name: FullResOutput
@@ -82,12 +118,147 @@ MonoBehaviour:
           mustConnect: 0
         positon:
           serializedVersion: 2
-          x: -1289
-          y: -2521
-          width: 300.00006
-          height: 104
+          x: -2008.8049
+          y: -2799.8967
+          width: 300
+          height: 150
         nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderNode
       name: FullResOutput
+    input:
+      node:
+        nodeName: TextureDebug
+        parameters:
+        - name: texture
+          type_str: UnityEngine.RenderTexture
+          value_bytes: 
+          obj_ref: {fileID: 0}
+        inputs:
+        - name: tex
+          info: 
+          mustConnect: 1
+        outputs: []
+        positon:
+          serializedVersion: 2
+          x: -1522.9288
+          y: -2466.9565
+          width: 300
+          height: 275.99997
+        nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+      name: tex
+  - output:
+      node:
+        nodeName: TestRenderNode
+        parameters:
+        - name: tex
+          type_str: UnityEngine.Texture2D
+          value_bytes: 
+          obj_ref: {fileID: 2800000, guid: b049663cfb4d0364e83dba009971a463, type: 3}
+        inputs: []
+        outputs:
+        - name: FullResOutput
+          info: 
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -2008.8049
+          y: -2799.8967
+          width: 300
+          height: 150
+        nodeType_str: HypnosRenderPipeline.RenderPass.TestRenderNode
+      name: FullResOutput
+    input:
+      node:
+        nodeName: ClearWithColor
+        parameters:
+        - name: k
+          type_str: UnityEngine.Color
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3132363539383037353c2f723e0d0a20203c673e302e3138383637393231383c2f673e0d0a20203c623e302e3132353438393438383c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000
+          obj_ref: {fileID: 0}
+        inputs:
+        - name: EighthResInOut
+          info: It's a test inout pin.
+          mustConnect: 0
+        outputs:
+        - name: EighthResInOut
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -1449.6503
+          y: -2965.6663
+          width: 300.00006
+          height: 128
+        nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
+      name: EighthResInOut
+  - output:
+      node:
+        nodeName: ClearWithColor
+        parameters:
+        - name: k
+          type_str: UnityEngine.Color
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3132363539383037353c2f723e0d0a20203c673e302e3138383637393231383c2f673e0d0a20203c623e302e3132353438393438383c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000
+          obj_ref: {fileID: 0}
+        inputs:
+        - name: EighthResInOut
+          info: It's a test inout pin.
+          mustConnect: 0
+        outputs:
+        - name: EighthResInOut
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -1449.6503
+          y: -2965.6663
+          width: 300.00006
+          height: 128
+        nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
+      name: EighthResInOut
+    input:
+      node:
+        nodeName: TextureDebug
+        parameters:
+        - name: texture
+          type_str: UnityEngine.RenderTexture
+          value_bytes: 
+          obj_ref: {fileID: 0}
+        inputs:
+        - name: tex
+          info: 
+          mustConnect: 1
+        outputs: []
+        positon:
+          serializedVersion: 2
+          x: -1053.0157
+          y: -2458.7424
+          width: 300
+          height: 275.99997
+        nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+      name: tex
+  - output:
+      node:
+        nodeName: ClearWithColor
+        parameters:
+        - name: k
+          type_str: UnityEngine.Color
+          value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3132363539383037353c2f723e0d0a20203c673e302e3138383637393231383c2f673e0d0a20203c623e302e3132353438393438383c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000
+          obj_ref: {fileID: 0}
+        inputs:
+        - name: EighthResInOut
+          info: It's a test inout pin.
+          mustConnect: 0
+        outputs:
+        - name: EighthResInOut
+          info: It's a test inout pin.
+          mustConnect: 0
+        positon:
+          serializedVersion: 2
+          x: -1449.6503
+          y: -2965.6663
+          width: 300.00006
+          height: 128
+        nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
+      name: EighthResInOut
     input:
       node:
         nodeName: TestOutputNode
@@ -99,24 +270,42 @@ MonoBehaviour:
         outputs: []
         positon:
           serializedVersion: 2
-          x: -811.75
-          y: -2622.65
-          width: 300.00006
-          height: 86.000015
+          x: -660
+          y: -2583
+          width: 300
+          height: 86
         nodeType_str: HypnosRenderPipeline.RenderPass.TestOutputNode
       name: result
   edgeRecs:
-  - i: 0
+  - i: 3
     o: 1
-    i_n: result
+    i_n: tex
     o_n: FullResOutput
+  - i: 2
+    o: 1
+    i_n: EighthResInOut
+    o_n: FullResOutput
+  - i: 4
+    o: 2
+    i_n: tex
+    o_n: EighthResInOut
+  - i: 0
+    o: 2
+    i_n: result
+    o_n: EighthResInOut
   node_edgeRecs:
   - node: 0
-    in_edges: 00000000
+    in_edges: 03000000
     out_edge: 
   - node: 1
     in_edges: 
-    out_edge: 00000000
+    out_edge: 0000000001000000
   - node: 2
-    in_edges: 
+    in_edges: 01000000
+    out_edge: 0200000003000000
+  - node: 3
+    in_edges: 00000000
+    out_edge: 
+  - node: 4
+    in_edges: 02000000
     out_edge: 

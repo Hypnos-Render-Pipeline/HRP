@@ -38,12 +38,33 @@ namespace HypnosRenderPipeline.RenderGraph
                     case RenderNodeTypeAttribute.Type.OutputNode:
                         // setup rendertarget
                         ((BaseOutputNode)renderNode).target = BuiltinRenderTextureType.CameraTarget;
-                        renderNode.Excute(context);
-                        return true;
+                        break;
+                    case RenderNodeTypeAttribute.Type.ToolNode:
+                        // setup debug tex
+                        if (node.nodeType == typeof(TextureDebug))
+                        {
+                            var debugNode = renderNode as TextureDebug;
+                            var tex_param = node.parameters.Find(p => p.name == "texture");
+                            if (tex_param.value == null) 
+                                tex_param.value = new RenderTexture(debugNode.tex.desc.basicDesc);
+                            else
+                            {
+                                var tex = tex_param.value as RenderTexture;
+                                var desc1 = tex.descriptor;
+                                var desc2 = debugNode.tex.desc.basicDesc;
+                                if (desc1.width != desc2.width || desc1.height != desc2.height || desc1.colorFormat != desc2.colorFormat)
+                                {
+                                    tex.Release();
+                                    tex_param.value = new RenderTexture(desc2);
+                                }
+                            }
+                            debugNode.texture = tex_param.value as RenderTexture;
+                        }
+                        break;
                     default:
-                        renderNode.Excute(context);
                         break;
                 };
+                renderNode.Excute(context);
             }
             return true;
         }

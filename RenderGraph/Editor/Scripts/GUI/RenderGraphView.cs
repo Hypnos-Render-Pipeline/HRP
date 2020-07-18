@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -60,6 +61,14 @@ namespace HypnosRenderPipeline.RenderGraph
                             }
                         }
                     }
+
+                    HRGDynamicExecutor executor = new HRGDynamicExecutor(m_renderGraphInfo);
+
+                    RenderPass.RenderContext context = new RenderPass.RenderContext() { RenderCamera = Camera.main, CmdBuffer = new UnityEngine.Rendering.CommandBuffer() };
+                    Debug.Log(executor.Excute(context));
+                    context.RenderCamera.RemoveAllCommandBuffers();
+                    context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
+
                 }
                 return change;
             };
@@ -114,7 +123,7 @@ namespace HypnosRenderPipeline.RenderGraph
             return compatibleAnchors;
         }
 
-        public void AddNodeFromTemplate(Type type, Rect pos)
+        public RenderGraphNodeView AddNodeFromTemplate(Type type, Rect pos)
         {
             var nodeView = new RenderGraphNodeView(m_renderGraphInfo);
             nodeView.SetType(type);
@@ -129,6 +138,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
             Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Node");
             m_renderGraphInfo.AddNode(nodeView.Node);
+            return nodeView;
         }
         public void AddEdge(Edge edgeView)
         {
@@ -167,6 +177,14 @@ namespace HypnosRenderPipeline.RenderGraph
             rgeView.input.Connect(rgeView);
 
             AddElement(rgeView);
+
+
+            HRGDynamicExecutor executor = new HRGDynamicExecutor(m_renderGraphInfo);
+
+            RenderPass.RenderContext context = new RenderPass.RenderContext() { RenderCamera = Camera.main, CmdBuffer = new UnityEngine.Rendering.CommandBuffer() };
+            Debug.Log(executor.Excute(context));
+            context.RenderCamera.RemoveAllCommandBuffers();
+            context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
         }
 
         void AddSerializedNode(RenderGraphNode node)
@@ -246,11 +264,20 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public void OnDropOutsidePort(Edge edge, Vector2 position)
         {
-            //Debug.Log("OnDropOutsidePort");
-            //var draggedPort = (edge.output != null ? edge.output.edgeConnector.edgeDragHelper.draggedPort : null) ??
-            //       (edge.input != null ? edge.input.edgeConnector.edgeDragHelper.draggedPort : null);
-
-            //SearchWindow.Open(new SearchWindowContext(GUIUtility.GUIToScreenPoint(Event.current.mousePosition)), m_searcher);
+            var draggedPort = (edge.output != null ? edge.output.edgeConnector.edgeDragHelper.draggedPort : null);
+            if (draggedPort != null)
+            {
+                var slot = draggedPort.userData as RenderGraphNode.Slot;
+                if (slot.slotType == typeof(RenderPass.TexturePin))
+                {
+                    var windowRoot = m_editorWindow.rootVisualElement;
+                    var windowMousePosition = windowRoot.ChangeCoordinatesTo(windowRoot.parent, position);
+                    var graphMousePosition = contentViewContainer.WorldToLocal(windowMousePosition);
+                    var nodeView = AddNodeFromTemplate(typeof(RenderPass.TextureDebug), new Rect(graphMousePosition, Vector2.zero));
+                    edge.input = nodeView.inputs[0];
+                    AddEdge(edge);
+                }
+            }
         }
 
         public void OnDrop(GraphView graphView, Edge edge)

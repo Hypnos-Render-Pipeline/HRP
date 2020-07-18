@@ -83,7 +83,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     viewDataKey = "RenderGraphView"
                 };
 
-                m_graphView.SetupZoom(0.05f, ContentZoomer.DefaultMaxScale);
+                m_graphView.SetupZoom(0.05f, ContentZoomer.DefaultMaxScale * 4);
                 m_graphView.AddManipulator(new ContentDragger());
                 m_graphView.AddManipulator(new SelectionDragger());
                 m_graphView.AddManipulator(new RectangleSelector());

@@ -16,6 +16,9 @@ namespace HypnosRenderPipeline.RenderGraph
         VisualElement m_controlItems;
         VisualElement m_portInputContainer;
         RenderGraphInfo m_renderGraphInfo;
+
+        static Material __unlit_mat__;
+        static Material m_unlitMat { get { if (__unlit_mat__ == null) __unlit_mat__ = new Material(Shader.Find("Unlit/GammaCorrect")); return __unlit_mat__; } }
         
         public List<Port> inputs;
         public List<Port> outputs;
@@ -62,7 +65,17 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     var toolbar = new IMGUIContainer(() =>
                     {
-                        if (expanded)
+                        if (Node.nodeType == typeof(TextureDebug))
+                        {
+                            var tex = Node.parameters.Find(p => p.name == "texture").value;
+                            if (tex != null)
+                            {
+                                var rt = tex as RenderTexture;
+                                EditorGUILayout.LabelField(rt.width + "x" + rt.height + "  " + rt.format);
+                                EditorGUI.DrawPreviewTexture(EditorGUILayout.GetControlRect(false, 170), rt, m_unlitMat, scaleMode: ScaleMode.ScaleToFit);
+                            }
+                        }
+                        else if (expanded)
                         {
                             var parms = new RenderGraphNode.Parameter[Node.parameters.Count];
                             Node.parameters.CopyTo(parms);

@@ -85,6 +85,23 @@ namespace HypnosRenderPipeline.RenderPass
         }
     }
 
+    public class TextureDebug : BaseToolNode
+    {
+        [NodePin(type: PinType.In, true)]
+        public TexturePin tex = new TexturePin(new TexturePin.TexturePinDesc(new RenderTextureDescriptor(1, 1)));
+
+
+        public RenderTexture texture;
+
+        public override void Excute(RenderContext context)
+        {
+            if (texture != null)
+            {
+                context.CmdBuffer.Blit(tex.handle, texture);
+            }
+        }
+    }
+
 
     public class TestOutputNode : BaseOutputNode
     {

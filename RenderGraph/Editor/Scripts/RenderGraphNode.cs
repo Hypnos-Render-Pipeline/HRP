@@ -39,7 +39,8 @@ namespace HypnosRenderPipeline.RenderGraph
                 if (type == null) return;
                 if (ReflectionUtil.IsEngineObject(type))
                 {
-                    value = obj_ref;
+                    if (obj_ref != null)
+                        value = obj_ref;
                 }
                 else if (value_bytes != null && value_bytes.Length != 0)
                 {
