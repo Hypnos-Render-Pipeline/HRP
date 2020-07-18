@@ -153,6 +153,10 @@ namespace HypnosRenderPipeline.RenderGraph
                                         parm.value = EditorGUILayout.ColorField(parm.name, (Color)parm.value);
                                     }
                                 }
+                                else if (parm.type == typeof(Texture2D))
+                                {
+                                    parm.value = EditorGUILayout.ObjectField(parm.value as Texture2D, parm.type, allowSceneObjects: false);
+                                }
                             }
                             if (EditorGUI.EndChangeCheck())
                             {
@@ -210,7 +214,7 @@ namespace HypnosRenderPipeline.RenderGraph
             port.AddManipulator(port.m_EdgeConnector);
             port.userData = slot;
             port.portName = slot.name;
-            if (slot.mustConnect)
+            if (slot.mustConnect && input)
                 port.portColor = Color.red;
             return port;
         }

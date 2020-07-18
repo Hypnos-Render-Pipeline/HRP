@@ -49,24 +49,46 @@ namespace HypnosRenderPipeline.RenderGraph
 
 
         [SerializeField]
-        [HideInInspector]
+        //[HideInInspector]
         List<NodeEdgeRec> node_edgeRecs;
 
         public void OnBeforeSerialize()
         {
-            edgeRecs = new List<EdgeRec>();
-            node_edgeRecs = new List<NodeEdgeRec>();
-            if (edges == null) return;
-            foreach (var edge in edges)
+            edgeRecs.Clear();
+            node_edgeRecs.Clear();
+
+            RenderGraphNode[] nodes_ = new RenderGraphNode[nodes.Count];
+            nodes.CopyTo(nodes_);
+            foreach (var node in nodes_)
             {
-                edgeRecs.Add(new EdgeRec()
+                if (node.nodeType == null)
                 {
-                    i = nodes.IndexOf(edge.input.node),
-                    o = nodes.IndexOf(edge.output.node),
-                    i_n = edge.input.name,
-                    o_n = edge.output.name
-                });
+                    RemoveNode(node);
+                }
             }
+
+            Edge[] edges_ = new Edge[edges.Count];
+            edges.CopyTo(edges_);
+            foreach(var edge in edges_)
+            {
+                if (edge.input.node.nodeType != null
+                    && edge.output.node.nodeType != null
+                    && edge.input.node.inputs.Find(i => i.name == edge.input.name) != null
+                    && edge.output.node.outputs.Find(i => i.name == edge.output.name) != null) {
+                    edgeRecs.Add(new EdgeRec()
+                    {
+                        i = nodes.IndexOf(edge.input.node),
+                        o = nodes.IndexOf(edge.output.node),
+                        i_n = edge.input.name,
+                        o_n = edge.output.name
+                    });
+                }
+                else
+                {
+                    RemoveEdge(edge);
+                }
+            }
+
             foreach (var rec in node_edge)
             {
                 List<int> in_edge = new List<int>();
@@ -85,8 +107,8 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public void OnAfterDeserialize()
         {
-            edges = new List<Edge>();
-            node_edge = new Dictionary<RenderGraphNode, Tuple<List<Edge>, List<Edge>>>();
+            edges.Clear();
+            node_edge.Clear();
             if (edgeRecs == null) return;
             foreach (var edge in edgeRecs)
             {
@@ -119,6 +141,8 @@ namespace HypnosRenderPipeline.RenderGraph
             nodes = new List<RenderGraphNode>();
             edges = new List<Edge>();
             node_edge = new Dictionary<RenderGraphNode, Tuple<List<Edge>, List<Edge>>>();
+            edgeRecs = new List<EdgeRec>();
+            node_edgeRecs = new List<NodeEdgeRec>();
         }
 
         public void AddNode(RenderGraphNode node)
@@ -145,14 +169,20 @@ namespace HypnosRenderPipeline.RenderGraph
         public void RemoveEdge(Edge edge)
         {
             edges.Remove(edge);
-            SearchNodeInDic(edge.output.node).Item2.Remove(edge);
-            SearchNodeInDic(edge.input.node).Item1.Remove(edge);
+            var t = SearchNodeInDic(edge.output.node, false);
+            if (t != null) t.Item2.Remove(edge);
+            t = SearchNodeInDic(edge.input.node, false);
+            if (t != null) t.Item1.Remove(edge);
         }
 
-        public Tuple<List<Edge>, List<Edge>> SearchNodeInDic(RenderGraphNode node)
+        public Tuple<List<Edge>, List<Edge>> SearchNodeInDic(RenderGraphNode node, bool createWhenFailed = true)
         {
             if (!node_edge.ContainsKey(node))
-                node_edge[node] = new Tuple<List<Edge>, List<Edge>>(new List<Edge>(), new List<Edge>());
+            {
+                if (createWhenFailed)
+                    node_edge[node] = new Tuple<List<Edge>, List<Edge>>(new List<Edge>(), new List<Edge>());
+                else return null;
+            }
             var inn = node_edge[node];
             return node_edge[node];
         }

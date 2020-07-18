@@ -22,6 +22,12 @@ namespace HypnosRenderPipeline.RenderGraph
             while (baseType.BaseType != typeof(object)) { baseType = baseType.BaseType; }
             return baseType == typeof(BaseRenderNode);
         }
+        public static bool IsEngineObject(Type t)
+        {
+            var baseType = t.BaseType;
+            while (baseType != typeof(UnityEngine.Object) && baseType != typeof(object)) { baseType = baseType.BaseType; }
+            return baseType == typeof(UnityEngine.Object);
+        }
 
         public static Type GetTypeFromName(string typeName)
         {
@@ -88,7 +94,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     if (field.FieldType.IsValueType)
                     {
-                        Debug.LogError("Pin can only be a Reference Type. It can lead to undefined behavior.\n" + nodeType.ToString() + " + " + field.Name);
+                        //Debug.LogError("Pin can only be a Reference Type. It can lead to undefined behavior.\n" + nodeType.ToString() + " + " + field.Name);
                     }
 
                     if (pinInfo.type != BaseRenderNode.PinType.Out)

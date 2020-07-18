@@ -19,22 +19,30 @@ namespace HypnosRenderPipeline.RenderGraph
         [Serializable]
         public class Parameter : ISerializationCallbackReceiver
         {
-            public Type type;
+            public Type type = null;
             [SerializeField]
-            public string name;
+            public string name = null;
             [SerializeField]
-            public System.Object value;
+            public System.Object value = null;
 
-            public FieldInfo raw_data;
+            public FieldInfo raw_data = null;
 
             [SerializeField]
-            string type_str;
+            string type_str = null;
             [SerializeField]
-            byte[] value_bytes;
+            byte[] value_bytes = null;
+            [SerializeField]
+            Texture2D tex_ref = null;
             public void OnAfterDeserialize()
             {
                 type = ReflectionUtil.GetTypeFromName(type_str);
-                if (type != null && value_bytes != null && value_bytes.Length != 0)
+                if (type == null) return;
+                if (ReflectionUtil.IsEngineObject(type))
+                {
+                    if (type == typeof(Texture2D))
+                        value = tex_ref;
+                }
+                else if (value_bytes != null && value_bytes.Length != 0)
                 {
                     try
                     {
@@ -54,9 +62,17 @@ namespace HypnosRenderPipeline.RenderGraph
                 if (type != null) type_str = type.ToString();
                 if (value != null)
                 {
-                    MemoryStream stream = new MemoryStream();
-                    new XmlSerializer(type).Serialize(stream, value);
-                    value_bytes = stream.GetBuffer();
+                    if (ReflectionUtil.IsEngineObject(type))
+                    {
+                        if (type == typeof(Texture2D))
+                            tex_ref = value as Texture2D;
+                    }
+                    else
+                    {
+                        MemoryStream stream = new MemoryStream();
+                        new XmlSerializer(type).Serialize(stream, value);
+                        value_bytes = stream.GetBuffer();
+                    }
                 }
             }
 
@@ -137,7 +153,7 @@ namespace HypnosRenderPipeline.RenderGraph
             }
         }
 
-        public void Init(Type t) 
+        public bool Init(Type t) 
         {
             inputs = new List<Slot>();
             outputs = new List<Slot>();
@@ -154,7 +170,7 @@ namespace HypnosRenderPipeline.RenderGraph
             if (nodeType == null)
             {
                 Debug.LogError(string.Format("Load RenderNode \"{0}\" faild! This may caused by mismatched RG version and scripts version.", nodeName));
-                return;
+                return false;
             }
 
             nodeName = ReflectionUtil.GetLastNameOfType(t);
@@ -162,10 +178,11 @@ namespace HypnosRenderPipeline.RenderGraph
             if (!ReflectionUtil.IsBasedRenderNode(t)) 
             {
                 Debug.LogError(string.Format("Load RenderNode \"{0}\" faild! RenderNode must inherit from BaseRenderNode.", nodeName));
-                return;
+                return false;
             }
 
             var field_infos = ReflectionUtil.GetFieldInfo(nodeType);
+            if (field_infos == null) return false;
             var input_fields = field_infos.Item1;
             var output_fields = field_infos.Item2;
             var param_fields = field_infos.Item3;
@@ -197,6 +214,7 @@ namespace HypnosRenderPipeline.RenderGraph
             });
             }
             parameters = new_parameters;
+            return true;
         }
     }
 }

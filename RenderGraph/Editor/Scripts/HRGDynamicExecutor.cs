@@ -31,13 +31,13 @@ namespace HypnosRenderPipeline.RenderGraph
             for (int i = 0; i < readyNodes.Count; i++)
             {
                 var node = readyNodes[i];
-                BaseRenderNode renderNode = SetupNode(node);
+                BaseRenderNode renderNode = SetupNode(context, node);
                 if (renderNode == null) return false;
                 switch (node.nodeType.GetCustomAttribute<RenderNodeTypeAttribute>().type)
                 {
                     case RenderNodeTypeAttribute.Type.OutputNode:
                         // setup rendertarget
-                        ((BaseOutputNode)renderNode).target = 9876;// context.RenderCamera.targetTexture;
+                        ((BaseOutputNode)renderNode).target = BuiltinRenderTextureType.CameraTarget;
                         renderNode.Excute(context);
                         return true;
                     default:
@@ -45,7 +45,6 @@ namespace HypnosRenderPipeline.RenderGraph
                         break;
                 };
             }
-
             return true;
         }
 
@@ -54,7 +53,7 @@ namespace HypnosRenderPipeline.RenderGraph
         List<RenderGraphNode> readyNodes;
 
 
-        BaseRenderNode SetupNode(RenderGraphNode node)
+        BaseRenderNode SetupNode(RenderContext context, RenderGraphNode node)
         {
             var field_infos = ReflectionUtil.GetFieldInfo(node.nodeType);
 
@@ -78,7 +77,35 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 if (existValue.ContainsKey(input.Name))
                 {
-                    input.SetValue(node_instance, existValue[input.Name]);
+                    var from_pin = existValue[input.Name];
+
+                    var compare_method = input.FieldType.GetMethod("Compare");
+                    var generic_types = from_pin.GetType().BaseType.GetGenericArguments();
+                    bool same = (bool)compare_method.MakeGenericMethod(generic_types).Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                    if (same)
+                    {
+                        var move_method = input.FieldType.GetMethod("MoveFrom");
+                        move_method.MakeGenericMethod(generic_types).Invoke(input.GetValue(node_instance), new object[] { from_pin });
+                    }
+                    else
+                    {
+                        var ca_cast_method = input.FieldType.GetMethod("CanCastFrom");
+                        bool can_cast = (bool)ca_cast_method.MakeGenericMethod(generic_types).Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                        if (can_cast)
+                        {
+                            var init_method = input.FieldType.GetMethod("AllocateResourcces");
+                            int id = Shader.PropertyToID(input.Name + UnityEngine.Random.Range(0, 1000000));
+                            init_method.Invoke(input.GetValue(node_instance), new object[] { context, id });
+                            var cast_method = input.FieldType.GetMethod("CastFrom");
+                            cast_method.MakeGenericMethod(generic_types).Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                        }
+                        else
+                        {
+                            Debug.LogError("Can't auto cast from Pin " + from_pin.ToString() + " to " + input);
+                            return null;
+                        }
+
+                    }
                 }
                 else
                 {
@@ -89,8 +116,9 @@ namespace HypnosRenderPipeline.RenderGraph
                     else
                     {
                         // create resources for bare pin
-                        var value = input.FieldType.IsValueType ? Activator.CreateInstance(input.FieldType) : null;
-                        input.SetValue(node_instance, value);
+                        var init_method = input.FieldType.GetMethod("AllocateResourcces");
+                        int id = Shader.PropertyToID(input.Name + UnityEngine.Random.Range(0, 1000000));
+                        init_method.Invoke(input.GetValue(node_instance), new object[] { context, id });
                     }
                 }
                 pin_map[input.Name] = input.GetValue(node_instance);
@@ -100,12 +128,14 @@ namespace HypnosRenderPipeline.RenderGraph
 
             foreach (var output in field_infos.Item2)
             {
-                System.Object value;
+                System.Object value = null;
                 if (!pin_map.ContainsKey(output.Name))
                 {
                     // create resources for out pin
-                    value = output.FieldType.IsValueType ? Activator.CreateInstance(output.FieldType) : null;
-                    output.SetValue(node_instance, value);
+                    var init_method = output.FieldType.GetMethod("AllocateResourcces");
+                    int id = Shader.PropertyToID(output.Name + UnityEngine.Random.Range(0, 1000000));
+                    init_method.Invoke(output.GetValue(node_instance), new object[] { context, id });
+                    value = output.GetValue(node_instance);
                 }
                 else
                 {

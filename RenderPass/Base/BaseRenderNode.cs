@@ -43,6 +43,6 @@ namespace HypnosRenderPipeline.RenderGraph
             }
         }
 
-        public virtual void Excute(RenderContext RenderingContext) { }
+        public abstract void Excute(RenderContext context);
     }
 }

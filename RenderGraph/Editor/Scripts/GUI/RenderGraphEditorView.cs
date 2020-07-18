@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using HypnosRenderPipeline.RenderPass;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.PackageManager.UI;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -16,6 +18,9 @@ namespace HypnosRenderPipeline.RenderGraph
 
         EditorWindow m_editorWindow;
         RenderGraphView m_graphView;
+
+        HRGEditorData __editorData__;
+        HRGEditorData m_editorData { get { if (__editorData__ == null) __editorData__ = AssetDatabase.LoadAssetAtPath<HRGEditorData>("Assets/HRP/RenderGraph/Editor/EditorData.asset"); return __editorData__; } }
 
         string assetName = "unnamed";
 
@@ -51,10 +56,14 @@ namespace HypnosRenderPipeline.RenderGraph
 
                 GUILayout.Space(6);
 
-                if (GUILayout.Button("Test", EditorStyles.toolbarButton))
+                if (GUILayout.Button("Test Execute", EditorStyles.toolbarButton))
                 {
                     HRGDynamicExecutor executor = new HRGDynamicExecutor(m_renderGraphInfo);
-                    Debug.Log(executor.Excute(new RenderPass.RenderContext()));
+
+                    RenderContext context = new RenderContext() { RenderCamera = Camera.main, CmdBuffer = new UnityEngine.Rendering.CommandBuffer() };
+                    Debug.Log(executor.Excute(context));
+                    context.RenderCamera.RemoveAllCommandBuffers();
+                    context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
                 }
 
                 GUILayout.Space(26);
@@ -91,6 +100,8 @@ namespace HypnosRenderPipeline.RenderGraph
             a.value = ScaleMode.ScaleAndCrop;
             m_graphView.style.unityBackgroundScaleMode = a;
             m_graphView.style.unityBackgroundImageTintColor = new StyleColor(new Color(0.7f, 0.7f, 0.8f));
+
+            AutoLoad();
         }
 
         void KeyDown(KeyDownEvent e)
@@ -104,6 +115,29 @@ namespace HypnosRenderPipeline.RenderGraph
             m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
             m_graphView.SetGraphInfo(m_renderGraphInfo);
             assetName = "unnamed";
+        }
+
+        public void AutoSave()
+        {
+            if (assetName != "unnamed")
+            {
+                Save();
+                m_editorData.lastOpenPath = assetName;
+                EditorUtility.SetDirty(m_editorData);
+                AssetDatabase.Refresh();
+            }
+            m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
+            m_graphView.SetGraphInfo(m_renderGraphInfo);
+            assetName = "unnamed";
+        }
+
+        public void AutoLoad()
+        {
+            if (m_editorData.lastOpenPath != "unnamed")
+            {
+                Load(m_editorData.lastOpenPath);
+                Load(m_editorData.lastOpenPath);
+            }
         }
 
         public void Load(string path)
@@ -156,7 +190,6 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public void Save()
         {
-            Debug.Log("Saved: " + assetName);
             if (AssetDatabase.Contains(m_renderGraphInfo))
             {
                 EditorUtility.SetDirty(m_renderGraphInfo);

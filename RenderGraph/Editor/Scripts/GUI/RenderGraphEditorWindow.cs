@@ -31,7 +31,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
         private void OnDisable()
         {
-            m_view.New();
+            m_view.AutoSave();
         }
 
         public void Load(string path)
