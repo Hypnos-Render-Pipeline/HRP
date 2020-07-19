@@ -61,14 +61,7 @@ namespace HypnosRenderPipeline.RenderGraph
                             }
                         }
                     }
-
-                    HRGDynamicExecutor executor = new HRGDynamicExecutor(m_renderGraphInfo);
-
-                    RenderPass.RenderContext context = new RenderPass.RenderContext() { RenderCamera = Camera.main, CmdBuffer = new UnityEngine.Rendering.CommandBuffer() };
-                    Debug.Log(executor.Excute(context));
-                    context.RenderCamera.RemoveAllCommandBuffers();
-                    context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
-
+                    m_renderGraphInfo.TestExecute();
                 }
                 return change;
             };
@@ -125,6 +118,8 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public RenderGraphNodeView AddNodeFromTemplate(Type type, Rect pos)
         {
+            Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Node");
+
             var nodeView = new RenderGraphNodeView(m_renderGraphInfo);
             nodeView.SetType(type);
             nodeView.InitView(this);
@@ -136,24 +131,23 @@ namespace HypnosRenderPipeline.RenderGraph
 
             nodeView.Node.NodeView = nodeView;
 
-            Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Node");
             m_renderGraphInfo.AddNode(nodeView.Node);
             return nodeView;
         }
         public void AddEdge(Edge edgeView)
         {
-            Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Edge");
+            RenderGraphInfo.Edge remove_edge = null;
 
             if (edgeView.input.connected == true)
             {
                 var old_edge_enum = edgeView.input.connections.GetEnumerator();
                 old_edge_enum.MoveNext();
                 var old_edge = old_edge_enum.Current;
+                remove_edge = old_edge.userData as RenderGraphInfo.Edge;
                 old_edge.input.Disconnect(old_edge);
                 old_edge.output.Disconnect(old_edge);
-                m_renderGraphInfo.RemoveEdge(old_edge.userData as RenderGraphInfo.Edge);
                 old_edge.userData = null; // set this to null means delete from code and don't need redo register
-                old_edge.output.MarkDirtyRepaint(); // don't work, don't know why
+                //old_edge.output.MarkDirtyRepaint(); // don't work, don't know why
                 RemoveElement(old_edge);
             }
 
@@ -166,8 +160,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 input = new RenderGraphInfo.Port { node = input_node.Node, name = in_name },
                 output = new RenderGraphInfo.Port { node = output_node.Node, name = out_name }
             };
-            m_renderGraphInfo.AddEdge(edge);
-            
+
             RenderGraphEdgeView rgeView = new RenderGraphEdgeView();
             rgeView.userData = edge;
             rgeView.output = edgeView.output;
@@ -178,13 +171,17 @@ namespace HypnosRenderPipeline.RenderGraph
 
             AddElement(rgeView);
 
-
-            HRGDynamicExecutor executor = new HRGDynamicExecutor(m_renderGraphInfo);
-
-            RenderPass.RenderContext context = new RenderPass.RenderContext() { RenderCamera = Camera.main, CmdBuffer = new UnityEngine.Rendering.CommandBuffer() };
-            Debug.Log(executor.Excute(context));
-            context.RenderCamera.RemoveAllCommandBuffers();
-            context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
+            if (remove_edge != null)
+            {
+                Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Change Edge");
+                m_renderGraphInfo.ChangeEdge(remove_edge, edge);
+            }
+            else
+            {
+                Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Edge");
+                m_renderGraphInfo.AddEdge(edge);
+            }
+            m_renderGraphInfo.TestExecute();
         }
 
         void AddSerializedNode(RenderGraphNode node)

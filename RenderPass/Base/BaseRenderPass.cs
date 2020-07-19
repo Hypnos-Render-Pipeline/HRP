@@ -25,6 +25,7 @@ namespace HypnosRenderPipeline.RenderPass
     }
 
     [RenderNodePath("RenderPass")]
+    [NodeColor(0, 0.2f, 1, 0.4f)]
     [RenderNodeType(RenderNodeTypeAttribute.Type.RenderPass)]
     public abstract class BaseRenderPass : BaseRenderNode 
     {
@@ -32,6 +33,7 @@ namespace HypnosRenderPipeline.RenderPass
 
 
     [RenderNodePath("ToolNodes")]
+    [NodeColor(1, 1, 0.2f, 0.4f)]
     [RenderNodeType(RenderNodeTypeAttribute.Type.ToolNode)]
     public abstract class BaseToolNode : BaseRenderNode
     {
@@ -39,6 +41,7 @@ namespace HypnosRenderPipeline.RenderPass
 
 
     [RenderNodePath("OutputNodes")]
+    [NodeColor(1f, 0.2f, 0.2f, 0.4f)]
     [RenderNodeType(RenderNodeTypeAttribute.Type.OutputNode)]
     public abstract class BaseOutputNode : BaseRenderNode
     {
@@ -51,6 +54,35 @@ namespace HypnosRenderPipeline.RenderPass
         public override void Excute(RenderContext context)
         {
             context.CmdBuffer.Blit(result.handle, target);
+        }
+    }
+
+
+    [NodeColor(1, 0, 1, 0.5f)]
+    [RenderNodePath("ToolNodes/Debug")]
+    public class TextureDebug : BaseToolNode
+    {
+        [NodePin(type: PinType.In)]
+        [PinColor(1,0,1,1)]
+        public TexturePin tex = new TexturePin(new TexturePin.TexturePinDesc(new RenderTextureDescriptor(1, 1)));
+
+
+        public RenderTexture texture;
+
+        public override void Excute(RenderContext context)
+        {
+            if (texture != null)
+            {
+                context.CmdBuffer.Blit(tex.handle, texture);
+            }
+        }
+    }
+
+    public class OutputNode : BaseOutputNode
+    {
+        public override void Excute(RenderContext context)
+        {
+            base.Excute(context);
         }
     }
 }

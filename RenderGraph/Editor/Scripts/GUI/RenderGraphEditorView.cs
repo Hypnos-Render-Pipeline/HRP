@@ -28,6 +28,7 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             m_editorWindow = editorWindow;
             m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
+            Undo.undoRedoPerformed += UndoRedoCallback;
 
             StyleLoader.Load(this);
 
@@ -58,12 +59,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
                 if (GUILayout.Button("Test Execute", EditorStyles.toolbarButton))
                 {
-                    HRGDynamicExecutor executor = new HRGDynamicExecutor(m_renderGraphInfo);
-
-                    RenderContext context = new RenderContext() { RenderCamera = Camera.main, CmdBuffer = new UnityEngine.Rendering.CommandBuffer() };
-                    Debug.Log(executor.Excute(context));
-                    context.RenderCamera.RemoveAllCommandBuffers();
-                    context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
+                    m_renderGraphInfo.TestExecute();
                 }
 
                 GUILayout.Space(26);
@@ -109,6 +105,11 @@ namespace HypnosRenderPipeline.RenderGraph
             //Debug.Log("KeyDown");
         }
 
+        void UndoRedoCallback()
+        {
+            m_renderGraphInfo.TestExecute();
+        }
+
         public void New()
         {
             if (assetName != "unnamed") Save();
@@ -135,7 +136,16 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             if (m_editorData.lastOpenPath != "unnamed")
             {
-                Load(m_editorData.lastOpenPath);
+                try
+                {
+                    Load(m_editorData.lastOpenPath);
+                }
+                catch (System.Exception)
+                {
+                    New();
+                    return;
+                }
+                m_renderGraphInfo.OnAfterDeserialize(); // beacuse this function call happend on code hot recompile, so we need to Deserialize and delete error edges & nodes.
                 Load(m_editorData.lastOpenPath);
             }
         }
@@ -157,6 +167,7 @@ namespace HypnosRenderPipeline.RenderGraph
             m_graphView.SetGraphInfo(info);
 
             assetName = path;
+            m_renderGraphInfo.TestExecute();
         }
 
         public void Load()

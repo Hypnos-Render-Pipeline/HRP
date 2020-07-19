@@ -104,7 +104,7 @@ namespace HypnosRenderPipeline.RenderGraph
         public List<Slot> inputs, outputs;
 
         [NonSerialized]
-        public List<RenderGraphNode> parent, child;
+        public HashSet<RenderGraphNode> parent, child;
 
         [SerializeField]
         public Rect positon;
@@ -131,6 +131,14 @@ namespace HypnosRenderPipeline.RenderGraph
 
         #endregion
 
+        [NonSerialized]
+        public RenderTexture debugTex;
+
+        public RenderGraphNode()
+        {
+            parent = new HashSet<RenderGraphNode>();
+            child = new HashSet<RenderGraphNode>();
+        }
 
         void BindSlots(List<FieldInfo> infos, List<Slot> slots)
         {
@@ -156,9 +164,6 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             inputs = new List<Slot>();
             outputs = new List<Slot>();
-            parent = new List<RenderGraphNode>();
-            child = new List<RenderGraphNode>();
-
 
             if (parameters == null)
                 parameters = new List<Parameter>();

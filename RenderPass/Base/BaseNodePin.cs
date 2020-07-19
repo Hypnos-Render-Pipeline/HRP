@@ -9,12 +9,13 @@ namespace HypnosRenderPipeline.RenderPass
 {
     public abstract class BaseNodePin<Desc, Handle>
     {
+        public string name;
         public Desc desc;
         public Handle handle { internal set; get; }
 
         public abstract void AllocateResourcces(RenderContext renderContext, int id);
+        public abstract void ReleaseResourcces(RenderContext renderContext);
         public abstract bool Compare<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin);
-        public abstract void MoveFrom<T2, T3>(BaseNodePin<T2, T3> pin);
         public abstract bool CanCastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin);
         public abstract void CastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin);
 
@@ -56,13 +57,18 @@ namespace HypnosRenderPipeline.RenderPass
         {
             if (desc.sizeScale != TexturePinDesc.SizeScale.Custom)
             {
-                Debug.Log(context.RenderCamera.pixelWidth);
                 desc.basicDesc.width = context.RenderCamera.pixelWidth / (int)desc.sizeScale;
                 desc.basicDesc.height = context.RenderCamera.pixelHeight / (int)desc.sizeScale;
             }
 
             context.CmdBuffer.GetTemporaryRT(id, desc.basicDesc);
+            //Debug.Log("get " + id);
             handle = id;
+        }
+        public override void ReleaseResourcces(RenderContext context)
+        {
+            context.CmdBuffer.ReleaseTemporaryRT(handle);
+            //Debug.Log("release " + handle);
         }
 
         public override bool Compare<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
@@ -90,12 +96,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             return true;
         }
-        public override void MoveFrom<T2, T3>(BaseNodePin<T2, T3> pin)
-        {
-            var src = pin as TexturePin;
-            handle = src.handle;
-            desc = src.desc;
-        }
+
         public override bool CanCastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
             var desc2 = (pin as TexturePin).desc;
@@ -108,6 +109,7 @@ namespace HypnosRenderPipeline.RenderPass
         public override void CastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
             renderContext.CmdBuffer.Blit((pin as TexturePin).handle, handle);
+            //Debug.Log("cast from " + (pin as TexturePin).handle + " to " + handle);
         }
     }
 }

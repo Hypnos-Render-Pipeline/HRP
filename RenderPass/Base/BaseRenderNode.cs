@@ -24,9 +24,19 @@ namespace HypnosRenderPipeline.RenderGraph
         }
     }
 
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    public class NodeColorAttribute : Attribute
+    {
+        public Color color { private set; get; } = Color.clear;
+        public NodeColorAttribute(float r,float g, float b, float a)
+        {
+            this.color = new Color(r,g,b,a);
+        }
+    }
 
     [RenderNodePath("")]
     [RenderNodeInformation("")]
+    [NodeColor(1, 1, 1, 0)]
     public abstract class BaseRenderNode
     {
         public enum PinType { In, Out, InOut };
@@ -40,6 +50,16 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 this.type = type;
                 this.mustConnect = mustConnect;
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
+        public class PinColorAttribute : Attribute
+        {
+            public Color color { private set; get; } = Color.clear;
+            public PinColorAttribute(float r, float g, float b, float a)
+            {
+                this.color = new Color(r, g, b, a);
             }
         }
 

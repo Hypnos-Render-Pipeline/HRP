@@ -9,11 +9,11 @@ namespace HypnosRenderPipeline.RenderGraph
 {
 
     [CustomEditor(typeof(RenderGraphInfo))]
-    public class RenderGraphInfoEditor : Editor
+    public class RenderGraphInfoInspector : Editor
     {
         public override void OnInspectorGUI()
         {
-            //base.OnInspectorGUI();
+            base.OnInspectorGUI();
         }
 
         [OnOpenAsset(0)]
