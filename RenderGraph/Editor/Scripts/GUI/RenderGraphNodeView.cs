@@ -19,8 +19,22 @@ namespace HypnosRenderPipeline.RenderGraph
         VisualElement m_portInputContainer;
         RenderGraphInfo m_renderGraphInfo;
 
+        static Material __unlit_srgb_mat__;
         static Material __unlit_mat__;
-        static Material m_unlitMat { get { if (__unlit_mat__ == null) __unlit_mat__ = new Material(Shader.Find("Unlit/GammaCorrect")); return __unlit_mat__; } }
+        static Material m_unlitMat
+        {
+            get
+            {
+                if (PlayerSettings.colorSpace == ColorSpace.Linear)
+                {
+                    if (__unlit_srgb_mat__ == null) __unlit_srgb_mat__ = new Material(Shader.Find("Unlit/GammaCorrect")); return __unlit_srgb_mat__;
+                }
+                else
+                {
+                    if (__unlit_mat__ == null) __unlit_mat__ = new Material(Shader.Find("Unlit/Transparent")); return __unlit_mat__;
+                }
+            }
+        }
         
         public List<Port> inputs;
         public List<Port> outputs;

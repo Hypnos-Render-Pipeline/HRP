@@ -32,8 +32,7 @@ public class TestGraph
             }
             if (AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path) != null)
             {
-                HRGDynamicExecutor executor = new HRGDynamicExecutor(AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path));
-                executor.Excute(new HypnosRenderPipeline.RenderPass.RenderContext() { CmdBuffer = new UnityEngine.Rendering.CommandBuffer(), RenderCamera = Camera.main });
+                AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path).TestExecute();
             }
         }
     }
