@@ -17,7 +17,7 @@ MonoBehaviour:
     parameters:
     - name: k
       type_str: UnityEngine.Color
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e373733353834393c2f723e0d0a20203c673e302e3234343438323031313c2f673e0d0a20203c623e302e3234343438323031313c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e0000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3736343135313c2f723e0d0a20203c673e302e3632333537363034353c2f673e0d0a20203c623e302e3632333537363034353c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     inputs:
     - name: target
@@ -29,8 +29,8 @@ MonoBehaviour:
       mustConnect: 0
     positon:
       serializedVersion: 2
-      x: -1393.721
-      y: -3911.4402
+      x: -1311.3
+      y: -4008.001
       width: 300
       height: 128
     nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
@@ -46,10 +46,10 @@ MonoBehaviour:
       mustConnect: 0
     positon:
       serializedVersion: 2
-      x: -1852.7915
-      y: -3929.521
+      x: -1789.2604
+      y: -3953
       width: 300
-      height: 110.00001
+      height: 110
     nodeType_str: HypnosRenderPipeline.RenderPass.EighthScale
   - nodeName: TextureDebug
     parameters:
@@ -64,10 +64,10 @@ MonoBehaviour:
     outputs: []
     positon:
       serializedVersion: 2
-      x: -1483.65
-      y: -4117.451
+      x: -1363.1737
+      y: -4220.543
       width: 220
-      height: 173.00002
+      height: 151
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: LoadTexture
     parameters:
@@ -150,10 +150,6 @@ MonoBehaviour:
     o: 3
     i_n: tex
     o_n: FullResOutput
-  - i: 5
-    o: 0
-    i_n: result
-    o_n: target
   - i: 6
     o: 0
     i_n: tex
@@ -162,10 +158,14 @@ MonoBehaviour:
     o: 1
     i_n: target
     o_n: EighthResInOut
+  - i: 5
+    o: 0
+    i_n: result
+    o_n: target
   node_edgeRecs:
   - node: 1
     in_edges: 01000000
-    out_edge: 0000000005000000
+    out_edge: 0000000004000000
   - node: 2
     in_edges: 00000000
     out_edge: 
@@ -176,11 +176,11 @@ MonoBehaviour:
     in_edges: 02000000
     out_edge: 
   - node: 0
-    in_edges: 05000000
-    out_edge: 0300000004000000
-  - node: 5
+    in_edges: 04000000
+    out_edge: 0300000005000000
+  - node: 6
     in_edges: 03000000
     out_edge: 
-  - node: 6
-    in_edges: 04000000
+  - node: 5
+    in_edges: 05000000
     out_edge: 

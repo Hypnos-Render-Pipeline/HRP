@@ -2,8 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using UnityEditor;
+using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
+using UnityEngine.XR;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
@@ -211,6 +215,9 @@ namespace HypnosRenderPipeline.RenderGraph
                 Debug.LogError("execute failed");
             context.RenderCamera.RemoveAllCommandBuffers();
             context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
+
+            GameObject gameObject = new GameObject();
+            GameObject.DestroyImmediate(gameObject); // trigger repaint
         }
     }
 }
