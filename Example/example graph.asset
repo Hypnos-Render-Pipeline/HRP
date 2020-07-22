@@ -29,8 +29,8 @@ MonoBehaviour:
       mustConnect: 0
     positon:
       serializedVersion: 2
-      x: -1311.3
-      y: -4008.001
+      x: -1457.8373
+      y: -3929.678
       width: 300
       height: 128
     nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
@@ -51,24 +51,6 @@ MonoBehaviour:
       width: 300
       height: 110
     nodeType_str: HypnosRenderPipeline.RenderPass.EighthScale
-  - nodeName: TextureDebug
-    parameters:
-    - name: texture
-      type_str: UnityEngine.RenderTexture
-      value_bytes: 
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: tex
-      info: 
-      mustConnect: 0
-    outputs: []
-    positon:
-      serializedVersion: 2
-      x: -1363.1737
-      y: -4220.543
-      width: 220
-      height: 151
-    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: LoadTexture
     parameters:
     - name: tex
@@ -82,29 +64,11 @@ MonoBehaviour:
       mustConnect: 0
     positon:
       serializedVersion: 2
-      x: -2317.4001
-      y: -3928.0005
+      x: -2125.2375
+      y: -3953.128
       width: 300
       height: 150
     nodeType_str: HypnosRenderPipeline.RenderPass.LoadTexture
-  - nodeName: TextureDebug
-    parameters:
-    - name: texture
-      type_str: UnityEngine.RenderTexture
-      value_bytes: 
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: tex
-      info: 
-      mustConnect: 0
-    outputs: []
-    positon:
-      serializedVersion: 2
-      x: -1872.6812
-      y: -3754.3005
-      width: 960
-      height: 646
-    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: OutputNode
     parameters: []
     inputs:
@@ -114,73 +78,34 @@ MonoBehaviour:
     outputs: []
     positon:
       serializedVersion: 2
-      x: -848.05005
-      y: -3883.4504
-      width: 300.00006
-      height: 86.000015
+      x: -1783.0072
+      y: -4085.6072
+      width: 300
+      height: 86
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
-  - nodeName: TextureDebug
-    parameters:
-    - name: texture
-      type_str: UnityEngine.RenderTexture
-      value_bytes: 
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: tex
-      info: 
-      mustConnect: 0
-    outputs: []
-    positon:
-      serializedVersion: 2
-      x: -995.7954
-      y: -4125.666
-      width: 220.00002
-      height: 173
-    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   edgeRecs:
-  - i: 2
-    o: 1
-    i_n: tex
-    o_n: EighthResInOut
   - i: 1
-    o: 3
+    o: 2
     i_n: EighthResInOut
     o_n: FullResOutput
-  - i: 4
-    o: 3
-    i_n: tex
-    o_n: FullResOutput
-  - i: 6
-    o: 0
-    i_n: tex
-    o_n: target
   - i: 0
     o: 1
     i_n: target
     o_n: EighthResInOut
-  - i: 5
-    o: 0
+  - i: 3
+    o: 2
     i_n: result
-    o_n: target
+    o_n: FullResOutput
   node_edgeRecs:
   - node: 1
-    in_edges: 01000000
-    out_edge: 0000000004000000
-  - node: 2
     in_edges: 00000000
+    out_edge: 01000000
+  - node: 2
+    in_edges: 
+    out_edge: 0000000002000000
+  - node: 0
+    in_edges: 01000000
     out_edge: 
   - node: 3
-    in_edges: 
-    out_edge: 0100000002000000
-  - node: 4
     in_edges: 02000000
-    out_edge: 
-  - node: 0
-    in_edges: 04000000
-    out_edge: 0300000005000000
-  - node: 6
-    in_edges: 03000000
-    out_edge: 
-  - node: 5
-    in_edges: 05000000
     out_edge: 
