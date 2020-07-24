@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
@@ -133,6 +134,9 @@ namespace HypnosRenderPipeline.RenderGraph
 
         [NonSerialized]
         public RenderTexture debugTex;
+
+        [NonSerialized]
+        public CustomSampler sampler;
 
         public RenderGraphNode()
         {

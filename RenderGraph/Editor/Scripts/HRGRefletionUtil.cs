@@ -19,7 +19,7 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             if (t.IsAbstract) return false;
             var baseType = t.BaseType;
-            while (baseType.BaseType != typeof(object)) { baseType = baseType.BaseType; }
+            while (baseType != null && baseType.BaseType != typeof(object)) { baseType = baseType.BaseType; }
             return baseType == typeof(BaseRenderNode);
         }
         public static bool IsEngineObject(Type t)

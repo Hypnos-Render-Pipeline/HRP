@@ -131,7 +131,7 @@ namespace HypnosRenderPipeline.RenderGraph
             m_graphView.SetGraphInfo(m_renderGraphInfo);
             assetName = "unnamed";
         }
-
+         
         public void AutoLoad()
         {
             if (m_editorData.lastOpenPath != "unnamed")
@@ -157,6 +157,7 @@ namespace HypnosRenderPipeline.RenderGraph
             try
             {
                 info = AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path);
+                if (info == null) throw new System.Exception("Null");
             }
             catch
             {

@@ -6,6 +6,7 @@ using System.Xml.Schema;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
+using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
@@ -67,10 +68,15 @@ namespace HypnosRenderPipeline.RenderGraph
                     default:
                         break;
                 };
+
+                if (node.sampler == null) node.sampler = UnityEngine.Profiling.CustomSampler.Create(node.nodeName + node.GetHashCode(), true);
+                context.CmdBuffer.BeginSample(node.sampler);
                 renderNode.Excute(context);
+                context.CmdBuffer.EndSample(node.sampler);
 
                 ReleaseNode(context, renderNode);
             }
+
             return true;
         }
 

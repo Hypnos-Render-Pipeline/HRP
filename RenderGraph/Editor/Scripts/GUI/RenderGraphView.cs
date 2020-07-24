@@ -125,7 +125,7 @@ namespace HypnosRenderPipeline.RenderGraph
             nodeView.InitView(this);
             nodeView.MarkDirtyRepaint();
             
-            nodeView.SetPosition(pos);
+            nodeView.SetPositionWithoutUndo(pos);
 
             AddElement(nodeView);
 
@@ -192,7 +192,7 @@ namespace HypnosRenderPipeline.RenderGraph
             nodeView.InitView(this);
             nodeView.MarkDirtyRepaint();
 
-            nodeView.SetPosition(node.positon);
+            nodeView.SetPositionWithoutUndo(node.positon);
 
             
             AddElement(nodeView);
@@ -244,9 +244,19 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 RemoveElement(node);
             }
+            Rect rect = new Rect(0,0,0,0);
             foreach (var node in m_renderGraphInfo.nodes)
             {
                 AddSerializedNode(node);
+                rect.x = Mathf.Min(node.positon.x, rect.x);
+                rect.y = Mathf.Min(node.positon.y, rect.y);
+                rect.xMax = Mathf.Max(node.positon.xMax, rect.xMax);
+                rect.yMax = Mathf.Max(node.positon.yMax, rect.yMax);
+            }
+            foreach (var node in m_renderGraphInfo.nodes)
+            {
+                node.positon.x -= rect.x;
+                node.positon.y -= rect.y;
             }
             var edges_ = edges.ToList();
             foreach (var edge in edges_)
@@ -257,6 +267,7 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 AddSerializedEdge(edge);
             }
+            Debug.Log(CalculateRectToFitAll(contentContainer));
         }
 
         public void OnDropOutsidePort(Edge edge, Vector2 position)

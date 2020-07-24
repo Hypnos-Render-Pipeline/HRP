@@ -18,7 +18,6 @@ namespace HypnosRenderPipeline.RenderGraph
             window.minSize = new Vector2(800, 500);
             window.name = "RenderGraph";
             window.titleContent = new GUIContent("RenderGraph");
-            window.OnEnable();
             return window;
         }
 
@@ -31,7 +30,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
         private void OnDisable()
         {
-            m_view.AutoSave();
+            if (m_view != null) m_view.AutoSave();
         }
 
         public void Load(string path)

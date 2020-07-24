@@ -8,6 +8,8 @@ using System.Reflection;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.Profiling;
 using UnityEngine.UIElements;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -95,110 +97,119 @@ namespace HypnosRenderPipeline.RenderGraph
                                 EditorGUI.DrawPreviewTexture(rect, rt, m_unlitMat, scaleMode: ScaleMode.ScaleToFit);
                             }
                         }
-                        else if (expanded)
+                        else
                         {
-                            var parms = new RenderGraphNode.Parameter[Node.parameters.Count];
-                            Node.parameters.CopyTo(parms);
-                            var rect = EditorGUILayout.BeginVertical();
-                            bool u_dep = false;
-                            foreach (var input_slot in inputs)
+                            if (Node.sampler != null)
                             {
-                                if (input_slot.connected == false 
-                                        && (input_slot.userData as RenderGraphNode.Slot).mustConnect == true)
-                                {
-                                    u_dep = true;
-                                    break;
-                                }
+                                title = Node.nodeName 
+                                            + "                                                               ".Substring(Node.nodeName.Length) 
+                                            + (Node.sampler.GetRecorder().gpuElapsedNanoseconds / 1000000.0f).ToString("F2") + "ms";
                             }
-                            if (u_dep)
+                            if (expanded)
                             {
-                                EditorGUI.DrawRect(rect, new Color(0.4f, 0.1f, 0.1f, 0.5f));
-                                EditorGUILayout.LabelField("Unsatisfied dependency");
+                                var parms = new RenderGraphNode.Parameter[Node.parameters.Count];
+                                Node.parameters.CopyTo(parms);
+                                var rect = EditorGUILayout.BeginVertical();
+                                bool u_dep = false;
+                                foreach (var input_slot in inputs)
+                                {
+                                    if (input_slot.connected == false
+                                            && (input_slot.userData as RenderGraphNode.Slot).mustConnect == true)
+                                    {
+                                        u_dep = true;
+                                        break;
+                                    }
+                                }
+                                if (u_dep)
+                                {
+                                    EditorGUI.DrawRect(rect, new Color(0.4f, 0.1f, 0.1f, 0.5f));
+                                    EditorGUILayout.LabelField("Unsatisfied dependency");
+                                }
+                                foreach (var parm in parms)
+                                {
+                                    EditorGUI.BeginChangeCheck();
+                                    var value = parm.value;
+                                    if (parm.type == typeof(bool))
+                                    {
+                                        value = EditorGUILayout.Toggle(parm.name, (bool)parm.value);
+                                    }
+                                    else if (parm.type == typeof(int))
+                                    {
+                                        var arts = parm.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
+                                        var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
+                                        if (art != null)
+                                        {
+                                            value = EditorGUILayout.IntSlider(parm.name, (int)parm.value, (int)art.min, (int)art.max);
+                                        }
+                                        else
+                                        {
+                                            value = EditorGUILayout.IntField(parm.name, (int)parm.value);
+                                        }
+                                    }
+                                    else if (parm.type == typeof(float))
+                                    {
+                                        var arts = parm.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
+                                        var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
+                                        if (art != null)
+                                        {
+                                            value = EditorGUILayout.Slider(parm.name, (float)parm.value, (float)art.min, (float)art.max);
+                                        }
+                                        else
+                                        {
+                                            value = EditorGUILayout.FloatField(parm.name, (float)parm.value);
+                                        }
+                                    }
+                                    else if (parm.type.IsEnum)
+                                    {
+                                        value = EditorGUILayout.EnumPopup(parm.name, (Enum)parm.value);
+                                    }
+                                    else if (parm.type == typeof(Vector2))
+                                    {
+                                        value = EditorGUILayout.Vector2Field(parm.name, (Vector2)parm.value);
+                                    }
+                                    else if (parm.type == typeof(Vector2Int))
+                                    {
+                                        value = EditorGUILayout.Vector2IntField(parm.name, (Vector2Int)parm.value);
+                                    }
+                                    else if (parm.type == typeof(Vector3))
+                                    {
+                                        value = EditorGUILayout.Vector3Field(parm.name, (Vector3)parm.value);
+                                    }
+                                    else if (parm.type == typeof(Vector3Int))
+                                    {
+                                        value = EditorGUILayout.Vector3IntField(parm.name, (Vector3Int)parm.value);
+                                    }
+                                    else if (parm.type == typeof(Vector4))
+                                    {
+                                        value = EditorGUILayout.Vector4Field(parm.name, (Vector4)parm.value);
+                                    }
+                                    else if (parm.type == typeof(Color))
+                                    {
+                                        var arts = parm.raw_data.GetCustomAttributes(typeof(ColorUsageAttribute), false);
+                                        var art = arts.Length > 0 ? (arts[0] as ColorUsageAttribute) : null;
+                                        if (art != null)
+                                        {
+                                            value = EditorGUILayout.ColorField(new GUIContent(parm.name), (Color)parm.value,
+                                                                                        true, art.showAlpha, art.hdr);
+                                        }
+                                        else
+                                        {
+                                            value = EditorGUILayout.ColorField(parm.name, (Color)parm.value);
+                                        }
+                                    }
+                                    else if (ReflectionUtil.IsEngineObject(parm.type))
+                                    {
+                                        value = EditorGUILayout.ObjectField(parm.name, parm.value as UnityEngine.Object, parm.type, allowSceneObjects: false);
+                                    }
+                                    if (EditorGUI.EndChangeCheck())
+                                    {
+                                        Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Change Parameter");
+                                        parm.value = value;
+                                        m_renderGraphInfo.TestExecute();
+                                    }
+                                }
+                                EditorGUILayout.EndVertical();
                             }
-                            foreach (var parm in parms)
-                            {
-                                EditorGUI.BeginChangeCheck();
-                                var value = parm.value;
-                                if (parm.type == typeof(bool))
-                                {
-                                    value = EditorGUILayout.Toggle(parm.name, (bool)parm.value);
-                                }
-                                else if (parm.type == typeof(int))
-                                {
-                                    var arts = parm.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
-                                    var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
-                                    if (art != null)
-                                    {
-                                        value = EditorGUILayout.IntSlider(parm.name, (int)parm.value, (int)art.min, (int)art.max);
-                                    }
-                                    else
-                                    {
-                                        value = EditorGUILayout.IntField(parm.name, (int)parm.value);
-                                    }
-                                }
-                                else if (parm.type == typeof(float))
-                                {
-                                    var arts = parm.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
-                                    var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
-                                    if (art != null)
-                                    {
-                                        value = EditorGUILayout.Slider(parm.name, (float)parm.value, (float)art.min, (float)art.max);
-                                    }
-                                    else
-                                    {
-                                        value= EditorGUILayout.FloatField(parm.name, (float)parm.value);
-                                    }
-                                }
-                                else if (parm.type.IsEnum)
-                                {
-                                    value = EditorGUILayout.EnumPopup(parm.name, (Enum)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector2))
-                                {
-                                    value = EditorGUILayout.Vector2Field(parm.name, (Vector2)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector2Int))
-                                {
-                                    value = EditorGUILayout.Vector2IntField(parm.name, (Vector2Int)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector3))
-                                {
-                                    value = EditorGUILayout.Vector3Field(parm.name, (Vector3)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector3Int))
-                                {
-                                    value = EditorGUILayout.Vector3IntField(parm.name, (Vector3Int)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector4))
-                                {
-                                    value = EditorGUILayout.Vector4Field(parm.name, (Vector4)parm.value);
-                                }
-                                else if (parm.type == typeof(Color))
-                                {
-                                    var arts = parm.raw_data.GetCustomAttributes(typeof(ColorUsageAttribute), false);
-                                    var art = arts.Length > 0 ? (arts[0] as ColorUsageAttribute) : null;
-                                    if (art != null)
-                                    {
-                                        value = EditorGUILayout.ColorField(new GUIContent(parm.name), (Color)parm.value,
-                                                                                    true, art.showAlpha, art.hdr);
-                                    }
-                                    else
-                                    {
-                                        value = EditorGUILayout.ColorField(parm.name, (Color)parm.value);
-                                    }
-                                }
-                                else if (ReflectionUtil.IsEngineObject(parm.type))
-                                {
-                                    value = EditorGUILayout.ObjectField(parm.name, parm.value as UnityEngine.Object, parm.type, allowSceneObjects: false);
-                                }
-                                if (EditorGUI.EndChangeCheck())
-                                {
-                                    Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Change Parameter");
-                                    parm.value = value;
-                                    m_renderGraphInfo.TestExecute();
-                                }
-                            }
-                            EditorGUILayout.EndVertical();
                         }
                     });
                     m_controlItems.Add(toolbar);
@@ -223,6 +234,12 @@ namespace HypnosRenderPipeline.RenderGraph
         }
 
         public override void SetPosition(Rect newPos)
+        {
+            base.SetPosition(newPos);
+            Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Move Node");
+            Node.positon = newPos;
+        }
+        public void SetPositionWithoutUndo(Rect newPos)
         {
             base.SetPosition(newPos);
             Node.positon = newPos;

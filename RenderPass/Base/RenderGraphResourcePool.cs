@@ -489,7 +489,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
         FRGTexturePool m_TexturePool = new FRGTexturePool();
 
-        public DynamicArray<IRenderGraphResource>[] m_Resources = new DynamicArray<IRenderGraphResource>[(int)FRGResourceType.Count];
+        public List<IRenderGraphResource>[] m_Resources = new List<IRenderGraphResource>[(int)FRGResourceType.Count];
 
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -498,7 +498,7 @@ namespace HypnosRenderPipeline.RenderGraph
             m_RenderContext = renderContext;
 
             for (int i = 0; i<(int)FRGResourceType.Count; ++i)
-                m_Resources[i] = new DynamicArray<IRenderGraphResource>();
+                m_Resources[i] = new List<IRenderGraphResource>();
         }
 
         internal void BeginRender()
@@ -511,12 +511,10 @@ namespace HypnosRenderPipeline.RenderGraph
             current = null;
         }
 
-        int AddNewResource<ResType>(DynamicArray<IRenderGraphResource> resourceArray, out ResType outRes) where ResType : IRenderGraphResource, new()
+        int AddNewResource<ResType>(List<IRenderGraphResource> resourceArray, out ResType outRes) where ResType : IRenderGraphResource, new()
         {
-            int result = resourceArray.size;
-            resourceArray.Resize(resourceArray.size + 1, true);
-            if (resourceArray[result] == null)
-                resourceArray[result] = new ResType();
+            int result = resourceArray.Count;
+            resourceArray.Add(new ResType());
 
             outRes = resourceArray[result] as ResType;
             outRes.Reset();

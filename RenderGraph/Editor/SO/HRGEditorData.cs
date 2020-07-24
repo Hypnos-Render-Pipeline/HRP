@@ -14,7 +14,7 @@ public class HRGEditorData : ScriptableObject
         EditorApplication.wantsToQuit -= Quit;
         EditorApplication.wantsToQuit += Quit;
     }
-
+       
     static bool Quit()
     {
         var self = AssetDatabase.LoadAssetAtPath<HRGEditorData>("Assets/HRP/RenderGraph/Editor/EditorData.asset");
