@@ -134,18 +134,28 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override bool Compare<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
+            FRGBufferDesc compareDesc = (pin as BufferPin).desc;
+
+            if(desc.count != compareDesc.count || desc.stride != compareDesc.stride || desc.type != compareDesc.type) {
+                return false;
+            }
 
             return true;
         }
 
         public override bool CanCastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
+            FRGBufferDesc compareDesc = (pin as BufferPin).desc;
+
+            if (desc.count != compareDesc.count || desc.stride != compareDesc.stride || desc.type != compareDesc.type) {
+                return false;
+            }
 
             return true;
         }
         public override void CastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
-
+            ComputeBuffer buffer = handle;
         }
     }
 
