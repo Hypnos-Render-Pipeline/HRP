@@ -114,9 +114,9 @@ MonoBehaviour:
     outputs: []
     positon:
       serializedVersion: 2
-      x: 173.57051
-      y: 0
-      width: 220.00002
+      x: 1188.935
+      y: 93.94036
+      width: 220
       height: 173
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: TextureDebug
@@ -132,9 +132,9 @@ MonoBehaviour:
     outputs: []
     positon:
       serializedVersion: 2
-      x: 1188.935
-      y: 93.94036
-      width: 220
+      x: 781.9583
+      y: 74.54275
+      width: 220.00002
       height: 173
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   edgeRecs:
@@ -155,23 +155,23 @@ MonoBehaviour:
     i_n: result
     o_n: target
   - i: 5
-    o: 1
-    i_n: tex
-    o_n: EighthResInOut
-  - i: 6
     o: 0
     i_n: tex
     o_n: target
+  - i: 6
+    o: 1
+    i_n: tex
+    o_n: EighthResInOut
   node_edgeRecs:
   - node: 2
     in_edges: 
     out_edge: 0000000002000000
   - node: 1
     in_edges: 00000000
-    out_edge: 0100000004000000
+    out_edge: 0100000005000000
   - node: 0
     in_edges: 01000000
-    out_edge: 0300000005000000
+    out_edge: 0300000004000000
   - node: 4
     in_edges: 02000000
     out_edge: 

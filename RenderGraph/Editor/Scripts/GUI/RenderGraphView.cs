@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HypnosRenderPipeline.RenderPass;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -275,6 +276,20 @@ namespace HypnosRenderPipeline.RenderGraph
             var draggedPort = (edge.output != null ? edge.output.edgeConnector.edgeDragHelper.draggedPort : null);
             if (draggedPort != null)
             {
+                if (draggedPort.connected)
+                {
+                    var tex_debug = false;
+                    var en = draggedPort.connections.GetEnumerator();
+                    while (en.MoveNext())
+                    {                        
+                        var exist_edge = en.Current;
+                        tex_debug |= (exist_edge.input.node.userData as RenderGraphNode).nodeType == typeof(TextureDebug)
+                                        || (exist_edge.output.node.userData as RenderGraphNode).nodeType == typeof(TextureDebug);
+                        if (tex_debug) break;
+                    }
+                    if (tex_debug) return;                     
+                }
+
                 var slot = draggedPort.userData as RenderGraphNode.Slot;
                 if (slot.slotType == typeof(RenderPass.TexturePin))
                 {
