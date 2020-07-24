@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HypnosRenderPipeline.RenderGraph;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -112,4 +113,40 @@ namespace HypnosRenderPipeline.RenderPass
             //Debug.Log("cast from " + (pin as TexturePin).handle + " to " + handle);
         }
     }
+
+
+    public class BufferPin : BaseNodePin<FRGBufferDesc, FRGBufferHandle>
+    {
+        public BufferPin(FRGBufferDesc desc)
+        {
+            this.desc = desc;
+        }
+
+        public override void AllocateResourcces(RenderContext context, int id)
+        {
+            context.ResourcePool.GetBuffer(handle);
+        }
+
+        public override void ReleaseResourcces(RenderContext context)
+        {
+            context.ResourcePool.ReleaseBuffer(handle);
+        }
+
+        public override bool Compare<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
+        {
+
+            return true;
+        }
+
+        public override bool CanCastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
+        {
+
+            return true;
+        }
+        public override void CastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
+        {
+
+        }
+    }
+
 }

@@ -11,6 +11,7 @@ namespace HypnosRenderPipeline.RenderPass
         public Camera RenderCamera;
         public CommandBuffer CmdBuffer;
         public ScriptableRenderContext Context;
+        public RenderGraphResourcePool ResourcePool;
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
