@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEditor;
-using UnityEditor.Experimental.TerrainAPI;
 using UnityEngine;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -27,7 +24,6 @@ namespace HypnosRenderPipeline.RenderGraph
             rootVisualElement.Clear();
             rootVisualElement.Add(m_view);
             this.Focus();
-            m_view.Focus();
         }
 
         private void OnDisable()

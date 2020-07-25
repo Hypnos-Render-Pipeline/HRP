@@ -1,18 +1,18 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.SceneManagement;
-using UnityEngine.XR;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
     internal class RenderGraphInfo : ScriptableObject, ISerializationCallbackReceiver
     {
         #region Parameters
+
+        [SerializeField]
+        public Vector3 viewPosition;
+        [SerializeField]
+        public Vector3 viewScale;
 
         [SerializeField]
         public List<RenderGraphNode> nodes;
@@ -216,8 +216,6 @@ namespace HypnosRenderPipeline.RenderGraph
         public void AddEdge(Edge edge)
         {
             edges.Add(edge);
-            edge.input.node.parent.Add(edge.output.node);
-            edge.output.node.child.Add(edge.input.node);
             SearchNodeInDic(edge.output.node).Item2.Add(edge);
             SearchNodeInDic(edge.input.node).Item1.Add(edge);
         }
@@ -232,8 +230,6 @@ namespace HypnosRenderPipeline.RenderGraph
         public void RemoveEdge(Edge edge)
         {
             edges.Remove(edge);
-            edge.input.node.parent.Remove(edge.output.node);
-            edge.output.node.child.Remove(edge.input.node);
             var t = SearchNodeInDic(edge.output.node, false);
             if (t != null) t.Item2.Remove(edge);
             t = SearchNodeInDic(edge.input.node, false);

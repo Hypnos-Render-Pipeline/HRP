@@ -1,13 +1,10 @@
 ﻿using HypnosRenderPipeline.RenderPass;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -124,10 +121,11 @@ namespace HypnosRenderPipeline.RenderGraph
                 enu.MoveNext();
                 current = enu.Current;
                 nodes.Remove(current);
-                if (current.parent.Contains(node)) return true;
-                foreach (var par in current.parent)
+                var edges = m_renderGraphInfo.SearchNodeInDic(current).Item1;
+                if (edges.Find(e=>e.output.node == node) != null) return true;
+                foreach (var par in edges)
                 {
-                    nodes.Add(par);
+                    nodes.Add(par.output.node);
                 }
             }
             return false;
@@ -265,8 +263,6 @@ namespace HypnosRenderPipeline.RenderGraph
                     break;
                 }
             }
-            input_node.parent.Add(output_node);
-            output_node.child.Add(input_node);
             AddElement(edgeView);
         }
         RenderGraphGroupView AddSerializedGroup(RenderGraphInfo.Group group)

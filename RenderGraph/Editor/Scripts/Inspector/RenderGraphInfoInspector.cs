@@ -1,9 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEngine;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
@@ -19,8 +15,8 @@ namespace HypnosRenderPipeline.RenderGraph
         [OnOpenAsset(0)]
         public static bool OnOpenAsset(int instanceID, int line)
         {
-            try
-            {
+            //try
+            //{
                 var path = AssetDatabase.GetAssetPath(instanceID);
                 if (AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path) != null)
                 {
@@ -28,11 +24,12 @@ namespace HypnosRenderPipeline.RenderGraph
                     return true;
                 }
                 return false;
-            }
-            catch
-            {
-                return false;
-            }
+            //}
+            //catch
+            //{
+            //    Debug.LogError("Load faild");
+            //    return false;
+            //}
         }
     }
 }

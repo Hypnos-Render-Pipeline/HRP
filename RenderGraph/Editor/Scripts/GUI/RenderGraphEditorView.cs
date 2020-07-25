@@ -1,12 +1,7 @@
-﻿using HypnosRenderPipeline.RenderPass;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
-using UnityEditor.PackageManager.UI;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -162,6 +157,10 @@ namespace HypnosRenderPipeline.RenderGraph
             m_graphView.SetGraphInfo(info);
 
             assetName = path;
+
+            m_graphView.contentViewContainer.transform.position = m_renderGraphInfo.viewPosition;
+            m_graphView.contentViewContainer.transform.scale = m_renderGraphInfo.viewScale;
+
             m_renderGraphInfo.TestExecute();
         }
 
@@ -196,6 +195,8 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public void Save()
         {
+            m_renderGraphInfo.viewPosition = m_graphView.contentViewContainer.transform.position;
+            m_renderGraphInfo.viewScale = m_graphView.contentViewContainer.transform.scale;
             if (AssetDatabase.Contains(m_renderGraphInfo))
             {
                 EditorUtility.SetDirty(m_renderGraphInfo);

@@ -1,17 +1,12 @@
 ﻿using HypnosRenderPipeline.RenderPass;
-using ICSharpCode.NRefactory.Ast;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
-using UnityEditorInternal;
+using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.Profiling;
 using UnityEngine.UIElements;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -20,27 +15,9 @@ namespace HypnosRenderPipeline.RenderGraph
     {
         VisualElement m_controlsDivider;
         VisualElement m_controlItems;
-        VisualElement m_portInputContainer;
         RenderGraphInfo m_renderGraphInfo;
         RenderGraphView m_renderGraphView;
 
-        static Material __unlit_srgb_mat__;
-        static Material __unlit_mat__;
-        static Material m_unlitMat
-        {
-            get
-            {
-                if (PlayerSettings.colorSpace == ColorSpace.Linear)
-                {
-                    if (__unlit_srgb_mat__ == null) __unlit_srgb_mat__ = new Material(Shader.Find("Unlit/GammaCorrect")); return __unlit_srgb_mat__;
-                }
-                else
-                {
-                    if (__unlit_mat__ == null) __unlit_mat__ = new Material(Shader.Find("Unlit/Transparent")); return __unlit_mat__;
-                }
-            }
-        }
-        
         public List<Port> inputs;
         public List<Port> outputs;
 
@@ -92,11 +69,19 @@ namespace HypnosRenderPipeline.RenderGraph
                 controlsContainer.Add(m_controlsDivider);
                 m_controlItems = new VisualElement { name = "items" };
                 controlsContainer.Add(m_controlItems);
+                titleContainer.Remove(this.Q("title-button-container"));
+
+                Image image = null;
+                if (Node.nodeType == typeof(TextureDebug))
+                {
+                    image = new Image();
+                    image.scaleMode = ScaleMode.ScaleToFit;
+                    m_controlItems.Add(image);
+                }
 
                 if (Node.nodeType != typeof(TextureDebug))
                 {
                     this.Q("title-label").style.fontSize = new StyleLength(25);
-                    titleContainer.Remove(this.Q("title-button-container"));
                     titleContainer.Add(m_timeLabel);
                 }
 
@@ -107,11 +92,11 @@ namespace HypnosRenderPipeline.RenderGraph
                         var tex = Node.debugTex;
                         if (tex != null && inputs[0].connected)
                         {
+                            image.image = tex;
                             var rt = tex as RenderTexture;
                             title = rt.name + ": " + rt.width + "x" + rt.height + " " + rt.format;
                             style.width = Mathf.Max(220, rt.width / 2);
-                            var rect = EditorGUILayout.GetControlRect(false, rt.height / 2);
-                            EditorGUI.DrawPreviewTexture(rect, rt, m_unlitMat, scaleMode: ScaleMode.ScaleToFit);
+                            m_controlItems.style.height = rt.height / 2;
                         }
                         else
                         {
@@ -119,6 +104,7 @@ namespace HypnosRenderPipeline.RenderGraph
                             title = Node.nodeName;
                             style.width = 220;
                         }
+                        contentContainer.MarkDirtyRepaint();
                     }
                     else
                     {
@@ -129,118 +115,273 @@ namespace HypnosRenderPipeline.RenderGraph
                             m_timeLabel.style.color = color;
                             m_timeLabel.text = ms.ToString("F2") + "ms  ";
                         }
-                        if (expanded)
+
+                        bool u_dep = false;
+                        foreach (var input_slot in inputs)
                         {
-                            var parms = new RenderGraphNode.Parameter[Node.parameters.Count];
-                            Node.parameters.CopyTo(parms);
-                            var rect = EditorGUILayout.BeginVertical();
-                            bool u_dep = false;
-                            foreach (var input_slot in inputs)
+                            if (input_slot.connected == false
+                                    && (input_slot.userData as RenderGraphNode.Slot).mustConnect == true)
                             {
-                                if (input_slot.connected == false
-                                        && (input_slot.userData as RenderGraphNode.Slot).mustConnect == true)
-                                {
-                                    u_dep = true;
-                                    break;
-                                }
+                                u_dep = true;
+                                break;
                             }
-                            if (u_dep)
-                            {
-                                EditorGUI.DrawRect(rect, new Color(0.4f, 0.1f, 0.1f, 0.5f));
-                                EditorGUILayout.LabelField("Unsatisfied dependency");
-                            }
-                            foreach (var parm in parms)
-                            {
-                                EditorGUI.BeginChangeCheck();
-                                var value = parm.value;
-                                if (parm.type == typeof(bool))
-                                {
-                                    value = EditorGUILayout.Toggle(parm.name, (bool)parm.value);
-                                }
-                                else if (parm.type == typeof(int))
-                                {
-                                    var arts = parm.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
-                                    var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
-                                    if (art != null)
-                                    {
-                                        value = EditorGUILayout.IntSlider(parm.name, (int)parm.value, (int)art.min, (int)art.max);
-                                    }
-                                    else
-                                    {
-                                        value = EditorGUILayout.IntField(parm.name, (int)parm.value);
-                                    }
-                                }
-                                else if (parm.type == typeof(float))
-                                {
-                                    var arts = parm.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
-                                    var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
-                                    if (art != null)
-                                    {
-                                        value = EditorGUILayout.Slider(parm.name, (float)parm.value, (float)art.min, (float)art.max);
-                                    }
-                                    else
-                                    {
-                                        value = EditorGUILayout.FloatField(parm.name, (float)parm.value);
-                                    }
-                                }
-                                else if (parm.type.IsEnum)
-                                {
-                                    value = EditorGUILayout.EnumPopup(parm.name, (Enum)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector2))
-                                {
-                                    value = EditorGUILayout.Vector2Field(parm.name, (Vector2)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector2Int))
-                                {
-                                    value = EditorGUILayout.Vector2IntField(parm.name, (Vector2Int)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector3))
-                                {
-                                    value = EditorGUILayout.Vector3Field(parm.name, (Vector3)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector3Int))
-                                {
-                                    value = EditorGUILayout.Vector3IntField(parm.name, (Vector3Int)parm.value);
-                                }
-                                else if (parm.type == typeof(Vector4))
-                                {
-                                    value = EditorGUILayout.Vector4Field(parm.name, (Vector4)parm.value);
-                                }
-                                else if (parm.type == typeof(Color))
-                                {
-                                    var arts = parm.raw_data.GetCustomAttributes(typeof(ColorUsageAttribute), false);
-                                    var art = arts.Length > 0 ? (arts[0] as ColorUsageAttribute) : null;
-                                    if (art != null)
-                                    {
-                                        value = EditorGUILayout.ColorField(new GUIContent(parm.name), (Color)parm.value,
-                                                                                    true, art.showAlpha, art.hdr);
-                                    }
-                                    else
-                                    {
-                                        value = EditorGUILayout.ColorField(parm.name, (Color)parm.value);
-                                    }
-                                }
-                                else if (ReflectionUtil.IsEngineObject(parm.type))
-                                {
-                                    value = EditorGUILayout.ObjectField(parm.name, parm.value as UnityEngine.Object, parm.type, allowSceneObjects: false);
-                                }
-                                if (EditorGUI.EndChangeCheck())
-                                {
-                                    Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Change Parameter");
-                                    parm.value = value;
-                                    m_renderGraphInfo.TestExecute();
-                                }
-                            }
-                            EditorGUILayout.EndVertical();
+                        }
+                        if (u_dep)
+                        {
+                            this.Q("title-label").style.color = Color.red;
+                        }
+                        else
+                        {
+                            this.Q("title-label").style.color = Color.white;
                         }
                     }
                 });
 
-                toolbar.style.unityOverflowClipBox = OverflowClipBox.ContentBox;
-
                 if (Node.nodeType == typeof(TextureDebug))
                     toolbar.pickingMode = PickingMode.Ignore;
+
+                void RegisterChange(RenderGraphNode.Parameter parm, object value)
+                {
+                    Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Change Parameter(s)");
+                    parm.value = value;
+                    m_renderGraphInfo.TestExecute();
+                }
+
+                if (Node.nodeType != typeof(TextureDebug))
+                {
+                    foreach (var param in Node.parameters)
+                    {
+                        VisualElement ele = null;
+                        if (param.type == typeof(bool))
+                        {
+                            var field = new Toggle(param.name);
+                            field.value = (bool)param.value;
+                            field.RegisterValueChangedCallback(e=> {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        else if (param.type == typeof(int))
+                        {
+                            var arts = param.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
+                            var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
+                            if (art != null)
+                            {
+                                var field = new SliderInt(param.name, (int)art.min, (int)art.max);
+                                field.value = (int)param.value;
+                                var valueField = new IntegerField("");
+                                valueField.value = field.value;
+                                valueField.style.width = 65;
+                                var lables = field.Children().ElementAt(1);
+                                lables.style.minWidth = lables.style.maxWidth = 116;
+                                field.RegisterValueChangedCallback(e => {
+                                    RegisterChange(param, e.newValue);
+                                    valueField.SetValueWithoutNotify(e.newValue);
+
+                                });
+                                valueField.RegisterValueChangedCallback(e => {
+                                    RegisterChange(param, e.newValue);
+                                    field.SetValueWithoutNotify(e.newValue);
+                                });
+                                field.Add(valueField);
+                                ele = field;
+                            }
+                            else
+                            {
+                                IntegerField field = new IntegerField(param.name);
+                                field.value = (int)param.value;
+                                var lables = field.Children().ElementAt(1);
+                                lables.style.minWidth = lables.style.maxWidth = 184;
+                                field.RegisterValueChangedCallback(e => {
+                                    RegisterChange(param, e.newValue);
+                                });
+                                ele = field;
+                            }
+                        }
+                        else if (param.type == typeof(float))
+                        {
+                            var arts = param.raw_data.GetCustomAttributes(typeof(RangeAttribute), false);
+                            var art = arts.Length > 0 ? (arts[0] as RangeAttribute) : null;
+                            if (art != null)
+                            {
+                                Slider field = new Slider(param.name, art.min, art.max);
+                                field.value = (float)param.value;
+                                var valueField = new FloatField("");
+                                valueField.value = field.value;
+                                valueField.style.width = 65;
+                                var lables = field.Children().ElementAt(1);
+                                lables.style.minWidth = lables.style.maxWidth = 118;
+                                field.RegisterValueChangedCallback(e => {
+                                    RegisterChange(param, e.newValue);
+                                    valueField.SetValueWithoutNotify(e.newValue);
+
+                                });
+                                valueField.RegisterValueChangedCallback(e => {
+                                    RegisterChange(param, e.newValue);
+                                    field.SetValueWithoutNotify(e.newValue);
+                                });
+                                field.Add(valueField);
+                                ele = field;
+                            }
+                            else
+                            {
+                                FloatField field = new FloatField(param.name);
+                                field.value = (float)param.value;
+                                var lables = field.Children().ElementAt(1);
+                                lables.style.minWidth = lables.style.maxWidth = 180;
+                                field.RegisterValueChangedCallback(e => {
+                                    RegisterChange(param, e.newValue);
+                                });
+                                ele = field;
+                            }
+                        }
+                        else if (param.type.IsEnum)
+                        {
+                            var field = new EnumField(param.name, (Enum)param.value);
+                            field.value = (Enum)param.value;
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        else if (param.type == typeof(Vector2))
+                        {
+                            var field = new Vector2Field(param.name);
+                            field.value = (Vector2)param.value;
+                            var lables = field.Children().ElementAt(1);
+                            lables.style.minWidth = lables.style.maxWidth = 280;
+                            var a = lables.Children().GetEnumerator();
+                            while (a.MoveNext())
+                            {
+                                if (a.Current.childCount == 0) continue;
+                                var l = a.Current.Children().ElementAt(0);
+                                l.style.minWidth = l.style.maxWidth = 12;
+                                l.style.unityTextAlign = TextAnchor.MiddleCenter;
+                                l = a.Current;
+                                l.style.marginLeft = l.style.marginRight = l.style.paddingLeft = l.style.paddingRight = 0;
+                            }
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        else if (param.type == typeof(Vector2Int))
+                        {
+                            var field = new Vector2IntField(param.name);
+                            field.value = (Vector2Int)param.value;
+                            var lables = field.Children().ElementAt(1);
+                            lables.style.minWidth = lables.style.maxWidth = 280;
+                            var a = lables.Children().GetEnumerator();
+                            while (a.MoveNext())
+                            {
+                                if (a.Current.childCount == 0) continue;
+                                var l = a.Current.Children().ElementAt(0);
+                                l.style.minWidth = l.style.maxWidth = 12;
+                                l.style.unityTextAlign = TextAnchor.MiddleCenter;
+                                l = a.Current;
+                                l.style.marginLeft = l.style.marginRight = l.style.paddingLeft = l.style.paddingRight = 0;
+                            }
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        else if (param.type == typeof(Vector3))
+                        {
+                            var field = new Vector3Field(param.name);
+                            field.value = (Vector3)param.value;
+                            var lables = field.Children().ElementAt(1);
+                            lables.style.minWidth = lables.style.maxWidth = 186;
+                            var a = lables.Children().GetEnumerator();
+                            while (a.MoveNext())
+                            {
+                                var l = a.Current.Children().ElementAt(0);
+                                l.style.minWidth = l.style.maxWidth = 12;
+                                l.style.unityTextAlign = TextAnchor.MiddleCenter;
+                                l = a.Current;
+                                l.style.marginLeft = l.style.marginRight = l.style.paddingLeft = l.style.paddingRight = 0;
+                            }
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        else if (param.type == typeof(Vector3Int))
+                        {
+                            var field = new Vector3IntField(param.name);
+                            field.value = (Vector3Int)param.value;
+                            var lables = field.Children().ElementAt(1);
+                            lables.style.minWidth = lables.style.maxWidth = 186;
+                            var a = lables.Children().GetEnumerator();
+                            while (a.MoveNext())
+                            {
+                                var l = a.Current.Children().ElementAt(0);
+                                l.style.minWidth = l.style.maxWidth = 12;
+                                l.style.unityTextAlign = TextAnchor.MiddleCenter;
+                                l = a.Current;
+                                l.style.marginLeft = l.style.marginRight = l.style.paddingLeft = l.style.paddingRight = 0;
+                            }
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        else if (param.type == typeof(Vector4))
+                        {
+                            var field = new Vector4Field(param.name);
+                            field.value = (Vector4)param.value;
+                            var lables = field.Children().ElementAt(1);
+                            lables.style.minWidth = lables.style.maxWidth = 226;
+                            var a = lables.Children().GetEnumerator();
+                            while (a.MoveNext())
+                            {
+                                var l = a.Current.Children().ElementAt(0);
+                                l.style.minWidth = l.style.maxWidth = 12;
+                                l.style.unityTextAlign = TextAnchor.MiddleCenter;
+                                l = a.Current;
+                                l.style.marginLeft = l.style.marginRight = l.style.paddingLeft = l.style.paddingRight = 0;
+                            }
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        else if (param.type == typeof(Color))
+                        {
+                            var field = new ColorField(param.name);
+                            field.value = (Color)param.value;
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                            var arts = param.raw_data.GetCustomAttributes(typeof(ColorUsageAttribute), false);
+                            var art = arts.Length > 0 ? (arts[0] as ColorUsageAttribute) : null;
+                            if (art != null)
+                            {
+                                field.hdr = art.hdr;
+                                field.showAlpha = art.showAlpha;
+                            }
+                        }
+                        else if (ReflectionUtil.IsEngineObject(param.type))
+                        {
+                            var field = new ObjectField(param.name);
+                            field.objectType = param.type;
+                            field.value = (UnityEngine.Object)param.value;
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, e.newValue);
+                            });
+                            ele = field;
+                        }
+                        var label = ele.Children().ElementAt(0);
+                        if (param.type == typeof(Vector4))
+                            label.style.maxWidth = label.style.minWidth = 60;
+                        else
+                            label.style.maxWidth = label.style.minWidth = 100;
+                        ele.tooltip = param.info;
+                        toolbar.Add(ele);
+                    }
+                }
+
                 m_controlItems.Add(toolbar);
             }
             contents.Add(controlsContainer);

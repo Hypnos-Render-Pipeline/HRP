@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
+﻿using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.UIElements;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -29,24 +26,24 @@ namespace HypnosRenderPipeline.RenderGraph
                 AddElement(node.NodeView);
             }
 
+            style.borderBottomWidth = style.borderLeftWidth = style.borderTopWidth = style.borderRightWidth = 3;
+
             var timeLabel = new UnityEngine.UIElements.Label("AAA");
             timeLabel.style.unityTextAlign = TextAnchor.LowerRight;
             timeLabel.style.fontSize = new StyleLength(40);
-            timeLabel.style.top = -20;
+            timeLabel.style.top = 27;
             timeLabel.pickingMode = PickingMode.Ignore;
 
             var titile_label = this.Q("titleLabel");
             var bgcolor = new ColorField();
             bgcolor.value = group.color;
-            style.backgroundColor = bgcolor.value;
+            ChangeColor(group.color);
             titile_label.Add(bgcolor);
             bgcolor.style.alignSelf = Align.FlexStart;
-            bgcolor.style.top = 6;
+            bgcolor.style.top = 61;
             bgcolor.style.width = 50;
             bgcolor.RegisterValueChangedCallback((e) => {
-                style.backgroundColor = e.newValue;
-                Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Change Group Color");
-                group.color = e.newValue;
+                ChangeColor(e.newValue, true);
             });
 
             titile_label.style.fontSize = new StyleLength(50);
@@ -66,6 +63,20 @@ namespace HypnosRenderPipeline.RenderGraph
                 timeLabel.text = ms.ToString("F2") + "ms";
                 bgcolor.style.visibility = selected ? Visibility.Visible : Visibility.Hidden;
             }));
+        }
+
+        void ChangeColor(Color c, bool undo = false)
+        {
+            var a = c;
+            a.a = Mathf.Clamp(a.a, 0.1f, 0.9f);
+            style.backgroundColor = a;
+            var alpha = a.a * 2;
+            a /= a.maxColorComponent;
+            a.a = alpha;
+            style.borderBottomColor = style.borderLeftColor = style.borderRightColor = style.borderTopColor = a;
+            if (undo)
+                Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Change Group Color");
+            group.color = c;
         }
 
         protected override void OnElementsAdded(IEnumerable<GraphElement> elements)

@@ -24,6 +24,8 @@ namespace HypnosRenderPipeline.RenderGraph
 
             public FieldInfo raw_data = null;
 
+            public string info;
+
             [SerializeField]
             string type_str = null;
             [SerializeField]
@@ -100,9 +102,6 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public List<Slot> inputs, outputs;
 
-        [NonSerialized]
-        public HashSet<RenderGraphNode> parent, child;
-
         [SerializeField]
         public Rect position;
 
@@ -136,11 +135,7 @@ namespace HypnosRenderPipeline.RenderGraph
         [NonSerialized]
         public CustomSampler sampler;
 
-        public RenderGraphNode()
-        {
-            parent = new HashSet<RenderGraphNode>();
-            child = new HashSet<RenderGraphNode>();
-        }
+        public RenderGraphNode() { }
 
         void BindSlots(List<FieldInfo> infos, List<Slot> slots)
         {
@@ -203,6 +198,7 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 string name = parm.Name;// + " (" + ReflectionUtil.GetLastNameOfType(parm.FieldType) + ")";
                 bool find_saved = false;
+                var tooltipattri = parm.GetCustomAttribute<TooltipAttribute>();
                 if (parameters != null)
                 {
                     foreach (var saved_parm in parameters)
@@ -220,7 +216,8 @@ namespace HypnosRenderPipeline.RenderGraph
                     type = parm.FieldType,
                     name = name,
                     raw_data = parm,
-                    value = parm.FieldType.IsValueType ? Activator.CreateInstance(parm.FieldType) : null
+                    value = parm.FieldType.IsValueType ? Activator.CreateInstance(parm.FieldType) : null,
+                    info = tooltipattri != null ? tooltipattri.tooltip : ""
                 });
             }
             parameters = new_parameters;
