@@ -47,6 +47,7 @@ namespace HypnosRenderPipeline.RenderPass
     public abstract class BaseOutputNode : BaseRenderNode
     {
         [NodePin(PinType.In, true)]
+        [Tooltip("Output to screen")]
         public TexturePin result = new TexturePin(new TexturePin.TexturePinDesc(new RenderTextureDescriptor(1,1)));
 
         [HideInInspector]
@@ -60,7 +61,8 @@ namespace HypnosRenderPipeline.RenderPass
 
 
     [NodeColor(1, 0, 1, 0.5f)]
-    [RenderNodePath("ToolNodes/Debug")]
+    [RenderNodePath("ToolNodes/Debug", true)]
+    [RenderNodeInformation("Use this to debug texture, drag from output pin to create it.")]
     public class TextureDebug : BaseToolNode
     {
         [NodePin(type: PinType.In)]

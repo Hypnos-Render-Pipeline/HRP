@@ -84,7 +84,6 @@ namespace HypnosRenderPipeline.RenderGraph
                 m_graphView.AddManipulator(new SelectionDragger());
                 m_graphView.AddManipulator(new RectangleSelector());
                 m_graphView.AddManipulator(new ClickSelector());
-                m_graphView.RegisterCallback<KeyDownEvent>(KeyDown);
                 content.Add(m_graphView);
 
                 m_graphView.SetGraphInfo(m_renderGraphInfo);
@@ -98,11 +97,6 @@ namespace HypnosRenderPipeline.RenderGraph
             m_graphView.style.unityBackgroundImageTintColor = new StyleColor(new Color(0.7f, 0.7f, 0.8f));
 
             AutoLoad();
-        }
-
-        void KeyDown(KeyDownEvent e)
-        {
-            //Debug.Log("KeyDown");
         }
 
         void UndoRedoCallback()

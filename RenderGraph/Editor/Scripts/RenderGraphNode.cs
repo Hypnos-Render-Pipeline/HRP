@@ -1,11 +1,7 @@
-﻿using HypnosRenderPipeline.RenderPass;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -108,9 +104,11 @@ namespace HypnosRenderPipeline.RenderGraph
         public HashSet<RenderGraphNode> parent, child;
 
         [SerializeField]
-        public Rect positon;
+        public Rect position;
 
         public RenderGraphNodeView NodeView;
+
+        public string info;
 
         #endregion
 
@@ -164,7 +162,7 @@ namespace HypnosRenderPipeline.RenderGraph
             }
         }
 
-        public bool Init(Type t) 
+        public bool Init(Type t)
         {
             inputs = new List<Slot>();
             outputs = new List<Slot>();
@@ -183,7 +181,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
             nodeName = ReflectionUtil.GetLastNameOfType(t);
 
-            if (!ReflectionUtil.IsBasedRenderNode(t)) 
+            if (!ReflectionUtil.IsBasedRenderNode(t))
             {
                 Debug.LogError(string.Format("Load RenderNode \"{0}\" faild! RenderNode must inherit from BaseRenderNode.", nodeName));
                 return false;
@@ -217,12 +215,25 @@ namespace HypnosRenderPipeline.RenderGraph
                         }
                     }
                 }
-                if (!find_saved) new_parameters.Add(new Parameter() { type = parm.FieldType, name = name, raw_data = parm, 
-                                                                        value = parm.FieldType.IsValueType ? Activator.CreateInstance(parm.FieldType) : null
-            });
+                if (!find_saved) new_parameters.Add(new Parameter()
+                {
+                    type = parm.FieldType,
+                    name = name,
+                    raw_data = parm,
+                    value = parm.FieldType.IsValueType ? Activator.CreateInstance(parm.FieldType) : null
+                });
             }
             parameters = new_parameters;
+
+            var infoattri = t.GetCustomAttribute<RenderNodeInformationAttribute>();
+            info = infoattri != null ? infoattri.info : "";
+
             return true;
+        }
+
+        public string TypeString()
+        {
+            return nodeType.ToString();
         }
     }
 }

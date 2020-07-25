@@ -8,9 +8,11 @@ namespace HypnosRenderPipeline.RenderGraph
     public class RenderNodePathAttribute : Attribute
     {
         public string path { private set; get; } = string.Empty;
-        public RenderNodePathAttribute(string path)
+        public bool hidden = false;
+        public RenderNodePathAttribute(string path, bool hidden = false)
         {
             this.path = path;
+            this.hidden = hidden;
         }
     }
 

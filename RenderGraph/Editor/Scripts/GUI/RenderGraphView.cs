@@ -2,6 +2,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -37,7 +39,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     bool custom_dele_flag = false;
                     foreach (var ele in change.elementsToRemove)
                     {
-                        if (ele.userData as RenderGraphNode != null || ele.userData as RenderGraphInfo.Edge != null)
+                        if (ele.userData as RenderGraphNode != null || ele.userData as RenderGraphInfo.Edge != null || ele.userData as RenderGraphInfo.Group != null)
                         {
                             custom_dele_flag = true;
                             break;
@@ -46,6 +48,32 @@ namespace HypnosRenderPipeline.RenderGraph
                     if (!custom_dele_flag) return change;
 
                     Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Delete");
+
+                    var remove_group = new List<GraphElement>();
+                    foreach (var sele in selection)
+                    {
+                        var groupView = sele as RenderGraphGroupView;
+                        if (groupView != null)
+                        {
+                            foreach (var n in groupView.group.nodes)
+                            {
+                                groupView.RemoveElement(n.NodeView);
+                            }
+                            change.elementsToRemove.Clear();
+                            remove_group.Add(groupView);
+                            m_renderGraphInfo.RemoveGroup(groupView.group);
+                        }
+                    }
+                    if (remove_group.Count != 0)
+                    {
+                        change.elementsToRemove.Clear();
+                        foreach (var ele in remove_group)
+                        {
+                            change.elementsToRemove.Add(ele);
+                        }
+                        return change;
+                    }
+
                     foreach (var ele in change.elementsToRemove)
                     {
                         var node = ele.userData as RenderGraphNode;
@@ -60,17 +88,28 @@ namespace HypnosRenderPipeline.RenderGraph
                             {
                                 m_renderGraphInfo.RemoveEdge(edge);
                             }
+                            else
+                            {
+                                var group = ele.userData as RenderGraphInfo.Group;
+                                if (group != null)
+                                {
+                                    m_renderGraphInfo.RemoveGroup(group);
+                                }
+                            }
                         }
                     }
                     m_renderGraphInfo.TestExecute();
                 }
                 return change;
             };
-            
+
             nodeCreationRequest = (c) =>
             {
                 SearchWindow.Open(new SearchWindowContext(c.screenMousePosition), m_searcher);
             };
+
+            RegisterCallback<KeyDownEvent>(KeyDown);
+            RegisterCopyPast();
         }
 
         public bool IsParent(RenderGraphNodeView a, RenderGraphNodeView b)
@@ -121,11 +160,11 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Node");
 
-            var nodeView = new RenderGraphNodeView(m_renderGraphInfo);
+            var nodeView = new RenderGraphNodeView(this, m_renderGraphInfo);
             nodeView.SetType(type);
             nodeView.InitView(this);
             nodeView.MarkDirtyRepaint();
-            
+
             nodeView.SetPositionWithoutUndo(pos);
 
             AddElement(nodeView);
@@ -187,15 +226,15 @@ namespace HypnosRenderPipeline.RenderGraph
 
         void AddSerializedNode(RenderGraphNode node)
         {
-            var nodeView = new RenderGraphNodeView(node, m_renderGraphInfo);
+            var nodeView = new RenderGraphNodeView(this, node, m_renderGraphInfo);
             node.NodeView = nodeView;
             node.Init(node.nodeType);
             nodeView.InitView(this);
             nodeView.MarkDirtyRepaint();
 
-            nodeView.SetPositionWithoutUndo(node.positon);
+            nodeView.SetPositionWithoutUndo(node.position);
 
-            
+
             AddElement(nodeView);
         }
         void AddSerializedEdge(RenderGraphInfo.Edge edge)
@@ -230,6 +269,12 @@ namespace HypnosRenderPipeline.RenderGraph
             output_node.child.Add(input_node);
             AddElement(edgeView);
         }
+        RenderGraphGroupView AddSerializedGroup(RenderGraphInfo.Group group)
+        {
+            RenderGraphGroupView groupView = new RenderGraphGroupView(m_renderGraphInfo, group);
+            AddElement(groupView);
+            return groupView;
+        }
 
         public void SetGraphInfo(RenderGraphInfo info)
         {
@@ -240,35 +285,33 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public void Refresh()
         {
-            var nodes_ = nodes.ToList();
-            foreach (var node in nodes_)
+            var eles = graphElements.ToList();
+            foreach (var ele in eles)
             {
-                RemoveElement(node);
+                RemoveElement(ele);
             }
-            Rect rect = new Rect(0,0,0,0);
+            Rect rect = new Rect(0, 0, 0, 0);
             foreach (var node in m_renderGraphInfo.nodes)
             {
                 AddSerializedNode(node);
-                rect.x = Mathf.Min(node.positon.x, rect.x);
-                rect.y = Mathf.Min(node.positon.y, rect.y);
-                rect.xMax = Mathf.Max(node.positon.xMax, rect.xMax);
-                rect.yMax = Mathf.Max(node.positon.yMax, rect.yMax);
+                rect.x = Mathf.Min(node.position.x, rect.x);
+                rect.y = Mathf.Min(node.position.y, rect.y);
+                rect.xMax = Mathf.Max(node.position.xMax, rect.xMax);
+                rect.yMax = Mathf.Max(node.position.yMax, rect.yMax);
             }
             foreach (var node in m_renderGraphInfo.nodes)
             {
-                node.positon.x -= rect.x;
-                node.positon.y -= rect.y;
-            }
-            var edges_ = edges.ToList();
-            foreach (var edge in edges_)
-            {
-                RemoveElement(edge);
+                node.position.x -= rect.x;
+                node.position.y -= rect.y;
             }
             foreach (var edge in m_renderGraphInfo.edges)
             {
                 AddSerializedEdge(edge);
             }
-            Debug.Log(CalculateRectToFitAll(contentContainer));
+            foreach (var group in m_renderGraphInfo.groups)
+            {
+                AddSerializedGroup(group);
+            }
         }
 
         public void OnDropOutsidePort(Edge edge, Vector2 position)
@@ -281,13 +324,13 @@ namespace HypnosRenderPipeline.RenderGraph
                     var tex_debug = false;
                     var en = draggedPort.connections.GetEnumerator();
                     while (en.MoveNext())
-                    {                        
+                    {
                         var exist_edge = en.Current;
                         tex_debug |= (exist_edge.input.node.userData as RenderGraphNode).nodeType == typeof(TextureDebug)
                                         || (exist_edge.output.node.userData as RenderGraphNode).nodeType == typeof(TextureDebug);
                         if (tex_debug) break;
                     }
-                    if (tex_debug) return;                     
+                    if (tex_debug) return;
                 }
 
                 var slot = draggedPort.userData as RenderGraphNode.Slot;
@@ -308,5 +351,114 @@ namespace HypnosRenderPipeline.RenderGraph
             //Debug.Log("OnDrop");
             AddEdge(edge);
         }
+
+        void KeyDown(KeyDownEvent e)
+        {
+            if (e.keyCode == KeyCode.G)
+            {
+                var nodes = selection.FindAll(element => (element as RenderGraphNodeView) != null);
+                if (nodes.Count != 0)
+                {
+                    RenderGraphInfo.Group group = new RenderGraphInfo.Group();
+                    group.name = "New Graph";
+                    group.nodes = new List<RenderGraphNode>();
+                    group.color = new Color(0.09803922f, 0.09803922f, 0.09803922f, 0.4f);
+                    foreach (var node in nodes)
+                    {
+                        group.nodes.Add((node as RenderGraphNodeView).Node);
+                    }
+                    Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Group");
+                    foreach (var node in group.nodes)
+                    {
+                        foreach (var removed_group in m_renderGraphInfo.RemoveNodeFromGroup(node))
+                        {
+                            if (removed_group.nodes.Count == 0)
+                                RemoveElement(removed_group.groupView);
+                        }
+                    }
+                    m_renderGraphInfo.AddGroup(group);
+                    var groupView = AddSerializedGroup(group);
+                    groupView.FocusTitleTextField();
+                    groupView.title = "New Group";
+                }
+            }
+            else if (e.keyCode == KeyCode.R)
+            {
+                var nodes = selection.FindAll(element => (element as RenderGraphNodeView) != null);
+                if (nodes.Count != 0)
+                {
+                    Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Remove Node From Group");
+                    foreach (var node in nodes)
+                    {
+                        foreach (var removed_group in m_renderGraphInfo.RemoveNodeFromGroup((node as RenderGraphNodeView).Node))
+                        {
+                            removed_group.groupView.RemoveElement(node as RenderGraphNodeView);
+                            if (removed_group.nodes.Count == 0)
+                                RemoveElement(removed_group.groupView);
+                        }
+                    }
+                }
+            }
+        }
+
+        public override EventPropagation DeleteSelection()
+        {
+            var groups = selection.FindAll(sele => sele as RenderGraphGroupView != null);
+            if (groups.Count != 0)
+            {
+                ClearSelection();
+                selection = groups;
+            }
+            return base.DeleteSelection();
+        }
+
+
+        void RegisterCopyPast()
+        {
+            serializeGraphElements =
+                 elements =>
+                 {
+                     string res = "";
+                     foreach (var ele in elements)
+                     {
+                         var node = ele as RenderGraphNodeView;
+                         if (node != null)
+                         {
+                             res += node.Node.TypeString() + "*" + node.Node.position.x + "," + node.Node.position.y + "|";
+                         }
+                     }
+                     if (res.Length != 0) res = res.Substring(0, res.Length - 1);
+                     return res;
+                 };
+
+            canPasteSerializedData =
+                (data) =>
+                {
+                    if (data != null && data.Length != 0) return true;
+                    return false;
+                };
+
+            unserializeAndPaste =
+                (op, data) =>
+                {
+                    Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, op);
+                    var strs = data.Split('|');
+                    List<RenderGraphNodeView> news = new List<RenderGraphNodeView>();
+                    ClearSelection();
+                    foreach (var str in strs)
+                    {
+                        var type_rect = str.Split('*');
+                        var type = ReflectionUtil.GetTypeFromName(type_rect[0]);
+                        if (type != null)
+                        {
+                            var rect = type_rect[1].Split(',');
+                            AddToSelection(AddNodeFromTemplate(type, new Rect(new Vector2(float.Parse(rect[0]), float.Parse(rect[1])) + Vector2.one * 100f, Vector2.one)));
+                        }
+                    }
+                };
+        }
+
+        [DllImport("user32.dll", EntryPoint = "keybd_event")]
+        public static extern void Keybd_event(byte bvk, byte bScan, int dwFlags, int dwExtraInfo);
     }
 }

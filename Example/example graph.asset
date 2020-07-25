@@ -13,44 +13,6 @@ MonoBehaviour:
   m_Name: example graph
   m_EditorClassIdentifier: 
   nodes:
-  - nodeName: ClearWithColor
-    parameters:
-    - name: k
-      type_str: UnityEngine.Color
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3736343135313c2f723e0d0a20203c673e302e3632333537363034353c2f673e0d0a20203c623e302e3632333537363034353c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: target
-      info: It's a test inout pin.
-      mustConnect: 0
-    outputs:
-    - name: target
-      info: It's a test inout pin.
-      mustConnect: 0
-    positon:
-      serializedVersion: 2
-      x: 869.93506
-      y: 268.94037
-      width: 300
-      height: 128
-    nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
-  - nodeName: EighthScale
-    parameters: []
-    inputs:
-    - name: EighthResInOut
-      info: It's a test inout pin.
-      mustConnect: 0
-    outputs:
-    - name: EighthResInOut
-      info: It's a test inout pin.
-      mustConnect: 0
-    positon:
-      serializedVersion: 2
-      x: 342.93506
-      y: 285.94037
-      width: 300
-      height: 110
-    nodeType_str: HypnosRenderPipeline.RenderPass.EighthScale
   - nodeName: LoadTexture
     parameters:
     - name: tex
@@ -62,26 +24,28 @@ MonoBehaviour:
     - name: FullResOutput
       info: 
       mustConnect: 0
-    positon:
+    position:
       serializedVersion: 2
-      x: 0
-      y: 263.06
+      x: 1509.4059
+      y: 882.99994
       width: 300
       height: 150
+    info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.LoadTexture
   - nodeName: OutputNode
     parameters: []
     inputs:
     - name: result
-      info: 
+      info: Output to screen
       mustConnect: 1
     outputs: []
-    positon:
+    position:
       serializedVersion: 2
-      x: 1222.935
-      y: 274.94037
+      x: 3406.4058
+      y: 904.99994
       width: 300
       height: 86
+    info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: TextureDebug
     parameters:
@@ -94,13 +58,32 @@ MonoBehaviour:
       info: 
       mustConnect: 0
     outputs: []
-    positon:
+    position:
       serializedVersion: 2
-      x: 435.63477
-      y: 409.64032
-      width: 960.0001
-      height: 646.00006
+      x: 1917.4059
+      y: 54.984726
+      width: 960
+      height: 626
+    info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  - nodeName: EighthScale
+    parameters: []
+    inputs:
+    - name: EighthResInOut
+      info: It's a test inout pin.
+      mustConnect: 0
+    outputs:
+    - name: EighthResInOut
+      info: It's a test inout pin.
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2475.4058
+      y: 881.99994
+      width: 300
+      height: 110
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.EighthScale
   - nodeName: TextureDebug
     parameters:
     - name: texture
@@ -112,13 +95,36 @@ MonoBehaviour:
       info: 
       mustConnect: 0
     outputs: []
-    positon:
+    position:
       serializedVersion: 2
-      x: 1188.935
-      y: 93.94036
+      x: 2969.4058
+      y: 558.98474
       width: 220
-      height: 173
+      height: 153
+    info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  - nodeName: ClearWithColor
+    parameters:
+    - name: k
+      type_str: UnityEngine.Color
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e343234353238333c2f723e0d0a20203c673e302e303738303937313934343c2f673e0d0a20203c623e302e303738303937313934343c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: target
+      info: It's a test inout pin.
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: It's a test inout pin.
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2918.4058
+      y: 877.99994
+      width: 300
+      height: 128
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
   - nodeName: TextureDebug
     parameters:
     - name: texture
@@ -130,57 +136,65 @@ MonoBehaviour:
       info: 
       mustConnect: 0
     outputs: []
-    positon:
+    position:
       serializedVersion: 2
-      x: 781.9583
-      y: 74.54275
-      width: 220.00002
-      height: 173
+      x: 3243.4058
+      y: 567.98474
+      width: 220
+      height: 153
+    info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   edgeRecs:
-  - i: 1
-    o: 2
-    i_n: EighthResInOut
-    o_n: FullResOutput
-  - i: 0
-    o: 1
-    i_n: target
-    o_n: EighthResInOut
-  - i: 4
-    o: 2
+  - i: 2
+    o: 0
     i_n: tex
     o_n: FullResOutput
   - i: 3
     o: 0
-    i_n: result
-    o_n: target
-  - i: 5
-    o: 0
-    i_n: tex
-    o_n: target
-  - i: 6
-    o: 1
+    i_n: EighthResInOut
+    o_n: FullResOutput
+  - i: 4
+    o: 3
     i_n: tex
     o_n: EighthResInOut
+  - i: 5
+    o: 3
+    i_n: target
+    o_n: EighthResInOut
+  - i: 1
+    o: 5
+    i_n: result
+    o_n: target
+  - i: 6
+    o: 5
+    i_n: tex
+    o_n: target
   node_edgeRecs:
-  - node: 2
-    in_edges: 
-    out_edge: 0000000002000000
-  - node: 1
-    in_edges: 00000000
-    out_edge: 0100000005000000
   - node: 0
+    in_edges: 
+    out_edge: 0000000001000000
+  - node: 2
+    in_edges: 00000000
+    out_edge: 
+  - node: 3
     in_edges: 01000000
-    out_edge: 0300000004000000
+    out_edge: 0200000003000000
   - node: 4
     in_edges: 02000000
     out_edge: 
-  - node: 3
-    in_edges: 03000000
-    out_edge: 
   - node: 5
+    in_edges: 03000000
+    out_edge: 0400000005000000
+  - node: 1
     in_edges: 04000000
     out_edge: 
   - node: 6
     in_edges: 05000000
     out_edge: 
+  groupRecs:
+  - name: Pipeline
+    color: {r: 0.18569775, g: 0.19313557, b: 0.3679245, a: 0.28235295}
+    nodes: 03000000000000000100000005000000
+  - name: Debug
+    color: {r: 1, g: 0, b: 1, a: 0.09803922}
+    nodes: 020000000400000006000000

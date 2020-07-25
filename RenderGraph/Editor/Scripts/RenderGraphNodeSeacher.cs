@@ -74,7 +74,8 @@ namespace HypnosRenderPipeline.RenderGraph
                     var pathattris = t.GetCustomAttributes<RenderNodePathAttribute>();
                     foreach (var pathattri in pathattris)
                     {
-                        nodes.Add(new Tuple<string, Type>(pathattri.path, t));
+                        if (!pathattri.hidden)
+                            nodes.Add(new Tuple<string, Type>(pathattri.path, t));
                     }
                 }
             }

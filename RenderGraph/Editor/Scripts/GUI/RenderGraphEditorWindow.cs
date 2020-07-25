@@ -26,6 +26,8 @@ namespace HypnosRenderPipeline.RenderGraph
             m_view = new RenderGraphEditorView(this);
             rootVisualElement.Clear();
             rootVisualElement.Add(m_view);
+            this.Focus();
+            m_view.Focus();
         }
 
         private void OnDisable()
@@ -37,6 +39,7 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             if (m_view!=null) m_view.Load(path);
         }
+
     }
 
 

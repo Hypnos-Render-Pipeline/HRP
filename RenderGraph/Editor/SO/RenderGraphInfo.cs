@@ -28,6 +28,17 @@ namespace HypnosRenderPipeline.RenderGraph
             public Port output, input;
         }
 
+        public class Group
+        {
+            public string name;
+            public Color color;
+            public List<RenderGraphNode> nodes;
+            public RenderGraphGroupView groupView;
+        }
+
+        [NonSerialized]
+        public List<Group> groups;
+
         [NonSerialized]
         public List<Edge> edges;
 
@@ -58,10 +69,22 @@ namespace HypnosRenderPipeline.RenderGraph
         [SerializeField]
         List<NodeEdgeRec> node_edgeRecs;
 
+        [Serializable]
+        class GroupRec
+        {
+            public string name;
+            public Color color;
+            public List<int> nodes;
+        }
+
+        [SerializeField]
+        List<GroupRec> groupRecs;
+
         public void OnBeforeSerialize()
         {
             edgeRecs.Clear();
             node_edgeRecs.Clear();
+            groupRecs.Clear();
 
             foreach(var edge in edges)
             {
@@ -88,12 +111,25 @@ namespace HypnosRenderPipeline.RenderGraph
                 }
                 node_edgeRecs.Add(new NodeEdgeRec() { in_edges = in_edge, out_edge = out_edge, node = nodes.IndexOf(rec.Key) });
             }
+            foreach (var group in groups)
+            {
+                var rec = new GroupRec();
+                rec.name = group.name;
+                rec.color = group.color;
+                rec.nodes = new List<int>();
+                foreach (var node in group.nodes)
+                {
+                    rec.nodes.Add(nodes.IndexOf(node));
+                }
+                groupRecs.Add(rec);
+            }
         }
 
         public void OnAfterDeserialize()
         {
             edges.Clear();
             node_edge.Clear();
+            groups.Clear();
 
             foreach (var edge in edgeRecs)
             {
@@ -117,6 +153,19 @@ namespace HypnosRenderPipeline.RenderGraph
                     out_edge.Add(edges[edge]);
                 }
                 node_edge[nodes[rec.node]] = new Tuple<List<Edge>, List<Edge>>(in_edge, out_edge);
+            }
+
+            foreach (var rec in groupRecs)
+            {
+                var group = new Group();
+                group.name = rec.name;
+                group.color = rec.color;
+                group.nodes = new List<RenderGraphNode>();
+                foreach (var node in rec.nodes)
+                {
+                    group.nodes.Add(nodes[node]);
+                }
+                groups.Add(group);
             }
 
             RenderGraphNode[] nodes_ = new RenderGraphNode[nodes.Count];
@@ -151,9 +200,11 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             nodes = new List<RenderGraphNode>();
             edges = new List<Edge>();
+            groups = new List<Group>();
             node_edge = new Dictionary<RenderGraphNode, Tuple<List<Edge>, List<Edge>>>();
             edgeRecs = new List<EdgeRec>();
             node_edgeRecs = new List<NodeEdgeRec>();
+            groupRecs = new List<GroupRec>();
         }
 
         public void AddNode(RenderGraphNode node)
@@ -175,6 +226,7 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             nodes.Remove(node);
             node_edge.Remove(node);
+            RemoveNodeFromGroup(node);
         }
 
         public void RemoveEdge(Edge edge)
@@ -193,6 +245,42 @@ namespace HypnosRenderPipeline.RenderGraph
             RemoveEdge(e1);
             AddEdge(e2);
         }
+
+        public void AddGroup(Group group)
+        {
+            groups.Add(group);
+        }
+
+        public void RemoveGroup(Group group)
+        {
+            groups.Remove(group);
+        }
+        public List<Group> RemoveNodeFromGroup(RenderGraphNode node)
+        {
+            var gs = groups.FindAll(g => g.nodes.Contains(node));
+            var remove_groups = new List<Group>();
+            foreach (var g in gs)
+            {
+                g.nodes.Remove(node);
+                remove_groups.Add(g);
+            }
+            foreach (var g in remove_groups)
+            {
+                if (g.nodes.Count == 0)
+                    groups.Remove(g);
+            }
+            return remove_groups;
+        }
+        public void AddNodeToGroup(RenderGraphNode node, Group group)
+        {
+            RemoveNodeFromGroup(node);
+            group.nodes.Add(node);
+        }
+
+        public bool InGroup(RenderGraphNode node)
+        {
+            return groups.Find(g => g.nodes.Contains(node)) != null;
+        }        
 
         public Tuple<List<Edge>, List<Edge>> SearchNodeInDic(RenderGraphNode node, bool createWhenFailed = true)
         {
