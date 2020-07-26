@@ -1,5 +1,6 @@
 ﻿using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEngine;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
@@ -9,14 +10,14 @@ namespace HypnosRenderPipeline.RenderGraph
     {
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
+            //base.OnInspectorGUI();
         }
 
         [OnOpenAsset(0)]
         public static bool OnOpenAsset(int instanceID, int line)
         {
-            //try
-            //{
+            try
+            {
                 var path = AssetDatabase.GetAssetPath(instanceID);
                 if (AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path) != null)
                 {
@@ -24,12 +25,12 @@ namespace HypnosRenderPipeline.RenderGraph
                     return true;
                 }
                 return false;
-            //}
-            //catch
-            //{
-            //    Debug.LogError("Load faild");
-            //    return false;
-            //}
+            }
+            catch
+            {
+                Debug.LogError("Load faild");
+                return false;
+            }
         }
     }
 }

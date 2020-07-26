@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
-    internal class RenderGraphInfo : ScriptableObject, ISerializationCallbackReceiver
+#if UNITY_EDITOR
+
+    public class RenderGraphInfo : ScriptableObject, ISerializationCallbackReceiver
     {
         #region Parameters
 
@@ -33,7 +36,7 @@ namespace HypnosRenderPipeline.RenderGraph
             public string name;
             public Color color;
             public List<RenderGraphNode> nodes;
-            public RenderGraphGroupView groupView;
+            public object groupView;
         }
 
         [NonSerialized]
@@ -292,15 +295,28 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public void TestExecute()
         {
-            HRGDynamicExecutor executor = new HRGDynamicExecutor(this);
-            RenderPass.RenderContext context = new RenderPass.RenderContext() { RenderCamera = Camera.main, CmdBuffer = new UnityEngine.Rendering.CommandBuffer() };
-            if (!executor.Excute(context))
-                Debug.LogError("execute failed");
-            context.RenderCamera.RemoveAllCommandBuffers();
-            context.RenderCamera.AddCommandBuffer(CameraEvent.AfterEverything, context.CmdBuffer);
+            try
+            {
+                if (GraphicsSettings.renderPipelineAsset == null)
+                {
+                    GraphicsSettings.renderPipelineAsset = AssetDatabase.LoadAssetAtPath<HypnosRenderPipelineAsset>("Assets/HRP/RenderGraph/Runtime/DefaultPipelineAsset.asset");
+                }
+                var asset = GraphicsSettings.renderPipelineAsset as HypnosRenderPipelineAsset;
+                if (asset == null)
+                {
+                    GraphicsSettings.renderPipelineAsset = AssetDatabase.LoadAssetAtPath<HypnosRenderPipelineAsset>("Assets/HRP/RenderGraph/Runtime/DefaultPipelineAsset.asset");
+                }
+                asset.hypnosRenderPipelineGraph = this;
+            }
+            catch (System.Exception) { }
 
-            GameObject gameObject = new GameObject();
-            GameObject.DestroyImmediate(gameObject); // trigger repaint
+            if (!Application.isPlaying)// trigger repaint
+            {
+                GameObject gameObject = new GameObject();
+                GameObject.DestroyImmediate(gameObject); 
+            }
         }
     }
+
+#endif
 }

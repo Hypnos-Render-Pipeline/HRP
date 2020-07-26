@@ -1,14 +1,11 @@
 {
-    "name": "HypnosRenderPipeline.RenderGraph.Editor",
+    "name": "NewAssembly",
     "references": [
-        "GUID:46f26ed7d5234c044b976e7ffdb38768",
-        "GUID:b1f5c1f7a12f98846bfc5611ff8c3f69"
+        "GUID:46f26ed7d5234c044b976e7ffdb38768"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
+    "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

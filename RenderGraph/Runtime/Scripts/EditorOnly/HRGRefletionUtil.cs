@@ -5,7 +5,9 @@ using UnityEngine;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
-    internal abstract class ReflectionUtil
+#if UNITY_EDITOR
+
+    public abstract class ReflectionUtil
     {
         public static string GetLastNameOfType(Type t)
         {
@@ -112,6 +114,5 @@ namespace HypnosRenderPipeline.RenderGraph
         }
     }
 
-
-
+#endif
 }

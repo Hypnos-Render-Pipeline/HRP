@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8437931b8738e3b4c93d5bde231201df, type: 3}
+  m_Name: DefaultPipelineAsset
+  m_EditorClassIdentifier: NewAssembly::HypnosRenderPipelineAsset
+  hypnosRenderPipelineGraph: {fileID: 11400000, guid: 6675f19fb88da4c4792e873c1e25bef9, type: 2}

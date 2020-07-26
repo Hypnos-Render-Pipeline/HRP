@@ -422,9 +422,9 @@ namespace HypnosRenderPipeline.RenderGraph
                     Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Remove Node From Group");
                     foreach (var removed_group in m_renderGraphInfo.RemoveNodeFromGroup(Node))
                     {
-                        removed_group.groupView.RemoveElement(this);
+                        (removed_group.groupView as RenderGraphGroupView).RemoveElement(this);
                         if (removed_group.nodes.Count == 0)
-                            m_renderGraphView.RemoveElement(removed_group.groupView);
+                            m_renderGraphView.RemoveElement(removed_group.groupView as RenderGraphGroupView);
                     }
                 }, m_renderGraphInfo.InGroup(Node) ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
         }

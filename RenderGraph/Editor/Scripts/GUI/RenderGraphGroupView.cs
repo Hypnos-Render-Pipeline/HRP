@@ -22,8 +22,8 @@ namespace HypnosRenderPipeline.RenderGraph
 
             foreach (var node in group.nodes)
             {
-                node.NodeView.operate_by_unity = false;
-                AddElement(node.NodeView);
+                (node.NodeView as RenderGraphNodeView).operate_by_unity = false;
+                AddElement(node.NodeView as RenderGraphNodeView);
             }
 
             style.borderBottomWidth = style.borderLeftWidth = style.borderTopWidth = style.borderRightWidth = 3;

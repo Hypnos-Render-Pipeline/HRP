@@ -54,7 +54,7 @@ namespace HypnosRenderPipeline.RenderGraph
                         {
                             foreach (var n in groupView.group.nodes)
                             {
-                                groupView.RemoveElement(n.NodeView);
+                                groupView.RemoveElement(n.NodeView as RenderGraphNodeView);
                             }
                             change.elementsToRemove.Clear();
                             remove_group.Add(groupView);
@@ -95,7 +95,6 @@ namespace HypnosRenderPipeline.RenderGraph
                             }
                         }
                     }
-                    m_renderGraphInfo.TestExecute();
                 }
                 return change;
             };
@@ -245,7 +244,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
             edgeView.userData = edge;
 
-            foreach (var port in input_node.NodeView.inputs)
+            foreach (var port in (input_node.NodeView as RenderGraphNodeView).inputs)
             {
                 if (port.portName == in_name)
                 {
@@ -254,7 +253,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     break;
                 }
             }
-            foreach (var port in output_node.NodeView.outputs)
+            foreach (var port in (output_node.NodeView as RenderGraphNodeView).outputs)
             {
                 if (port.portName == out_name)
                 {
@@ -369,7 +368,7 @@ namespace HypnosRenderPipeline.RenderGraph
                         foreach (var removed_group in m_renderGraphInfo.RemoveNodeFromGroup(node))
                         {
                             if (removed_group.nodes.Count == 0)
-                                RemoveElement(removed_group.groupView);
+                                RemoveElement(removed_group.groupView as RenderGraphGroupView);
                         }
                     }
                     m_renderGraphInfo.AddGroup(group);
@@ -388,9 +387,9 @@ namespace HypnosRenderPipeline.RenderGraph
                     {
                         foreach (var removed_group in m_renderGraphInfo.RemoveNodeFromGroup((node as RenderGraphNodeView).Node))
                         {
-                            removed_group.groupView.RemoveElement(node as RenderGraphNodeView);
+                            (removed_group.groupView as RenderGraphGroupView).RemoveElement(node as RenderGraphNodeView);
                             if (removed_group.nodes.Count == 0)
-                                RemoveElement(removed_group.groupView);
+                                RemoveElement(removed_group.groupView as RenderGraphGroupView);
                         }
                     }
                 }

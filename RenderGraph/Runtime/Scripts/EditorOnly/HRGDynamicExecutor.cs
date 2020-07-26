@@ -7,8 +7,9 @@ using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
+#if UNITY_EDITOR
 
-    class HRGDynamicExecutor
+    internal class HRGDynamicExecutor
     {
         RenderGraphInfo m_graph;
 
@@ -24,7 +25,7 @@ namespace HypnosRenderPipeline.RenderGraph
             valuePool.Clear();
             dependency.Clear();
             pinPool.Clear();
-            temp_id = 1;
+            temp_id = context.RenderCamera.GetHashCode();
             FindEnterPoints();
 
             while (readyNodes.Count != 0)
@@ -244,6 +245,5 @@ namespace HypnosRenderPipeline.RenderGraph
         }
     }
 
-
-
+#endif
 }

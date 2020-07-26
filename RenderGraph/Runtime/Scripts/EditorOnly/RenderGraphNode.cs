@@ -8,8 +8,10 @@ using UnityEngine.Profiling;
 
 namespace HypnosRenderPipeline.RenderGraph
 {
+#if UNITY_EDITOR
+
     [Serializable]
-    internal class RenderGraphNode : ISerializationCallbackReceiver
+    public class RenderGraphNode : ISerializationCallbackReceiver
     {
         #region Parameter Define
 
@@ -102,12 +104,14 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public List<Slot> inputs, outputs;
 
+#if UNITY_EDITOR
         [SerializeField]
         public Rect position;
 
-        public RenderGraphNodeView NodeView;
+        public object NodeView;
 
         public string info;
+#endif
 
         #endregion
 
@@ -129,11 +133,13 @@ namespace HypnosRenderPipeline.RenderGraph
 
         #endregion
 
+#if UNITY_EDITOR
         [NonSerialized]
         public RenderTexture debugTex;
 
         [NonSerialized]
         public CustomSampler sampler;
+#endif
 
         public RenderGraphNode() { }
 
@@ -233,4 +239,6 @@ namespace HypnosRenderPipeline.RenderGraph
             return nodeType.ToString();
         }
     }
+
+#endif
 }

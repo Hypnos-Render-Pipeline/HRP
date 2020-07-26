@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
+  m_Name: a
+  m_EditorClassIdentifier: 
+  viewPosition: {x: -730, y: 81, z: 0}
+  viewScale: {x: 0.5059331, y: 0.5059331, z: 1}
+  nodes:
+  - nodeName: OutputNode
+    parameters: []
+    inputs:
+    - name: result
+      info: Output to screen
+      mustConnect: 1
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 3854.6929
+      y: 100
+      width: 300
+      height: 86
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
+  - nodeName: LoadTexture
+    parameters:
+    - name: tex
+      info: 
+      type_str: UnityEngine.Texture2D
+      value_bytes: 
+      obj_ref: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
+    inputs: []
+    outputs:
+    - name: FullResOutput
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 1918.693
+      y: 54
+      width: 300
+      height: 106
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.LoadTexture
+  - nodeName: TextureDebug
+    parameters:
+    - name: texture
+      info: 
+      type_str: UnityEngine.RenderTexture
+      value_bytes: 
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: tex
+      info: 
+      mustConnect: 0
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 2467.6929
+      y: 183
+      width: 960
+      height: 618
+    info: Use this to debug texture, drag from output pin to create it.
+    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  - nodeName: EighthScale
+    parameters: []
+    inputs:
+    - name: EighthResInOut
+      info: It's a test inout pin.
+      mustConnect: 0
+    outputs:
+    - name: EighthResInOut
+      info: It's a test inout pin.
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2880.6929
+      y: 0
+      width: 300
+      height: 110
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.EighthScale
+  - nodeName: TextureDebug
+    parameters:
+    - name: texture
+      info: 
+      type_str: UnityEngine.RenderTexture
+      value_bytes: 
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: tex
+      info: 
+      mustConnect: 0
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 3623.1943
+      y: 264.85486
+      width: 220
+      height: 145
+    info: Use this to debug texture, drag from output pin to create it.
+    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  edgeRecs:
+  - i: 2
+    o: 1
+    i_n: tex
+    o_n: FullResOutput
+  - i: 3
+    o: 1
+    i_n: EighthResInOut
+    o_n: FullResOutput
+  - i: 0
+    o: 3
+    i_n: result
+    o_n: EighthResInOut
+  - i: 4
+    o: 3
+    i_n: tex
+    o_n: EighthResInOut
+  node_edgeRecs:
+  - node: 1
+    in_edges: 
+    out_edge: 0000000001000000
+  - node: 2
+    in_edges: 00000000
+    out_edge: 
+  - node: 3
+    in_edges: 01000000
+    out_edge: 0200000003000000
+  - node: 0
+    in_edges: 02000000
+    out_edge: 
+  - node: 4
+    in_edges: 03000000
+    out_edge: 
+  groupRecs:
+  - name: AAAAAAAAAAAAAA
+    color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
+    nodes: 0000000001000000030000000200000004000000

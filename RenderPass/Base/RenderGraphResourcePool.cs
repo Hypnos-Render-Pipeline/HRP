@@ -482,8 +482,6 @@ namespace HypnosRenderPipeline.RenderGraph
             }
         }
 
-        RenderContext m_RenderContext;
-
         FRGBufferPool m_BufferPool = new FRGBufferPool();
 
         FRGTexturePool m_TexturePool = new FRGTexturePool();
@@ -491,11 +489,8 @@ namespace HypnosRenderPipeline.RenderGraph
         public List<IRenderGraphResource>[] m_Resources = new List<IRenderGraphResource>[(int)FRGResourceType.Count];
 
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        internal RenderGraphResourcePool(RenderContext renderContext)
+        public RenderGraphResourcePool()
         {
-            m_RenderContext = renderContext;
-
             for (int i = 0; i<(int)FRGResourceType.Count; ++i)
                 m_Resources[i] = new List<IRenderGraphResource>();
         }
