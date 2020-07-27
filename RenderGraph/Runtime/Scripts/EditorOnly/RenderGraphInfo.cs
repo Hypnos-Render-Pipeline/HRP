@@ -313,7 +313,7 @@ namespace HypnosRenderPipeline.RenderGraph
             if (!Application.isPlaying)// trigger repaint
             {
                 GameObject gameObject = new GameObject();
-                GameObject.DestroyImmediate(gameObject); 
+                GameObject.DestroyImmediate(gameObject);
             }
         }
     }

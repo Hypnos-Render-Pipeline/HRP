@@ -96,7 +96,6 @@ namespace HypnosRenderPipeline.RenderGraph
 
         void UndoRedoCallback()
         {
-            m_renderGraphInfo.TestExecute();
         }
 
         public void New()
