@@ -1,4 +1,5 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
+using System.Security.Cryptography;
 using UnityEngine;
 
 
@@ -9,6 +10,8 @@ namespace HypnosRenderPipeline.RenderPass
         public string name;
         public Desc desc;
         public Handle handle { internal set; get; }
+
+        public virtual void Move(BaseNodePin<Desc, Handle> pin) { desc = pin.desc; handle = pin.handle; name = pin.name; }
 
         public abstract void AllocateResourcces(RenderContext renderContext, int id);
         public abstract void ReleaseResourcces(RenderContext renderContext);
@@ -85,10 +88,15 @@ namespace HypnosRenderPipeline.RenderPass
                 if (descSize != new Vector2Int(desc2.basicDesc.width, desc2.basicDesc.height)) return false;
             }
 
+            if (desc.colorMode != TexturePinDesc.ColorCastMode.FitToInput)
+            {
+                if (desc.basicDesc.colorFormat != desc2.basicDesc.colorFormat) return false;
+            }
+
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension
-                || desc.basicDesc.colorFormat != desc2.basicDesc.colorFormat
                 || desc.basicDesc.enableRandomWrite != desc2.basicDesc.enableRandomWrite
-                || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth)
+                || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth
+                || desc.basicDesc.depthBufferBits > desc2.basicDesc.depthBufferBits)
                 return false;
 
             return true;

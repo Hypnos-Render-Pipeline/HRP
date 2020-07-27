@@ -21,7 +21,6 @@ namespace HypnosRenderPipeline
         }
 
 
-
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
             var rc = new RenderContext() { Context = context, ResourcePool = m_resourcePool };
@@ -33,6 +32,18 @@ namespace HypnosRenderPipeline
             foreach (var cam in cameras)
             {
                 BeginCameraRendering(context, cam);
+
+#if UNITY_EDITOR
+                if (cam.cameraType == CameraType.SceneView)
+                {
+                    ScriptableRenderContext.EmitWorldGeometryForSceneView(cam);
+                    // this culling is to trigger sceneview gizmos culling
+                    ScriptableCullingParameters cullingParams;
+                    cam.TryGetCullingParameters(out cullingParams);
+                    cullingParams.cullingMask = 0;
+                    var cullingResults = context.Cull(ref cullingParams);
+                }
+#endif
 
                 context.SetupCameraProperties(cam);
 
@@ -51,7 +62,11 @@ namespace HypnosRenderPipeline
                 context.ExecuteCommandBuffer(cb);
 
 #if UNITY_EDITOR
-                if (cam.cameraType == CameraType.SceneView) {
+                if (cam.cameraType == CameraType.SceneView)
+                {
+                    cb.Clear();
+                    cb.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+                    context.ExecuteCommandBuffer(cb);
                     context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
                     context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
                     context.DrawUIOverlay(cam);

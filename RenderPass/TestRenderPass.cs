@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderPass
 {
@@ -23,10 +24,10 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin]
         [Tooltip("It's a test inout pin.")]
         public TexturePin target = new TexturePin(new TexturePin.TexturePinDesc(
-                                                            new RenderTextureDescriptor(1, 1),
-                                                            TexturePin.TexturePinDesc.SizeCastMode.Fixed,
+                                                            new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 24),
+                                                            TexturePin.TexturePinDesc.SizeCastMode.ResizeToInput,
                                                             TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
-                                                            TexturePin.TexturePinDesc.SizeScale.Eighth));
+                                                            TexturePin.TexturePinDesc.SizeScale.Full));
 
         [Tooltip("AA")]
         [ColorUsage(true, true)]
@@ -115,6 +116,48 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
+        }
+    }
+
+
+
+    public class DrawErrorMaterials : BaseRenderPass
+    {
+
+        static ShaderTagId[] legacyShaderTagIds = {
+                    new ShaderTagId("Always"),
+                    new ShaderTagId("ForwardBase"),
+                    new ShaderTagId("PrepassBase"),
+                    new ShaderTagId("Vertex"),
+                    new ShaderTagId("VertexLMRGBM"),
+                    new ShaderTagId("VertexLM")
+                };
+
+        [NodePin]
+        [Tooltip("It's a test inout pin.")]
+        public TexturePin target = new TexturePin(new TexturePin.TexturePinDesc(
+                                                    new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 24),
+                                                    TexturePin.TexturePinDesc.SizeCastMode.ResizeToInput,
+                                                    TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
+                                                    TexturePin.TexturePinDesc.SizeScale.Full));
+
+        public override void Excute(RenderContext context)
+        {
+            context.CmdBuffer.SetRenderTarget(target.handle);
+            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
+            context.CmdBuffer.Clear();
+
+            ScriptableCullingParameters cullingParams;
+            context.RenderCamera.TryGetCullingParameters(out cullingParams);
+            var cullingResults = context.Context.Cull(ref cullingParams);
+
+            foreach (var name in legacyShaderTagIds)
+            {
+                var a = new DrawingSettings(name, new SortingSettings(context.RenderCamera)) { overrideMaterial = new Material(Shader.Find("Hidden/InternalErrorShader")) };
+                var b = FilteringSettings.defaultValue;
+
+                context.Context.DrawRenderers(cullingResults, ref a, ref b);
+            }
         }
     }
 }
