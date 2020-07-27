@@ -19,8 +19,9 @@ namespace HypnosRenderPipeline.RenderGraph
             m_graph = graph;
         }
 
-        public bool Excute(RenderContext context)
+        public int Excute(RenderContext context)
         {
+            int result = -1;
             readyNodes.Clear();
             valuePool.Clear();
             dependency.Clear();
@@ -33,13 +34,14 @@ namespace HypnosRenderPipeline.RenderGraph
                 var node = readyNodes.Pop();
                 pin_map.Clear();
                 BaseRenderNode renderNode = SetupNode(context, node);
-                if (renderNode == null) return false;
-                switch (node.nodeType.GetCustomAttribute<RenderNodeTypeAttribute>().type)
+                if (renderNode == null) return result;
+                var node_type = node.nodeType.GetCustomAttribute<RenderNodeTypeAttribute>().type;
+                switch (node_type)
                 {
                     case RenderNodeTypeAttribute.Type.OutputNode:
                         // setup rendertarget
-                        ((BaseOutputNode)renderNode).target = BuiltinRenderTextureType.CameraTarget;
-                        break;
+                        result = ((BaseOutputNode)renderNode).result.handle;
+                        return result;
                     case RenderNodeTypeAttribute.Type.ToolNode:
                         // setup debug tex
                         if (node.nodeType == typeof(TextureDebug))
@@ -65,15 +67,24 @@ namespace HypnosRenderPipeline.RenderGraph
                         break;
                 };
 
+                context.Context.ExecuteCommandBuffer(context.CmdBuffer);
+                context.CmdBuffer.Clear();
+
                 if (node.sampler == null) node.sampler = UnityEngine.Profiling.CustomSampler.Create(node.nodeName + node.GetHashCode(), true);
                 context.CmdBuffer.BeginSample(node.sampler);
                 renderNode.Excute(context);
                 context.CmdBuffer.EndSample(node.sampler);
 
+                context.Context.ExecuteCommandBuffer(context.CmdBuffer);
+                context.CmdBuffer.Clear();
+                
                 ReleaseNode(context, renderNode);
             }
 
-            return true;
+            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
+            context.CmdBuffer.Clear();
+
+            return result;
         }
 
         int temp_id;
@@ -199,6 +210,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     if (input.GetCustomAttribute<BaseRenderNode.NodePinAttribute>().mustConnect)
                     {
+                        Debug.LogError("Must connect Pin \"" + input.Name + "\" of \"" + node.nodeName + "\" is not connected.");
                         return null;
                     }
                     else

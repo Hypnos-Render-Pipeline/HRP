@@ -49,13 +49,7 @@ namespace HypnosRenderPipeline.RenderPass
         [Tooltip("Output to screen")]
         public TexturePin result = new TexturePin(new TexturePin.TexturePinDesc(new RenderTextureDescriptor(1,1)));
 
-        [HideInInspector]
-        public RenderTargetIdentifier target;
-
-        public override void Excute(RenderContext context)
-        {
-            context.CmdBuffer.Blit(result.handle, target);
-        }
+        public override void Excute(RenderContext context) { }
     }
 
 

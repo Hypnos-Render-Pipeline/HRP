@@ -47,31 +47,36 @@ namespace HypnosRenderPipeline
 
                 context.SetupCameraProperties(cam);
 
-                cb.Clear();
                 rc.RenderCamera = cam;
                 rc.CmdBuffer = cb;
 
 #if UNITY_EDITOR
                 m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
-                m_executor.Excute(rc);
+                int result = m_executor.Excute(rc);
+                if (result == -1) return;
 #endif
 
-                if (cam.targetTexture != null)
-                    cb.Blit(BuiltinRenderTextureType.CameraTarget, cam.targetTexture);
-
-                context.ExecuteCommandBuffer(cb);
 
 #if UNITY_EDITOR
                 if (cam.cameraType == CameraType.SceneView)
                 {
-                    cb.Clear();
-                    cb.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
+                    cb.SetRenderTarget(result);
                     context.ExecuteCommandBuffer(cb);
+                    cb.Clear();
                     context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
                     context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
                     context.DrawUIOverlay(cam);
                 }
 #endif
+
+                if (cam.targetTexture != null)
+                    cb.Blit(result, cam.targetTexture);
+                else
+                    cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
+
+                context.ExecuteCommandBuffer(cb);
+                cb.Clear();
+
 
                 EndCameraRendering(context, cam);
             }

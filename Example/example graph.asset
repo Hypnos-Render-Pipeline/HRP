@@ -12,24 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -529, y: -23, z: 0}
-  viewScale: {x: 0.44196844, y: 0.44196844, z: 1}
+  viewPosition: {x: -1413, y: 57, z: 0}
+  viewScale: {x: 0.5457685, y: 0.5457685, z: 1}
   nodes:
-  - nodeName: OutputNode
-    parameters: []
-    inputs:
-    - name: result
-      info: Output to screen
-      mustConnect: 1
-    outputs: []
-    position:
-      serializedVersion: 2
-      x: 3949.3337
-      y: 1039.5801
-      width: 300
-      height: 86
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: DrawErrorMaterials
     parameters: []
     inputs:
@@ -42,10 +27,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2739.6462
-      y: 926.71204
+      x: 5928.3906
+      y: 935.21936
       width: 300
-      height: 110.00001
+      height: 110
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.DrawErrorMaterials
   - nodeName: ClearWithColor
@@ -65,8 +50,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1793
-      y: 1040.7876
+      x: 4936.3906
+      y: 953.21936
       width: 300
       height: 130
     info: 
@@ -85,10 +70,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 3179.3015
-      y: 234.94019
-      width: 806.00006
-      height: 421
+      x: 5378.3706
+      y: 50.50046
+      width: 807
+      height: 710
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: TextureDebug
@@ -105,49 +90,64 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 2136.059
-      y: 220.46497
-      width: 806
-      height: 450
+      x: 6319.3706
+      y: 51.50046
+      width: 807
+      height: 710
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  - nodeName: OutputNode
+    parameters: []
+    inputs:
+    - name: result
+      info: Output to screen
+      mustConnect: 1
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 7085.3906
+      y: 941.21936
+      width: 300
+      height: 86
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   edgeRecs:
-  - i: 1
-    o: 2
+  - i: 0
+    o: 1
     i_n: target
     o_n: target
-  - i: 3
+  - i: 2
     o: 1
+    i_n: tex
+    o_n: target
+  - i: 3
+    o: 0
     i_n: tex
     o_n: target
   - i: 4
-    o: 2
-    i_n: tex
-    o_n: target
-  - i: 0
-    o: 1
+    o: 0
     i_n: result
     o_n: target
   node_edgeRecs:
-  - node: 2
-    in_edges: 
-    out_edge: 0000000002000000
   - node: 1
+    in_edges: 
+    out_edge: 0000000001000000
+  - node: 0
     in_edges: 00000000
-    out_edge: 0100000003000000
-  - node: 3
+    out_edge: 0200000003000000
+  - node: 2
     in_edges: 01000000
     out_edge: 
-  - node: 4
+  - node: 3
     in_edges: 02000000
     out_edge: 
-  - node: 0
+  - node: 4
     in_edges: 03000000
     out_edge: 
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 1, a: 0.13333334}
-    nodes: 000000000100000002000000
+    nodes: 000000000100000004000000
   - name: Debug
     color: {r: 0.5377358, g: 0.16487184, b: 0.16487184, a: 0.14117648}
-    nodes: 0300000004000000
+    nodes: 0200000003000000

@@ -155,6 +155,13 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public RenderGraphNodeView AddNodeFromTemplate(Type type, Rect pos)
         {
+            if (type == typeof(OutputNode))
+            {
+                if (m_renderGraphInfo.nodes.Find(n => n.nodeType == type) != null)
+                {
+                    return null;
+                }
+            }
             Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Node");
 
             var nodeView = new RenderGraphNodeView(this, m_renderGraphInfo);
@@ -447,13 +454,12 @@ namespace HypnosRenderPipeline.RenderGraph
                         if (type != null)
                         {
                             var rect = type_rect[1].Split(',');
-                            AddToSelection(AddNodeFromTemplate(type, new Rect(new Vector2(float.Parse(rect[0]), float.Parse(rect[1])) + Vector2.one * 100f, Vector2.one)));
+                            var node = AddNodeFromTemplate(type, new Rect(new Vector2(float.Parse(rect[0]), float.Parse(rect[1])) + Vector2.one * 100f, Vector2.one));
+                            if (node != null)
+                                AddToSelection(node);
                         }
                     }
                 };
         }
-
-        [DllImport("user32.dll", EntryPoint = "keybd_event")]
-        public static extern void Keybd_event(byte bvk, byte bScan, int dwFlags, int dwExtraInfo);
     }
 }
