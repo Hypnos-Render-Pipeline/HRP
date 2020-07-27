@@ -201,7 +201,7 @@ namespace HypnosRenderPipeline.RenderGraph
                         }
                         else
                         {
-                            Debug.LogError("Can't auto cast from Pin " + from_pin.ToString() + " to " + input);
+                            Debug.LogError("Can't auto cast to \"" + input.Name + " \" of \"" + node.nodeName + "\"");
                             return null;
                         }
                     }

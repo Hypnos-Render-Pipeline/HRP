@@ -1,7 +1,8 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
+using System;
 using System.Security.Cryptography;
 using UnityEngine;
-
+using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderPass
 {
@@ -106,15 +107,24 @@ namespace HypnosRenderPipeline.RenderPass
         {
             var desc2 = (pin as TexturePin).desc;
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension
-                || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth)
+                || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth
+                || desc.basicDesc.depthBufferBits != desc2.basicDesc.depthBufferBits) //todo: blit depth
                 return false;
 
             return true;
         }
         public override void CastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
-            renderContext.CmdBuffer.Blit((pin as TexturePin).handle, handle);
-            //Debug.Log("cast from " + (pin as TexturePin).handle + " to " + handle);
+            var from = (pin as TexturePin).handle;
+            renderContext.CmdBuffer.Blit(from, handle);
+
+            //todo: blit depth
+            //if ((pin as TexturePin).desc.basicDesc.depthBufferBits != 0)
+            //{
+            //    renderContext.CmdBuffer.SetShadowSamplingMode(from, ShadowSamplingMode.RawDepth);
+            //    renderContext.CmdBuffer.Blit(from, handle);
+            //    renderContext.CmdBuffer.SetShadowSamplingMode(from, ShadowSamplingMode.None);
+            //}
         }
     }
 
@@ -149,17 +159,11 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override bool CanCastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
-            FRGBufferDesc compareDesc = (pin as BufferPin).desc;
-
-            if (desc.count != compareDesc.count || desc.stride != compareDesc.stride || desc.type != compareDesc.type) {
-                return false;
-            }
-
-            return true;
+            return false;
         }
         public override void CastFrom<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
-            ComputeBuffer buffer = handle;
+            throw new NotImplementedException();
         }
     }
 

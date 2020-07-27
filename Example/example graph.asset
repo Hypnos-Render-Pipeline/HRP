@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -2634, y: 57, z: 0}
-  viewScale: {x: 0.5457685, y: 0.5457685, z: 1}
+  viewPosition: {x: -2397, y: 61, z: 0}
+  viewScale: {x: 0.49717674, y: 0.49717674, z: 1}
   nodes:
   - nodeName: DrawErrorMaterials
     parameters: []
@@ -90,10 +90,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 6319.3706
-      y: 51.50046
-      width: 807
-      height: 710
+      x: 6453.6733
+      y: 29.962503
+      width: 959.99994
+      height: 617.99994
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: OutputNode

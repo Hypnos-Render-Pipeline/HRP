@@ -24,7 +24,7 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin]
         [Tooltip("It's a test inout pin.")]
         public TexturePin target = new TexturePin(new TexturePin.TexturePinDesc(
-                                                            new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 24),
+                                                            new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 16),
                                                             TexturePin.TexturePinDesc.SizeCastMode.ResizeToInput,
                                                             TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
                                                             TexturePin.TexturePinDesc.SizeScale.Full));
@@ -136,7 +136,7 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin]
         [Tooltip("It's a test inout pin.")]
         public TexturePin target = new TexturePin(new TexturePin.TexturePinDesc(
-                                                    new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 24),
+                                                    new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 16),
                                                     TexturePin.TexturePinDesc.SizeCastMode.ResizeToInput,
                                                     TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
                                                     TexturePin.TexturePinDesc.SizeScale.Full));
