@@ -525,12 +525,12 @@ namespace HypnosRenderPipeline.RenderGraph
             return GetBufferResource(handle.handle).resource;
         }
 
-        public void GetBuffer(in FRGBufferDesc bufferDesc, out FRGBufferHandle bufferHandle)
+        public void GetBuffer(in FRGBufferDesc bufferDesc, out int bufferHandle)
         {
             int newHandle = AddNewResource(m_Resources[(int)FRGResourceType.Buffer], out BufferResource bufferResource);
             bufferResource.desc = bufferDesc;
             int hashCode = bufferResource.desc.GetHashCode();
-            bufferHandle = new FRGBufferHandle(newHandle);
+            bufferHandle = newHandle;
 
 
             bufferResource.resource = null;

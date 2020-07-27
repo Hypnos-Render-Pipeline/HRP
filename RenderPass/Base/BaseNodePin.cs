@@ -1,7 +1,10 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
 using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderPass
@@ -63,13 +66,11 @@ namespace HypnosRenderPipeline.RenderPass
             }
 
             context.CmdBuffer.GetTemporaryRT(id, desc.basicDesc);
-            //Debug.Log("get " + id);
             handle = id;
         }
         public override void ReleaseResourcces(RenderContext context)
         {
             context.CmdBuffer.ReleaseTemporaryRT(handle);
-            //Debug.Log("release " + handle);
         }
 
         public override bool Compare<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
@@ -129,16 +130,39 @@ namespace HypnosRenderPipeline.RenderPass
     }
 
 
-    public class BufferPin : BaseNodePin<FRGBufferDesc, FRGBufferHandle>
+    public class BufferPin<T> : BaseNodePin<BufferPin<T>.BufferPinDesc, FRGBufferHandle>
     {
-        public BufferPin(FRGBufferDesc desc)
+        public struct BufferPinDesc
         {
-            this.desc = desc;
+            public delegate int SizeDelegate();
+            public SizeDelegate sizeDelegate;
+
+            public enum SizeMode { FitToInput = 0, Fixed };
+
+            public SizeMode sizeMode;
+
+            public BufferPinDesc(SizeDelegate sizeDelegate, SizeMode sizeMode = SizeMode.FitToInput) { this.sizeDelegate = sizeDelegate; this.sizeMode = sizeMode; }
+        }
+
+        public FRGBufferDesc bufferDesc;
+
+        public BufferPin(BufferPinDesc.SizeDelegate sizeDelegate)
+        {
+            this.desc = new BufferPinDesc(sizeDelegate);
         }
 
         public override void AllocateResourcces(RenderContext context, int id)
         {
-            context.ResourcePool.GetBuffer(handle);
+            bufferDesc = new FRGBufferDesc(desc.sizeDelegate(), Marshal.SizeOf<T>());
+            //context.ResourcePool.GetBuffer(res_desc, id);
+            handle = new FRGBufferHandle(id);
+        }
+
+        public override void Move(BaseNodePin<BufferPinDesc, FRGBufferHandle> pin)
+        {
+            var from = (pin as BufferPin<T>);
+            bufferDesc = from.bufferDesc;
+            handle = from.handle;
         }
 
         public override void ReleaseResourcces(RenderContext context)
@@ -148,12 +172,13 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override bool Compare<T2, T3>(RenderContext renderContext, BaseNodePin<T2, T3> pin)
         {
-            FRGBufferDesc compareDesc = (pin as BufferPin).desc;
+            var from = (pin as BufferPin<T>);
 
-            if(desc.count != compareDesc.count || desc.stride != compareDesc.stride || desc.type != compareDesc.type) {
-                return false;
+            if (desc.sizeMode != BufferPinDesc.SizeMode.FitToInput)
+            {
+                if (desc.sizeDelegate() > from.bufferDesc.count) return false;
             }
-
+                        
             return true;
         }
 
@@ -166,5 +191,4 @@ namespace HypnosRenderPipeline.RenderPass
             throw new NotImplementedException();
         }
     }
-
 }
