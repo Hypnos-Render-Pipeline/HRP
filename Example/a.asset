@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: a
   m_EditorClassIdentifier: 
-  viewPosition: {x: -730, y: 81, z: 0}
-  viewScale: {x: 0.5059331, y: 0.5059331, z: 1}
+  viewPosition: {x: -1125, y: 93, z: 0}
+  viewScale: {x: 0.61013985, y: 0.61013985, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []

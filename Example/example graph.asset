@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -2397, y: 61, z: 0}
-  viewScale: {x: 0.49717674, y: 0.49717674, z: 1}
+  viewPosition: {x: -2517, y: -93, z: 0}
+  viewScale: {x: 0.56051713, y: 0.56051713, z: 1}
   nodes:
   - nodeName: DrawErrorMaterials
     parameters: []
@@ -50,8 +50,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 4936.3906
-      y: 953.21936
+      x: 4968.0176
+      y: 915.4828
       width: 300
       height: 130
     info: 
@@ -70,10 +70,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 5378.3706
-      y: 50.50046
-      width: 807
-      height: 710
+      x: 5338.136
+      y: 321.86374
+      width: 1022.99994
+      height: 421
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: TextureDebug
@@ -90,10 +90,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 6453.6733
-      y: 29.962503
-      width: 959.99994
-      height: 617.99994
+      x: 6434.033
+      y: 320
+      width: 1022.99994
+      height: 421
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: OutputNode
@@ -105,8 +105,8 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 7085.3906
-      y: 941.21936
+      x: 7365.098
+      y: 924.872
       width: 300
       height: 86
     info: 
