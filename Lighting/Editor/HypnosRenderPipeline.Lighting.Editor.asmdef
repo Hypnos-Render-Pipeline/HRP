@@ -1,10 +1,11 @@
 {
-    "name": "NewAssembly",
+    "name": "HypnosRenderPipeline.Light.Editor",
     "references": [
-        "GUID:46f26ed7d5234c044b976e7ffdb38768",
         "GUID:899fc01217e37d745b55404665eceada"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

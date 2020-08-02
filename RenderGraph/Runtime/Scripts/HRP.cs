@@ -1,5 +1,7 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
 using HypnosRenderPipeline.RenderPass;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -9,6 +11,9 @@ namespace HypnosRenderPipeline
     {
         HypnosRenderPipelineAsset m_asset;
         RenderGraphResourcePool m_resourcePool;
+
+        Material __m_wireFrame__;
+        Material m_wireFrame { get { if (__m_wireFrame__ == null) __m_wireFrame__ = new Material(Shader.Find("Hidden/Wireframe")); return __m_wireFrame__; } }
 
 #if UNITY_EDITOR
         HRGDynamicExecutor m_executor;
@@ -33,18 +38,6 @@ namespace HypnosRenderPipeline
             {
                 BeginCameraRendering(context, cam);
 
-#if UNITY_EDITOR
-                if (cam.cameraType == CameraType.SceneView)
-                {
-                    ScriptableRenderContext.EmitWorldGeometryForSceneView(cam);
-                    // this culling is to trigger sceneview gizmos culling
-                    ScriptableCullingParameters cullingParams;
-                    cam.TryGetCullingParameters(out cullingParams);
-                    cullingParams.cullingMask = 0;
-                    var cullingResults = context.Cull(ref cullingParams);
-                }
-#endif
-
                 context.SetupCameraProperties(cam);
 
                 rc.RenderCamera = cam;
@@ -60,7 +53,26 @@ namespace HypnosRenderPipeline
 #if UNITY_EDITOR
                 if (cam.cameraType == CameraType.SceneView)
                 {
+                    ScriptableRenderContext.EmitWorldGeometryForSceneView(cam);
+                    // this culling is to trigger sceneview gizmos culling
+                    ScriptableCullingParameters cullingParams;
+                    cam.TryGetCullingParameters(out cullingParams);
+                    var cullingResults = context.Cull(ref cullingParams);
+
                     cb.SetRenderTarget(result);
+                    var selected_lights = Selection.GetFiltered<Light>(SelectionMode.Unfiltered);
+                    foreach (var light in cullingResults.visibleLights)
+                    {
+                        var ld = light.light.GetComponent<HRPLight>();
+                        if (ld != null)
+                        {
+                            if (selected_lights.Contains(light.light) && ld.lightType == HRPLightType.Mesh && ld.lightMesh != null)
+                            {
+                                cb.DrawMesh(ld.lightMesh, ld.transform.localToWorldMatrix, m_wireFrame);
+                            }
+                        }
+                    }
+
                     context.ExecuteCommandBuffer(cb);
                     cb.Clear();
                     context.DrawGizmos(cam, GizmoSubset.PreImageEffects);

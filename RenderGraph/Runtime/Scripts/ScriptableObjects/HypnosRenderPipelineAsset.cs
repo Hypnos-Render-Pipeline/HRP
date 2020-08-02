@@ -1,4 +1,5 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline
@@ -9,6 +10,14 @@ namespace HypnosRenderPipeline
 
         protected override RenderPipeline CreatePipeline()
         {
+            var ls = GameObject.FindObjectsOfType<Light>();
+            foreach (var l in ls)
+            {
+                if (l.GetComponent<HRPLight>() == null)
+                {
+                    HRPLight.GenerateHRPLight(l);
+                }
+            }
             return new HypnosRenderPipeline(this);
         }
 
