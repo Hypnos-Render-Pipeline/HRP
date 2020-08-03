@@ -136,6 +136,8 @@ namespace HypnosRenderPipeline.RenderGraph
 #if UNITY_EDITOR
         [NonSerialized]
         public RenderTexture debugTex;
+        [NonSerialized]
+        public RenderTextureDescriptor debugTexDesc;
 
         [NonSerialized]
         public CustomSampler sampler;

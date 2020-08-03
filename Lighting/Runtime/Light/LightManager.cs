@@ -54,7 +54,7 @@ namespace HypnosRenderPipeline
         public static void GetVisibleLights(List<HRPLight> list, Camera cam) { instance.__GetVisibleLights__(list, cam); }
 
         /// <summary>
-        /// Return visible Lights with given camera
+        /// Return visible Lights with given camera and specific cullingDesc
         /// </summary>
         public static void GetVisibleLights(List<HRPLight> list, Camera cam, LightCullingDesc lightCullingDesc) { if (lightCullingDesc.cullingType == LightCullingType.Frustum) instance.__GetVisibleLights__(list, cam); else instance.__GetVisibleLights__(list, cam, lightCullingDesc.radius); }
 

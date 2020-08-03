@@ -8,11 +8,11 @@ namespace HypnosRenderPipeline.RenderPass
     {
         [NodePin]
         [Tooltip("It's a test inout pin.")]
-        public TexturePin EighthResInOut = new TexturePin(new TexturePin.TexturePinDesc(
+        public TexturePin EighthResInOut = new TexturePin(new TexturePinDesc(
                                                             new RenderTextureDescriptor(1,1),
-                                                            TexturePin.TexturePinDesc.SizeCastMode.Fixed,
-                                                            TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
-                                                            TexturePin.TexturePinDesc.SizeScale.Eighth));
+                                                            TexturePinDesc.SizeCastMode.Fixed,
+                                                            TexturePinDesc.ColorCastMode.FitToInput,
+                                                            TexturePinDesc.SizeScale.Eighth));
 
         public override void Excute(RenderContext context)
         {
@@ -23,11 +23,11 @@ namespace HypnosRenderPipeline.RenderPass
     {
         [NodePin]
         [Tooltip("It's a test inout pin.")]
-        public TexturePin target = new TexturePin(new TexturePin.TexturePinDesc(
+        public TexturePin target = new TexturePin(new TexturePinDesc(
                                                             new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 16),
-                                                            TexturePin.TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                            TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
-                                                            TexturePin.TexturePinDesc.SizeScale.Full));
+                                                            TexturePinDesc.SizeCastMode.ResizeToInput,
+                                                            TexturePinDesc.ColorCastMode.FitToInput,
+                                                            TexturePinDesc.SizeScale.Full));
 
         [Tooltip("AA")]
         [ColorUsage(true, true)]
@@ -43,7 +43,7 @@ namespace HypnosRenderPipeline.RenderPass
     public class LoadTexture : BaseToolNode
     {
         [NodePin(type: PinType.Out)]
-        public TexturePin FullResOutput = new TexturePin(new TexturePin.TexturePinDesc(new RenderTextureDescriptor(1,1)));
+        public TexturePin FullResOutput = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1,1)));
 
         [Tooltip("Texture to show")]
         public Texture2D tex;
@@ -61,11 +61,11 @@ namespace HypnosRenderPipeline.RenderPass
     {
         [NodePin]
         [Tooltip("It's a test inout pin.")]
-        public TexturePin pin = new TexturePin(new TexturePin.TexturePinDesc(
+        public TexturePin pin = new TexturePin(new TexturePinDesc(
                                                             new RenderTextureDescriptor(1, 1),
-                                                            TexturePin.TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                            TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
-                                                            TexturePin.TexturePinDesc.SizeScale.Full));
+                                                            TexturePinDesc.SizeCastMode.ResizeToInput,
+                                                            TexturePinDesc.ColorCastMode.FitToInput,
+                                                            TexturePinDesc.SizeScale.Full));
 
         public bool Boolen;
 
@@ -134,16 +134,22 @@ namespace HypnosRenderPipeline.RenderPass
                 };
 
         [NodePin]
-        [Tooltip("It's a test inout pin.")]
-        public TexturePin target = new TexturePin(new TexturePin.TexturePinDesc(
-                                                    new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 16),
-                                                    TexturePin.TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                    TexturePin.TexturePinDesc.ColorCastMode.FitToInput,
-                                                    TexturePin.TexturePinDesc.SizeScale.Full));
+        public TexturePin target = new TexturePin(new TexturePinDesc(
+                                                    new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
+                                                    TexturePinDesc.SizeCastMode.ResizeToInput,
+                                                    TexturePinDesc.ColorCastMode.FitToInput,
+                                                    TexturePinDesc.SizeScale.Full));
+
+        [NodePin]
+        public TexturePin depth = new TexturePin(new TexturePinDesc(
+                                            new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 32),
+                                            TexturePinDesc.SizeCastMode.ResizeToInput,
+                                            TexturePinDesc.ColorCastMode.Fixed,
+                                            TexturePinDesc.SizeScale.Full));
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.SetRenderTarget(target.handle);
+            context.CmdBuffer.SetRenderTarget(color: target.handle, depth: depth.handle);
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
 
@@ -158,6 +164,33 @@ namespace HypnosRenderPipeline.RenderPass
 
                 context.Context.DrawRenderers(cullingResults, ref a, ref b);
             }
+        }
+    }
+
+    public class PreZ : BaseRenderPass
+    {
+        [NodePin(PinType.InOut)]
+        public TexturePin depthTexture = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1,1, RenderTextureFormat.Depth, 32), 
+                                                                        TexturePinDesc.SizeCastMode.ResizeToInput, 
+                                                                        TexturePinDesc.ColorCastMode.Fixed,
+                                                                        TexturePinDesc.SizeScale.Full));
+
+
+        public override void Excute(RenderContext context)
+        {
+            context.CmdBuffer.SetRenderTarget(depthTexture.handle);
+            context.CmdBuffer.ClearRenderTarget(true, false, Color.black);
+            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
+            context.CmdBuffer.Clear();
+
+            ScriptableCullingParameters cullingParams;
+            context.RenderCamera.TryGetCullingParameters(out cullingParams);
+            var cullingResults = context.Context.Cull(ref cullingParams);
+
+            var a = new DrawingSettings(new ShaderTagId("PreZ"), new SortingSettings(context.RenderCamera));
+            var b = FilteringSettings.defaultValue;
+
+            context.Context.DrawRenderers(cullingResults, ref a, ref b);
         }
     }
 }

@@ -94,7 +94,7 @@ namespace HypnosRenderPipeline.RenderGraph
                         {
                             image.image = tex;
                             var rt = tex as RenderTexture;
-                            title = rt.name + ": " + rt.width + "x" + rt.height + " " + rt.format;
+                            title = rt.name + ": " + rt.width + "x" + rt.height + " " + Node.debugTexDesc.colorFormat;
                             style.width = Mathf.Max(220, rt.width / 2);
                             m_controlItems.style.height = rt.height / 2;
                         }

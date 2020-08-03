@@ -12,90 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -2517, y: -93, z: 0}
-  viewScale: {x: 0.56051713, y: 0.56051713, z: 1}
+  viewPosition: {x: -4748, y: -484, z: 0}
+  viewScale: {x: 0.90416974, y: 0.90416974, z: 1}
   nodes:
   - nodeName: DrawErrorMaterials
     parameters: []
     inputs:
     - name: target
-      info: It's a test inout pin.
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
       mustConnect: 0
     outputs:
     - name: target
-      info: It's a test inout pin.
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 5928.3906
-      y: 935.21936
+      x: 5878.536
+      y: 865
       width: 300
-      height: 110
+      height: 158
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.DrawErrorMaterials
-  - nodeName: ClearWithColor
-    parameters:
-    - name: k
-      info: 
-      type_str: UnityEngine.Color
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e303735343731373c2f723e0d0a20203c673e302e303735343731373c2f673e0d0a20203c623e302e303735343731373c2f623e0d0a20203c613e313c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: target
-      info: It's a test inout pin.
-      mustConnect: 0
-    outputs:
-    - name: target
-      info: It's a test inout pin.
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 4968.0176
-      y: 915.4828
-      width: 300
-      height: 130
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
-  - nodeName: TextureDebug
-    parameters:
-    - name: texture
-      info: 
-      type_str: UnityEngine.RenderTexture
-      value_bytes: 
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: tex
-      info: 
-      mustConnect: 0
-    outputs: []
-    position:
-      serializedVersion: 2
-      x: 5338.136
-      y: 321.86374
-      width: 1022.99994
-      height: 421
-    info: Use this to debug texture, drag from output pin to create it.
-    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
-  - nodeName: TextureDebug
-    parameters:
-    - name: texture
-      info: 
-      type_str: UnityEngine.RenderTexture
-      value_bytes: 
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: tex
-      info: 
-      mustConnect: 0
-    outputs: []
-    position:
-      serializedVersion: 2
-      x: 6434.033
-      y: 320
-      width: 1022.99994
-      height: 421
-    info: Use this to debug texture, drag from output pin to create it.
-    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   - nodeName: OutputNode
     parameters: []
     inputs:
@@ -105,49 +48,80 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 7365.098
-      y: 924.872
+      x: 6325.2456
+      y: 925.00006
       width: 300
       height: 86
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
+  - nodeName: PreZ
+    parameters: []
+    inputs:
+    - name: depthTexture
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: depthTexture
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 5310
+      y: 968
+      width: 300
+      height: 110
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.PreZ
+  - nodeName: ClearWithColor
+    parameters:
+    - name: k
+      info: 
+      type_str: UnityEngine.Color
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3132323634313530343c2f723e0d0a20203c673e302e3132323634313530343c2f673e0d0a20203c623e302e3132323634313530343c2f623e0d0a20203c613e303c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: target
+      info: It's a test inout pin.
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: It's a test inout pin.
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 5309.521
+      y: 813.6989
+      width: 300
+      height: 130
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
   edgeRecs:
   - i: 0
-    o: 1
+    o: 2
+    i_n: depth
+    o_n: depthTexture
+  - i: 0
+    o: 3
     i_n: target
     o_n: target
-  - i: 2
-    o: 1
-    i_n: tex
-    o_n: target
-  - i: 3
-    o: 0
-    i_n: tex
-    o_n: target
-  - i: 4
+  - i: 1
     o: 0
     i_n: result
     o_n: target
   node_edgeRecs:
-  - node: 1
-    in_edges: 
-    out_edge: 0000000001000000
-  - node: 0
-    in_edges: 00000000
-    out_edge: 0200000003000000
   - node: 2
-    in_edges: 01000000
-    out_edge: 
+    in_edges: 
+    out_edge: 00000000
+  - node: 0
+    in_edges: 0000000001000000
+    out_edge: 02000000
   - node: 3
+    in_edges: 
+    out_edge: 01000000
+  - node: 1
     in_edges: 02000000
-    out_edge: 
-  - node: 4
-    in_edges: 03000000
     out_edge: 
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 1, a: 0.13333334}
-    nodes: 000000000100000004000000
-  - name: Debug
-    color: {r: 0.5377358, g: 0.16487184, b: 0.16487184, a: 0.14117648}
-    nodes: 0200000003000000
+    nodes: 00000000010000000200000003000000

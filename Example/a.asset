@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: a
   m_EditorClassIdentifier: 
-  viewPosition: {x: -1125, y: 93, z: 0}
-  viewScale: {x: 0.61013985, y: 0.61013985, z: 1}
+  viewPosition: {x: -682, y: 127, z: 0}
+  viewScale: {x: 0.43232757, y: 0.43232757, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []
@@ -36,7 +36,7 @@ MonoBehaviour:
       info: 
       type_str: UnityEngine.Texture2D
       value_bytes: 
-      obj_ref: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
+      obj_ref: {fileID: 2800000, guid: 858e5f85d9e76a44db615afbdada75ea, type: 3}
     inputs: []
     outputs:
     - name: FullResOutput

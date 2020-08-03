@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d6f58951d8f68a41a140d80d86233c7, type: 3}
-  m_Name: EditorData
+  m_Script: {fileID: 11500000, guid: ff26c7da37240424b94ce878c4c214d2, type: 3}
+  m_Name: HRPDefaultResources
   m_EditorClassIdentifier: 
-  lastOpenPath: Assets/HRP/Example/example graph.asset
+  defaultMaterial: {fileID: 2100000, guid: efec45c3c5eb4194e93d4761170c5b09, type: 2}

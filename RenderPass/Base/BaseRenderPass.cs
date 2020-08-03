@@ -47,7 +47,7 @@ namespace HypnosRenderPipeline.RenderPass
     {
         [NodePin(PinType.In, true)]
         [Tooltip("Output to screen")]
-        public TexturePin result = new TexturePin(new TexturePin.TexturePinDesc(new RenderTextureDescriptor(1,1)));
+        public TexturePin result = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1,1)));
 
         public override void Excute(RenderContext context) { }
     }
@@ -60,7 +60,7 @@ namespace HypnosRenderPipeline.RenderPass
     {
         [NodePin(type: PinType.In)]
         [PinColor(1,0,1,1)]
-        public TexturePin tex = new TexturePin(new TexturePin.TexturePinDesc(new RenderTextureDescriptor(1, 1)));
+        public TexturePin tex = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1)));
 
 
         public RenderTexture texture;

@@ -31,28 +31,29 @@ namespace HypnosRenderPipeline.RenderPass
     }
 
 
-    public class TexturePin : BaseNodePin<TexturePin.TexturePinDesc, int>
+    public struct TexturePinDesc
     {
-        public struct TexturePinDesc
+        public RenderTextureDescriptor basicDesc;
+        public enum SizeCastMode { ResizeToInput = 0, Fixed };
+        public SizeCastMode sizeMode;
+        public enum ColorCastMode { FitToInput = 0, Fixed };
+        public ColorCastMode colorMode;
+        public enum SizeScale { Full = 1, Half = 2, Quater = 4, Eighth = 8, Custom = 0 };
+        public SizeScale sizeScale;
+
+        public TexturePinDesc(RenderTextureDescriptor descriptor, SizeCastMode sizeCastMode = SizeCastMode.ResizeToInput, ColorCastMode colorCastMode = ColorCastMode.FitToInput, SizeScale sizeScale = SizeScale.Full)
         {
-            public RenderTextureDescriptor basicDesc;
-            public enum SizeCastMode { ResizeToInput = 0, Fixed };
-            public SizeCastMode sizeMode;
-            public enum ColorCastMode { FitToInput = 0, Fixed };
-            public ColorCastMode colorMode;
-            public enum SizeScale { Full = 1, Half = 2, Quater = 4, Eighth = 8, Custom = 0 };
-            public SizeScale sizeScale;
-
-            public TexturePinDesc(RenderTextureDescriptor descriptor, SizeCastMode sizeCastMode = SizeCastMode.ResizeToInput, ColorCastMode colorCastMode = ColorCastMode.FitToInput, SizeScale sizeScale = SizeScale.Full)
-            {
-                basicDesc = descriptor;
-                sizeMode = sizeCastMode;
-                colorMode = colorCastMode;
-                this.sizeScale = sizeScale;
-            }
+            basicDesc = descriptor;
+            sizeMode = sizeCastMode;
+            colorMode = colorCastMode;
+            this.sizeScale = sizeScale;
         }
+    }
 
-        public TexturePin(TexturePin.TexturePinDesc desc)
+    public class TexturePin : BaseNodePin<TexturePinDesc, int>
+    {
+
+        public TexturePin(TexturePinDesc desc)
         {
             this.desc = desc;
         }
@@ -109,7 +110,7 @@ namespace HypnosRenderPipeline.RenderPass
             var desc2 = (pin as TexturePin).desc;
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension
                 || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth
-                || desc.basicDesc.depthBufferBits != desc2.basicDesc.depthBufferBits) //todo: blit depth
+                || desc.basicDesc.depthBufferBits > desc2.basicDesc.depthBufferBits) //todo: blit depth
                 return false;
 
             return true;

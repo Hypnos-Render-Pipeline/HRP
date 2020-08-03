@@ -39,9 +39,9 @@ namespace HypnosRenderPipeline.RenderGraph
         public bool useDynamicScale;
         public RenderTextureMemoryless memoryless;
         public string name;
-#if UNITY_2020_2_OR_NEWER
-        public FastMemoryDesc fastMemoryDesc;
-#endif
+//#if UNITY_2020_2_OR_NEWER
+//        public FastMemoryDesc fastMemoryDesc;
+//#endif
 
         public bool clearBuffer;
         public Color clearColor;

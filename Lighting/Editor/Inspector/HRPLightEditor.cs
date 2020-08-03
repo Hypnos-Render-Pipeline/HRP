@@ -58,7 +58,7 @@ namespace HypnosRenderPipeline
                 m_light.Copy(m_lightData);
             }
             m_lighdDataObject = new SerializedObject(m_lightData);
-            m_ColorTempTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/HRP/Lighting/Editor/ColorTemperature.png");
+            m_ColorTempTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/HRP/Lighting/Editor/Textures/ColorTemperature.png");
             var sliderMethod = typeof(EditorGUILayout).
                        GetMethod(
                             "SliderWithTexture",
@@ -180,6 +180,7 @@ namespace HypnosRenderPipeline
             {
                 float r = m_lightData.sphereRadius;
                 float r1 = Handles.RadiusHandle(Quaternion.identity, m_light.transform.position, m_lightData.sphereRadius);
+                r1 = Mathf.Max(0, r1);
                 if (r != r1)
                 {
                     Undo.RecordObject(m_lightData, "Change Light Parameter(s)");
@@ -215,6 +216,7 @@ namespace HypnosRenderPipeline
                 mat.SetTRS(p + l, m_light.transform.rotation, new Vector3(1, 1, 1));
                 using (new Handles.DrawingScope(Color.white, mat))
                     m_BoundsHandle.DrawHandle();
+                m_BoundsHandle.radius = Mathf.Max(0, m_BoundsHandle.radius);
                 if (EditorGUI.EndChangeCheck())
                 {
                     moved = true;
@@ -249,6 +251,7 @@ namespace HypnosRenderPipeline
                 EditorGUI.BeginChangeCheck();
                 using (new Handles.DrawingScope(Color.white, mat))
                     m_BoundsHandle.DrawHandle();
+                m_BoundsHandle.radius = Mathf.Max(0, m_BoundsHandle.radius);
                 if (EditorGUI.EndChangeCheck())
                 {
                     Undo.RecordObject(m_lightData, "Change Light Parameter(s)");
@@ -332,14 +335,14 @@ namespace HypnosRenderPipeline
         {
             EditorGUILayout.HelpBox("Additional Light Data For HRP", MessageType.Info);
 
-            var rect = EditorGUILayout.BeginVertical();
-            EditorGUILayout.LabelField("This Area is for develop debug and will be hidden in the release version");
-            EditorGUI.DrawRect(rect, new Color(0, 0, 0, 0.2f));
-            EditorGUI.BeginDisabledGroup(true);
-            base.OnInspectorGUI();
-            EditorGUI.EndDisabledGroup();
+            //var rect = EditorGUILayout.BeginVertical();
+            //EditorGUILayout.LabelField("This Area is for develop debug and will be hidden in the release version");
+            //EditorGUI.DrawRect(rect, new Color(0, 0, 0, 0.2f));
+            //EditorGUI.BeginDisabledGroup(true);
+            //base.OnInspectorGUI();
+            //EditorGUI.EndDisabledGroup();
 
-            EditorGUILayout.EndVertical();
+            //EditorGUILayout.EndVertical();
         }
     }
 }

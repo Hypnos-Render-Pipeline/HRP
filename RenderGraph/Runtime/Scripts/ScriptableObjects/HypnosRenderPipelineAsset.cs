@@ -1,4 +1,6 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
+using System;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -7,6 +9,13 @@ namespace HypnosRenderPipeline
     public class HypnosRenderPipelineAsset : RenderPipelineAsset
     {
         public RenderGraphInfo hypnosRenderPipelineGraph;
+
+        public HRPMaterialResources materialResources;
+
+        private Shader m_defaultShader = null;
+        public override Shader defaultShader { get { if (m_defaultShader == null) m_defaultShader = Shader.Find("HRP/Lit"); return m_defaultShader; } }
+
+        public override Material defaultMaterial { get { return materialResources.defaultMaterial; } }
 
         protected override RenderPipeline CreatePipeline()
         {
@@ -50,7 +59,9 @@ namespace HypnosRenderPipeline
                 {
                     UnityEditor.AssetDatabase.DeleteAsset(path);
                 }
-                UnityEditor.AssetDatabase.CreateAsset(UnityEngine.ScriptableObject.CreateInstance<HypnosRenderPipelineAsset>(), path);
+                var obj = UnityEngine.ScriptableObject.CreateInstance<HypnosRenderPipelineAsset>();
+                obj.materialResources = AssetDatabase.LoadAssetAtPath<HRPMaterialResources>("Assets/HRP/Lighting/Runtime/Resources/HRPDefaultResources.asset");
+                UnityEditor.AssetDatabase.CreateAsset(obj, path);
             }
         }
 
