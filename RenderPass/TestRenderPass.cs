@@ -38,9 +38,7 @@ namespace HypnosRenderPipeline.RenderPass
                                                                                        TexturePinDesc.SizeScale.Full));
 
 
-        static Material __lightingMat__;
-        static Material lightingMat { get { if (__lightingMat__ == null) __lightingMat__ = new Material(Shader.Find("Hidden/DeferredLighting")); return __lightingMat__; } }
-
+        static MaterialWithName lightingMat = new MaterialWithName("Hidden/DeferredLighting");
 
         public override void Excute(RenderContext context)
         {

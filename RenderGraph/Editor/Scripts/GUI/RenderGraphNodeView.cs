@@ -72,12 +72,6 @@ namespace HypnosRenderPipeline.RenderGraph
                 titleContainer.Remove(this.Q("title-button-container"));
 
                 Image image = null;
-                if (Node.nodeType == typeof(TextureDebug))
-                {
-                    image = new Image();
-                    image.scaleMode = ScaleMode.ScaleToFit;
-                    m_controlItems.Add(image);
-                }
 
                 if (Node.nodeType != typeof(TextureDebug))
                 {
@@ -85,7 +79,8 @@ namespace HypnosRenderPipeline.RenderGraph
                     titleContainer.Add(m_timeLabel);
                 }
 
-                var toolbar = new IMGUIContainer(() =>
+                var toolbar = new IMGUIContainer();
+                toolbar.onGUIHandler = () =>
                 {
                     if (Node.nodeType == typeof(TextureDebug))
                     {
@@ -95,8 +90,8 @@ namespace HypnosRenderPipeline.RenderGraph
                             image.image = tex;
                             var rt = tex as RenderTexture;
                             title = rt.name + ": " + rt.width + "x" + rt.height + " " + Node.debugTexDesc.colorFormat;
-                            style.width = Mathf.Max(220, rt.width / 2);
-                            m_controlItems.style.height = rt.height / 2;
+                            style.width = image.style.width = Mathf.Max(296, rt.width / 2);
+                            image.style.height = rt.height / 2;
                         }
                         else
                         {
@@ -135,7 +130,7 @@ namespace HypnosRenderPipeline.RenderGraph
                             this.Q("title-label").style.color = Color.white;
                         }
                     }
-                });
+                };
 
                 if (Node.nodeType == typeof(TextureDebug))
                     toolbar.pickingMode = PickingMode.Ignore;
@@ -147,7 +142,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     m_renderGraphInfo.TestExecute();
                 }
 
-                if (Node.nodeType != typeof(TextureDebug))
+                //if (Node.nodeType != typeof(TextureDebug))
                 {
                     foreach (var param in Node.parameters)
                     {
@@ -392,6 +387,13 @@ namespace HypnosRenderPipeline.RenderGraph
                 }
 
                 m_controlItems.Add(toolbar);
+
+                if (Node.nodeType == typeof(TextureDebug))
+                {
+                    image = new Image();
+                    image.scaleMode = ScaleMode.ScaleToFit;
+                    m_controlItems.Add(image);
+                }
             }
             contents.Add(controlsContainer);
 

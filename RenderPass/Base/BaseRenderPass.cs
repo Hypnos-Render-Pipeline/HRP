@@ -62,14 +62,27 @@ namespace HypnosRenderPipeline.RenderPass
         [PinColor(1,0,1,1)]
         public TexturePin tex = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1)));
 
+        [Range(0.1f, 10)]
+        public float multiplier = 1;
 
+        public enum Channal { RGBA,R,G,B,A };
+
+        [Range(0.1f, 10)]
+        public Channal channal = Channal.RGBA;
+
+        [HideInInspector]
         public RenderTexture texture;
+
+        static MaterialWithName blitMat = new MaterialWithName("Hidden/DebugBlit");
 
         public override void Excute(RenderContext context)
         {
             if (texture != null)
             {
-                context.CmdBuffer.Blit(tex.handle, texture);
+                context.CmdBuffer.SetGlobalFloat("_Multiplier", multiplier);
+                context.CmdBuffer.SetGlobalInt("_Channel", (int)channal);
+                context.CmdBuffer.SetGlobalFloat("_Aspect", (float)tex.desc.basicDesc.width / tex.desc.basicDesc.height);
+                context.CmdBuffer.Blit(tex.handle, texture, blitMat);
             }
         }
     }

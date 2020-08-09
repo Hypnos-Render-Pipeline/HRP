@@ -30,8 +30,7 @@ namespace HypnosRenderPipeline.RenderPass
                     new ShaderTagId("VertexLM")
                 };
 
-        static Material __errorMat__;
-        static Material errorMat { get { if (__errorMat__ == null) __errorMat__ = new Material(Shader.Find("Hidden/InternalErrorShader")); return __errorMat__; } }
+        static MaterialWithName errorMat = new MaterialWithName("Hidden/InternalErrorShader");
 
         public override void Excute(RenderContext context)
         {

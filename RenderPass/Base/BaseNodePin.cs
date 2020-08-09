@@ -134,16 +134,13 @@ namespace HypnosRenderPipeline.RenderPass
             return true;
         }
 
-        static Material __depthBlitMat__;
-        static Material depthBlitMat { get { if (__depthBlitMat__ == null) __depthBlitMat__ = new Material(Shader.Find("Hidden/DepthBlit")); return __depthBlitMat__; } }
-
         public override void CastFrom(RenderContext renderContext, BaseNodePin<TexturePinDesc, int> pin)
         {
             var from = pin.handle;
 
             if ((pin as TexturePin).desc.basicDesc.colorFormat == RenderTextureFormat.Depth)
             {
-                renderContext.CmdBuffer.Blit(from, handle, depthBlitMat);
+                renderContext.CmdBuffer.Blit(from, handle, MaterialWithName.depthBit);
             }
             else
             {

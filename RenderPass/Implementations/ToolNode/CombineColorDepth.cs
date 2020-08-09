@@ -22,13 +22,10 @@ namespace HypnosRenderPipeline.RenderPass
                                                                                        TexturePinDesc.ColorCastMode.FitToInput,
                                                                                        TexturePinDesc.SizeScale.Full));
 
-        static Material __depthBlitMat__;
-        static Material depthBlitMat { get { if (__depthBlitMat__ == null) __depthBlitMat__ = new Material(Shader.Find("Hidden/DepthBlit")); return __depthBlitMat__; } }
-
         public override void Excute(RenderContext context)
         {
             context.CmdBuffer.Blit(color.handle, combined.handle);
-            context.CmdBuffer.Blit(depth.handle, combined.handle, depthBlitMat);
+            context.CmdBuffer.Blit(depth.handle, combined.handle, MaterialWithName.depthBit);
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
         }
