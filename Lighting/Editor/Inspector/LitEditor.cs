@@ -13,10 +13,6 @@ public class LitEditor : ShaderGUI
     MaterialProperty metallic = null;
     MaterialProperty metallicglossyMap = null;
 
-    MaterialProperty metallicMap = null;
-    MaterialProperty roughnessMap = null;
-    MaterialProperty roughness = null;
-
     MaterialProperty smoothness = null;
     MaterialProperty smoothnessScale = null;
 
@@ -45,10 +41,6 @@ public class LitEditor : ShaderGUI
 
         metallicglossyMap = FindProperty("_MetallicGlossMap", props, false);
         metallic = FindProperty("_Metallic", props);
-
-        metallicMap = FindProperty("_MetallicMap", props, false);
-        roughnessMap = FindProperty("_RoughnessMap", props, false);
-        roughness = FindProperty("_Roughness", props);
 
         smoothness = FindProperty("_Smoothness", props);
         smoothnessScale = FindProperty("_GlossMapScale", props, false);

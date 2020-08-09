@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -19,8 +20,10 @@ namespace HypnosRenderPipeline.RenderGraph
             m_graph = graph;
         }
 
-        public int Excute(RenderContext context)
+        public int Excute(RenderContext context, bool debug = false)
         {
+            UnityEngine.Profiling.Profiler.BeginSample("Excute HRG");
+
             int result = -1;
             readyNodes.Clear();
             valuePool.Clear();
@@ -44,13 +47,14 @@ namespace HypnosRenderPipeline.RenderGraph
                         return result;
                     case RenderNodeTypeAttribute.Type.ToolNode:
                         // setup debug tex
+                        if (!debug) break;
                         if (node.nodeType == typeof(TextureDebug))
                         {
                             var debugNode = renderNode as TextureDebug;
                             if (node.debugTex == null)
                             {
                                 var desc = debugNode.tex.desc.basicDesc;
-                                desc.colorFormat = RenderTextureFormat.ARGBFloat;
+                                desc.colorFormat = RenderTextureFormat.ARGBHalf;
                                 node.debugTex = new RenderTexture(desc);
                                 node.debugTexDesc = debugNode.tex.desc.basicDesc;
                             }
@@ -59,7 +63,7 @@ namespace HypnosRenderPipeline.RenderGraph
                                 var desc1 = node.debugTexDesc;
                                 var desc2 = debugNode.tex.desc.basicDesc;
                                 var desc = desc2;
-                                desc.colorFormat = RenderTextureFormat.ARGBFloat;
+                                desc.colorFormat = RenderTextureFormat.ARGBHalf;
                                 if (desc1.width != desc2.width || desc1.height != desc2.height || desc1.colorFormat != desc2.colorFormat)
                                 {
                                     node.debugTex.Release();
@@ -75,39 +79,53 @@ namespace HypnosRenderPipeline.RenderGraph
                         break;
                 };
 
+                if (debug)
+                {
+                    if (node.sampler == null/* || node.sampler.isValid == false*/) node.sampler = UnityEngine.Profiling.CustomSampler.Create(node.nodeName + node.GetHashCode(), true);
+                    context.CmdBuffer.BeginSample(node.sampler);
+                }
                 context.Context.ExecuteCommandBuffer(context.CmdBuffer);
                 context.CmdBuffer.Clear();
-
-                if (node.sampler == null) node.sampler = UnityEngine.Profiling.CustomSampler.Create(node.nodeName + node.GetHashCode(), true);
-                context.CmdBuffer.BeginSample(node.sampler);
-                renderNode.Excute(context);
-                context.CmdBuffer.EndSample(node.sampler);
-
+                if (node.nodeType != typeof(TextureDebug) || debug)
+                {
+                    renderNode.Excute(context);
+                }
+                if (debug)
+                    context.CmdBuffer.EndSample(node.sampler);
                 context.Context.ExecuteCommandBuffer(context.CmdBuffer);
                 context.CmdBuffer.Clear();
-                
+                                
                 ReleaseNode(context, renderNode);
             }
 
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
 
+            UnityEngine.Profiling.Profiler.EndSample();
             return result;
         }
 
         int temp_id;
+
+        struct Pair<T1, T2>
+        {
+            public T1 first;
+            public T2 last;
+            public Pair(T1 first, T2 last) { this.first = first; this.last = last; }
+        }
+
         Dictionary<RenderGraphNode, Dictionary<string, System.Object>> valuePool = new Dictionary<RenderGraphNode, Dictionary<string, object>>();
         Dictionary<string, int> pinPool = new Dictionary<string, int>();
         Dictionary<RenderGraphNode, int> dependency = new Dictionary<RenderGraphNode, int>();
         Stack<RenderGraphNode> readyNodes = new Stack<RenderGraphNode>();
-        Dictionary<string, Tuple<object, Type>> pin_map = new Dictionary<string, Tuple<object, Type>>();
+        Dictionary<string, Pair<object, Type>> pin_map = new Dictionary<string, Pair<object, Type>>();
         Dictionary<string, object> existValue = new Dictionary<string, object>();
 
         class NodeRec
         {
             public BaseRenderNode node;
             public Dictionary<string, FieldInfo> parameters;
-            public List<Tuple<FieldInfo, object>> inputs, outputs;
+            public Dictionary<string, Pair<FieldInfo, object>> inputs, outputs;
         }
         Dictionary<int, NodeRec> nodes = new Dictionary<int, NodeRec>();
 
@@ -120,16 +138,16 @@ namespace HypnosRenderPipeline.RenderGraph
                 nodeRec.node = System.Activator.CreateInstance(node.nodeType) as BaseRenderNode;
                 var node_instance = System.Activator.CreateInstance(node.nodeType);
                 var field_infos = ReflectionUtil.GetFieldInfo(node.nodeType);
-                nodeRec.inputs = new List<Tuple<FieldInfo, object>>(field_infos.Item1.Count);
-                nodeRec.outputs = new List<Tuple<FieldInfo, object>>(field_infos.Item2.Count);
+                nodeRec.inputs = new Dictionary<string, Pair<FieldInfo, object>>(field_infos.Item1.Count);
+                nodeRec.outputs = new Dictionary<string, Pair<FieldInfo, object>>(field_infos.Item2.Count);
                 nodeRec.parameters = new Dictionary<string, FieldInfo>(field_infos.Item3.Count);
                 foreach (var item in field_infos.Item1)
                 {
-                    nodeRec.inputs.Add(new Tuple<FieldInfo, object>(item, item.GetValue(node_instance)));
+                    nodeRec.inputs.Add(item.Name, new Pair<FieldInfo, object>(item, item.GetValue(node_instance)));
                 }
                 foreach (var item in field_infos.Item2)
                 {
-                    nodeRec.outputs.Add(new Tuple<FieldInfo, object>(item, item.GetValue(node_instance)));
+                    nodeRec.outputs.Add(item.Name, new Pair<FieldInfo, object>(item, item.GetValue(node_instance)));
                 }
                 foreach (var item in field_infos.Item3)
                 {
@@ -144,11 +162,11 @@ namespace HypnosRenderPipeline.RenderGraph
                 //res.node = System.Activator.CreateInstance(node.nodeType) as BaseRenderNode;
                 foreach (var item in res.inputs)
                 {
-                    item.Item1.FieldType.GetMethod("Move").Invoke(item.Item1.GetValue(res.node), new object[] { item.Item2 });
+                    item.Value.first.FieldType.GetMethod("Move").Invoke(item.Value.first.GetValue(res.node), new object[] { item.Value.last });
                 }
                 foreach (var item in res.outputs)
                 {
-                    item.Item1.FieldType.GetMethod("Move").Invoke(item.Item1.GetValue(res.node), new object[] { item.Item2 });
+                    item.Value.first.FieldType.GetMethod("Move").Invoke(item.Value.first.GetValue(res.node), new object[] { item.Value.last });
                 }
             }
             return res;
@@ -174,23 +192,22 @@ namespace HypnosRenderPipeline.RenderGraph
 
             foreach (var input_value in nodeRec.inputs)
             {
-                var input = input_value.Item1;
+                var input = input_value.Value.first;
                 if (existValue.ContainsKey(input.Name))
                 {
                     var from_pin = existValue[input.Name];
                     var from_pin_name = input.FieldType.GetField("name").GetValue(from_pin) as string;
 
                     var compare_method = input.FieldType.GetMethod("Compare");
-                    var generic_types = from_pin.GetType().BaseType.GetGenericArguments();
-                    bool same = (bool)compare_method.MakeGenericMethod(generic_types).Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
-                    if (same && (node.nodeType == typeof(TextureDebug) || pinPool[from_pin_name] == 1))
+                    bool same = (bool)compare_method.Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                    if (same && (nodeRec.outputs.ContainsKey(input.Name) || node.nodeType == typeof(TextureDebug) || pinPool[from_pin_name] == 1))
                     {
                         input.FieldType.GetMethod("Move").Invoke(input.GetValue(node_instance), new object[] { from_pin });
                     }
                     else
                     {
                         var ca_cast_method = input.FieldType.GetMethod("CanCastFrom");
-                        bool can_cast = (bool)ca_cast_method.MakeGenericMethod(generic_types).Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                        bool can_cast = (bool)ca_cast_method.Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
                         if (can_cast)
                         {
                             var init_method = input.FieldType.GetMethod("AllocateResourcces");
@@ -200,7 +217,7 @@ namespace HypnosRenderPipeline.RenderGraph
                             input.FieldType.GetField("name").SetValue(input.GetValue(node_instance), name);
                             pinPool[name] = 1;
                             var cast_method = input.FieldType.GetMethod("CastFrom");
-                            cast_method.MakeGenericMethod(generic_types).Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                            cast_method.Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
                             if (--pinPool[from_pin_name] == 0)
                             {
                                 var release_method = input.FieldType.GetMethod("ReleaseResourcces");
@@ -232,14 +249,14 @@ namespace HypnosRenderPipeline.RenderGraph
                         pinPool[input.FieldType.GetField("name").GetValue(input.GetValue(node_instance)) as string] = 1;
                     }
                 }
-                pin_map[input.Name] = new Tuple<object, Type>(input.GetValue(node_instance), input.FieldType);
+                pin_map[input.Name] = new Pair<object, Type>(input.GetValue(node_instance), input.FieldType);
             }
 
             var out_edges = m_graph.SearchNodeInDic(node).Item2;
 
             foreach (var output_value in nodeRec.outputs)
             {
-                var output = output_value.Item1;
+                var output = output_value.Value.first;
                 System.Object value = null;
 
                 var edges = out_edges.FindAll(e => e.output.name == output.Name);
@@ -252,13 +269,14 @@ namespace HypnosRenderPipeline.RenderGraph
                     int id = Shader.PropertyToID(name);
                     init_method.Invoke(output.GetValue(node_instance), new object[] { context, id });
                     value = output.GetValue(node_instance);
-                    pinPool[name] = 0;
+                    pinPool[name] = 1;
                     output.FieldType.GetField("name").SetValue(value, name);
+                    pin_map[output.Name] = new Pair<object, Type>(value, output.FieldType);
 
                 }
                 else
                 {
-                    value = pin_map[output.Name].Item1;
+                    value = pin_map[output.Name].first;
                 }
 
                 pinPool[output.FieldType.GetField("name").GetValue(value) as string] += edges.Count;
@@ -293,13 +311,13 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             foreach (var pin in pin_map)
             {
-                var name = pin.Value.Item2.GetField("name").GetValue(pin.Value.Item1) as string;
+                var name = pin.Value.last.GetField("name").GetValue(pin.Value.first) as string;
                 if (pinPool.ContainsKey(name))
                 {
                     if (--pinPool[name] > 0) continue;
                 }
-                var release_method = pin.Value.Item2.GetMethod("ReleaseResourcces");
-                release_method.Invoke(pin.Value.Item1, new object[] { context });
+                var release_method = pin.Value.last.GetMethod("ReleaseResourcces");
+                release_method.Invoke(pin.Value.first, new object[] { context });
             }
         }
 

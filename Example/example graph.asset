@@ -12,9 +12,131 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -4748, y: -484, z: 0}
-  viewScale: {x: 0.90416974, y: 0.90416974, z: 1}
+  viewPosition: {x: 30, y: -18, z: 0}
+  viewScale: {x: 0.8260234, y: 0.8260234, z: 1}
   nodes:
+  - nodeName: OutputNode
+    parameters: []
+    inputs:
+    - name: result
+      info: Output to screen
+      mustConnect: 1
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 1752.3665
+      y: 471.51144
+      width: 300.00003
+      height: 86.00001
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
+  - nodeName: PreZ
+    parameters:
+    - name: mask
+      info: 
+      type_str: UnityEngine.LayerMask
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c4c617965724d61736b20786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c76616c75653e2d313c2f76616c75653e0d0a3c2f4c617965724d61736b3e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: clearDepthFirst
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: depth
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: depth
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 0
+      y: 234.21465
+      width: 300
+      height: 150
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.PreZ
+  - nodeName: GBuffer
+    parameters: []
+    inputs:
+    - name: depth
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: depth
+      info: 
+      mustConnect: 0
+    - name: baseColor_roughness
+      info: 
+      mustConnect: 0
+    - name: normal_metallic
+      info: 
+      mustConnect: 0
+    - name: emission
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 351
+      y: 261.21466
+      width: 300
+      height: 182
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.GBuffer
+  - nodeName: LightingPass
+    parameters: []
+    inputs:
+    - name: lights
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 0
+    - name: baseColor_roughness
+      info: 
+      mustConnect: 0
+    - name: normal_metallic
+      info: 
+      mustConnect: 0
+    - name: emission
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: lightingResult
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 738.5256
+      y: 140.83894
+      width: 300
+      height: 206
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.LightingPass
+  - nodeName: SortLight
+    parameters: []
+    inputs: []
+    outputs:
+    - name: mainLights
+      info: Main lights, they are closest to camera and have high quality shadow.
+      mustConnect: 0
+    - name: secondLights
+      info: Second level lights, they are midle far from camera and still have shadow
+        on.
+      mustConnect: 0
+    - name: otherLights
+      info: Other lights, they are far from camera and don't need shadow.
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 351
+      y: 72
+      width: 300
+      height: 134
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.SortLight
   - nodeName: DrawErrorMaterials
     parameters: []
     inputs:
@@ -33,95 +155,98 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 5878.536
-      y: 865
+      x: 1068
+      y: 376
       width: 300
       height: 158
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.DrawErrorMaterials
-  - nodeName: OutputNode
+  - nodeName: CombineColorDepth
     parameters: []
     inputs:
-    - name: result
-      info: Output to screen
+    - name: color
+      info: 
       mustConnect: 1
-    outputs: []
-    position:
-      serializedVersion: 2
-      x: 6325.2456
-      y: 925.00006
-      width: 300
-      height: 86
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
-  - nodeName: PreZ
-    parameters: []
-    inputs:
-    - name: depthTexture
+    - name: depth
       info: 
-      mustConnect: 0
+      mustConnect: 1
     outputs:
-    - name: depthTexture
+    - name: combined
       info: 
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 5310
-      y: 968
-      width: 300
-      height: 110
+      x: 1419.2195
+      y: 423.29205
+      width: 300.00003
+      height: 134
     info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.PreZ
-  - nodeName: ClearWithColor
-    parameters:
-    - name: k
-      info: 
-      type_str: UnityEngine.Color
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e302e3132323634313530343c2f723e0d0a20203c673e302e3132323634313530343c2f673e0d0a20203c623e302e3132323634313530343c2f623e0d0a20203c613e303c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: target
-      info: It's a test inout pin.
-      mustConnect: 0
-    outputs:
-    - name: target
-      info: It's a test inout pin.
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 5309.521
-      y: 813.6989
-      width: 300
-      height: 130
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.ClearWithColor
+    nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   edgeRecs:
-  - i: 0
+  - i: 3
     o: 2
     i_n: depth
-    o_n: depthTexture
-  - i: 0
+    o_n: depth
+  - i: 3
+    o: 2
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 3
+    o: 2
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 3
+    o: 2
+    i_n: emission
+    o_n: emission
+  - i: 2
+    o: 1
+    i_n: depth
+    o_n: depth
+  - i: 3
+    o: 4
+    i_n: lights
+    o_n: mainLights
+  - i: 5
     o: 3
     i_n: target
+    o_n: lightingResult
+  - i: 5
+    o: 2
+    i_n: depth
+    o_n: depth
+  - i: 6
+    o: 5
+    i_n: color
     o_n: target
-  - i: 1
-    o: 0
+  - i: 6
+    o: 5
+    i_n: depth
+    o_n: depth
+  - i: 0
+    o: 6
     i_n: result
-    o_n: target
+    o_n: combined
   node_edgeRecs:
   - node: 2
-    in_edges: 
-    out_edge: 00000000
-  - node: 0
-    in_edges: 0000000001000000
-    out_edge: 02000000
+    in_edges: 04000000
+    out_edge: 0000000001000000020000000300000007000000
   - node: 3
-    in_edges: 
-    out_edge: 01000000
+    in_edges: 0000000001000000020000000300000005000000
+    out_edge: 06000000
   - node: 1
-    in_edges: 02000000
+    in_edges: 
+    out_edge: 04000000
+  - node: 4
+    in_edges: 
+    out_edge: 05000000
+  - node: 5
+    in_edges: 0600000007000000
+    out_edge: 0800000009000000
+  - node: 6
+    in_edges: 0800000009000000
+    out_edge: 0a000000
+  - node: 0
+    in_edges: 0a000000
     out_edge: 
-  groupRecs:
-  - name: Pipeline
-    color: {r: 0.09803922, g: 0.09803922, b: 1, a: 0.13333334}
-    nodes: 00000000010000000200000003000000
+  groupRecs: []

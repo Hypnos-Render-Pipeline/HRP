@@ -88,6 +88,7 @@ namespace HypnosRenderPipeline.RenderGraph
             public Type slotType;
             public string name;
             public string info;
+            public Nullable<Color> color = null;
             public bool mustConnect;
         }
 
@@ -155,11 +156,13 @@ namespace HypnosRenderPipeline.RenderGraph
 
                 string name = info.Name;// + " (" + ReflectionUtil.GetLastNameOfType(info.FieldType) + ")";
 
+                var coloratri = info.GetCustomAttribute<RenderGraph.BaseRenderNode.PinColorAttribute>();
                 slots.Add(new Slot()
                 {
                     slotType = info.FieldType,
                     name = name,
                     info = tips,
+                    color = coloratri != null ? (Nullable<Color>)coloratri.color : null,
                     mustConnect = pinInfo.mustConnect
                 });
             }
@@ -202,6 +205,8 @@ namespace HypnosRenderPipeline.RenderGraph
 
             List<Parameter> new_parameters = new List<Parameter>();
 
+            BaseRenderNode node_instance = System.Activator.CreateInstance(nodeType) as BaseRenderNode;
+
             foreach (var parm in param_fields)
             {
                 string name = parm.Name;// + " (" + ReflectionUtil.GetLastNameOfType(parm.FieldType) + ")";
@@ -219,14 +224,18 @@ namespace HypnosRenderPipeline.RenderGraph
                         }
                     }
                 }
-                if (!find_saved) new_parameters.Add(new Parameter()
+                if (!find_saved)
                 {
-                    type = parm.FieldType,
-                    name = name,
-                    raw_data = parm,
-                    value = parm.FieldType.IsValueType ? Activator.CreateInstance(parm.FieldType) : null,
-                    info = tooltipattri != null ? tooltipattri.tooltip : ""
-                });
+                    var value = parm.GetValue(node_instance); 
+                    new_parameters.Add(new Parameter()
+                    {
+                        type = parm.FieldType,
+                        name = name,
+                        raw_data = parm,
+                        value = value != null ? value : (parm.FieldType.IsValueType ? Activator.CreateInstance(parm.FieldType) : null),
+                        info = tooltipattri != null ? tooltipattri.tooltip : ""
+                    });
+                }
             }
             parameters = new_parameters;
 

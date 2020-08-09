@@ -1047,11 +1047,11 @@ namespace HypnosRenderPipeline.RenderGraph
                 for (int i = 0; i < UnityEditor.SceneView.sceneViews.Count; i++) // Using a foreach on an ArrayList generates garbage ...
                 {
                     var sv = UnityEditor.SceneView.sceneViews[i] as UnityEditor.SceneView;
-                    if (sv.camera == camera && sv.sceneViewState.alwaysRefresh)
-                    {
-                        animateMaterials = true;
-                        break;
-                    }
+                    //if (sv.camera == camera && sv.sceneViewState.alwaysRefresh)
+                    //{
+                    //    animateMaterials = true;
+                    //    break;
+                    //}
                 }
             }
             else if (camera.cameraType == CameraType.Preview)

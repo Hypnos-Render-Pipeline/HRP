@@ -362,6 +362,15 @@ namespace HypnosRenderPipeline.RenderGraph
                                 field.showAlpha = art.showAlpha;
                             }
                         }
+                        else if (param.type == typeof(LayerMask))
+                        {
+                            var field = new LayerMaskField(param.name);
+                            field.value = (LayerMask)param.value;
+                            field.RegisterValueChangedCallback(e => {
+                                RegisterChange(param, (LayerMask)e.newValue);
+                            });
+                            ele = field;
+                        }
                         else if (ReflectionUtil.IsEngineObject(param.type))
                         {
                             var field = new ObjectField(param.name);
@@ -449,8 +458,13 @@ namespace HypnosRenderPipeline.RenderGraph
             port.portName = slot.name;
             port.Q("type").style.fontSize = new StyleLength(16);
             port.tooltip = slot.info;
+            if (slot.color != null)
+            {
+                port.portColor = slot.color.Value;
+            }
             if (slot.mustConnect && input)
-                port.portColor = Color.red;
+                port.Q("type").style.color = Color.red;
+
             return port;
         }
     }

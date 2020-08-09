@@ -1,7 +1,6 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
 using HypnosRenderPipeline.RenderPass;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -23,6 +22,10 @@ namespace HypnosRenderPipeline
         {
             m_asset = asset;
             m_resourcePool = new RenderGraphResourcePool();
+#if UNITY_EDITOR
+            m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
+#endif
+            m_asset.defaultMaterial.hideFlags = HideFlags.NotEditable;
         }
 
 
@@ -34,6 +37,22 @@ namespace HypnosRenderPipeline
 
             BeginFrameRendering(context, cameras);
 
+#if UNITY_EDITOR
+            // determinate debug priority
+            var hasSceneCamera = false;
+            if (UnityEditor.SceneView.sceneViews.Count != 0)
+            {
+                foreach (var sv in UnityEditor.SceneView.sceneViews)
+                {
+                    if ((sv as UnityEditor.SceneView).hasFocus) hasSceneCamera = true;
+                }
+            }
+
+            UnityEditor.EditorWindow[] windows = Resources.FindObjectsOfTypeAll<UnityEditor.EditorWindow>();
+            var gameWindow = windows.FirstOrDefault(e => e.titleContent.text.Contains("Game"));
+            var hasGameCamera = (gameWindow != null) && gameWindow.hasFocus;
+#endif
+
             foreach (var cam in cameras)
             {
                 BeginCameraRendering(context, cam);
@@ -44,8 +63,20 @@ namespace HypnosRenderPipeline
                 rc.CmdBuffer = cb;
 
 #if UNITY_EDITOR
-                m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
-                int result = m_executor.Excute(rc);
+                // determinate whether debug this camera
+                bool debugCamera = false;
+                if (hasGameCamera)
+                {
+                    if (cam.cameraType == CameraType.Game) debugCamera = true;
+                }
+                
+                else if (hasSceneCamera)
+                {
+                    if (cam.cameraType == CameraType.SceneView) debugCamera = true;
+                }
+                else if (cam == cameras[0]) debugCamera = true;
+
+                int result = m_executor.Excute(rc, debugCamera);
                 if (result == -1) return;
 #endif
 
@@ -60,7 +91,7 @@ namespace HypnosRenderPipeline
                     var cullingResults = context.Cull(ref cullingParams);
 
                     cb.SetRenderTarget(result);
-                    var selected_lights = Selection.GetFiltered<Light>(SelectionMode.Unfiltered);
+                    var selected_lights = UnityEditor.Selection.GetFiltered<Light>(UnityEditor.SelectionMode.Unfiltered);
                     foreach (var light in cullingResults.visibleLights)
                     {
                         var ld = light.light.GetComponent<HRPLight>();

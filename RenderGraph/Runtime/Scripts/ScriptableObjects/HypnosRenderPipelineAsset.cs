@@ -8,7 +8,10 @@ namespace HypnosRenderPipeline
 {
     public class HypnosRenderPipelineAsset : RenderPipelineAsset
     {
+
+#if UNITY_EDITOR
         public RenderGraphInfo hypnosRenderPipelineGraph;
+#endif
 
         public HRPMaterialResources materialResources;
 

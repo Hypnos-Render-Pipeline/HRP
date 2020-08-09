@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: a
   m_EditorClassIdentifier: 
-  viewPosition: {x: -682, y: 127, z: 0}
-  viewScale: {x: 0.43232757, y: 0.43232757, z: 1}
+  viewPosition: {x: 103, y: 189, z: 0}
+  viewScale: {x: 0.7561437, y: 0.7561437, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []
@@ -30,26 +30,6 @@ MonoBehaviour:
       height: 86
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
-  - nodeName: LoadTexture
-    parameters:
-    - name: tex
-      info: 
-      type_str: UnityEngine.Texture2D
-      value_bytes: 
-      obj_ref: {fileID: 2800000, guid: 858e5f85d9e76a44db615afbdada75ea, type: 3}
-    inputs: []
-    outputs:
-    - name: FullResOutput
-      info: 
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 1918.693
-      y: 54
-      width: 300
-      height: 106
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.LoadTexture
   - nodeName: TextureDebug
     parameters:
     - name: texture
@@ -70,24 +50,6 @@ MonoBehaviour:
       height: 618
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
-  - nodeName: EighthScale
-    parameters: []
-    inputs:
-    - name: EighthResInOut
-      info: It's a test inout pin.
-      mustConnect: 0
-    outputs:
-    - name: EighthResInOut
-      info: It's a test inout pin.
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 2880.6929
-      y: 0
-      width: 300
-      height: 110
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.EighthScale
   - nodeName: TextureDebug
     parameters:
     - name: texture
@@ -108,40 +70,18 @@ MonoBehaviour:
       height: 145
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
-  edgeRecs:
-  - i: 2
-    o: 1
-    i_n: tex
-    o_n: FullResOutput
-  - i: 3
-    o: 1
-    i_n: EighthResInOut
-    o_n: FullResOutput
-  - i: 0
-    o: 3
-    i_n: result
-    o_n: EighthResInOut
-  - i: 4
-    o: 3
-    i_n: tex
-    o_n: EighthResInOut
+  edgeRecs: []
   node_edgeRecs:
   - node: 1
     in_edges: 
-    out_edge: 0000000001000000
-  - node: 2
-    in_edges: 00000000
     out_edge: 
-  - node: 3
-    in_edges: 01000000
-    out_edge: 0200000003000000
   - node: 0
-    in_edges: 02000000
+    in_edges: 
     out_edge: 
-  - node: 4
-    in_edges: 03000000
+  - node: 2
+    in_edges: 
     out_edge: 
   groupRecs:
   - name: AAAAAAAAAAAAAA
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
-    nodes: 0000000001000000030000000200000004000000
+    nodes: 000000000100000002000000
