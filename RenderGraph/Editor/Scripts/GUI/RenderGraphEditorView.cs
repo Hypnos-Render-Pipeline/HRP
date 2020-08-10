@@ -15,7 +15,7 @@ namespace HypnosRenderPipeline.RenderGraph
         RenderGraphView m_graphView;
 
         HRGEditorData __editorData__;
-        HRGEditorData m_editorData { get { if (__editorData__ == null) __editorData__ = AssetDatabase.LoadAssetAtPath<HRGEditorData>("Assets/HRP/RenderGraph/Editor/EditorData.asset"); return __editorData__; } }
+        HRGEditorData m_editorData { get { if (__editorData__ == null) __editorData__ = AssetDatabase.LoadAssetAtPath<HRGEditorData>(PathDefine.path + "RenderGraph/Editor/EditorData.asset"); return __editorData__; } }
 
         string assetName = "unnamed";
 

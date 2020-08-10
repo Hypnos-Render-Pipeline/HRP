@@ -299,12 +299,12 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 if (GraphicsSettings.renderPipelineAsset == null)
                 {
-                    GraphicsSettings.renderPipelineAsset = AssetDatabase.LoadAssetAtPath<HypnosRenderPipelineAsset>("Assets/HRP/RenderGraph/Runtime/DefaultPipelineAsset.asset");
+                    GraphicsSettings.renderPipelineAsset = AssetDatabase.LoadAssetAtPath<HypnosRenderPipelineAsset>(PathDefine.path + "RenderGraph/Runtime/DefaultPipelineAsset.asset");
                 }
                 var asset = GraphicsSettings.renderPipelineAsset as HypnosRenderPipelineAsset;
                 if (asset == null)
                 {
-                    GraphicsSettings.renderPipelineAsset = AssetDatabase.LoadAssetAtPath<HypnosRenderPipelineAsset>("Assets/HRP/RenderGraph/Runtime/DefaultPipelineAsset.asset");
+                    GraphicsSettings.renderPipelineAsset = AssetDatabase.LoadAssetAtPath<HypnosRenderPipelineAsset>(PathDefine.path + "RenderGraph/Runtime/DefaultPipelineAsset.asset");
                 }
                 asset.hypnosRenderPipelineGraph = this;
             }

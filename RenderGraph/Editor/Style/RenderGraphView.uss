@@ -1,6 +1,6 @@
 RenderGraphView {
     flex-direction: row;
     background-color: #202020;
-	background-image: resource("Assets/HRP/RenderGraph/Editor/Style/HRG_Background.png");
+	background-image: resource("HRG_Background");
     flex: 1; 
 }

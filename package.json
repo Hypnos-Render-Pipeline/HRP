@@ -1,0 +1,11 @@
+{
+  "name": "com.hjk.hypnos",
+  "description": "Hypnos render pipeline",
+  "version": "0.1.0",
+  "unity": "2020.1",
+  "unityRelease": "0b16",
+  "displayName": "HRP",
+  "dependencies": {
+    "com.unity.render-pipelines.core": "8.1.0"
+  }
+}

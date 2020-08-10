@@ -15,7 +15,7 @@ public class HRGEditorData : ScriptableObject
        
     static bool Quit()
     {
-        var self = AssetDatabase.LoadAssetAtPath<HRGEditorData>("Assets/HRP/RenderGraph/Editor/EditorData.asset");
+        var self = AssetDatabase.LoadAssetAtPath<HRGEditorData>(HypnosRenderPipeline.PathDefine.path + "RenderGraph/Editor/EditorData.asset");
         self.lastOpenPath = "unnamed";
         EditorUtility.SetDirty(self);
         AssetDatabase.Refresh();

@@ -63,7 +63,7 @@ namespace HypnosRenderPipeline
                     UnityEditor.AssetDatabase.DeleteAsset(path);
                 }
                 var obj = UnityEngine.ScriptableObject.CreateInstance<HypnosRenderPipelineAsset>();
-                obj.materialResources = AssetDatabase.LoadAssetAtPath<HRPMaterialResources>("Assets/HRP/Lighting/Runtime/Resources/HRPDefaultResources.asset");
+                obj.materialResources = AssetDatabase.LoadAssetAtPath<HRPMaterialResources>(PathDefine.path + "Lighting/Runtime/Resources/HRPDefaultResources.asset");
                 UnityEditor.AssetDatabase.CreateAsset(obj, path);
             }
         }
