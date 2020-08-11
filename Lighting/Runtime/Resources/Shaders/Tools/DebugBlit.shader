@@ -41,7 +41,6 @@
             float4 frag (v2f i) : SV_Target
             {
                 float4 col = tex2D(_MainTex, i.uv);
-
                 col.rgb *= _Multiplier;
 
                 if (_Channel) {

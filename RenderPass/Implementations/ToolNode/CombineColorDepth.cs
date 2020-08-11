@@ -25,7 +25,7 @@ namespace HypnosRenderPipeline.RenderPass
         public override void Excute(RenderContext context)
         {
             context.CmdBuffer.Blit(color.handle, combined.handle);
-            context.CmdBuffer.Blit(depth.handle, combined.handle, MaterialWithName.depthBit);
+            context.CmdBuffer.Blit(depth.handle, combined.handle, MaterialWithName.depthBlit);
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
         }

@@ -19,9 +19,11 @@ namespace HypnosRenderPipeline
             return a.material;
         }
 
-        static MaterialWithName __depthBit__ = new MaterialWithName("Hidden/DepthBlit");
-        
-        public static Material depthBit { get { return __depthBit__; } }
+        static MaterialWithName __depthBlit__ = new MaterialWithName("Hidden/DepthBlit");
+        public static Material depthBlit { get { return __depthBlit__; } }
+
+        static MaterialWithName __debugBlit__ = new MaterialWithName("Hidden/DebugBlit");
+        public static Material debugBlit { get { return __debugBlit__; } }
     }
 
 

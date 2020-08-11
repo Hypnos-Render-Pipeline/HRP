@@ -73,8 +73,6 @@ namespace HypnosRenderPipeline.RenderPass
         [HideInInspector]
         public RenderTexture texture;
 
-        static MaterialWithName blitMat = new MaterialWithName("Hidden/DebugBlit");
-
         public override void Excute(RenderContext context)
         {
             if (texture != null)
@@ -82,7 +80,7 @@ namespace HypnosRenderPipeline.RenderPass
                 context.CmdBuffer.SetGlobalFloat("_Multiplier", multiplier);
                 context.CmdBuffer.SetGlobalInt("_Channel", (int)channal);
                 context.CmdBuffer.SetGlobalFloat("_Aspect", (float)tex.desc.basicDesc.width / tex.desc.basicDesc.height);
-                context.CmdBuffer.Blit(tex.handle, texture, blitMat);
+                context.CmdBuffer.Blit(tex.handle, texture, MaterialWithName.debugBlit);
             }
         }
     }

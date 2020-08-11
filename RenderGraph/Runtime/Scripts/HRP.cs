@@ -1,8 +1,10 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
 using HypnosRenderPipeline.RenderPass;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace HypnosRenderPipeline
 {
@@ -106,20 +108,50 @@ namespace HypnosRenderPipeline
 
                     context.ExecuteCommandBuffer(cb);
                     cb.Clear();
+                }
+#endif
+
+#if UNITY_EDITOR
+                if (cam.cameraType == CameraType.SceneView)
+                {
+                    var drawMode = SceneView.lastActiveSceneView.cameraMode.drawMode;
+                    if (drawMode == DrawCameraMode.Wireframe)
+                    {
+                        cb.SetGlobalFloat("_Multiplier", 1);
+                        cb.SetGlobalInt("_Channel", 4);
+                        if (cam.targetTexture != null)
+                            cb.Blit(result, cam.targetTexture, MaterialWithName.debugBlit);
+                        else
+                            cb.Blit(result, BuiltinRenderTextureType.CameraTarget, MaterialWithName.debugBlit);
+                    }
+                    else
+                    {
+#endif
+                        if (cam.targetTexture != null)
+                            cb.Blit(result, cam.targetTexture);
+                        else
+                            cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
+
+#if UNITY_EDITOR
+                    }
+
+                    context.ExecuteCommandBuffer(cb);
+                    cb.Clear();
                     context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
                     context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
                     context.DrawUIOverlay(cam);
                 }
-#endif
-
-                if (cam.targetTexture != null)
-                    cb.Blit(result, cam.targetTexture);
                 else
-                    cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
+                {
+                    if (cam.targetTexture != null)
+                        cb.Blit(result, cam.targetTexture);
+                    else
+                        cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
+                }
+#endif
 
                 context.ExecuteCommandBuffer(cb);
                 cb.Clear();
-
 
                 EndCameraRendering(context, cam);
             }

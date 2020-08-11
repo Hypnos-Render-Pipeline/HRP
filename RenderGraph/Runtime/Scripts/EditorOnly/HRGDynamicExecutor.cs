@@ -200,7 +200,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
                     var compare_method = input.FieldType.GetMethod("Compare");
                     bool same = (bool)compare_method.Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
-                    if (same && (nodeRec.outputs.ContainsKey(input.Name) || node.nodeType == typeof(TextureDebug) || pinPool[from_pin_name] == 1))
+                    if (same && (!nodeRec.outputs.ContainsKey(input.Name) || node.nodeType == typeof(TextureDebug) || pinPool[from_pin_name] == 1))
                     {
                         input.FieldType.GetMethod("Move").Invoke(input.GetValue(node_instance), new object[] { from_pin });
                     }

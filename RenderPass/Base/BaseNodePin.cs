@@ -140,7 +140,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             if ((pin as TexturePin).desc.basicDesc.colorFormat == RenderTextureFormat.Depth)
             {
-                renderContext.CmdBuffer.Blit(from, handle, MaterialWithName.depthBit);
+                renderContext.CmdBuffer.Blit(from, handle, MaterialWithName.depthBlit);
             }
             else
             {
