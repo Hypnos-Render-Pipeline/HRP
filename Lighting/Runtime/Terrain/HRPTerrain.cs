@@ -2,13 +2,14 @@
 using static Unity.Mathematics.math;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEditor;
 
 [ExecuteInEditMode]
-public class TerrainMesh : MonoBehaviour
+public class HRPTerrain : MonoBehaviour
 {
-    public int tileCount = 8;
+    public int tileCount = 16;
 
-    public float tileSize = 10;
+    public float tileSize = 16;
 
     [Range(4, 8)]
     public int maxLodGridCount = 4;
@@ -292,4 +293,25 @@ public class TerrainMesh : MonoBehaviour
 
         return mesh;
     }
+
+
+
+
+
+
+
+
+#if UNITY_EDITOR
+
+    [UnityEditor.MenuItem("GameObject/3D Object/HRP Terrain")]
+    static void CreateTerrain()
+    {
+        GameObject go = new GameObject();
+        go.name = "Terrain";
+        go.AddComponent<HRPTerrain>();
+        Undo.RegisterCreatedObjectUndo(go, "Create HRP Terrain");
+    }
+
+
+#endif
 }

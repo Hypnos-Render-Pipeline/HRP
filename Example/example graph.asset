@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -6069, y: -1573, z: 0}
-  viewScale: {x: 4, y: 4, z: 1}
+  viewPosition: {x: 42, y: 234, z: 0}
+  viewScale: {x: 0.47619048, y: 0.47619048, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []
@@ -24,9 +24,9 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 2389.995
-      y: 406.05573
-      width: 300.00003
+      x: 2210.1968
+      y: 414.99017
+      width: 300
       height: 86
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
@@ -183,12 +183,7 @@ MonoBehaviour:
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   - nodeName: TerrainPass
-    parameters:
-    - name: terrain
-      info: 
-      type_str: TerrainMesh
-      value_bytes: 
-      obj_ref: {fileID: 0}
+    parameters: []
     inputs:
     - name: color
       info: 
@@ -205,10 +200,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1449
-      y: 335.13043
+      x: 1450.25
+      y: 335
       width: 300
-      height: 178
+      height: 198
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.TerrainPass
   edgeRecs:

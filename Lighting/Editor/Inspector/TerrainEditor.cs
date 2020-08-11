@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(TerrainMesh))]
+[CustomEditor(typeof(HRPTerrain))]
 public class TerrainEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -12,7 +12,7 @@ public class TerrainEditor : Editor
         base.OnInspectorGUI();
         if (EditorGUI.EndChangeCheck())
         {
-            (target as TerrainMesh).Generate();
+            (target as HRPTerrain).Generate();
         }
     }
 }

@@ -16,11 +16,8 @@ namespace HypnosRenderPipeline.RenderPass
                                                                         TexturePinDesc.ColorCastMode.Fixed,
                                                                         TexturePinDesc.SizeScale.Full));
 
-        public TerrainMesh terrain;
-
         public override void Excute(RenderContext context)
         {
-            if (terrain == null || terrain.cb == null) return;
                 context.CmdBuffer.SetRenderTarget(
                 new[]{
                     (RenderTargetIdentifier)color.handle,
@@ -31,7 +28,12 @@ namespace HypnosRenderPipeline.RenderPass
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
 
-            context.Context.ExecuteCommandBuffer(terrain.cb);
+            var tms = GameObject.FindObjectsOfType<HRPTerrain>();
+            foreach (var tm in tms)
+            {
+                if (tm.isActiveAndEnabled && tm.cb != null)
+                    context.Context.ExecuteCommandBuffer(tm.cb);
+            }
         }
     }
 

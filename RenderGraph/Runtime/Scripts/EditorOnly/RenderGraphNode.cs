@@ -74,6 +74,11 @@ namespace HypnosRenderPipeline.RenderGraph
                         value_bytes = stream.GetBuffer();
                     }
                 }
+                else
+                {
+                    value_bytes = null;
+                    obj_ref = null;
+                }
             }
 
         }
