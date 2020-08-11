@@ -371,6 +371,7 @@ namespace HypnosRenderPipeline.RenderGraph
                             var field = new ObjectField(param.name);
                             field.objectType = param.type;
                             field.value = (UnityEngine.Object)param.value;
+                            field.allowSceneObjects = false;
                             field.RegisterValueChangedCallback(e => {
                                 RegisterChange(param, e.newValue);
                             });
