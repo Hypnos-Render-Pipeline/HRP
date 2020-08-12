@@ -1,18 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
-using UnityEngine;
+﻿using UnityEditor;
 
-[CustomEditor(typeof(HRPTerrain))]
-public class TerrainEditor : Editor
+namespace HypnosRenderPipeline
 {
-    public override void OnInspectorGUI()
+
+    [CustomEditor(typeof(HRPTerrain))]
+    public class TerrainEditor : Editor
     {
-        EditorGUI.BeginChangeCheck();
-        base.OnInspectorGUI();
-        if (EditorGUI.EndChangeCheck())
+        public override void OnInspectorGUI()
         {
-            (target as HRPTerrain).Generate();
+            EditorGUI.BeginChangeCheck();
+            base.OnInspectorGUI();
+            if (EditorGUI.EndChangeCheck())
+            {
+                (target as HRPTerrain).Generate();
+            }
         }
     }
 }

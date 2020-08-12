@@ -113,7 +113,6 @@ namespace HypnosRenderPipeline.RenderGraph
                 Save();
                 m_editorData.lastOpenPath = assetName;
                 EditorUtility.SetDirty(m_editorData);
-                AssetDatabase.Refresh();
             }
             m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
             m_graphView.SetGraphInfo(m_renderGraphInfo);
@@ -199,7 +198,6 @@ namespace HypnosRenderPipeline.RenderGraph
             if (AssetDatabase.Contains(m_renderGraphInfo))
             {
                 EditorUtility.SetDirty(m_renderGraphInfo);
-                AssetDatabase.SaveAssets();
                 assetName = AssetDatabase.GetAssetPath(m_renderGraphInfo);
             }
             else

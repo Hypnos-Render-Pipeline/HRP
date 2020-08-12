@@ -1,0 +1,49 @@
+﻿#pragma kernel Clear
+#pragma kernel PlaneCuling
+
+
+
+float4 _FrustumPlanes[6];
+
+uint _TotalNum;
+RWBuffer<uint> _ResultNum;
+RWBuffer<int> _Results;
+
+float _PlaneSize;
+float3 _LocalToWorld;
+Buffer<float2> _PlaneCenter;
+
+
+
+void Append(int index) {
+	uint id;
+	InterlockedAdd(_ResultNum[1], 1, id);
+	_Results[id] = index;
+}
+
+
+[numthreads(1, 1, 1)]
+void Clear(uint id : SV_DispatchThreadID)
+{
+	_ResultNum[1] = 0;
+}
+
+[numthreads(32, 1, 1)]
+void PlaneCuling(uint id : SV_DispatchThreadID)
+{
+	if (id >= _TotalNum) return;
+
+	float2 offset = _PlaneCenter[id];
+	float3 center = _LocalToWorld  + float3(_PlaneSize,0, _PlaneSize) / 2 + float3(offset.x, 0, offset.y);
+	float3 size = float3(_PlaneSize, 0, -_PlaneSize) / 2;
+
+	float4x3 corners = float4x3(center + size.zyz, center + size.xyz, center + size.zyx, center + size.xyx);
+
+	for (int i = 0; i < 6; i++)
+	{
+		float4 dis = mul(corners, _FrustumPlanes[i].xyz);
+		if (all(dis < _FrustumPlanes[i].w)) return;
+	}
+
+	Append(id);
+}

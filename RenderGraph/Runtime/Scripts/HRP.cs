@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using UnityEngine.XR;
 
 namespace HypnosRenderPipeline
 {
@@ -150,9 +151,8 @@ namespace HypnosRenderPipeline
                 cb.Clear();
 
 #if UNITY_EDITOR
-                if (cam.cameraType == CameraType.SceneView || cam.cameraType == CameraType.Game)
-                {
-
+                if (Handles.ShouldRenderGizmos() && (cam.cameraType == CameraType.SceneView || cam.cameraType == CameraType.Game))
+                {                    
                     context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
                     context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
                     context.DrawUIOverlay(cam);

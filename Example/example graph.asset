@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: 42, y: 234, z: 0}
-  viewScale: {x: 0.47619048, y: 0.47619048, z: 1}
+  viewPosition: {x: 47, y: 75, z: 0}
+  viewScale: {x: 0.6627635, y: 0.6627635, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []
@@ -155,8 +155,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1063.4037
-      y: 321.03085
+      x: 1072.8593
+      y: 313.95767
       width: 300
       height: 158
     info: 
@@ -183,7 +183,12 @@ MonoBehaviour:
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   - nodeName: TerrainPass
-    parameters: []
+    parameters:
+    - name: gameCameraCull
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     inputs:
     - name: color
       info: 
@@ -200,10 +205,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1450.25
-      y: 335
+      x: 1458.5916
+      y: 322.63495
       width: 300
-      height: 198
+      height: 177
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.TerrainPass
   edgeRecs:
@@ -286,5 +291,5 @@ MonoBehaviour:
     out_edge: 0b0000000c000000
   groupRecs:
   - name: Pipeline
-    color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
+    color: {r: 0.14204344, g: 0.18852712, b: 0.2264151, a: 0.4}
     nodes: 0000000001000000020000000300000004000000050000000600000007000000

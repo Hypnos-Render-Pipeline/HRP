@@ -16,23 +16,34 @@ namespace HypnosRenderPipeline.RenderPass
                                                                         TexturePinDesc.ColorCastMode.Fixed,
                                                                         TexturePinDesc.SizeScale.Full));
 
+        public bool gameCameraCull = false;
+
         public override void Excute(RenderContext context)
         {
-                context.CmdBuffer.SetRenderTarget(
+            context.CmdBuffer.SetRenderTarget(
                 new[]{
                     (RenderTargetIdentifier)color.handle,
                     (RenderTargetIdentifier)depth.handle,
                 }
                 , depth.handle);
 
+            var cam = gameCameraCull ? Camera.main ?? context.RenderCamera : context.RenderCamera;
+
+            FrustumCulling.SetCullingCamera(context.CmdBuffer, cam);
+
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
 
-            var tms = GameObject.FindObjectsOfType<HRPTerrain>();
-            foreach (var tm in tms)
+            var terrain = GameObject.FindObjectOfType<HRPTerrain>();
+           if (terrain != null)
             {
-                if (tm.isActiveAndEnabled && tm.cb != null)
-                    context.Context.ExecuteCommandBuffer(tm.cb);
+                if (terrain.isActiveAndEnabled && terrain.cb != null)
+                {
+                    terrain.MoveTerrain(context.CmdBuffer, cam);
+                    context.Context.ExecuteCommandBuffer(context.CmdBuffer);
+                    context.CmdBuffer.Clear();
+                    context.Context.ExecuteCommandBuffer(terrain.cb);
+                }
             }
         }
     }
