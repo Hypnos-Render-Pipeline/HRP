@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: 47, y: 75, z: 0}
+  viewPosition: {x: 47, y: 30, z: 0}
   viewScale: {x: 0.6627635, y: 0.6627635, z: 1}
   nodes:
   - nodeName: OutputNode
@@ -205,8 +205,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1458.5916
-      y: 322.63495
+      x: 1464.7844
+      y: 310.98175
       width: 300
       height: 177
     info: 

@@ -16,7 +16,9 @@ namespace HypnosRenderPipeline.RenderPass
                                                                         TexturePinDesc.ColorCastMode.Fixed,
                                                                         TexturePinDesc.SizeScale.Full));
 
-        public bool gameCameraCull = false;
+        public bool gameCameraCull = true;
+
+        HRPTerrain terrain = null;
 
         public override void Excute(RenderContext context)
         {
@@ -34,8 +36,7 @@ namespace HypnosRenderPipeline.RenderPass
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
 
-            var terrain = GameObject.FindObjectOfType<HRPTerrain>();
-           if (terrain != null)
+            if (terrain != null)
             {
                 if (terrain.isActiveAndEnabled && terrain.cb != null)
                 {
@@ -44,6 +45,10 @@ namespace HypnosRenderPipeline.RenderPass
                     context.CmdBuffer.Clear();
                     context.Context.ExecuteCommandBuffer(terrain.cb);
                 }
+            }
+            else
+            {
+                terrain = GameObject.FindObjectOfType<HRPTerrain>();
             }
         }
     }

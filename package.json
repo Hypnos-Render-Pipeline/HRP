@@ -6,6 +6,7 @@
   "unityRelease": "0b16",
   "displayName": "HRP",
   "dependencies": {
-    "com.unity.render-pipelines.core": "8.1.0"
+    "com.unity.render-pipelines.core": "8.1.0",
+    "com.unity.mathematics": "1.1.0"
   }
 }
