@@ -97,7 +97,7 @@ namespace HypnosRenderPipeline
         /// <summary>
         /// Editor Only.
         /// </summary>
-        public bool canHasTexture { get { if (lightType == HRPLightType.Quad || lightType == HRPLightType.Mesh) return true; return false; } }
+        public bool canHasTexture { get { if (lightType == HRPLightType.Quad || lightType == HRPLightType.Disc || lightType == HRPLightType.Mesh) return true; return false; } }
 #endif
 
         public bool isArea { get { if (canHasTexture || lightType == HRPLightType.Tube || lightType == HRPLightType.Sphere || lightType == HRPLightType.Disc) return true; return false; } }
@@ -124,7 +124,7 @@ namespace HypnosRenderPipeline
         /// <summary>
         /// Light Color, you should always use this(HRPLight.color) instead of using "Light.color".
         /// </summary>
-        public Color color { get { return m_light.color; } set { m_light.color = value; m_temperature = m_light.colorTemperature; } }
+        public Color color { get { return Mathf.CorrelatedColorTemperatureToRGB(m_temperature); } set { m_light.color = value; m_temperature = m_light.colorTemperature; } }
 
         public float spotAngle { get { return m_light.spotAngle; } set { m_light.spotAngle = spotAngle; } }
 

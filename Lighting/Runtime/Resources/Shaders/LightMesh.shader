@@ -25,6 +25,7 @@
 
             float3 _LightColor;
             sampler2D _LightTex;
+            int _Disc;
 
             v2f vert (appdata v)
             {
@@ -36,6 +37,7 @@
 
             float4 frag(v2f i) : SV_Target
             {
+                if (_Disc) if (distance(i.uv, 0.5) > 0.5) discard;
                 return float4(_LightColor * tex2D(_LightTex, i.uv).rgb, 0);
             }
             ENDCG

@@ -94,10 +94,13 @@ namespace HypnosRenderPipeline.RenderPass
                     switch (light.lightType)
                     {
                         case HRPLightType.Sphere:
-                            mat = Matrix4x4.TRS(trans.position, Quaternion.identity, Vector3.one * light.sphereRadius);
+                            mat = Matrix4x4.TRS(trans.position, Quaternion.identity, Vector3.one * light.sphereRadius * 2);
                             mesh = sphere;
                             break;
                         case HRPLightType.Tube:
+                            float2 lr = light.tubeLengthRadius;
+                            lr.y *= 2;
+                            mat = Matrix4x4.TRS(trans.position, trans.rotation * Quaternion.AngleAxis(90, Vector3.right), math.float3(lr.y, lr.x, lr.y));
                             mesh = tube;
                             break;
                         case HRPLightType.Quad:
@@ -105,6 +108,8 @@ namespace HypnosRenderPipeline.RenderPass
                             mesh = quad;
                             break;
                         case HRPLightType.Disc:
+                            mat = Matrix4x4.TRS(trans.position, trans.rotation, math.float3(light.discRadius * 2));
+                            mesh = quad;
                             break;
                         case HRPLightType.Mesh:
                             mesh = light.lightMesh;
@@ -116,7 +121,8 @@ namespace HypnosRenderPipeline.RenderPass
                     if (mesh != null)
                     {
                         context.CmdBuffer.SetGlobalColor("_LightColor", light.color * light.radiance);
-                        context.CmdBuffer.SetGlobalTexture("_LightTex", light.areaTexture == null ? Texture2D.whiteTexture : light.areaTexture);
+                        context.CmdBuffer.SetGlobalTexture("_LightTex", (light.canHasTexture && light.areaTexture != null) ? light.areaTexture : Texture2D.whiteTexture);
+                        context.CmdBuffer.SetGlobalInt("_Disc", light.lightType == HRPLightType.Disc ? 1 : 0);
                         context.CmdBuffer.SetRenderTarget(color: target.handle, depth: depth.handle);
                         context.CmdBuffer.DrawMesh(mesh, mat, lightMat);
 
@@ -142,7 +148,20 @@ namespace HypnosRenderPipeline.RenderPass
 
                             context.CmdBuffer.Blit(null, target.handle, deferredLightingMat, 1);
                         }
+                        else if (light.lightType == HRPLightType.Tube)
+                        {
+                            var pos = light.transform.position;
+                            var x = float4(trans.forward, light.tubeLengthRadius.x * 2);
+                            var y = float4(trans.right, light.tubeLengthRadius.y * 2);
+                            context.CmdBuffer.SetGlobalVector("_LightPos", pos);
+                            context.CmdBuffer.SetGlobalVector("_LightX", x);
+                            context.CmdBuffer.SetGlobalVector("_LightY", y);
 
+                            context.CmdBuffer.SetGlobalTexture("_LightDiffuseTex", Texture2D.whiteTexture);
+                            context.CmdBuffer.SetGlobalTexture("_LightSpecTex", Texture2D.whiteTexture);
+
+                            context.CmdBuffer.Blit(null, target.handle, deferredLightingMat, 2);
+                        }
                     }
                 }
             }
