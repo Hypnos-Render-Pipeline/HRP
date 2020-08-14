@@ -48,7 +48,19 @@ void DecodeGBuffer(fixed4 target0, fixed4 target1, fixed4 target2,
 	emission = DecodeHDR(target2);
 }
 
+inline float OneMinusReflectivityFromMetallic(const float metallic)
+{
+	float oneMinusDielectricSpec = 1.0 - 0.04;
+	return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
+}
 
+
+inline float3 DiffuseAndSpecularFromMetallic(const float3 albedo, const float metallic, out float3 specColor)
+{
+	specColor = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+	float oneMinusReflectivity = OneMinusReflectivityFromMetallic(metallic);
+	return albedo * oneMinusReflectivity;
+}
 
 
 

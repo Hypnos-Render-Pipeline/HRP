@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using UnityEngine.Rendering;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.Assertions;
@@ -71,9 +72,14 @@ namespace HypnosRenderPipeline
         public Texture2D areaTexture;
 
         /// <summary>
-        /// Filtered light texture for LTC.
+        /// Filtered light texture (diffuse) for LTC.
         /// </summary>
-        public Texture2D filteredAreaTexture { get { return m_filteredTex; } }
+        public RenderTexture filteredDiffuseTexture { get { if (!areaTextureAlreadyFiltered) GeneratePrefilteredAreaTexture(); return m_filteredDiffuseTex; } }
+
+        /// <summary>
+        /// Filtered light texture (specular) for LTC.
+        /// </summary>
+        public RenderTexture filteredSpecularTexture { get { if (!areaTextureAlreadyFiltered) GeneratePrefilteredAreaTexture(); return m_filteredSpecTex; } }
 
         public Mesh lightMesh;
 
@@ -86,7 +92,7 @@ namespace HypnosRenderPipeline
         /// <summary>
         /// Editor Only. Whether light texture has been filtered.
         /// </summary>
-        public bool areaTextureAlreadyFiltered { get { if (m_lastTex == null || areaTexture != m_lastTex) return false; return true; } }
+        public bool areaTextureAlreadyFiltered { get { if (areaTexture == null) return true; if (m_lastTex == null || areaTexture != m_lastTex) return false; return true; } }
 
         /// <summary>
         /// Editor Only.
@@ -165,15 +171,19 @@ namespace HypnosRenderPipeline
         [SerializeField]
         private float m_temperature = 6000;
 
-        [SerializeField]
-        private Texture2D m_filteredTex;
+        [NonSerialized]
+        private RenderTexture m_filteredDiffuseTex, m_filteredSpecTex;
 
 
         [SerializeField]
         private Vector2 m_areaSize = Vector2.one;
 
         Light m_light { get { if (__m_light__ == null) __m_light__ = GetComponent<Light>(); return __m_light__; } }
+        [NonSerialized]
         Light __m_light__ = null;
+
+        [NonSerialized]
+        Texture2D m_lastTex;
 
         #endregion
 
@@ -224,11 +234,34 @@ namespace HypnosRenderPipeline
             return l;
         }
 
+
+        /// <summary>
+        /// Generate Filtered light texture for LTC. Usually you don't need to call this function, HRPLight will automatically filter texture when it needed.
+        /// </summary>
+        public void GeneratePrefilteredAreaTexture()
+        {
+            if (areaTexture == null) return;
+            if (!areaTextureAlreadyFiltered)
+            {
+                // generate
+                if (m_filteredDiffuseTex != null)
+                {
+                    m_filteredDiffuseTex.Release();
+                    m_filteredDiffuseTex = null;
+                    m_filteredSpecTex.Release();
+                    m_filteredSpecTex = null;
+                }
+
+                m_filteredDiffuseTex = CalculateDiffuse(areaTexture);
+                m_filteredSpecTex = CalculateSpec(areaTexture);
+
+                m_lastTex = areaTexture;
+            }
+        }
+
         #endregion
 
-
         #region Private Methods
-
 
         void OnEnable()
         {
@@ -238,29 +271,84 @@ namespace HypnosRenderPipeline
         void OnDisable()
         {
             LightManager.ReportDestroy(this);
+            if (m_filteredDiffuseTex != null)
+            {
+                m_filteredDiffuseTex.Release();
+                m_filteredDiffuseTex = null;
+            }
+            if (m_filteredSpecTex != null)
+            {
+                m_filteredSpecTex.Release();
+                m_filteredSpecTex = null;
+            }
+            m_lastTex = null;
         }
 
+        RenderTexture CalculateSpec(Texture2D tex)
+        {
+            RenderTexture filterd_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
+            filterd_tex.useMipMap = true;
+            filterd_tex.autoGenerateMips = false;
+            filterd_tex.Create();
+            RenderTexture swap_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
+            swap_tex.useMipMap = true;
+            swap_tex.autoGenerateMips = false;
+            swap_tex.Create();
+
+
+            var blurMat = new Material(Shader.Find("Hidden/GenerateLTCTexture"));
+
+            CommandBuffer cb = new CommandBuffer();
+
+            cb.Blit(tex, filterd_tex);
+            cb.Blit(filterd_tex, swap_tex);
+            for (int i = 1; i < tex.mipmapCount; i++)
+            {
+                cb.SetRenderTarget(filterd_tex, i);
+                cb.SetGlobalInt("_Level", i - 1);
+                cb.Blit(swap_tex, BuiltinRenderTextureType.CurrentActive, blurMat, 0);
+                cb.SetRenderTarget(swap_tex, i);
+                cb.Blit(filterd_tex, BuiltinRenderTextureType.CurrentActive, blurMat, 1);
+            }
+            Graphics.ExecuteCommandBuffer(cb);
+            swap_tex.Release();
+            return filterd_tex;
+        }
+
+        RenderTexture CalculateDiffuse(Texture2D tex)
+        {
+            RenderTexture filterd_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
+            filterd_tex.useMipMap = true;
+            filterd_tex.autoGenerateMips = false;
+            filterd_tex.Create();
+            RenderTexture swap_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
+            swap_tex.useMipMap = true;
+            swap_tex.autoGenerateMips = false;
+            swap_tex.Create();
+
+
+            var blurMat = new Material(Shader.Find("Hidden/GenerateLTCTexture"));
+
+            CommandBuffer cb = new CommandBuffer();
+
+            cb.Blit(tex, filterd_tex, blurMat, 2);
+            cb.Blit(filterd_tex, swap_tex);
+            for (int i = 1; i < tex.mipmapCount; i++)
+            {
+                cb.SetRenderTarget(filterd_tex, i);
+                cb.SetGlobalInt("_Level", i - 1);
+                cb.Blit(swap_tex, BuiltinRenderTextureType.CurrentActive, blurMat, 0);
+                cb.SetRenderTarget(swap_tex, i);
+                cb.Blit(filterd_tex, BuiltinRenderTextureType.CurrentActive, blurMat, 1);
+            }
+            Graphics.ExecuteCommandBuffer(cb);
+            swap_tex.Release();
+            return filterd_tex;
+        }
 
         #endregion
 
 #if UNITY_EDITOR
-
-        Texture2D m_lastTex;
-        /// <summary>
-        /// Editor Only. Generate Filtered light texture for LTC.
-        /// </summary>
-        public void GenerateAreaTexturePrefiltered()
-        {
-            if (!areaTextureAlreadyFiltered)
-            {
-                // generate
-                if (m_filteredTex != null)
-                {
-                    AssetDatabase.DeleteAsset(AssetDatabase.GetAssetPath(m_filteredTex));
-                    m_filteredTex = null;
-                }
-            }
-        }
 
         [MenuItem("CONTEXT/Light/Remove Component", false, 0)]
         static void RemoveLight(MenuCommand menuCommand)

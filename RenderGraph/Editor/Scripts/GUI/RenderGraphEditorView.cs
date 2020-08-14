@@ -164,7 +164,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public void Load()
         {
-            RenderGraphSaveFileWindow.OpenFileName openFileName = new RenderGraphSaveFileWindow.OpenFileName();
+            FileUtil.OpenFileName openFileName = new FileUtil.OpenFileName();
             openFileName.structSize = Marshal.SizeOf(openFileName);
             openFileName.templateName = "*.asset";
             openFileName.filter = "HRG(*.asset)\0*.asset";
@@ -176,7 +176,7 @@ namespace HypnosRenderPipeline.RenderGraph
             openFileName.title = "Load HRG";
             openFileName.flags = 0x00080000 | 0x00001000 | 0x00000800 | 0x00000008;
 
-            if (RenderGraphSaveFileWindow.GetOpenFileName(openFileName))
+            if (FileUtil.GetOpenFileName(openFileName))
             {
                 string path = openFileName.file.Substring(openFileName.file.IndexOf("Assets"));
                 path = path.Replace('\\', '/');
@@ -202,7 +202,7 @@ namespace HypnosRenderPipeline.RenderGraph
             }
             else
             {
-                RenderGraphSaveFileWindow.OpenFileName openFileName = new RenderGraphSaveFileWindow.OpenFileName();
+                FileUtil.OpenFileName openFileName = new FileUtil.OpenFileName();
                 openFileName.structSize = Marshal.SizeOf(openFileName);
                 openFileName.templateName = "*.asset";
                 openFileName.filter = "HRG(*.asset)\0*.asset";
@@ -214,7 +214,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 openFileName.title = "Save HRG";
                 openFileName.flags = 0x00080000 | 0x00001000 | 0x00000800 | 0x00000008 | 0x00000002;
 
-                if (RenderGraphSaveFileWindow.GetSaveFileName(openFileName))
+                if (FileUtil.GetSaveFileName(openFileName))
                 {
                     string path = openFileName.file.Substring(openFileName.file.IndexOf("Assets"));
                     path = path.Replace('\\', '/');

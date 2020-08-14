@@ -51,7 +51,7 @@ namespace HypnosRenderPipeline.RenderPass
             context.CmdBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness.handle);
             context.CmdBuffer.SetGlobalTexture("_NormalTex", normal_metallic.handle);
             context.CmdBuffer.SetGlobalTexture("_EmissionTex", emission.handle);
-            context.CmdBuffer.Blit(null, lightingResult.handle, lightingMat);
+            context.CmdBuffer.Blit(null, lightingResult.handle, lightingMat, 0);
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
         }

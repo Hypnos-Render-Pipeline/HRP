@@ -2,7 +2,7 @@
 using static Unity.Mathematics.math;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEditor;
+
 
 namespace HypnosRenderPipeline
 {
@@ -10,6 +10,9 @@ namespace HypnosRenderPipeline
     [ExecuteInEditMode]
     public class HRPTerrain : MonoBehaviour
     {
+        [Space(5)]
+        [Header("Mesh used for Render")]
+
         public int tileCount = 16;
 
         public float tileSize = 16;
@@ -21,6 +24,10 @@ namespace HypnosRenderPipeline
         public int lodNum = 4;
 
         public AnimationCurve lodCurve = AnimationCurve.Linear(0, 0, 1, 1);
+
+        [Space(5)]
+        [Header("Terrain Data")]
+        public HRPTerrainData terrainData;
 
         int maxTileVertexCount = 0;
 
@@ -366,7 +373,7 @@ namespace HypnosRenderPipeline
             GameObject go = new GameObject();
             go.name = "Terrain";
             go.AddComponent<HRPTerrain>();
-            Undo.RegisterCreatedObjectUndo(go, "Create HRP Terrain");
+            UnityEditor.Undo.RegisterCreatedObjectUndo(go, "Create HRP Terrain");
         }
 
 #endif

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: 47, y: 30, z: 0}
-  viewScale: {x: 0.6627635, y: 0.6627635, z: 1}
+  viewPosition: {x: -2755, y: -1244, z: 0}
+  viewScale: {x: 1.520875, y: 1.520875, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []
@@ -24,10 +24,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 2210.1968
-      y: 414.99017
-      width: 300
-      height: 86
+      x: 1864.1047
+      y: 393.97726
+      width: 299.99994
+      height: 85.999985
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: PreZ
@@ -109,8 +109,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 740
-      y: 141
+      x: 746.6125
+      y: 137.0325
       width: 300
       height: 206
     info: 
@@ -137,7 +137,7 @@ MonoBehaviour:
       height: 134
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SortLight
-  - nodeName: DrawErrorMaterials
+  - nodeName: AreaLight
     parameters: []
     inputs:
     - name: target
@@ -146,6 +146,12 @@ MonoBehaviour:
     - name: depth
       info: 
       mustConnect: 0
+    - name: baseColor_roughness
+      info: 
+      mustConnect: 1
+    - name: normal_metallic
+      info: 
+      mustConnect: 1
     outputs:
     - name: target
       info: 
@@ -155,12 +161,12 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1072.8593
-      y: 313.95767
+      x: 1122.7725
+      y: 292.26132
       width: 300
-      height: 158
+      height: 206
     info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.DrawErrorMaterials
+    nodeType_str: HypnosRenderPipeline.RenderPass.AreaLight
   - nodeName: CombineColorDepth
     parameters: []
     inputs:
@@ -176,41 +182,62 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1821.4037
-      y: 372.20493
+      x: 1499.7078
+      y: 357.27237
       width: 300
       height: 134
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
-  - nodeName: TerrainPass
+  - nodeName: TextureDebug
     parameters:
-    - name: gameCameraCull
+    - name: multiplier
       info: 
-      type_str: System.Boolean
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e313c2f666c6f61743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: channal
+      info: 
+      type_str: HypnosRenderPipeline.RenderPass.TextureDebug+Channal
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c4368616e6e616c3e524742413c2f4368616e6e616c3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     inputs:
-    - name: color
+    - name: tex
       info: 
       mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    outputs:
-    - name: color
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
+    outputs: []
     position:
       serializedVersion: 2
-      x: 1464.7844
-      y: 310.98175
-      width: 300
-      height: 177
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.TerrainPass
+      x: 973.0587
+      y: 603.11774
+      width: 960.00006
+      height: 675
+    info: Use this to debug texture, drag from output pin to create it.
+    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  - nodeName: TextureDebug
+    parameters:
+    - name: multiplier
+      info: 
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e313c2f666c6f61743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: channal
+      info: 
+      type_str: HypnosRenderPipeline.RenderPass.TextureDebug+Channal
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c4368616e6e616c3e524742413c2f4368616e6e616c3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: tex
+      info: 
+      mustConnect: 0
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 2028.7977
+      y: 603.8066
+      width: 960
+      height: 675
+    info: Use this to debug texture, drag from output pin to create it.
+    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   edgeRecs:
   - i: 3
     o: 2
@@ -244,33 +271,41 @@ MonoBehaviour:
     o: 2
     i_n: depth
     o_n: depth
+  - i: 5
+    o: 2
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 5
+    o: 2
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 6
+    o: 5
+    i_n: color
+    o_n: target
+  - i: 6
+    o: 5
+    i_n: depth
+    o_n: depth
   - i: 0
     o: 6
     i_n: result
     o_n: combined
   - i: 7
-    o: 5
-    i_n: color
-    o_n: target
-  - i: 7
-    o: 5
-    i_n: depth
-    o_n: depth
-  - i: 6
-    o: 7
-    i_n: color
-    o_n: color
-  - i: 6
-    o: 7
-    i_n: depth
-    o_n: depth
+    o: 3
+    i_n: tex
+    o_n: lightingResult
+  - i: 8
+    o: 6
+    i_n: tex
+    o_n: combined
   node_edgeRecs:
   - node: 2
     in_edges: 04000000
-    out_edge: 0000000001000000020000000300000007000000
+    out_edge: 00000000010000000200000003000000070000000800000009000000
   - node: 3
     in_edges: 0000000001000000020000000300000005000000
-    out_edge: 06000000
+    out_edge: 060000000d000000
   - node: 1
     in_edges: 
     out_edge: 04000000
@@ -278,18 +313,21 @@ MonoBehaviour:
     in_edges: 
     out_edge: 05000000
   - node: 5
-    in_edges: 0600000007000000
-    out_edge: 090000000a000000
+    in_edges: 06000000070000000800000009000000
+    out_edge: 0a0000000b000000
   - node: 6
-    in_edges: 0b0000000c000000
-    out_edge: 08000000
+    in_edges: 0a0000000b000000
+    out_edge: 0c0000000e000000
   - node: 0
-    in_edges: 08000000
+    in_edges: 0c000000
     out_edge: 
   - node: 7
-    in_edges: 090000000a000000
-    out_edge: 0b0000000c000000
+    in_edges: 0d000000
+    out_edge: 
+  - node: 8
+    in_edges: 0e000000
+    out_edge: 
   groupRecs:
   - name: Pipeline
     color: {r: 0.14204344, g: 0.18852712, b: 0.2264151, a: 0.4}
-    nodes: 0000000001000000020000000300000004000000050000000600000007000000
+    nodes: 00000000010000000200000003000000040000000500000006000000

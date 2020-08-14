@@ -145,6 +145,9 @@ namespace HypnosRenderPipeline
                 m_lighdDataObject.ApplyModifiedProperties();
                 m_light.Copy(m_lightData);
                 m_light.range = lr;
+
+                //if (m_lightData.areaTexture != null && !m_lightData.areaTextureAlreadyFiltered)
+                //    m_lightData.GeneratePrefilteredAreaTexture();
             }
 
             {
