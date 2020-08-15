@@ -33,7 +33,8 @@ namespace HypnosRenderPipeline
             public static SerializedProperty radiance;
             public static SerializedProperty shadow;
             public static SerializedProperty areaTexture;
-            public static SerializedProperty lightMesh; 
+            public static SerializedProperty lightMesh;
+            public static SerializedProperty drawLightMesh;
 
             public static void Gets(SerializedObject obj)
             {
@@ -43,6 +44,7 @@ namespace HypnosRenderPipeline
                 shadow = obj.FindProperty("shadow");
                 areaTexture = obj.FindProperty("areaTexture");
                 lightMesh = obj.FindProperty("lightMesh");
+                drawLightMesh = obj.FindProperty("drawLightMesh");
             }
         }
 
@@ -117,9 +119,9 @@ namespace HypnosRenderPipeline
                 {
                     EditorGUILayout.HelpBox("Area light types only work with Shadow off or Ray Traced Shadow", MessageType.Error);
                 }
+                EditorGUILayout.Space(15);
+                EditorGUILayout.PropertyField(Properties.drawLightMesh);
             }
-
-            EditorGUILayout.Space(15);
 
             if (m_lightData.canHasTexture)
             {

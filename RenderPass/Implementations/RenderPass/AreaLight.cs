@@ -41,9 +41,9 @@ namespace HypnosRenderPipeline.RenderPass
 
         List<HRPLight> lights;
 
-        Texture2D TransformInv_Diffuse, TransformInv_Specular, AmpDiffAmpSpecFresnel;
+        Texture2D TransformInv_Diffuse, TransformInv_Specular, AmpDiffAmpSpecFresnel, DiscClip;
 
-        Mesh sphere, quad, tube, disc;
+        Mesh sphere, quad, tube;
 
         public AreaLight()
         {
@@ -69,6 +69,7 @@ namespace HypnosRenderPipeline.RenderPass
             AmpDiffAmpSpecFresnel = Resources.Load<Texture2D>("Textures/LUT/AmpDiffAmpSpecFresnel");
             TransformInv_Diffuse = Resources.Load<Texture2D>("Textures/LUT/TransformInv_DisneyDiffuse");
             TransformInv_Specular = Resources.Load<Texture2D>("Textures/LUT/TransformInv_GGX");
+            DiscClip = Resources.Load<Texture2D>("Textures/LUT/DiscClip");
         }
 
 
@@ -79,6 +80,7 @@ namespace HypnosRenderPipeline.RenderPass
             context.CmdBuffer.SetGlobalTexture("_AmpDiffAmpSpecFresnel", AmpDiffAmpSpecFresnel);
             context.CmdBuffer.SetGlobalTexture("_TransformInv_Diffuse", TransformInv_Diffuse);
             context.CmdBuffer.SetGlobalTexture("_TransformInv_Specular", TransformInv_Specular);
+            context.CmdBuffer.SetGlobalTexture("_DiscClip", DiscClip);
 
             context.CmdBuffer.SetGlobalTexture("_DepthTex", depth.handle);
             context.CmdBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness.handle);
@@ -121,10 +123,13 @@ namespace HypnosRenderPipeline.RenderPass
                     if (mesh != null)
                     {
                         context.CmdBuffer.SetGlobalColor("_LightColor", light.color * light.radiance);
-                        context.CmdBuffer.SetGlobalTexture("_LightTex", (light.canHasTexture && light.areaTexture != null) ? light.areaTexture : Texture2D.whiteTexture);
-                        context.CmdBuffer.SetGlobalInt("_Disc", light.lightType == HRPLightType.Disc ? 1 : 0);
-                        context.CmdBuffer.SetRenderTarget(color: target.handle, depth: depth.handle);
-                        context.CmdBuffer.DrawMesh(mesh, mat, lightMat);
+                        if (light.drawLightMesh)
+                        {
+                            context.CmdBuffer.SetGlobalTexture("_LightTex", (light.canHasTexture && light.areaTexture != null) ? light.areaTexture : Texture2D.whiteTexture);
+                            context.CmdBuffer.SetGlobalInt("_Disc", light.lightType == HRPLightType.Disc ? 1 : 0);
+                            context.CmdBuffer.SetRenderTarget(color: target.handle, depth: depth.handle);
+                            context.CmdBuffer.DrawMesh(mesh, mat, lightMat);
+                        }
 
                         if (light.lightType == HRPLightType.Quad) // Current only support Quad light shading
                         {
@@ -161,6 +166,28 @@ namespace HypnosRenderPipeline.RenderPass
                             context.CmdBuffer.SetGlobalTexture("_LightSpecTex", Texture2D.whiteTexture);
 
                             context.CmdBuffer.Blit(null, target.handle, deferredLightingMat, 2);
+                        }
+                        else if (light.lightType == HRPLightType.Disc)
+                        {
+                            var pos = light.transform.position;
+                            var x = new Vector4(-trans.right.x, -trans.right.y, -trans.right.z, light.discRadius * 2);
+                            var y = new Vector4(trans.up.x, trans.up.y, trans.up.z, light.discRadius * 2);
+                            context.CmdBuffer.SetGlobalVector("_LightPos", pos);
+                            context.CmdBuffer.SetGlobalVector("_LightX", x);
+                            context.CmdBuffer.SetGlobalVector("_LightY", y);
+
+                            if (light.areaTexture != null)
+                            {
+                                context.CmdBuffer.SetGlobalTexture("_LightDiffuseTex", light.filteredDiffuseTexture);
+                                context.CmdBuffer.SetGlobalTexture("_LightSpecTex", light.filteredSpecularTexture);
+                            }
+                            else
+                            {
+                                context.CmdBuffer.SetGlobalTexture("_LightDiffuseTex", Texture2D.whiteTexture);
+                                context.CmdBuffer.SetGlobalTexture("_LightSpecTex", Texture2D.whiteTexture);
+                            }
+
+                            context.CmdBuffer.Blit(null, target.handle, deferredLightingMat, 3);
                         }
                     }
                 }

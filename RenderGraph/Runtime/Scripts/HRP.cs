@@ -110,6 +110,13 @@ namespace HypnosRenderPipeline
                     context.ExecuteCommandBuffer(cb);
                     cb.Clear();
                 }
+
+                if (Handles.ShouldRenderGizmos() && (cam.cameraType == CameraType.SceneView || cam.cameraType == CameraType.Game))
+                {
+                    context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
+                    context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
+                    context.DrawUIOverlay(cam);
+                }
 #endif
 
 #if UNITY_EDITOR
@@ -149,15 +156,6 @@ namespace HypnosRenderPipeline
 
                 context.ExecuteCommandBuffer(cb);
                 cb.Clear();
-
-#if UNITY_EDITOR
-                if (Handles.ShouldRenderGizmos() && (cam.cameraType == CameraType.SceneView || cam.cameraType == CameraType.Game))
-                {                    
-                    context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
-                    context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
-                    context.DrawUIOverlay(cam);
-                }
-#endif
 
                 EndCameraRendering(context, cam);
             }

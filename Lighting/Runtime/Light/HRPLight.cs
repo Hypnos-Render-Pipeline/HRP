@@ -72,6 +72,11 @@ namespace HypnosRenderPipeline
         public Texture2D areaTexture;
 
         /// <summary>
+        /// Should Area light mesh be drawed ?
+        /// </summary>
+        public bool drawLightMesh;
+
+        /// <summary>
         /// Filtered light texture (diffuse) for LTC.
         /// </summary>
         public RenderTexture filteredDiffuseTexture { get { if (!areaTextureAlreadyFiltered) GeneratePrefilteredAreaTexture(); return m_filteredDiffuseTex; } }
@@ -287,6 +292,7 @@ namespace HypnosRenderPipeline
         RenderTexture CalculateSpec(Texture2D tex)
         {
             RenderTexture filterd_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
+            filterd_tex.wrapMode = TextureWrapMode.Clamp;
             filterd_tex.useMipMap = true;
             filterd_tex.autoGenerateMips = false;
             filterd_tex.Create();
@@ -318,6 +324,7 @@ namespace HypnosRenderPipeline
         RenderTexture CalculateDiffuse(Texture2D tex)
         {
             RenderTexture filterd_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
+            filterd_tex.wrapMode = TextureWrapMode.Clamp;
             filterd_tex.useMipMap = true;
             filterd_tex.autoGenerateMips = false;
             filterd_tex.Create();
