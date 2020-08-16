@@ -136,18 +136,18 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 var nodeRec = new NodeRec();
                 nodeRec.node = System.Activator.CreateInstance(node.nodeType) as BaseRenderNode;
-                var node_instance = System.Activator.CreateInstance(node.nodeType);
+                //var node_instance = System.Activator.CreateInstance(node.nodeType);
                 var field_infos = ReflectionUtil.GetFieldInfo(node.nodeType);
                 nodeRec.inputs = new Dictionary<string, Pair<FieldInfo, object>>(field_infos.Item1.Count);
                 nodeRec.outputs = new Dictionary<string, Pair<FieldInfo, object>>(field_infos.Item2.Count);
                 nodeRec.parameters = new Dictionary<string, FieldInfo>(field_infos.Item3.Count);
                 foreach (var item in field_infos.Item1)
                 {
-                    nodeRec.inputs.Add(item.Name, new Pair<FieldInfo, object>(item, item.GetValue(node_instance)));
+                    nodeRec.inputs.Add(item.Name, new Pair<FieldInfo, object>(item, item.GetValue(nodeRec.node)));
                 }
                 foreach (var item in field_infos.Item2)
                 {
-                    nodeRec.outputs.Add(item.Name, new Pair<FieldInfo, object>(item, item.GetValue(node_instance)));
+                    nodeRec.outputs.Add(item.Name, new Pair<FieldInfo, object>(item, item.GetValue(nodeRec.node)));
                 }
                 foreach (var item in field_infos.Item3)
                 {
@@ -159,15 +159,15 @@ namespace HypnosRenderPipeline.RenderGraph
             else
             {
                 res = nodes[node.GetHashCode()];
-                //res.node = System.Activator.CreateInstance(node.nodeType) as BaseRenderNode;
-                foreach (var item in res.inputs)
-                {
-                    item.Value.first.FieldType.GetMethod("Move").Invoke(item.Value.first.GetValue(res.node), new object[] { item.Value.last });
-                }
-                foreach (var item in res.outputs)
-                {
-                    item.Value.first.FieldType.GetMethod("Move").Invoke(item.Value.first.GetValue(res.node), new object[] { item.Value.last });
-                }
+                ////res.node = System.Activator.CreateInstance(node.nodeType) as BaseRenderNode;
+                //foreach (var item in res.inputs)
+                //{
+                //    item.Value.first.FieldType.GetMethod("Move").Invoke(item.Value.first.GetValue(res.node), new object[] { item.Value.last });
+                //}
+                //foreach (var item in res.outputs)
+                //{
+                //    item.Value.first.FieldType.GetMethod("Move").Invoke(item.Value.first.GetValue(res.node), new object[] { item.Value.last });
+                //}
             }
             return res;
         }

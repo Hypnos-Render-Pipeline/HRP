@@ -72,9 +72,17 @@ namespace HypnosRenderPipeline.RenderPass
             DiscClip = Resources.Load<Texture2D>("Textures/LUT/DiscClip");
         }
 
-
         public override void Excute(RenderContext context)
         {
+            if (quad == null)
+            {
+                quad = new Mesh();
+                quad.name = "Quad";
+                quad.vertices = new Vector3[] { float3(-0.5f, -0.5f, 0), float3(0.5f, -0.5f, 0), float3(-0.5f, 0.5f, 0), float3(0.5f, 0.5f, 0) };
+                quad.triangles = new int[] { 0, 1, 2, 2, 1, 3 };
+                quad.uv = new Vector2[] { float2(1, 0), float2(0, 0), float2(1, 1), float2(0, 1) };
+            }
+
             LightManager.GetVisibleLights(lights);
 
             context.CmdBuffer.SetGlobalTexture("_AmpDiffAmpSpecFresnel", AmpDiffAmpSpecFresnel);

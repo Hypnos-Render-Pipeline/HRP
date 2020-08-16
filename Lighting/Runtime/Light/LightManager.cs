@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace HypnosRenderPipeline
 {
@@ -11,6 +16,11 @@ namespace HypnosRenderPipeline
     {
         public LightCullingType cullingType;
         public float radius;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type">Culling Type</param>
+        /// <param name="radius">Radius if using Sphere culling</param>
         public LightCullingDesc(LightCullingType type = LightCullingType.Frustum, float radius = 50)
         {
             cullingType = type;
@@ -23,12 +33,44 @@ namespace HypnosRenderPipeline
     public sealed class LightManager
     {
         private LightManager() { }
+
         private class Nested { static Nested() { } internal static readonly LightManager instance = new LightManager(); }
         private static LightManager instance { get { return Nested.instance; } }
 
         int m_totalCount = 0;
         HashSet<HRPLight> m_lightSet = new HashSet<HRPLight>();
         HRPLight[] m_lightList = new HRPLight[201];
+
+        Dictionary<Camera, Dictionary<float, List<HRPLight>>> m_cullings = new Dictionary<Camera, Dictionary<float, List<HRPLight>>>();
+
+        Vector3 m_camera_pos;
+        Plane[] m_planes;
+
+        unsafe struct CullingLight : IJobParallelFor
+        {
+            public float radius;
+            [WriteOnly]
+            public NativeArray<bool> visibilityArray;
+
+            public void Execute(int id)
+            {
+                var light = instance.m_lightList[id];
+                if (radius == -1)
+                {
+                    visibilityArray[id] = true;
+                }
+                else
+                {
+                    Vector3 cp = instance.m_camera_pos;
+                    if (light.lightType != HRPLightType.Directional && Vector3.Distance(cp, light.transform.position) > radius + light.range)
+                        visibilityArray[id] = false;
+                    else
+                        visibilityArray[id] = true;
+                }
+            }
+        }
+        CullingLight m_cullingLight = new CullingLight();
+
 
         #region Pubic Methods
 
@@ -93,6 +135,21 @@ namespace HypnosRenderPipeline
             light.id = -1;
         }
 
+        private void __BeginCameraFrame__(Camera cam)
+        {
+            if (!m_cullings.ContainsKey(cam))
+            {
+                m_cullings.Add(cam, new Dictionary<float, List<HRPLight>>());
+            }
+            m_cullings[cam].Clear();
+        }
+
+        private void __EndCameraFrame__(Camera cam)
+        {
+            //m_cullings[cam].Clear();
+        }
+
+
         private void __GetAllLights__(List<HRPLight> list)
         {
             list.Clear();
@@ -105,24 +162,44 @@ namespace HypnosRenderPipeline
 
         private void __GetVisibleLights__(List<HRPLight> list, Camera cam)
         {
-            __GetAllLights__(list);
-            // todo: culling
+            list.Clear();
+            list.Capacity = m_totalCount;
+
+            m_planes = GeometryUtility.CalculateFrustumPlanes(cam);
+            m_cullingLight.radius = -1;
+            m_cullingLight.visibilityArray = new NativeArray<bool>(m_totalCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            m_cullingLight.Schedule(m_totalCount, math.max(1, m_totalCount / SystemInfo.processorCount)).Complete();
+
+            for (int i = 0; i < m_totalCount; i++)
+            {
+                if (m_cullingLight.visibilityArray[i])
+                {
+                    list.Add(m_lightList[i]);
+                }
+            }
+            m_cullingLight.visibilityArray.Dispose();
         }
 
         private void __GetVisibleLights__(List<HRPLight> list, Camera cam, float radius)
         {
+            Assert.IsTrue(radius > 0, "Culling radius must be greater than 0!");
             list.Clear();
             list.Capacity = m_totalCount;
-            Vector3 cp = cam.transform.position;
+
+            this.m_camera_pos = cam.transform.position;
+            m_cullingLight.radius = radius;
+            m_cullingLight.visibilityArray = new NativeArray<bool>(m_totalCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            m_cullingLight.Schedule(m_totalCount, math.max(1, m_totalCount / SystemInfo.processorCount)).Complete();
+
             for (int i = 0; i < m_totalCount; i++)
             {
-                var light = m_lightList[i];
-                if (light.lightType != HRPLightType.Directional && Vector3.Distance(cp, light.transform.position) > radius + light.range)
-                    continue;
-                list.Add(light);
+                if (m_cullingLight.visibilityArray[i])
+                {
+                    list.Add(m_lightList[i]);
+                }
             }
+            m_cullingLight.visibilityArray.Dispose();
         }
-
 
         #endregion
     }

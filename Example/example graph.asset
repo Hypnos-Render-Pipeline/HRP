@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: 42, y: 128, z: 0}
-  viewScale: {x: 0.4629964, y: 0.4629964, z: 1}
+  viewPosition: {x: -380, y: -37, z: 0}
+  viewScale: {x: 0.7561437, y: 0.7561437, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []
@@ -24,10 +24,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 1864.1047
-      y: 393.97726
-      width: 299.99994
-      height: 85.999985
+      x: 2276.62
+      y: 383.42
+      width: 300
+      height: 86
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: PreZ
@@ -182,12 +182,36 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1499.7078
-      y: 357.27237
+      x: 1903.6
+      y: 319.54752
       width: 300
       height: 134
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
+  - nodeName: DrawErrorMaterials
+    parameters: []
+    inputs:
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 1514.7725
+      y: 323.1825
+      width: 300
+      height: 158
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.DrawErrorMaterials
   edgeRecs:
   - i: 3
     o: 2
@@ -229,18 +253,26 @@ MonoBehaviour:
     o: 2
     i_n: normal_metallic
     o_n: normal_metallic
-  - i: 6
-    o: 5
-    i_n: color
-    o_n: target
-  - i: 6
-    o: 5
-    i_n: depth
-    o_n: depth
   - i: 0
     o: 6
     i_n: result
     o_n: combined
+  - i: 6
+    o: 7
+    i_n: color
+    o_n: target
+  - i: 6
+    o: 7
+    i_n: depth
+    o_n: depth
+  - i: 7
+    o: 5
+    i_n: target
+    o_n: target
+  - i: 7
+    o: 5
+    i_n: depth
+    o_n: depth
   node_edgeRecs:
   - node: 2
     in_edges: 04000000
@@ -256,14 +288,17 @@ MonoBehaviour:
     out_edge: 05000000
   - node: 5
     in_edges: 06000000070000000800000009000000
-    out_edge: 0a0000000b000000
+    out_edge: 0d0000000e000000
   - node: 6
-    in_edges: 0a0000000b000000
-    out_edge: 0c000000
+    in_edges: 0b0000000c000000
+    out_edge: 0a000000
   - node: 0
-    in_edges: 0c000000
+    in_edges: 0a000000
     out_edge: 
+  - node: 7
+    in_edges: 0d0000000e000000
+    out_edge: 0b0000000c000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.14204344, g: 0.18852712, b: 0.2264151, a: 0.4}
-    nodes: 00000000010000000200000003000000040000000500000006000000
+    nodes: 0000000001000000020000000300000004000000050000000600000007000000

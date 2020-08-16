@@ -123,6 +123,11 @@ namespace HypnosRenderPipeline.RenderPass
 
             return true;
         }
+        public override void Move(BaseNodePin<TexturePinDesc, int> pin) { 
+            desc.basicDesc = pin.desc.basicDesc; 
+            handle = pin.handle; 
+            name = pin.name;
+        }
 
         public override bool CanCastFrom(RenderContext renderContext, BaseNodePin<TexturePinDesc, int> pin)
         {

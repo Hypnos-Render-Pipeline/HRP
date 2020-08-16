@@ -66,29 +66,20 @@ float3 FetchDiffuseFilteredTexture(float3 p1, float3 p2, float3 p3, float3 p4, f
 
 	// LOD
 	float d = abs(planeDist) / pow(planeAreaSquared, 0.25);
-
+	
 	float lod = log(2048.0 * d) / log(3.0);
 	lod = min(lod, 7.0);
-
-	float lodA = floor(lod);
-	float lodB = ceil(lod);
-	float t = lod - lodA;
-
 
 	float3 a;
 	float3 b;
 
 	if (spec) {
-		a = tex2Dlod(_LightSpecTex, float4(Puv, 0, lodA));
-		b = tex2Dlod(_LightSpecTex, float4(Puv, 0, lodB));
+		return tex2Dlod(_LightSpecTex, float4(Puv, 0, lod));
 	}
 	else {
 		Puv = Puv / 2 + 0.25;
-		a = tex2Dlod(_LightDiffuseTex, float4(Puv, 0, lodA));
-		b = tex2Dlod(_LightDiffuseTex, float4(Puv, 0, lodB));
+		return tex2Dlod(_LightDiffuseTex, float4(Puv, 0, lod));
 	}
-
-	return lerp(a, b, t);
 }
 
 // Baum's equation
@@ -360,10 +351,11 @@ float3 LTC_Evaluate(
 	float3x3 R = (float3x3(T1, T2, N));
 
 	// polygon (allocate 5 vertices for clipping)
-	float3 L_[3];
+	float3 L_[4];
 	L_[0] = mul(R, points[0] - P);
 	L_[1] = mul(R, points[1] - P);
 	L_[2] = mul(R, points[2] - P);
+	L_[3] = mul(R, points[3] - P);
 
 	// init ellipse
 	float3 C = 0.5 * (L_[0] + L_[2]);
@@ -465,7 +457,24 @@ float3 LTC_Evaluate(
 	uv = uv * LUT_SCALE + LUT_BIAS;
 	uv.y = 1 - uv.y;
 	float scale = tex2D(_DiscClip, uv).r;
-	return formFactor * scale;//*FetchDiffuseFilteredTexture(points[0] - P, points[1] - P, points[2] - P, points[3] - P, reflect(V, N), true);
+	formFactor *= scale;
+	
+	float3 LL[4];
+	L_[0] = mul(L_[0], Minv);
+	L_[1] = mul(L_[1], Minv);
+	L_[2] = mul(L_[2], Minv);
+	L_[3] = mul(L_[3], Minv);
+	LL[0] = normalize(L_[0]);
+	LL[1] = normalize(L_[1]);
+	LL[2] = normalize(L_[2]);
+	LL[3] = normalize(L_[3]);
+	float3 sum = 0;
+	sum += IntegrateEdgeVec(LL[0], LL[1]);
+	sum += IntegrateEdgeVec(LL[1], LL[2]);
+	sum += IntegrateEdgeVec(LL[2], LL[3]);
+	sum += IntegrateEdgeVec(LL[3], LL[0]);
+
+	return formFactor * FetchDiffuseFilteredTexture(L_[0], L_[1], L_[2], L_[3], normalize(sum), spec);
 }
 
 

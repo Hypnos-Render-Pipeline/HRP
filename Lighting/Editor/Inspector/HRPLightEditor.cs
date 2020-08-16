@@ -32,6 +32,7 @@ namespace HypnosRenderPipeline
             public static SerializedProperty temperature;
             public static SerializedProperty radiance;
             public static SerializedProperty shadow;
+            public static SerializedProperty areaSize;
             public static SerializedProperty areaTexture;
             public static SerializedProperty lightMesh;
             public static SerializedProperty drawLightMesh;
@@ -42,6 +43,7 @@ namespace HypnosRenderPipeline
                 temperature = obj.FindProperty("m_temperature");
                 radiance = obj.FindProperty("radiance");
                 shadow = obj.FindProperty("shadow");
+                areaSize = obj.FindProperty("m_areaSize");
                 areaTexture = obj.FindProperty("areaTexture");
                 lightMesh = obj.FindProperty("lightMesh");
                 drawLightMesh = obj.FindProperty("drawLightMesh");
@@ -121,6 +123,7 @@ namespace HypnosRenderPipeline
                 }
                 EditorGUILayout.Space(15);
                 EditorGUILayout.PropertyField(Properties.drawLightMesh);
+                EditorGUILayout.PropertyField(Properties.areaSize);
             }
 
             if (m_lightData.canHasTexture)

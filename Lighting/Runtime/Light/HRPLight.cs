@@ -181,6 +181,7 @@ namespace HypnosRenderPipeline
 
 
         [SerializeField]
+        [Min(0)]
         private Vector2 m_areaSize = Vector2.one;
 
         Light m_light { get { if (__m_light__ == null) __m_light__ = GetComponent<Light>(); return __m_light__; } }

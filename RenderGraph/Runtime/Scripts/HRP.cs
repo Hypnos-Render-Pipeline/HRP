@@ -1,5 +1,6 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
 using HypnosRenderPipeline.RenderPass;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -91,19 +92,18 @@ namespace HypnosRenderPipeline
                     // this culling is to trigger sceneview gizmos culling
                     ScriptableCullingParameters cullingParams;
                     cam.TryGetCullingParameters(out cullingParams);
+                    cullingParams.cullingMask = 0;
                     var cullingResults = context.Cull(ref cullingParams);
 
                     cb.SetRenderTarget(result);
-                    var selected_lights = UnityEditor.Selection.GetFiltered<Light>(UnityEditor.SelectionMode.Unfiltered);
-                    foreach (var light in cullingResults.visibleLights)
+                    var selected_lights = UnityEditor.Selection.GetFiltered<HRPLight>(UnityEditor.SelectionMode.Unfiltered);
+                    var llist = new List<HRPLight>();
+                    LightManager.GetVisibleLights(llist, cam);
+                    foreach (var light in llist)
                     {
-                        var ld = light.light.GetComponent<HRPLight>();
-                        if (ld != null)
+                        if (selected_lights.Contains(light) && light.lightType == HRPLightType.Mesh && light.lightMesh != null)
                         {
-                            if (selected_lights.Contains(light.light) && ld.lightType == HRPLightType.Mesh && ld.lightMesh != null)
-                            {
-                                cb.DrawMesh(ld.lightMesh, ld.transform.localToWorldMatrix, m_wireFrame);
-                            }
+                            cb.DrawMesh(light.lightMesh, light.transform.localToWorldMatrix, m_wireFrame);
                         }
                     }
 
