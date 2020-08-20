@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Rendering;
+﻿using UnityEngine;
 
 namespace HypnosRenderPipeline
-{   
+{
     public class MaterialWithName
     {
         string shadername;

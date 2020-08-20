@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using UnityEngine;
-using UnityEngine.Rendering;
+﻿using UnityEngine;
 
 namespace HypnosRenderPipeline.RenderPass
 {

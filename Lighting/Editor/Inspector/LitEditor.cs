@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-using UnityEditor;
-using System;
+﻿using UnityEditor;
+using UnityEngine;
 
 public class LitEditor : ShaderGUI
 {

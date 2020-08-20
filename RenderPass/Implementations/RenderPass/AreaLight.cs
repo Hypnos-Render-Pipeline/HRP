@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using Unity.Mathematics;
-using static Unity.Mathematics.math;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Experimental.Rendering.RenderGraphModule;
+using static Unity.Mathematics.math;
 
 namespace HypnosRenderPipeline.RenderPass
 {

@@ -1,5 +1,4 @@
 ﻿using HypnosRenderPipeline.RenderGraph;
-using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;

@@ -1,10 +1,5 @@
-﻿using ICSharpCode.NRefactory.Ast;
-using System;
-using System.Linq;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
-using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 namespace HypnosRenderPipeline
 {

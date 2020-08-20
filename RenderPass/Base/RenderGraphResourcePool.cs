@@ -1,8 +1,7 @@
-﻿using UnityEngine;
-using UnityEngine.Rendering;
-using System.Collections.Generic;
-using HypnosRenderPipeline.RenderPass;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderGraph
 {

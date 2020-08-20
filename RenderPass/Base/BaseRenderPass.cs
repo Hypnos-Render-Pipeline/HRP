@@ -1,7 +1,7 @@
-﻿using System;
+﻿using HypnosRenderPipeline.RenderGraph;
+using System;
 using UnityEngine;
 using UnityEngine.Rendering;
-using HypnosRenderPipeline.RenderGraph;
 
 namespace HypnosRenderPipeline.RenderPass
 {

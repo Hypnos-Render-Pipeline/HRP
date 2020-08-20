@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace HypnosRenderPipeline { 
+﻿namespace HypnosRenderPipeline
+{
 
     public class FileUtil {
 
