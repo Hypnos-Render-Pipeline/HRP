@@ -50,23 +50,9 @@ namespace HypnosRenderPipeline.RenderPass
 
         public AreaLight()
         {
-            {
-                var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                sphere = go.GetComponent<MeshFilter>().sharedMesh;
-                GameObject.DestroyImmediate(go);
-            }
-            {
-                quad = new Mesh();
-                quad.name = "Quad";
-                quad.vertices = new Vector3[] { float3(-0.5f, -0.5f, 0), float3(0.5f, -0.5f, 0), float3(-0.5f, 0.5f, 0), float3(0.5f, 0.5f, 0) };
-                quad.triangles = new int[] { 0, 1, 2, 2, 1, 3 };
-                quad.uv = new Vector2[] { float2(1, 0), float2(0, 0), float2(1, 1), float2(0, 1) };
-            }
-            {
-                var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                tube = go.GetComponent<MeshFilter>().sharedMesh;
-                GameObject.DestroyImmediate(go);
-            }
+            sphere = MeshWithType.sphere;
+            tube = MeshWithType.cylinder;
+
             lights = new List<HRPLight>();
 
             AmpDiffAmpSpecFresnel = Resources.Load<Texture2D>("Textures/LUT/AmpDiffAmpSpecFresnel");

@@ -155,6 +155,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lightType: 4
   radiance: 2
+  IESProfile: {fileID: 0}
   shadow: 1
   areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
   drawLightMesh: 1
@@ -512,6 +513,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lightType: 5
   radiance: 4
+  IESProfile: {fileID: 0}
   shadow: 1
   areaTexture: {fileID: 0}
   drawLightMesh: 1
@@ -625,6 +627,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lightType: 6
   radiance: 2
+  IESProfile: {fileID: 0}
   shadow: 1
   areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
   drawLightMesh: 1
@@ -795,8 +798,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1289642101}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.7765245, y: 0.020262599, z: 0.6076088}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 26650425}
@@ -929,6 +932,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lightType: 5
   radiance: 4
+  IESProfile: {fileID: 0}
   shadow: 1
   areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
   drawLightMesh: 1

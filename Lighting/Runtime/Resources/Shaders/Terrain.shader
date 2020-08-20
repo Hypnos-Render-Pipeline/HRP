@@ -52,7 +52,7 @@
                     float2 lod_ = lerp(lods.xz, lods.yw, v.uv.x);
                     float lod = lerp(lod_.x, lod_.y, v.uv.y);
 
-                    o.vertex = UnityObjectToClipPos(float4(wpos, 1) + float3(v.uv2.x, 0, v.uv2.y) * lod);
+                    o.vertex = UnityWorldToClipPos(float4(wpos, 1) + float3(v.uv2.x, 0, v.uv2.y) * lod);
                     return o;
                 }
 

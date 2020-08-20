@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: 36, y: 298, z: 0}
-  viewScale: {x: 0.40473875, y: 0.40473875, z: 1}
+  viewPosition: {x: -1544, y: -169, z: 0}
+  viewScale: {x: 0.65751624, y: 0.65751624, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters: []
@@ -24,10 +24,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 2739.0503
-      y: 377.99997
+      x: 3527
+      y: 448
       width: 300
-      height: 85.999985
+      height: 86
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: PreZ
@@ -52,12 +52,66 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 10.350002
-      y: 213.29999
-      width: 300
-      height: 150
+      x: 1269.7499
+      y: 243.12549
+      width: 299.99994
+      height: 149.99997
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.PreZ
+  - nodeName: CombineColorDepth
+    parameters: []
+    inputs:
+    - name: color
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 1
+    outputs:
+    - name: combined
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 3143
+      y: 399
+      width: 300
+      height: 134
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
+  - nodeName: AreaLight
+    parameters: []
+    inputs:
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 0
+    - name: baseColor_roughness
+      info: 
+      mustConnect: 1
+    - name: normal_metallic
+      info: 
+      mustConnect: 1
+    - name: ao
+      info: 
+      mustConnect: 1
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2378
+      y: 221
+      width: 300
+      height: 230
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.AreaLight
   - nodeName: GBuffer
     parameters: []
     inputs:
@@ -82,8 +136,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 363.35
-      y: 240.29999
+      x: 1613
+      y: 198
       width: 300
       height: 206
     info: 
@@ -112,112 +166,12 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 757.35
-      y: 116.299995
+      x: 2014
+      y: 68
       width: 300
       height: 206
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.LightingPass
-  - nodeName: SortLight
-    parameters: []
-    inputs: []
-    outputs:
-    - name: mainLights
-      info: Main lights, they are closest to camera and have high quality shadow.
-      mustConnect: 0
-    - name: secondLights
-      info: Second level lights, they are midle far from camera and still have shadow
-        on.
-      mustConnect: 0
-    - name: otherLights
-      info: Other lights, they are far from camera and don't need shadow.
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 363.35
-      y: 51.299995
-      width: 300
-      height: 134
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.SortLight
-  - nodeName: AreaLight
-    parameters: []
-    inputs:
-    - name: target
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    - name: baseColor_roughness
-      info: 
-      mustConnect: 1
-    - name: normal_metallic
-      info: 
-      mustConnect: 1
-    - name: ao
-      info: 
-      mustConnect: 1
-    outputs:
-    - name: target
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 1133.35
-      y: 271.3
-      width: 300
-      height: 206
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.AreaLight
-  - nodeName: CombineColorDepth
-    parameters: []
-    inputs:
-    - name: color
-      info: 
-      mustConnect: 1
-    - name: depth
-      info: 
-      mustConnect: 1
-    outputs:
-    - name: combined
-      info: 
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 2366.0505
-      y: 315
-      width: 300
-      height: 134
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
-  - nodeName: DrawErrorMaterials
-    parameters: []
-    inputs:
-    - name: target
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    outputs:
-    - name: target
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 1952.0504
-      y: 320
-      width: 300
-      height: 158
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.DrawErrorMaterials
   - nodeName: TerrainPass
     parameters:
     - name: gameCameraCull
@@ -241,114 +195,96 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1547.0504
-      y: 305.99997
+      x: 2758
+      y: 349
       width: 300
       height: 177
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.TerrainPass
   edgeRecs:
-  - i: 3
+  - i: 0
     o: 2
-    i_n: depth
-    o_n: depth
-  - i: 3
-    o: 2
-    i_n: baseColor_roughness
-    o_n: baseColor_roughness
-  - i: 3
-    o: 2
-    i_n: normal_metallic
-    o_n: normal_metallic
-  - i: 3
-    o: 2
-    i_n: emission
-    o_n: emission
-  - i: 2
+    i_n: result
+    o_n: combined
+  - i: 4
     o: 1
     i_n: depth
     o_n: depth
   - i: 3
     o: 4
-    i_n: lights
-    o_n: mainLights
+    i_n: depth
+    o_n: depth
+  - i: 3
+    o: 4
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 3
+    o: 4
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 3
+    o: 4
+    i_n: ao
+    o_n: microAO
   - i: 5
-    o: 3
-    i_n: target
-    o_n: lightingResult
-  - i: 5
-    o: 2
+    o: 4
     i_n: depth
     o_n: depth
   - i: 5
-    o: 2
+    o: 4
     i_n: baseColor_roughness
     o_n: baseColor_roughness
   - i: 5
-    o: 2
+    o: 4
     i_n: normal_metallic
     o_n: normal_metallic
-  - i: 0
-    o: 6
-    i_n: result
-    o_n: combined
-  - i: 6
-    o: 7
-    i_n: color
-    o_n: target
-  - i: 6
-    o: 7
-    i_n: depth
-    o_n: depth
   - i: 5
-    o: 2
-    i_n: ao
-    o_n: microAO
-  - i: 8
+    o: 4
+    i_n: emission
+    o_n: emission
+  - i: 3
     o: 5
+    i_n: target
+    o_n: lightingResult
+  - i: 6
+    o: 3
     i_n: color
     o_n: target
-  - i: 8
-    o: 5
+  - i: 6
+    o: 3
     i_n: depth
     o_n: depth
-  - i: 7
-    o: 8
-    i_n: target
+  - i: 2
+    o: 6
+    i_n: color
     o_n: color
-  - i: 7
-    o: 8
+  - i: 2
+    o: 6
     i_n: depth
     o_n: depth
   node_edgeRecs:
   - node: 2
-    in_edges: 04000000
-    out_edge: 000000000100000002000000030000000700000008000000090000000d000000
-  - node: 3
-    in_edges: 0000000001000000020000000300000005000000
-    out_edge: 06000000
+    in_edges: 0d0000000e000000
+    out_edge: 00000000
+  - node: 0
+    in_edges: 00000000
+    out_edge: 
   - node: 1
     in_edges: 
-    out_edge: 04000000
+    out_edge: 01000000
   - node: 4
-    in_edges: 
-    out_edge: 05000000
+    in_edges: 01000000
+    out_edge: 0200000003000000040000000500000006000000070000000800000009000000
+  - node: 3
+    in_edges: 020000000300000004000000050000000a000000
+    out_edge: 0b0000000c000000
   - node: 5
-    in_edges: 060000000700000008000000090000000d000000
-    out_edge: 0e0000000f000000
+    in_edges: 06000000070000000800000009000000
+    out_edge: 0a000000
   - node: 6
     in_edges: 0b0000000c000000
-    out_edge: 0a000000
-  - node: 0
-    in_edges: 0a000000
-    out_edge: 
-  - node: 7
-    in_edges: 1000000011000000
-    out_edge: 0b0000000c000000
-  - node: 8
-    in_edges: 0e0000000f000000
-    out_edge: 1000000011000000
+    out_edge: 0d0000000e000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.14204344, g: 0.18852712, b: 0.2264151, a: 0.4}
-    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000
+    nodes: 00000000010000000200000003000000040000000500000006000000

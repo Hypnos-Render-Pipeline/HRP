@@ -15,16 +15,6 @@ namespace HypnosRenderPipeline
 
 #if UNITY_EDITOR
 
-        Mesh __m_sphere__ = null;
-        Mesh m_sphere { get { 
-                if (__m_sphere__ == null) {
-                    var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    __m_sphere__ = go.GetComponent<MeshFilter>().sharedMesh;
-                    GameObject.DestroyImmediate(go);
-                }
-                return __m_sphere__;
-            } }
-
         MaterialWithName m_wireFrame = new MaterialWithName("Hidden/Wireframe");
         MaterialWithName m_iesSphere = new MaterialWithName("Hidden/IESSphere");
 
@@ -119,7 +109,7 @@ namespace HypnosRenderPipeline
                             else if (light.supportIES && light.IESProfile != null)
                             {
                                 cb.SetGlobalTexture("_IESCube", light.IESProfile);
-                                cb.DrawMesh(m_sphere, Matrix4x4.TRS(light.transform.position, light.transform.rotation, Vector3.one * 0.6f), m_iesSphere);
+                                cb.DrawMesh(MeshWithType.sphere, Matrix4x4.TRS(light.transform.position, light.transform.rotation, Vector3.one * 0.6f), m_iesSphere);
                             }
                         }
                     }
