@@ -84,7 +84,7 @@ float3 FetchDiffuseFilteredTexture(float3 p1, float3 p2, float3 p3, float3 p4, f
 
 // Baum's equation
 // Expects non-normalized vertex positions
-float3 PolygonRadiance(half4x3 L, bool spec)
+float4 PolygonRadiance(half4x3 L, bool spec)
 {
 	float3 LL[4];
 	LL[0] = L[0];
@@ -230,10 +230,10 @@ float3 PolygonRadiance(half4x3 L, bool spec)
 
 	float3 fetchDir = normalize(sum);
 
-	return max(0, sum.z * 0.15915) * FetchDiffuseFilteredTexture(LL[0], LL[1], LL[2], LL[3], fetchDir, spec);
+	return float4(max(0, sum.z * 0.15915) * FetchDiffuseFilteredTexture(LL[0], LL[1], LL[2], LL[3], fetchDir, spec), fetchDir.z);
 }
 
-half3 TransformedPolygonRadiance(half4x3 L, half2 uv, sampler2D transformInv, half amplitude, bool spec = false)
+half4 TransformedPolygonRadiance(half4x3 L, half2 uv, sampler2D transformInv, half amplitude, bool spec = false)
 {
 	// Get the inverse LTC matrix M
 	half3x3 Minv = 0;
@@ -251,7 +251,7 @@ half3 TransformedPolygonRadiance(half4x3 L, half2 uv, sampler2D transformInv, ha
 
 	//half2 sample_uv = half2(dot((sample_point - lb), rb) / dot(rb, rb), dot((sample_point - lb), lu) / dot(lu, lu));
 
-	return PolygonRadiance(LTransformed, spec) * amplitude;
+	return PolygonRadiance(LTransformed, spec) * float4(amplitude.xxx, 1);
 }
 
 float3 SolveCubic(float4 Coefficient)
@@ -339,7 +339,7 @@ float3 SolveCubic(float4 Coefficient)
 
 
 
-float3 LTC_Evaluate(
+float4 LTC_Evaluate(
 	float3 N, float3 V, float3 P, float3x3 Minv, float3 points[4], bool spec = false)
 {
 	// construct orthonormal basis around N
@@ -448,7 +448,7 @@ float3 LTC_Evaluate(
 
 	float formFactor = L1 * L2 / sqrt((1.0 + L1 * L1) * (1.0 + L2 * L2));
 
-	const float LUT_SIZE = 64.0;
+	const float LUT_SIZE = 256.0;
 	const float LUT_SCALE = (LUT_SIZE - 1.0) / LUT_SIZE;
 	const float LUT_BIAS = 0.5 / LUT_SIZE;
 
@@ -474,7 +474,8 @@ float3 LTC_Evaluate(
 	sum += IntegrateEdgeVec(LL[2], LL[3]);
 	sum += IntegrateEdgeVec(LL[3], LL[0]);
 
-	return formFactor * FetchDiffuseFilteredTexture(L_[0], L_[1], L_[2], L_[3], normalize(sum), spec);
+	float3 fetchDir = normalize(sum);
+	return float4(formFactor * FetchDiffuseFilteredTexture(L_[0], L_[1], L_[2], L_[3], fetchDir, spec), fetchDir.z);
 }
 
 

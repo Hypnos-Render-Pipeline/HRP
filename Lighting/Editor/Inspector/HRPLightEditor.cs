@@ -1,18 +1,12 @@
 ﻿using UnityEngine;
-using System.Linq.Expressions;
-using System.Reflection;
-using ICSharpCode.NRefactory.Ast;
 using System;
-using System.Runtime.CompilerServices;
 using Expression = System.Linq.Expressions.Expression;
-#if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Assertions;
-#endif
 
 namespace HypnosRenderPipeline
 {
     [CustomEditor(typeof(Light))]
+    [CanEditMultipleObjects]
     public class HRPLightEditor : LightEditor
     {
         public Light m_light;
@@ -31,6 +25,7 @@ namespace HypnosRenderPipeline
             public static SerializedProperty lightType;
             public static SerializedProperty temperature;
             public static SerializedProperty radiance;
+            public static SerializedProperty IESProfile;
             public static SerializedProperty shadow;
             public static SerializedProperty areaSize;
             public static SerializedProperty areaTexture;
@@ -42,6 +37,7 @@ namespace HypnosRenderPipeline
                 lightType = obj.FindProperty("lightType");
                 temperature = obj.FindProperty("m_temperature");
                 radiance = obj.FindProperty("radiance");
+                IESProfile = obj.FindProperty("IESProfile");
                 shadow = obj.FindProperty("shadow");
                 areaSize = obj.FindProperty("m_areaSize");
                 areaTexture = obj.FindProperty("areaTexture");
@@ -111,6 +107,12 @@ namespace HypnosRenderPipeline
 
             EditorGUILayout.PropertyField(Properties.radiance);
 
+            if (m_lightData.supportIES)
+            {
+                EditorGUILayout.PropertyField(Properties.IESProfile);
+            }
+
+
             EditorGUILayout.PropertyField(Properties.shadow);
 
             var lr = EditorGUILayout.Slider("Range", m_light.range, 0, 50);
@@ -150,9 +152,6 @@ namespace HypnosRenderPipeline
                 m_lighdDataObject.ApplyModifiedProperties();
                 m_light.Copy(m_lightData);
                 m_light.range = lr;
-
-                //if (m_lightData.areaTexture != null && !m_lightData.areaTextureAlreadyFiltered)
-                //    m_lightData.GeneratePrefilteredAreaTexture();
             }
 
             {

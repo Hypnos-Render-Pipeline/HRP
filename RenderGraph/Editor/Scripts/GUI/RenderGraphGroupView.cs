@@ -84,14 +84,17 @@ namespace HypnosRenderPipeline.RenderGraph
             foreach (var ele in elements)
             {
                 var nodeView = ele as RenderGraphNodeView;
-                if (nodeView.operate_by_unity)
+                if (nodeView != null)
                 {
-                    Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Node To Group");
-                    m_renderGraphInfo.AddNodeToGroup(nodeView.Node, group);
-                }
-                else
-                {
-                    nodeView.operate_by_unity = true;
+                    if (nodeView.operate_by_unity)
+                    {
+                        Undo.RegisterCompleteObjectUndo(m_renderGraphInfo, "Add Node To Group");
+                        m_renderGraphInfo.AddNodeToGroup(nodeView.Node, group);
+                    }
+                    else
+                    {
+                        nodeView.operate_by_unity = true;
+                    }
                 }
             }
             base.OnElementsAdded(elements);

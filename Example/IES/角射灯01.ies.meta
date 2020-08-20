@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0f25879abb0d1014f8dc0bde0b54cfae
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: ab49ededd0b778a4ebf5cfff479e07aa, type: 3}
+  resolution: 256
+  version: IESNA91
+  vertAngle: 37
+  horizAngle: 9
+  candela: 1028

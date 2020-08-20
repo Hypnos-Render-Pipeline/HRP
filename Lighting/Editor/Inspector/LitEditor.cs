@@ -19,6 +19,9 @@ public class LitEditor : ShaderGUI
     MaterialProperty bumpMap = null;
     MaterialProperty bumpScale = null;
 
+    MaterialProperty aoScale = null;
+    MaterialProperty aoMap = null;
+
     MaterialProperty emissionMap = null;
     MaterialProperty emission = null;
 
@@ -47,6 +50,9 @@ public class LitEditor : ShaderGUI
 
         bumpScale = FindProperty("_BumpScale", props);
         bumpMap = FindProperty("_BumpMap", props);
+
+        aoScale = FindProperty("_AOScale", props);
+        aoMap = FindProperty("_AOMap", props);
 
         emission = FindProperty("_EmissionColor", props);
         emissionMap = FindProperty("_EmissionMap", props);
@@ -180,13 +186,7 @@ public class LitEditor : ShaderGUI
     void DoNormalArea()
     {
         m_MaterialEditor.TexturePropertySingleLine(Styles.normalMapText, bumpMap, bumpMap.textureValue != null ? bumpScale : null);
-        if (bumpScale.floatValue != 1 && UnityEditorInternal.InternalEditorUtility.IsMobilePlatform(EditorUserBuildSettings.activeBuildTarget))
-            if (m_MaterialEditor.HelpBoxWithButton(
-                EditorGUIUtility.TrTextContent("Bump scale is not supported on mobile platforms"),
-                EditorGUIUtility.TrTextContent("Fix Now")))
-            {
-                bumpScale.floatValue = 1;
-            }
+        m_MaterialEditor.TexturePropertySingleLine(Styles.aoMapText, aoMap, aoMap.textureValue != null ? aoScale : null);
     }
 
     void DoEmissionArea(Material material)
@@ -211,6 +211,7 @@ public class LitEditor : ShaderGUI
         // Note: keywords must be based on Material value not on MaterialProperty due to multi-edit & material animation
         // (MaterialProperty value might come from renderer material property block)
         SetKeyword(material, "_NORMALMAP", material.GetTexture("_BumpMap"));
+        SetKeyword(material, "_AOMAP", material.GetTexture("_AOMap"));
 
         SetKeyword(material, "_METALLICGLOSSMAP", material.GetTexture("_MetallicGlossMap"));
         
@@ -275,6 +276,7 @@ public class LitEditor : ShaderGUI
         public static GUIContent highlightsText = EditorGUIUtility.TrTextContent("Specular Highlights", "Specular Highlights");
         public static GUIContent reflectionsText = EditorGUIUtility.TrTextContent("Reflections", "Glossy Reflections");
         public static GUIContent normalMapText = EditorGUIUtility.TrTextContent("Normal Map", "Normal Map");
+        public static GUIContent aoMapText = EditorGUIUtility.TrTextContent("AO Map", "AO Map(R)");
         public static GUIContent heightMapText = EditorGUIUtility.TrTextContent("Height Map", "Height Map (G)");
         public static GUIContent occlusionText = EditorGUIUtility.TrTextContent("Occlusion", "Occlusion (G)");
         public static GUIContent emissionText = EditorGUIUtility.TrTextContent("Color", "Emission (RGB)");

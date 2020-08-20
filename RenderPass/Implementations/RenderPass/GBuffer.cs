@@ -26,6 +26,11 @@ namespace HypnosRenderPipeline.RenderPass
                                                                                        TexturePinDesc.SizeCastMode.Fixed,
                                                                                        TexturePinDesc.ColorCastMode.Fixed,
                                                                                        TexturePinDesc.SizeScale.Full));
+        [NodePin(PinType.Out)]
+        public TexturePin microAO = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
+                                                                                       TexturePinDesc.SizeCastMode.Fixed,
+                                                                                       TexturePinDesc.ColorCastMode.Fixed,
+                                                                                       TexturePinDesc.SizeScale.Full));
 
         public override void Excute(RenderContext context)
         {
@@ -34,6 +39,7 @@ namespace HypnosRenderPipeline.RenderPass
                     (RenderTargetIdentifier)baseColor_roughness.handle,
                     (RenderTargetIdentifier)normal_metallic.handle,
                     (RenderTargetIdentifier)emission.handle,
+                    (RenderTargetIdentifier)microAO.handle,
                 }
                 , depth.handle);
 

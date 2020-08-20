@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 529794d416a4b2f43bceaf5685b39a0e
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: ab49ededd0b778a4ebf5cfff479e07aa, type: 3}
+  resolution: 256
+  version: LM-63-1995
+  vertAngle: 37
+  horizAngle: 1
+  candela: 239.6

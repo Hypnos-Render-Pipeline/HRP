@@ -15,10 +15,21 @@ namespace HypnosRenderPipeline
         HypnosRenderPipelineAsset m_asset;
         RenderGraphResourcePool m_resourcePool;
 
-        Material __m_wireFrame__;
-        Material m_wireFrame { get { if (__m_wireFrame__ == null) __m_wireFrame__ = new Material(Shader.Find("Hidden/Wireframe")); return __m_wireFrame__; } }
-
 #if UNITY_EDITOR
+
+        Mesh __m_sphere__ = null;
+        Mesh m_sphere { get { 
+                if (__m_sphere__ == null) {
+                    var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    __m_sphere__ = go.GetComponent<MeshFilter>().sharedMesh;
+                    GameObject.DestroyImmediate(go);
+                }
+                return __m_sphere__;
+            } }
+
+        MaterialWithName m_wireFrame = new MaterialWithName("Hidden/Wireframe");
+        MaterialWithName m_iesSphere = new MaterialWithName("Hidden/IESSphere");
+
         HRGDynamicExecutor m_executor;
 #endif
 
@@ -101,9 +112,17 @@ namespace HypnosRenderPipeline
                     LightManager.GetVisibleLights(llist, cam);
                     foreach (var light in llist)
                     {
-                        if (selected_lights.Contains(light) && light.lightType == HRPLightType.Mesh && light.lightMesh != null)
+                        if (selected_lights.Contains(light))
                         {
-                            cb.DrawMesh(light.lightMesh, light.transform.localToWorldMatrix, m_wireFrame);
+                            if (light.lightType == HRPLightType.Mesh && light.lightMesh != null)
+                            {
+                                cb.DrawMesh(light.lightMesh, light.transform.localToWorldMatrix, m_wireFrame);
+                            }
+                            else if (light.supportIES && light.IESProfile != null)
+                            {
+                                cb.SetGlobalTexture("_IESCube", light.IESProfile);
+                                cb.DrawMesh(m_sphere, Matrix4x4.TRS(light.transform.position, light.transform.rotation, Vector3.one * 0.6f), m_iesSphere);
+                            }
                         }
                     }
 

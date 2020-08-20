@@ -11,8 +11,8 @@ namespace HypnosRenderPipeline
     [Serializable]
     public enum HRPLightType
     {
-        Point,
         Directional,
+        Point,
         Spot,
         Sphere,
         Tube,
@@ -60,6 +60,16 @@ namespace HypnosRenderPipeline
         /// Light radiance, you should always use this(HRPLight.radiance) instead of using "Light.intensity".
         /// </summary>
         public float radiance = 1;
+
+        /// <summary>
+        /// Whether IES is supported with this light type.
+        /// </summary>
+        public bool supportIES { get { return lightType == HRPLightType.Point || lightType == HRPLightType.Spot; } }
+
+        /// <summary>
+        /// IES profile.
+        /// </summary>
+        public Cubemap IESProfile;
 
         /// <summary>
         /// shadow mode.

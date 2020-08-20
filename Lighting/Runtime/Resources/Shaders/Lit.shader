@@ -11,6 +11,9 @@
 		_MetallicGlossMap("Metallic Smoothness", 2D) = "white" {}
 		[Gamma] _Metallic("Metallic", Range(0,1)) = 0.0
 
+		_AOMap("AO （R)", 2D) = "white" {}
+		_AOScale("AO", Range(0,1)) = 1
+
 		_Smoothness("Smoothness", Range(0,1)) = 0.5
 		_GlossMapScale("SmoothnessMapScale", Range(0,1)) = 1.0
 
@@ -67,6 +70,7 @@
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
 			#pragma shader_feature _METALLICGLOSSMAP _
+			#pragma shader_feature _AOMAP _
 
 
 			CBUFFER_START(UnityPerMaterial)
@@ -88,6 +92,10 @@
 				float4			_EmissionColor;
 				sampler2D		_EmissionMap;
 			#endif // _EMISSION
+			#if _AOMAP
+				sampler2D		_AOMap;
+				float			_AOScale;
+			#endif // _AOMAP
 			CBUFFER_END
 
 			struct a2v {
@@ -126,7 +134,7 @@
 				#endif
 			}	
 
-			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2) {
+			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3) {
 
 				fixed3 baseColor = _Color * tex2D(_MainTex, i.uv).rgb;
 
@@ -153,8 +161,13 @@
 				#else
 					float3 emission = 0;
 				#endif // _EMISSION
+				#if _AOMAP
+					float ao = 1 - (_AOScale * (1 - tex2D(_AOMap, i.uv).r));
+				#else
+					float ao = 1;
+				#endif // _AOMAP
 
-				Encode2GBuffer(baseColor, 1 - smoothness, metallic, normal, emission, target0, target1, target2);
+				Encode2GBuffer(baseColor, 1 - smoothness, metallic, normal, emission, i.normal, ao, target0, target1, target2, target3);
 			}
 
 			ENDCG

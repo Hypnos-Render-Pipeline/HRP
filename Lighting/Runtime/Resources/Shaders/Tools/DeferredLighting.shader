@@ -3,7 +3,7 @@
     Properties { }
     SubShader
     {
-        Pass
+        Pass // normal light
         {
             ZWrite off
             Cull off
@@ -55,15 +55,18 @@
                 float3 view = normalize(camPos - pos);
 
                 float3 baseColor;
-                float roughness; 
+                float roughness;
                 float metallic;
                 float3 normal;
                 float3 emission;
+                float3 gnormal;
+                float ao;
 
                 DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                baseColor, roughness, metallic, normal, emission);
+                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    1,
+                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
 
                 float3 res = lerp(pow(max(0, dot(normalize(view + float3(0, 1, 0)), normal)), lerp(2000, 10, roughness)) * lerp(10, 0.2, roughness), max(normal.y, 0) / 2, 0.96 - metallic) * baseColor;
 
@@ -73,7 +76,7 @@
         }
 
 
-        Pass
+        Pass // quad lighjt
         {
             ZWrite off
             Cull off
@@ -98,7 +101,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -133,11 +136,14 @@
                 float metallic;
                 float3 normal;
                 float3 emission;
+                float3 gnormal;
+                float ao;
 
                 DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                baseColor, roughness, metallic, normal, emission);
+                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
 
                 float3 lp = _LightPos;
                 float3 lx = _LightX;
@@ -166,18 +172,19 @@
                 float3 specColor;
                 baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
 
-                half3 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
-                result = diffuseTerm * baseColor;
+                half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
+                result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
+
                 half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
                 half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                result += specularTerm * fresnelTerm * UNITY_PI;
+                result += lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5)) * specularTerm * fresnelTerm * UNITY_PI;
 
                 return result * _LightColor;
             }
             ENDCG
         }
 
-        Pass
+        Pass // tube light
         {
             ZWrite off
             Cull off
@@ -202,7 +209,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -237,11 +244,14 @@
                 float metallic;
                 float3 normal;
                 float3 emission;
+                float3 gnormal;
+                float ao;
 
                 DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                baseColor, roughness, metallic, normal, emission);
+                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
 
                 float3 lp = _LightPos;
                 float3 ly = normalize(cross(_LightPos - pos, _LightX));
@@ -270,18 +280,19 @@
                 float3 specColor;
                 baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
 
-                half3 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
-                result = diffuseTerm * baseColor;
+                half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
+                result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
+
                 half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
                 half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                result += specularTerm * fresnelTerm * UNITY_PI;
+                result += lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5)) * specularTerm * fresnelTerm * UNITY_PI;
 
                 return result * _LightColor;
             }
             ENDCG
         }
 
-        Pass
+        Pass // disc light
         {
             ZWrite off
             Cull off
@@ -307,7 +318,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -342,11 +353,14 @@
                 float metallic;
                 float3 normal;
                 float3 emission;
+                float3 gnormal;
+                float ao;
 
                 DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                baseColor, roughness, metallic, normal, emission);
+                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
 
                 float3 lp = _LightPos;
                 float3 lx = _LightX;
@@ -382,8 +396,8 @@
                         Minv._m00_m02_m11_m20 = tex2D(_TransformInv_Diffuse, uv);
                     else
                         Minv._m00_m02_m11_m20 = half4(1, 0, 1, 0);
-                    half3 diffuseTerm = LTC_Evaluate(normal, view, pos, Minv, points);
-                    result = diffuseTerm * baseColor;
+                    half4 diffuseTerm = LTC_Evaluate(normal, view, pos, Minv, points);
+                    result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
                     if (any(isnan(result))) result = baseColor;
                 }
                 {
@@ -391,7 +405,7 @@
                     half3 specularTerm = LTC_Evaluate(normal, view, pos, Minv, points, true);
                     specularTerm *= 1 - smoothstep(0, 0.1, dot(reflect(view, normal), ln)) * (1 - roughness); // prevent float precision lost
                     half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                    result += specularTerm * fresnelTerm;
+                    result += lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5)) * specularTerm * fresnelTerm;
                 }
 
                 return result * _LightColor;

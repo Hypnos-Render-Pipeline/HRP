@@ -69,8 +69,6 @@ namespace HypnosRenderPipeline
                 SceneView.lastActiveSceneView.isRotationLocked = false;
             editTerrain = false;
             ActiveEditorTracker.sharedTracker.isLocked = false;
-            if (terrain.gameObject != null)
-                Selection.objects = new[] { terrain.gameObject };
         }
 
 
