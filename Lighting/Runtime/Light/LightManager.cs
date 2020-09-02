@@ -7,24 +7,53 @@ using UnityEngine.Assertions;
 
 namespace HypnosRenderPipeline
 {
-    public enum LightCullingType { Frustum, Shpere }
-
-    public struct LightCullingDesc
+    public class LightList
     {
-        public LightCullingType cullingType;
-        public float radius;
         /// <summary>
-        /// 
+        /// directional lights
         /// </summary>
-        /// <param name="type">Culling Type</param>
-        /// <param name="radius">Radius if using Sphere culling</param>
-        public LightCullingDesc(LightCullingType type = LightCullingType.Frustum, float radius = 50)
+        public List<HRPLight> directionals;
+
+        /// <summary>
+        /// local lights, they are point/spot or sphere lights close to the camera
+        /// </summary>
+        public List<HRPLight> locals;
+
+        /// <summary>
+        /// area lights
+        /// </summary>
+        public List<HRPLight> areas;
+
+        /// <summary>
+        /// faraway lights, they are point/spot or sphere lights faraway from the camera
+        /// </summary>
+        public List<HRPLight> faraways;
+
+        public LightList()
         {
-            cullingType = type;
-            this.radius = radius;
+            directionals = new List<HRPLight>();
+            locals = new List<HRPLight>();
+            areas = new List<HRPLight>();
+            faraways = new List<HRPLight>();
+        }
+
+        public void Clear()
+        {
+            directionals.Clear();
+            locals.Clear();
+            areas.Clear();
+            faraways.Clear();
+        }
+
+        public void Copy(LightList lightList)
+        {
+            Clear();
+            directionals.AddRange(lightList.directionals);
+            locals.AddRange(lightList.locals);
+            areas.AddRange(lightList.areas);
+            faraways.AddRange(lightList.faraways);
         }
     }
-
 
 
     public sealed class LightManager
@@ -40,34 +69,7 @@ namespace HypnosRenderPipeline
 
         Dictionary<Camera, Dictionary<float, List<HRPLight>>> m_cullings = new Dictionary<Camera, Dictionary<float, List<HRPLight>>>();
 
-        Vector3 m_camera_pos;
         Plane[] m_planes;
-
-        unsafe struct CullingLight : IJobParallelFor
-        {
-            public float radius;
-            [WriteOnly]
-            public NativeArray<bool> visibilityArray;
-
-            public void Execute(int id)
-            {
-                var light = instance.m_lightList[id];
-                if (radius == -1)
-                {
-                    visibilityArray[id] = true;
-                }
-                else
-                {
-                    Vector3 cp = instance.m_camera_pos;
-                    if (light.lightType != HRPLightType.Directional && Vector3.Distance(cp, light.transform.position) > radius + light.range)
-                        visibilityArray[id] = false;
-                    else
-                        visibilityArray[id] = true;
-                }
-            }
-        }
-        CullingLight m_cullingLight = new CullingLight();
-
 
         #region Pubic Methods
 
@@ -90,12 +92,12 @@ namespace HypnosRenderPipeline
         /// <summary>
         /// Return visible Lights with given camera
         /// </summary>
-        public static void GetVisibleLights(List<HRPLight> list, Camera cam) { instance.__GetVisibleLights__(list, cam); }
+        public static void GetVisibleLights(LightList list, Camera cam, float faraway = 200) { instance.__GetVisibleLights__(list, cam, faraway); }
 
         /// <summary>
         /// Return visible Lights with given camera and specific cullingDesc
         /// </summary>
-        public static void GetVisibleLights(List<HRPLight> list, Camera cam, LightCullingDesc lightCullingDesc) { if (lightCullingDesc.cullingType == LightCullingType.Frustum) instance.__GetVisibleLights__(list, cam); else instance.__GetVisibleLights__(list, cam, lightCullingDesc.radius); }
+        public static void GetVisibleLights(LightList list, Camera cam, float radius, float faraway = 200) { instance.__GetVisibleLights__(list, cam, radius, faraway); }
 
         #endregion
 
@@ -157,45 +159,78 @@ namespace HypnosRenderPipeline
             }
         }
 
-        private void __GetVisibleLights__(List<HRPLight> list, Camera cam)
+        private void __GetVisibleLights__(LightList list, Camera cam, float faraway)
         {
             list.Clear();
-            list.Capacity = m_totalCount;
 
             m_planes = GeometryUtility.CalculateFrustumPlanes(cam);
-            m_cullingLight.radius = -1;
-            m_cullingLight.visibilityArray = new NativeArray<bool>(m_totalCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            m_cullingLight.Schedule(m_totalCount, math.max(1, m_totalCount / SystemInfo.processorCount)).Complete();
+            Bounds bounds = new Bounds();
+
+            var camera_pos = cam.transform.position;
 
             for (int i = 0; i < m_totalCount; i++)
             {
-                if (m_cullingLight.visibilityArray[i])
+                var light = instance.m_lightList[i];
+                if (light.lightType == HRPLightType.Directional)
                 {
-                    list.Add(m_lightList[i]);
+                    list.directionals.Add(light);
+                    continue;
+                }
+                bounds.center = light.transform.position;
+                bounds.size = Vector3.one * light.range;
+                if (GeometryUtility.TestPlanesAABB(m_planes, bounds))
+                {
+                    if (light.isArea)
+                    {
+                        list.areas.Add(light);
+                    }
+                    else if (Vector3.Distance(camera_pos, bounds.center) > faraway)
+                    {
+                        list.faraways.Add(light);
+                    }
+                    else
+                    {
+                        list.locals.Add(light);
+                    }
                 }
             }
-            m_cullingLight.visibilityArray.Dispose();
         }
 
-        private void __GetVisibleLights__(List<HRPLight> list, Camera cam, float radius)
+        private void __GetVisibleLights__(LightList list, Camera cam, float radius, float faraway)
         {
             Assert.IsTrue(radius > 0, "Culling radius must be greater than 0!");
-            list.Clear();
-            list.Capacity = m_totalCount;
+            Assert.IsTrue(radius > faraway, "Culling radius must be greater than faraway distance!");
 
-            this.m_camera_pos = cam.transform.position;
-            m_cullingLight.radius = radius;
-            m_cullingLight.visibilityArray = new NativeArray<bool>(m_totalCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            m_cullingLight.Schedule(m_totalCount, math.max(1, m_totalCount / SystemInfo.processorCount)).Complete();
+            list.Clear();
+
+            var camera_pos = cam.transform.position;
 
             for (int i = 0; i < m_totalCount; i++)
             {
-                if (m_cullingLight.visibilityArray[i])
+                var light = instance.m_lightList[i];
+                if (light.lightType == HRPLightType.Directional)
                 {
-                    list.Add(m_lightList[i]);
+                    list.directionals.Add(light);
+                    continue;
+                }
+
+                float dis = Vector3.Distance(camera_pos, light.transform.position);
+                if (dis < radius + light.range)
+                {
+                    if (light.isArea)
+                    {
+                        list.areas.Add(light);
+                    }
+                    else if (dis > faraway)
+                    {
+                        list.faraways.Add(light);
+                    }
+                    else
+                    {
+                        list.locals.Add(light);
+                    }
                 }
             }
-            m_cullingLight.visibilityArray.Dispose();
         }
 
         #endregion

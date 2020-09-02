@@ -6,10 +6,10 @@ namespace HypnosRenderPipeline.RenderPass
     public class PreZ : BaseRenderPass
     {
         [NodePin(PinType.InOut)]
-        public TexturePin depth = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
-                                                                        TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                                        TexturePinDesc.ColorCastMode.Fixed,
-                                                                        TexturePinDesc.SizeScale.Full));
+        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
+                                                        SizeCastMode.ResizeToInput,
+                                                        ColorCastMode.Fixed,
+                                                        SizeScale.Full);
 
         public LayerMask mask = -1;
 
@@ -19,7 +19,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.SetRenderTarget(depth.handle);
+            context.CmdBuffer.SetRenderTarget(depth);
             if (clearDepthFirst)
             {
                 context.CmdBuffer.ClearRenderTarget(true, false, Color.black);

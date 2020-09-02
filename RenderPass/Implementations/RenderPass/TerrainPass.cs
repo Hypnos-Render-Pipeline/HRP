@@ -6,15 +6,15 @@ namespace HypnosRenderPipeline.RenderPass
     public class TerrainPass : BaseRenderPass
     {
         [NodePin(PinType.InOut)]
-        public TexturePin color = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
-                                                                                       TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                                                       TexturePinDesc.ColorCastMode.FitToInput,
-                                                                                       TexturePinDesc.SizeScale.Full));
+        public TexturePin color = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
+                                                        SizeCastMode.ResizeToInput,
+                                                        ColorCastMode.FitToInput,
+                                                        SizeScale.Full);
         [NodePin(PinType.InOut)]
-        public TexturePin depth = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
-                                                                        TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                                        TexturePinDesc.ColorCastMode.Fixed,
-                                                                        TexturePinDesc.SizeScale.Full));
+        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
+                                                        SizeCastMode.ResizeToInput,
+                                                        ColorCastMode.Fixed,
+                                                        SizeScale.Full);
 
         public bool gameCameraCull = true;
 
@@ -22,12 +22,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.SetRenderTarget(
-                new[]{
-                    (RenderTargetIdentifier)color.handle,
-                    (RenderTargetIdentifier)depth.handle,
-                }
-                , depth.handle);
+            context.CmdBuffer.SetRenderTarget(new RenderTargetIdentifier[]{ color, depth }, depth);
 
             var cam = gameCameraCull ? Camera.main ?? context.RenderCamera : context.RenderCamera;
 

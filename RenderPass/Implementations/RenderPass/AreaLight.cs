@@ -10,34 +10,32 @@ namespace HypnosRenderPipeline.RenderPass
     {
 
         [NodePin]
-        public TexturePin target = new TexturePin(new TexturePinDesc(
-                                                    new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
-                                                    TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                    TexturePinDesc.ColorCastMode.FitToInput,
-                                                    TexturePinDesc.SizeScale.Full));
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
+                                                                    SizeCastMode.ResizeToInput,
+                                                                    ColorCastMode.FitToInput,
+                                                                    SizeScale.Full);
 
         [NodePin]
-        public TexturePin depth = new TexturePin(new TexturePinDesc(
-                                            new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
-                                            TexturePinDesc.SizeCastMode.ResizeToInput,
-                                            TexturePinDesc.ColorCastMode.Fixed,
-                                            TexturePinDesc.SizeScale.Full));
+        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
+                                                                    SizeCastMode.ResizeToInput,
+                                                                    ColorCastMode.Fixed,
+                                                                    SizeScale.Full);
 
         [NodePin(PinType.In, true)]
-        public TexturePin baseColor_roughness = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
-                                                                                       TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                                                       TexturePinDesc.ColorCastMode.FitToInput,
-                                                                                       TexturePinDesc.SizeScale.Full));
+        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
+                                                                    SizeCastMode.ResizeToInput,
+                                                                    ColorCastMode.FitToInput,
+                                                                    SizeScale.Full);
         [NodePin(PinType.In, true)]
-        public TexturePin normal_metallic = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
-                                                                                       TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                                                       TexturePinDesc.ColorCastMode.FitToInput,
-                                                                                       TexturePinDesc.SizeScale.Full));
+        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
+                                                                    SizeCastMode.ResizeToInput,
+                                                                    ColorCastMode.FitToInput,
+                                                                    SizeScale.Full);
         [NodePin(PinType.In, true)]
-        public TexturePin ao = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
-                                                                               TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                                               TexturePinDesc.ColorCastMode.FitToInput,
-                                                                               TexturePinDesc.SizeScale.Full));
+        public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
+                                                                    SizeCastMode.ResizeToInput,
+                                                                    ColorCastMode.FitToInput,
+                                                                    SizeScale.Full);
 
         static MaterialWithName lightMat = new MaterialWithName("Hidden/LightMesh");
         static MaterialWithName deferredLightingMat = new MaterialWithName("Hidden/DeferredLighting");
@@ -125,7 +123,7 @@ namespace HypnosRenderPipeline.RenderPass
                         {
                             context.CmdBuffer.SetGlobalTexture("_LightTex", (light.canHasTexture && light.areaTexture != null) ? light.areaTexture : Texture2D.whiteTexture);
                             context.CmdBuffer.SetGlobalInt("_Disc", light.lightType == HRPLightType.Disc ? 1 : 0);
-                            context.CmdBuffer.SetRenderTarget(color: target.handle, depth: depth.handle);
+                            context.CmdBuffer.SetRenderTarget(color: target, depth: depth);
                             context.CmdBuffer.DrawMesh(mesh, mat, lightMat);
                         }
 
@@ -149,7 +147,7 @@ namespace HypnosRenderPipeline.RenderPass
                                 context.CmdBuffer.SetGlobalTexture("_LightSpecTex", Texture2D.whiteTexture);
                             }
 
-                            context.CmdBuffer.Blit(null, target.handle, deferredLightingMat, 1);
+                            context.CmdBuffer.Blit(null, target, deferredLightingMat, 1);
                         }
                         else if (light.lightType == HRPLightType.Tube)
                         {
@@ -163,7 +161,7 @@ namespace HypnosRenderPipeline.RenderPass
                             context.CmdBuffer.SetGlobalTexture("_LightDiffuseTex", Texture2D.whiteTexture);
                             context.CmdBuffer.SetGlobalTexture("_LightSpecTex", Texture2D.whiteTexture);
 
-                            context.CmdBuffer.Blit(null, target.handle, deferredLightingMat, 2);
+                            context.CmdBuffer.Blit(null, target, deferredLightingMat, 2);
                         }
                         else if (light.lightType == HRPLightType.Disc)
                         {
@@ -185,7 +183,7 @@ namespace HypnosRenderPipeline.RenderPass
                                 context.CmdBuffer.SetGlobalTexture("_LightSpecTex", Texture2D.whiteTexture);
                             }
 
-                            context.CmdBuffer.Blit(null, target.handle, deferredLightingMat, 3);
+                            context.CmdBuffer.Blit(null, target, deferredLightingMat, 3);
                         }
                     }
                 }

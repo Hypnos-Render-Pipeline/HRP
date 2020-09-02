@@ -66,5 +66,7 @@ namespace HypnosRenderPipeline.RenderGraph
         }
 
         public abstract void Excute(RenderContext context);
+
+        public virtual void Dispose() { }
     }
 }

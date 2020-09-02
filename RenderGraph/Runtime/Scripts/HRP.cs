@@ -31,6 +31,16 @@ namespace HypnosRenderPipeline
             m_asset.defaultMaterial.hideFlags = HideFlags.NotEditable;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+#if UNITY_EDITOR
+            if (disposing)
+            {
+                m_executor.Dispose();
+            }
+#endif
+        }
 
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
@@ -96,9 +106,9 @@ namespace HypnosRenderPipeline
 
                     cb.SetRenderTarget(result);
                     var selected_lights = UnityEditor.Selection.GetFiltered<HRPLight>(UnityEditor.SelectionMode.Unfiltered);
-                    var llist = new List<HRPLight>();
+                    var llist = new LightList();
                     LightManager.GetVisibleLights(llist, cam);
-                    foreach (var light in llist)
+                    foreach (var light in llist.areas)
                     {
                         if (selected_lights.Contains(light))
                         {
@@ -106,7 +116,13 @@ namespace HypnosRenderPipeline
                             {
                                 cb.DrawMesh(light.lightMesh, light.transform.localToWorldMatrix, m_wireFrame);
                             }
-                            else if (light.supportIES && light.IESProfile != null)
+                        }
+                    }
+                    foreach (var light in llist.locals)
+                    {
+                        if (selected_lights.Contains(light))
+                        {
+                            if (light.supportIES && light.IESProfile != null)
                             {
                                 cb.SetGlobalTexture("_IESCube", light.IESProfile);
                                 cb.DrawMesh(MeshWithType.sphere, Matrix4x4.TRS(light.transform.position, light.transform.rotation, Vector3.one * 0.6f), m_iesSphere);

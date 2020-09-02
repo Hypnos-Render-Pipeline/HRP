@@ -7,8 +7,7 @@ namespace HypnosRenderPipeline
 {
     public class FrustumCulling
     {
-        static ComputeShader __cullingShader__;
-        static ComputeShader cullingShader { get { if (__cullingShader__ == null) __cullingShader__ = Resources.Load<ComputeShader>("Shaders/Tools/FrustumCulling"); return __cullingShader__; } }
+        static ComputeShaderWithName cullingShader = ComputeShaderWithName.cullingShader;
 
         static Vector4[] planes = new Vector4[6];
 
@@ -35,6 +34,5 @@ namespace HypnosRenderPipeline
             cb.SetComputeBufferParam(cullingShader, 1, "_PlaneCenter", offsetBuffer);
             cb.DispatchCompute(cullingShader, 1, offsetBuffer.count / 32 + (offsetBuffer.count % 32 != 0 ? 1 : 0), 1, 1);
         }
-
     }
 }

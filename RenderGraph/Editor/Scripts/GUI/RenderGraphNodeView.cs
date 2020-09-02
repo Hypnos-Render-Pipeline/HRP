@@ -382,7 +382,7 @@ namespace HypnosRenderPipeline.RenderGraph
                             label.style.maxWidth = label.style.minWidth = 60;
                         else
                             label.style.maxWidth = label.style.minWidth = 100;
-                        ele.tooltip = param.info;
+                        ele.Children().First().tooltip = param.info;
                         toolbar.Add(ele);
                     }
                 }

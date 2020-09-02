@@ -223,7 +223,9 @@ namespace HypnosRenderPipeline.RenderGraph
                     {
                         if (saved_parm.name == name && parm.FieldType == saved_parm.type)
                         {
-                            new_parameters.Add(new Parameter() { type = parm.FieldType, name = name, raw_data = parm, value = saved_parm.value });
+                            new_parameters.Add(new Parameter() { type = parm.FieldType, name = name, raw_data = parm, value = saved_parm.value,
+                                                                  info = tooltipattri != null ? tooltipattri.tooltip : ""
+                            });
                             find_saved = true;
                             break;
                         }

@@ -193,29 +193,30 @@ namespace HypnosRenderPipeline.RenderGraph
                 var input = input_value.Value.first;
                 if (existValue.ContainsKey(input.Name))
                 {
+                    var pin = input.GetValue(node_instance);
                     var from_pin = existValue[input.Name];
                     var from_pin_name = input.FieldType.GetField("name").GetValue(from_pin) as string;
 
                     var compare_method = input.FieldType.GetMethod("Compare");
-                    bool same = (bool)compare_method.Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                    bool same = (bool)compare_method.Invoke(pin, new object[] { context, from_pin });
                     if (same && (!nodeRec.outputs.ContainsKey(input.Name) || node.nodeType == typeof(TextureDebug) || pinPool[from_pin_name] == 1))
                     {
-                        input.FieldType.GetMethod("Move").Invoke(input.GetValue(node_instance), new object[] { from_pin });
+                        input.FieldType.GetMethod("Move").Invoke(pin, new object[] { from_pin });
                     }
                     else
                     {
                         var ca_cast_method = input.FieldType.GetMethod("CanCastFrom");
-                        bool can_cast = (bool)ca_cast_method.Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                        bool can_cast = (bool)ca_cast_method.Invoke(pin, new object[] { context, from_pin });
                         if (can_cast)
                         {
                             var init_method = input.FieldType.GetMethod("AllocateResourcces");
                             string name = input.Name + temp_id++;
                             int id = Shader.PropertyToID(name);
-                            init_method.Invoke(input.GetValue(node_instance), new object[] { context, id });
-                            input.FieldType.GetField("name").SetValue(input.GetValue(node_instance), name);
+                            init_method.Invoke(pin, new object[] { context, id });
+                            input.FieldType.GetField("name").SetValue(pin, name);
                             pinPool[name] = 1;
                             var cast_method = input.FieldType.GetMethod("CastFrom");
-                            cast_method.Invoke(input.GetValue(node_instance), new object[] { context, from_pin });
+                            cast_method.Invoke(pin, new object[] { context, from_pin });
                             if (--pinPool[from_pin_name] == 0)
                             {
                                 var release_method = input.FieldType.GetMethod("ReleaseResourcces");
@@ -332,6 +333,36 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     dependency[node.Key] = node.Value.Item1.Count;
                 }
+            }
+        }
+
+        public void Dispose()
+        {
+            HashSet<string> set = new HashSet<string>();
+            foreach (var rec in nodes)
+            {
+                set.Clear();
+                var nodeRec = rec.Value;
+                var node_instance = nodeRec.node;
+                foreach (var input_value in nodeRec.inputs)
+                {
+                    var input = input_value.Value.first;
+
+                    var pin = input.GetValue(node_instance);
+                    set.Add(input.FieldType.Name);
+
+                    input.FieldType.GetMethod("Dispose").Invoke(pin, new object[] { });
+                }
+                foreach (var input_value in nodeRec.outputs)
+                {
+                    var input = input_value.Value.first;
+
+                    var pin = input.GetValue(node_instance);
+                    if (set.Contains(input.FieldType.Name)) continue;
+
+                    input.FieldType.GetMethod("Dispose").Invoke(pin, new object[] { });
+                }
+                node_instance.Dispose();
             }
         }
     }

@@ -17,12 +17,27 @@ namespace HypnosRenderPipeline
             return a.material;
         }
 
-        static MaterialWithName __depthBlit__ = new MaterialWithName("Hidden/DepthBlit");
-        public static Material depthBlit { get { return __depthBlit__; } }
+        public static MaterialWithName depthBlit = new MaterialWithName("Hidden/DepthBlit");
 
-        static MaterialWithName __debugBlit__ = new MaterialWithName("Hidden/DebugBlit");
-        public static Material debugBlit { get { return __debugBlit__; } }
+        public static MaterialWithName debugBlit = new MaterialWithName("Hidden/DebugBlit");
     }
 
+    public class ComputeShaderWithName
+    {
+        string path;
+        ComputeShader __Shader__;
+        ComputeShader Shader { get { if (__Shader__ == null) __Shader__ = Resources.Load<ComputeShader>(path); return __Shader__; } }
+
+        public ComputeShaderWithName(string path)
+        {
+            this.path = path;
+        }
+
+        public static implicit operator ComputeShader(ComputeShaderWithName a)
+        {
+            return a.Shader;
+        }
+        public static ComputeShaderWithName cullingShader = new ComputeShaderWithName("Shaders/Tools/FrustumCulling");
+    }
 
 }

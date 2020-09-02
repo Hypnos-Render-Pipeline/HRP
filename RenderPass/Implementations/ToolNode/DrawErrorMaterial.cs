@@ -8,18 +8,16 @@ namespace HypnosRenderPipeline.RenderPass
     {
 
         [NodePin]
-        public TexturePin target = new TexturePin(new TexturePinDesc(
-                                                    new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
-                                                    TexturePinDesc.SizeCastMode.ResizeToInput,
-                                                    TexturePinDesc.ColorCastMode.FitToInput,
-                                                    TexturePinDesc.SizeScale.Full));
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
+                                                    SizeCastMode.ResizeToInput,
+                                                    ColorCastMode.FitToInput,
+                                                    SizeScale.Full);
 
         [NodePin]
-        public TexturePin depth = new TexturePin(new TexturePinDesc(
-                                            new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
-                                            TexturePinDesc.SizeCastMode.ResizeToInput,
-                                            TexturePinDesc.ColorCastMode.Fixed,
-                                            TexturePinDesc.SizeScale.Full));
+        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
+                                                    SizeCastMode.ResizeToInput,
+                                                    ColorCastMode.Fixed,
+                                                    SizeScale.Full);
 
         static ShaderTagId[] legacyShaderTagIds = {
                     new ShaderTagId("Always"),
@@ -34,7 +32,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.SetRenderTarget(color: target.handle, depth: depth.handle);
+            context.CmdBuffer.SetRenderTarget(color: target, depth: depth);
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
 
