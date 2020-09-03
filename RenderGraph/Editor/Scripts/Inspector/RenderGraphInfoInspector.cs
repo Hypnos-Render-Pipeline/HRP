@@ -1,6 +1,5 @@
 ﻿using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace HypnosRenderPipeline.RenderGraph
@@ -108,9 +107,9 @@ namespace HypnosRenderPipeline.RenderGraph
                 }
                 return false;
             }
-            catch
+            catch(System.Exception e)
             {
-                Debug.LogError("Load faild");
+                Debug.LogError("Load faild: " + e.Message);
                 return false;
             }
         }

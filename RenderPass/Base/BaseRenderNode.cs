@@ -43,6 +43,9 @@ namespace HypnosRenderPipeline.RenderGraph
     {
         public enum PinType { In, Out, InOut };
 
+        [Tooltip("Should this node be excuted.")]
+        public bool enabled = true;
+
         [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
         public class NodePinAttribute : Attribute
         {

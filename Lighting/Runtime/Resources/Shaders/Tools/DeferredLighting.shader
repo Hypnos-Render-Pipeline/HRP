@@ -13,6 +13,7 @@
             #pragma fragment frag
             #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
+            #include "../Includes/Light.hlsl"
 
             struct appdata
             {
@@ -26,7 +27,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
             SamplerState sampler_point_clamp;
 
             float4x4 _V, _V_Inv;
@@ -65,12 +66,22 @@
                 DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    1,
+                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     baseColor, roughness, metallic, normal, emission, gnormal, ao);
 
-                float3 res = lerp(pow(max(0, dot(normalize(view + float3(0, 1, 0)), normal)), lerp(2000, 10, roughness)) * lerp(10, 0.2, roughness), max(normal.y, 0) / 2, 0.96 - metallic) * baseColor;
+                float3 res = 0;
 
-                return float4(emission, 1);
+                BegineLocalLightsLoop(i.uv, pos, _VP_Inv);
+                {
+                    float NdotL = max(0, dot(normalize(view + light.dir), normal));
+                    float diffuseAO = lerp(ao, 1, NdotL * 0.8 + 0.2);
+                    float specAO = lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5));
+
+                    res += lerp(pow(NdotL, lerp(2000, 10, roughness))* lerp(10, 0.2, roughness)* specAO, NdotL* diffuseAO / 2, 0.96 - metallic)* light.radiance * baseColor;
+                }
+                EndLocalLightsLoop;
+
+                return float4(res + emission, 1);
             }
             ENDCG
         }

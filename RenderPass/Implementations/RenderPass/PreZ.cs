@@ -13,14 +13,10 @@ namespace HypnosRenderPipeline.RenderPass
 
         public LayerMask mask = -1;
 
-
-        [Tooltip("Should I clear depth before render")]
-        public bool clearDepthFirst;
-
         public override void Excute(RenderContext context)
         {
             context.CmdBuffer.SetRenderTarget(depth);
-            if (clearDepthFirst)
+            if (!depth.connected)
             {
                 context.CmdBuffer.ClearRenderTarget(true, false, Color.black);
             }

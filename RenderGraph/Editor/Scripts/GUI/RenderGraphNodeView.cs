@@ -461,12 +461,18 @@ namespace HypnosRenderPipeline.RenderGraph
             port.portName = slot.name;
             port.Q("type").style.fontSize = new StyleLength(16);
             port.tooltip = slot.info;
+
+            if (slot.slotType.IsGenericType && slot.slotType.GetGenericTypeDefinition() == typeof(BufferPin<>))
+            {
+                port.portColor = new Color(0.5f, 0.5f, 1f);
+            }
             if (slot.color != null)
             {
                 port.portColor = slot.color.Value;
             }
+                        
             if (slot.mustConnect && input)
-                port.Q("type").style.color = Color.red;
+                port.Q("type").style.color = new Color(1, 0.7f, 0.8f);
 
             return port;
         }

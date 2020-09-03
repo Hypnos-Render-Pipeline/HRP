@@ -159,7 +159,7 @@ namespace HypnosRenderPipeline
                 switch (lightType)
                 {
                     case HRPLightType.Spot:
-                        geo.x = Mathf.Cos(spotAngle);
+                        geo.x = Mathf.Abs(Mathf.Tan(spotAngle / 180 * Mathf.PI / 2));
                         break;
                     case HRPLightType.Sphere:
                         geo.x = sphereRadius;

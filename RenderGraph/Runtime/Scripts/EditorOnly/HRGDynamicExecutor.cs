@@ -86,7 +86,8 @@ namespace HypnosRenderPipeline.RenderGraph
                 context.CmdBuffer.Clear();
                 if (node.nodeType != typeof(TextureDebug) || debug)
                 {
-                    renderNode.Excute(context);
+                    if (renderNode.enabled)
+                        renderNode.Excute(context);
                 }
                 if (debug)
                     context.CmdBuffer.EndSample(node.sampler);
@@ -191,9 +192,10 @@ namespace HypnosRenderPipeline.RenderGraph
             foreach (var input_value in nodeRec.inputs)
             {
                 var input = input_value.Value.first;
+                var pin = input.GetValue(node_instance);
                 if (existValue.ContainsKey(input.Name))
                 {
-                    var pin = input.GetValue(node_instance);
+                    input.FieldType.GetField("connected").SetValue(pin, true);
                     var from_pin = existValue[input.Name];
                     var from_pin_name = input.FieldType.GetField("name").GetValue(from_pin) as string;
 
@@ -232,6 +234,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 }
                 else
                 {
+                    input.FieldType.GetField("connected").SetValue(pin, false);
                     if (input.GetCustomAttribute<BaseRenderNode.NodePinAttribute>().mustConnect)
                     {
                         Debug.LogError("Must connect Pin \"" + input.Name + "\" of \"" + node.nodeName + "\" is not connected.");

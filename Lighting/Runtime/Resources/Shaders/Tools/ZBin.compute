@@ -1,14 +1,223 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+﻿#pragma kernel TileCulling
+#pragma kernel BinCulling
+#pragma kernel Debug
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-RWTexture2D<float4> Result;
+#define ZIBIN_COMPUTE
+#include "../Includes/Light.hlsl"
 
-[numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+uint _LocalLightCount;
+
+float3 _CameraPos;
+float4x4 _InvVP;
+
+
+float2 _WH;
+RWTexture2D<float3> _Debug;
+
+
+groupshared uint bits[32];
+uint LaneScanExclude(uint laneNum, uint lanOffset, uint laneId, uint value) {
+
+    bits[lanOffset + laneId] = value;
+
+    GroupMemoryBarrierWithGroupSync();
+
+    uint res = 0;
+    if (laneId == 0) {
+        for (uint i = 0; i < laneNum; i++)
+        {
+            uint res_ = res + bits[lanOffset + i];
+            bits[lanOffset + i] = res;
+            res = res_;
+        }
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    return bits[lanOffset + laneId];
+}
+
+
+inline float4 GetPlane(float3 normal, float3 inPoint)
 {
-    // TODO: insert actual code here!
+    return float4(normal, -dot(normal, inPoint));
+}
+inline float4 GetPlane(float3 a, float3 b, float3 c)
+{
+    float3 normal = normalize(cross(b - a, c - a));
+    return float4(normal, -dot(normal, a));
+}
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+bool SphereIntersect(float4 sphere, float4x4 planes)
+{
+    if (any(mul(planes, float4(sphere.xyz, 1)) > sphere.w)) return false;
+    return true;
+}
+bool SphereIntersect(float4 sphere, float2x4 planes)
+{
+    if (any(mul(planes, float4(sphere.xyz, 1)) > sphere.w)) return false;
+    return true;
+}
+
+inline bool PointInsidePlane(float3 vertex, float4 plane)
+{
+    return (dot(plane.xyz, vertex) + plane.w) < 0;
+}
+inline bool ConeInsidePlane(float4 position_range, float3 dir, float angle, float4 plane)
+{
+    float3 m = cross(cross(plane.xyz, dir), dir);
+    float3 Q = position_range.xyz + dir * position_range.w + normalize(m) * position_range.w * angle;
+    return PointInsidePlane(position_range.xyz, plane) || PointInsidePlane(Q, plane);
+}
+bool ConeIntersect(float4 position_range, float3 dir, float angle, float4x4 planes)
+{
+    [unroll]
+    for (uint i = 0; i < 4; ++i)
+    {
+        if (!ConeInsidePlane(position_range, dir, angle, planes[i])) return false;
+    }
+    return true;
+}
+bool ConeIntersect(float4 position_range, float3 dir, float angle, float2x4 planes)
+{
+    [unroll]
+    for (uint i = 0; i < 2; ++i)
+    {
+        if (!ConeInsidePlane(position_range, dir, angle, planes[i])) return false;
+    }
+    return true;
+}
+
+[numthreads(4, 2, 4)]
+void TileCulling(uint2 id : SV_DispatchThreadID, uint3 gtid : SV_GroupThreadID)
+{
+    float3 tileSize;
+    tileSize.xy = 2.0f / _TileCount.xy;
+    tileSize.z = 0;
+    uint4 tileCount = _TileCount;
+    uint2 tileId = id;
+    uint maxLightCount = tileCount.w;
+    uint start_offset = (id.x + id.y * tileCount.x) * (maxLightCount + 1);
+
+    float4 lb = float4(tileId * tileSize.xy - 1, 1, 1);
+    float4x4 uvs = transpose(float4x4(lb, lb + tileSize.xzzz, lb + tileSize.zyzz, lb + tileSize.xyzz));
+
+    float4x4 corner = mul(_InvVP, uvs);
+    float3 cam = _CameraPos;
+    float3 p0 = corner._m00_m10_m20 / corner._m30;
+    float3 p1 = corner._m01_m11_m21 / corner._m31;
+    float3 p2 = corner._m02_m12_m22 / corner._m32;
+    float3 p3 = corner._m03_m13_m23 / corner._m33;
+
+    float4x4 planes; // we don't need to test far/near clip plane, because cpu has already done this work.
+
+    planes[0] = GetPlane(cam, p0, p2);
+    planes[1] = GetPlane(cam, p2, p3);
+    planes[2] = GetPlane(cam, p3, p1);
+    planes[3] = GetPlane(cam, p1, p0);
+
+    int count = 0;
+    int idxs[32];
+    uint loopNum = _LocalLightCount / 4 + (_LocalLightCount % 4 != 0 ? 1 : 0);
+    for (uint i = 0; i < loopNum; i++)
+    {
+        uint index = (i << 2) + gtid.z;
+        if (index < _LocalLightCount) {
+            Light light = _LocalLightBuffer[index];
+            if (light.radiance_type.w == 1) { // point
+                if (!SphereIntersect(light.position_range, planes)) continue;
+            }
+            else { // spot
+                if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
+            }
+            idxs[count++] = index;
+        }
+    }
+
+    uint offset = LaneScanExclude(4, gtid.x * 16 + gtid.y * 4, gtid.z, count);
+
+    if (gtid.z == 3)
+        _TileLights[start_offset] = offset + count;
+    start_offset += 1;
+
+    for (uint j = offset; j < offset + count; j++)
+    {
+        if (j < maxLightCount)
+            _TileLights[start_offset + j] = (idxs[j - offset] << 24);
+    }
+}
+
+[numthreads(2, 2, 8)]
+void BinCulling(uint3 id : SV_DispatchThreadID)
+{
+    float3 tileSize;
+    tileSize.xy = 2.0f / _TileCount.xy;
+    tileSize.z = 0;
+    uint4 tileCount = _TileCount;
+    uint2 tileId = id.xy;
+    uint maxLightCount = tileCount.w;
+    uint start_offset = (tileId.x + tileId.y * tileCount.x) * (maxLightCount + 1);
+
+    float4 cam_ = mul(_InvVP, float4(0, 0, 1, 1));
+    float3 cam = cam_.xyz / cam_.w;
+    float4 farPlane = mul(_InvVP, float4(0, 0, 0, 1));
+    farPlane /= farPlane.w;
+    float3 viewDir = normalize(farPlane.xyz - cam);
+
+    float inv_bin = 1.0f / tileCount.z;
+
+    uint lightCount = _TileLights[start_offset];
+    start_offset += 1;
+
+
+    uint mask_value = 1 << id.z;
+    float z_uv = id.z * inv_bin;
+
+    float2x4 planes;
+    planes[0] = GetPlane(-viewDir, lerp(cam, farPlane.xyz, z_uv));          // near
+    planes[1] = GetPlane(viewDir, lerp(cam, farPlane.xyz, z_uv + inv_bin)); // far
+
+    for (uint j = 0; j < lightCount; j++)
+    {
+        Light light = _LocalLightBuffer[_TileLights[start_offset + j] >> 24];
+        if (light.radiance_type.w == 1) { // point
+            if (!SphereIntersect(light.position_range, planes)) continue;
+        }
+        else { // spot
+            if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
+        }
+        InterlockedAdd(_TileLights[start_offset + j], mask_value);
+    }
+}
+
+
+sampler2D _Depth;
+
+[numthreads(8, 8, 1)]
+void Debug(uint2 id : SV_DispatchThreadID)
+{
+    float2 uv = (id + 0.5) / _WH;
+
+    float d = tex2Dlod(_Depth, float4(uv, 0, 0)).x;
+    if (d == 0) {
+        _Debug[id] = 0;
+        return;
+    }
+
+    float3 pos;
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_InvVP, ndc);
+        pos = worldPos.xyz / worldPos.w;
+    }
+
+    float3 res = 0;
+    
+    BegineLocalLightsLoop(uv, pos, _InvVP);
+    {
+        res += max(0, dot(light.dir, float3(0, 1, 0))) * light.radiance * 0.1;
+    }
+    EndLocalLightsLoop;
+
+    _Debug[id] = res;
 }

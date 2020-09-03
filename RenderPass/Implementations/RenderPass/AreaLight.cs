@@ -8,39 +8,27 @@ namespace HypnosRenderPipeline.RenderPass
 
     public class AreaLight : BaseRenderPass
     {
+        [NodePin(PinType.In, true)]
+        public LightListPin lights = new LightListPin();
 
         [NodePin]
-        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0),
-                                                                    SizeCastMode.ResizeToInput,
-                                                                    ColorCastMode.FitToInput,
-                                                                    SizeScale.Full);
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0));
 
-        [NodePin]
-        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
-                                                                    SizeCastMode.ResizeToInput,
-                                                                    ColorCastMode.Fixed,
-                                                                    SizeScale.Full);
+        [NodePin(PinType.InOut, true)]
+        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In, true)]
-        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
-                                                                    SizeCastMode.ResizeToInput,
-                                                                    ColorCastMode.FitToInput,
-                                                                    SizeScale.Full);
+        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
         [NodePin(PinType.In, true)]
-        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
-                                                                    SizeCastMode.ResizeToInput,
-                                                                    ColorCastMode.FitToInput,
-                                                                    SizeScale.Full);
-        [NodePin(PinType.In, true)]
-        public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
-                                                                    SizeCastMode.ResizeToInput,
-                                                                    ColorCastMode.FitToInput,
-                                                                    SizeScale.Full);
+        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In)]
+        public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         static MaterialWithName lightMat = new MaterialWithName("Hidden/LightMesh");
+        static MaterialWithName clearAlphaMat = new MaterialWithName("Hidden/ClearAlpha");
         static MaterialWithName deferredLightingMat = new MaterialWithName("Hidden/DeferredLighting");
-
-        List<HRPLight> lights;
 
         Texture2D TransformInv_Diffuse, TransformInv_Specular, AmpDiffAmpSpecFresnel, DiscClip;
 
@@ -50,8 +38,6 @@ namespace HypnosRenderPipeline.RenderPass
         {
             sphere = MeshWithType.sphere;
             tube = MeshWithType.cylinder;
-
-            lights = new List<HRPLight>();
 
             AmpDiffAmpSpecFresnel = Resources.Load<Texture2D>("Textures/LUT/AmpDiffAmpSpecFresnel");
             TransformInv_Diffuse = Resources.Load<Texture2D>("Textures/LUT/TransformInv_DisneyDiffuse");
@@ -70,7 +56,9 @@ namespace HypnosRenderPipeline.RenderPass
                 quad.uv = new Vector2[] { float2(1, 0), float2(0, 0), float2(1, 1), float2(0, 1) };
             }
 
-            LightManager.GetVisibleLights(lights);
+            // clear alpha before render area light mesh
+            context.CmdBuffer.SetGlobalFloat("_Alpha", 1);
+            context.CmdBuffer.Blit(null, target, clearAlphaMat, 0);
 
             context.CmdBuffer.SetGlobalTexture("_AmpDiffAmpSpecFresnel", AmpDiffAmpSpecFresnel);
             context.CmdBuffer.SetGlobalTexture("_TransformInv_Diffuse", TransformInv_Diffuse);
@@ -82,7 +70,7 @@ namespace HypnosRenderPipeline.RenderPass
             context.CmdBuffer.SetGlobalTexture("_NormalTex", normal_metallic.handle);
             context.CmdBuffer.SetGlobalTexture("_AOTex", ao.handle);
 
-            foreach (var light in lights)
+            foreach (var light in lights.handle.areas)
             {
                 if (light.isArea)
                 {

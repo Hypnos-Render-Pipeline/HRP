@@ -36,7 +36,7 @@ namespace HypnosRenderPipeline.RenderPass
         {
             context.CmdBuffer.SetRenderTarget(new RenderTargetIdentifier[]{baseColor_roughness.handle, normal_metallic, emission, microAO }, depth);
 
-            context.CmdBuffer.ClearRenderTarget(false, true, Color.clear);
+            context.CmdBuffer.ClearRenderTarget(!depth.connected, true, Color.clear);
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
             context.CmdBuffer.Clear();
 
@@ -44,7 +44,11 @@ namespace HypnosRenderPipeline.RenderPass
             context.RenderCamera.TryGetCullingParameters(out cullingParams);
             var cullingResults = context.Context.Cull(ref cullingParams);
 
-            var a = new DrawingSettings(new ShaderTagId("GBuffer"), new SortingSettings(context.RenderCamera));
+            var a = new DrawingSettings(new ShaderTagId("GBuffer_Equal"), new SortingSettings(context.RenderCamera));
+            if (!depth.connected)
+            {
+                a = new DrawingSettings(new ShaderTagId("GBuffer_LEqual"), new SortingSettings(context.RenderCamera));
+            }
             var b = FilteringSettings.defaultValue;
 
             context.Context.DrawRenderers(cullingResults, ref a, ref b);

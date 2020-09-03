@@ -27,8 +27,18 @@ namespace HypnosRenderPipeline.RenderPass
             }
         }
 
+        /// <summary>
+        /// Whether this pin is connected.
+        /// </summary>
+        public bool connected;
+
+        /// <summary>
+        /// Name of this pin.
+        /// </summary>
         public string name;
+        
         public Desc desc;
+
         public Handle handle { internal set; get; }
 
         public static implicit operator Handle(BaseNodePin<Desc, Handle> self)

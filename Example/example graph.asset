@@ -12,11 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -566, y: 186, z: 0}
-  viewScale: {x: 0.4779609, y: 0.4779609, z: 1}
+  viewPosition: {x: -364, y: -311, z: 0}
+  viewScale: {x: 0.52537984, y: 0.52537984, z: 1}
   nodes:
   - nodeName: OutputNode
-    parameters: []
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     inputs:
     - name: result
       info: Output to screen
@@ -24,10 +29,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 3528.7488
-      y: 639.3533
-      width: 300
-      height: 86
+      x: 3516.9316
+      y: 1203.6794
+      width: 299.99994
+      height: 85.999985
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: PreZ
@@ -37,8 +42,8 @@ MonoBehaviour:
       type_str: UnityEngine.LayerMask
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c4c617965724d61736b20786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c76616c75653e2d313c2f76616c75653e0d0a3c2f4c617965724d61736b3e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
-    - name: clearDepthFirst
-      info: Should I clear depth before render
+    - name: enabled
+      info: Should this node be excuted.
       type_str: System.Boolean
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
@@ -52,14 +57,19 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1271.7488
-      y: 434.35327
-      width: 300
-      height: 150
+      x: 775.64404
+      y: 1117.6531
+      width: 300.00006
+      height: 150.00003
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.PreZ
   - nodeName: CombineColorDepth
-    parameters: []
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     inputs:
     - name: color
       info: 
@@ -73,21 +83,29 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3144.7488
-      y: 590.3533
-      width: 300
-      height: 134
+      x: 3132.9314
+      y: 1154.6794
+      width: 299.99994
+      height: 133.99997
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   - nodeName: AreaLight
-    parameters: []
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     inputs:
+    - name: lights
+      info: 
+      mustConnect: 1
     - name: target
       info: 
       mustConnect: 0
     - name: depth
       info: 
-      mustConnect: 0
+      mustConnect: 1
     - name: baseColor_roughness
       info: 
       mustConnect: 1
@@ -96,24 +114,29 @@ MonoBehaviour:
       mustConnect: 1
     - name: ao
       info: 
-      mustConnect: 1
+      mustConnect: 0
     outputs:
     - name: target
       info: 
       mustConnect: 0
     - name: depth
       info: 
-      mustConnect: 0
+      mustConnect: 1
     position:
       serializedVersion: 2
       x: 2379.7488
-      y: 412.35327
+      y: 1069.3687
       width: 300
       height: 230
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.AreaLight
   - nodeName: GBuffer
-    parameters: []
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     inputs:
     - name: depth
       info: 
@@ -136,51 +159,23 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1614.7488
-      y: 389.35327
-      width: 300
-      height: 206
+      x: 1118.644
+      y: 1072.6532
+      width: 300.00006
+      height: 225.00003
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.GBuffer
-  - nodeName: LightingPass
-    parameters: []
-    inputs:
-    - name: lightBuffer
-      info: 
-      mustConnect: 0
-    - name: lights
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    - name: baseColor_roughness
-      info: 
-      mustConnect: 0
-    - name: normal_metallic
-      info: 
-      mustConnect: 0
-    - name: emission
-      info: 
-      mustConnect: 0
-    outputs:
-    - name: lightingResult
-      info: 
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 2015.7488
-      y: 259.35327
-      width: 300
-      height: 206
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.LightingPass
   - nodeName: TerrainPass
     parameters:
     - name: gameCameraCull
       info: 
       type_str: System.Boolean
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     inputs:
     - name: color
@@ -198,10 +193,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2759.7913
-      y: 535.15314
-      width: 300
-      height: 177
+      x: 2759.9995
+      y: 1123.8158
+      width: 299.99994
+      height: 176.99997
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.TerrainPass
   - nodeName: CullLight
@@ -221,6 +216,11 @@ MonoBehaviour:
       type_str: System.Single
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e3130303c2f666c6f61743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     inputs: []
     outputs:
     - name: lights
@@ -228,39 +228,97 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1313
-      y: 191
+      x: 1127.0627
+      y: 872.19324
       width: 300
-      height: 159
+      height: 178
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CullLight
   - nodeName: ZBin
-    parameters: []
+    parameters:
+    - name: tileCount
+      info: 'xy: tile count of screen, z: depth split count'
+      type_str: UnityEngine.Vector3Int
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c566563746f7233496e7420786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c783e3132383c2f783e0d0a20203c793e36343c2f793e0d0a20203c7a3e32343c2f7a3e0d0a3c2f566563746f7233496e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: maxLightCountPerTile
+      info: max light number per tile
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e36343c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     inputs:
     - name: lights
       info: 
       mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 0
     outputs:
     - name: lightBuffer
       info: 
       mustConnect: 0
+    - name: tileLights
+      info: 
+      mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1663
-      y: 184
-      width: 300
-      height: 110
+      x: 1605.0502
+      y: 860.65015
+      width: 300.00006
+      height: 221.00003
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.ZBin
+  - nodeName: LocalLighting
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lightBuffer
+      info: 
+      mustConnect: 1
+    - name: tiledLights
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: baseColor_roughness
+      info: 
+      mustConnect: 1
+    - name: normal_metallic
+      info: 
+      mustConnect: 1
+    - name: emission
+      info: 
+      mustConnect: 1
+    - name: ao
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: lightingResult
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2005
+      y: 923.15015
+      width: 300.00006
+      height: 273
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.LocalLighting
   edgeRecs:
   - i: 0
     o: 2
     i_n: result
     o_n: combined
-  - i: 4
-    o: 1
-    i_n: depth
-    o_n: depth
   - i: 3
     o: 4
     i_n: depth
@@ -273,86 +331,102 @@ MonoBehaviour:
     o: 4
     i_n: normal_metallic
     o_n: normal_metallic
+  - i: 5
+    o: 3
+    i_n: color
+    o_n: target
+  - i: 5
+    o: 3
+    i_n: depth
+    o_n: depth
+  - i: 2
+    o: 5
+    i_n: depth
+    o_n: depth
+  - i: 2
+    o: 5
+    i_n: color
+    o_n: color
+  - i: 7
+    o: 6
+    i_n: lights
+    o_n: lights
+  - i: 7
+    o: 4
+    i_n: depth
+    o_n: depth
+  - i: 8
+    o: 4
+    i_n: ao
+    o_n: microAO
+  - i: 8
+    o: 4
+    i_n: emission
+    o_n: emission
+  - i: 8
+    o: 4
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 8
+    o: 4
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 8
+    o: 4
+    i_n: depth
+    o_n: depth
+  - i: 8
+    o: 7
+    i_n: lightBuffer
+    o_n: lightBuffer
   - i: 3
     o: 4
     i_n: ao
     o_n: microAO
-  - i: 5
-    o: 4
-    i_n: depth
-    o_n: depth
-  - i: 5
-    o: 4
-    i_n: baseColor_roughness
-    o_n: baseColor_roughness
-  - i: 5
-    o: 4
-    i_n: normal_metallic
-    o_n: normal_metallic
-  - i: 5
-    o: 4
-    i_n: emission
-    o_n: emission
   - i: 3
-    o: 5
+    o: 8
     i_n: target
     o_n: lightingResult
-  - i: 6
-    o: 3
-    i_n: color
-    o_n: target
-  - i: 6
-    o: 3
+  - i: 4
+    o: 1
     i_n: depth
     o_n: depth
-  - i: 2
-    o: 6
-    i_n: color
-    o_n: color
-  - i: 2
-    o: 6
-    i_n: depth
-    o_n: depth
-  - i: 5
-    o: 7
-    i_n: lights
-    o_n: lights
-  - i: 5
-    o: 8
-    i_n: lightBuffer
-    o_n: lightBuffer
   - i: 8
     o: 7
+    i_n: tiledLights
+    o_n: tileLights
+  - i: 3
+    o: 6
     i_n: lights
     o_n: lights
   node_edgeRecs:
   - node: 2
-    in_edges: 0d0000000e000000
+    in_edges: 0600000007000000
     out_edge: 00000000
   - node: 0
     in_edges: 00000000
     out_edge: 
+  - node: 4
+    in_edges: 12000000
+    out_edge: 010000000200000003000000090000000a0000000b0000000c0000000d0000000e00000010000000
+  - node: 3
+    in_edges: 010000000200000003000000100000001100000014000000
+    out_edge: 0400000005000000
+  - node: 5
+    in_edges: 0400000005000000
+    out_edge: 0600000007000000
+  - node: 6
+    in_edges: 
+    out_edge: 0800000014000000
+  - node: 7
+    in_edges: 0800000009000000
+    out_edge: 0f00000013000000
+  - node: 8
+    in_edges: 0a0000000b0000000c0000000d0000000e0000000f00000013000000
+    out_edge: 11000000
   - node: 1
     in_edges: 
-    out_edge: 01000000
-  - node: 4
-    in_edges: 01000000
-    out_edge: 0200000003000000040000000500000006000000070000000800000009000000
-  - node: 3
-    in_edges: 020000000300000004000000050000000a000000
-    out_edge: 0b0000000c000000
-  - node: 5
-    in_edges: 060000000700000008000000090000000f00000010000000
-    out_edge: 0a000000
-  - node: 6
-    in_edges: 0b0000000c000000
-    out_edge: 0d0000000e000000
-  - node: 7
-    in_edges: 
-    out_edge: 0f00000011000000
-  - node: 8
-    in_edges: 11000000
-    out_edge: 10000000
+    out_edge: 12000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.14204344, g: 0.18852712, b: 0.2264151, a: 0.4}
