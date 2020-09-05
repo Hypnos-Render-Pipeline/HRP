@@ -15,7 +15,7 @@
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/Light.hlsl"
 
-            struct appdata
+            struct appdata 
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
@@ -29,6 +29,8 @@
 
             Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
             SamplerState sampler_point_clamp;
+
+            int _DebugTiledLight;
 
             float4x4 _V, _V_Inv;
             float4x4 _VP_Inv;
@@ -73,11 +75,14 @@
 
                 BegineLocalLightsLoop(i.uv, pos, _VP_Inv);
                 {
-                    float NdotL = max(0, dot(normalize(view + light.dir), normal));
+                    float NdotL = max(0, dot(normalize(light.dir), normal));
                     float diffuseAO = lerp(ao, 1, NdotL * 0.8 + 0.2);
                     float specAO = lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5));
 
-                    res += lerp(pow(NdotL, lerp(2000, 10, roughness))* lerp(10, 0.2, roughness)* specAO, NdotL* diffuseAO / 2, 0.96 - metallic)* light.radiance * baseColor;
+                    res += lerp(pow(max(0, dot(normalize(view + light.dir), normal)), lerp(2000, 10, roughness))* lerp(10, 0.2, roughness) * specAO, NdotL* diffuseAO / 2, 0.96 - metallic)* light.radiance* baseColor;
+                    if (_DebugTiledLight) {
+                        res += float3(0.05, 0, 0.05);
+                    }
                 }
                 EndLocalLightsLoop;
 

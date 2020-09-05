@@ -4,11 +4,11 @@
 
 #define ZIBIN_COMPUTE
 #include "../Includes/Light.hlsl"
-
+ 
 uint _LocalLightCount;
 
-float3 _CameraPos;
-float4x4 _InvVP;
+float4x4 _V_Inv;
+float4x4 _VP_Inv;
 
 
 float2 _WH;
@@ -69,6 +69,51 @@ inline bool ConeInsidePlane(float4 position_range, float3 dir, float angle, floa
     float3 Q = position_range.xyz + dir * position_range.w + normalize(m) * position_range.w * angle;
     return PointInsidePlane(position_range.xyz, plane) || PointInsidePlane(Q, plane);
 }
+bool IntersectTriangle(float3 o, float3 d, float3 v0, float3 v1, float3 v2)
+{
+    float3  E1 = v1 - v0;
+    float3  E2 = v2 - v0;
+    float3  P = cross(d, E2);
+    float det = dot(E1, P);
+    float3  T;
+    if (det > 0) {
+        T = o - v0;
+    }
+    else {
+        T = v0 - o;
+        det = -det;
+    }
+    if (det < 0)
+        return false;
+    float u = dot(T, P);
+    if (u < -1 || u > det + 1)
+        return false;
+    float3  Q = cross(T, E1);
+    float v = dot(d, Q);
+    if (v < -1 || u + v > det + 1)
+        return false;
+    return true;
+}
+
+inline bool ConeConeTest(float3 p, float3 v, float t, float3 p1, float3 v1, float d1, float t1) {
+    float3 fp = p1 + v1 * d1;
+    float3 v_ = normalize(normalize(cross(cross(v, fp - p), v)) * t + v);
+    float dis = dot(fp - p, v1) / dot(v_, v1);
+    if (distance(dis * v_ + p, fp) < d1 * t1 + dis * t) return true;
+
+
+    float3 ta = normalize(cross(v1, normalize(p1 - p)));
+    float3 n = normalize(cross(ta, v1));
+    dis = dot(p1 - p, n) / dot(v, n);
+    dis *= t / dot(n, v);
+    p1 -= dis * v1;
+    float3 p2 = p1 + (v1 + ta * t1) * (d1 + dis * 2) + ta * dis;
+    float3 p3 = p1 + (v1 - ta * t1) * (d1 + dis * 2) - ta * dis;
+
+    if (IntersectTriangle(p, v, p1, p2, p3)) return true;
+
+    return false;
+}
 bool ConeIntersect(float4 position_range, float3 dir, float angle, float4x4 planes)
 {
     [unroll]
@@ -102,12 +147,18 @@ void TileCulling(uint2 id : SV_DispatchThreadID, uint3 gtid : SV_GroupThreadID)
     float4 lb = float4(tileId * tileSize.xy - 1, 1, 1);
     float4x4 uvs = transpose(float4x4(lb, lb + tileSize.xzzz, lb + tileSize.zyzz, lb + tileSize.xyzz));
 
-    float4x4 corner = mul(_InvVP, uvs);
-    float3 cam = _CameraPos;
+    float4x4 corner = mul(_VP_Inv, uvs);
+    float3 cam = _V_Inv._m03_m13_m23;
     float3 p0 = corner._m00_m10_m20 / corner._m30;
     float3 p1 = corner._m01_m11_m21 / corner._m31;
     float3 p2 = corner._m02_m12_m22 / corner._m32;
     float3 p3 = corner._m03_m13_m23 / corner._m33;
+    float3 p5 = (p0 + p3) / 2;
+
+    float3 cdir = normalize(p5 - cam);
+    float min_cos = min(min(dot(normalize(p0 - cam), cdir), dot(normalize(p1 - cam), cdir)), min(dot(normalize(p2 - cam), cdir), dot(normalize(p3 - cam), cdir)));
+    float max_tan = sqrt(1 - min_cos * min_cos) / min_cos;
+
 
     float4x4 planes; // we don't need to test far/near clip plane, because cpu has already done this work.
 
@@ -125,10 +176,17 @@ void TileCulling(uint2 id : SV_DispatchThreadID, uint3 gtid : SV_GroupThreadID)
         if (index < _LocalLightCount) {
             Light light = _LocalLightBuffer[index];
             if (light.radiance_type.w == 1) { // point
-                if (!SphereIntersect(light.position_range, planes)) continue;
+                //if (!SphereIntersect(light.position_range, planes)) continue;
+                // Instead of perform Sphere-plane collision test, we use Sphere-cone test, it's faster and will do a more accurate culling.
+                float3 ldir = light.position_range.xyz - cam;
+                float ldis = length(ldir); ldir /= ldis;
+                float cosl = dot(ldir, cdir);
+                if (sqrt(1 - cosl * cosl) * ldis - light.position_range.w - cosl * ldis * max_tan > 0) continue;
             }
             else { // spot
                 if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
+                // This Version perform more accurate soft rasterization culling, but cost more time.
+                if (!ConeConeTest(cam, cdir, max_tan, light.position_range.xyz, light.mainDirection_id.xyz, light.position_range.w, light.geometry.x)) continue;
             }
             idxs[count++] = index;
         }
@@ -158,9 +216,9 @@ void BinCulling(uint3 id : SV_DispatchThreadID)
     uint maxLightCount = tileCount.w;
     uint start_offset = (tileId.x + tileId.y * tileCount.x) * (maxLightCount + 1);
 
-    float4 cam_ = mul(_InvVP, float4(0, 0, 1, 1));
+    float4 cam_ = mul(_VP_Inv, float4(0, 0, 1, 1));
     float3 cam = cam_.xyz / cam_.w;
-    float4 farPlane = mul(_InvVP, float4(0, 0, 0, 1));
+    float4 farPlane = mul(_VP_Inv, float4(0, 0, 0, 1));
     farPlane /= farPlane.w;
     float3 viewDir = normalize(farPlane.xyz - cam);
 
@@ -207,13 +265,13 @@ void Debug(uint2 id : SV_DispatchThreadID)
     float3 pos;
     {
         float4 ndc = float4(uv * 2 - 1, d, 1);
-        float4 worldPos = mul(_InvVP, ndc);
+        float4 worldPos = mul(_VP_Inv, ndc);
         pos = worldPos.xyz / worldPos.w;
     }
 
     float3 res = 0;
     
-    BegineLocalLightsLoop(uv, pos, _InvVP);
+    BegineLocalLightsLoop(uv, pos, _VP_Inv);
     {
         res += max(0, dot(light.dir, float3(0, 1, 0))) * light.radiance * 0.1;
     }

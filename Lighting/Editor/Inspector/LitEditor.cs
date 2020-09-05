@@ -133,6 +133,7 @@ public class LitEditor : ShaderGUI
             if (EditorGUI.EndChangeCheck())
             {
                 SetMaterialKeywords(material);
+                RTRegister.SceneChanged();
             }
         }
         EditorGUI.EndDisabledGroup();

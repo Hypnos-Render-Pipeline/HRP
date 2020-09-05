@@ -28,7 +28,10 @@ namespace HypnosRenderPipeline.RenderPass
         }
 
         /// <summary>
-        /// Whether this pin is connected.
+        /// <para>Whether this pin is connected to an *enabled* parent node and thus contains valid data,</para>
+        /// <para>so as you don't need to do necessary init of the pin resources. For example, TexturePin</para>
+        /// <para>with 'connected == true' means it contains valid pixel data from parent node, otherwise</para>
+        /// <para>you may want to clear it before starting to use it, this is determined by its usage.   </para>
         /// </summary>
         public bool connected;
 
@@ -46,13 +49,13 @@ namespace HypnosRenderPipeline.RenderPass
             return self.handle;
         }
 
-        public virtual void Move(BaseNodePin<Desc, Handle> pin) { desc = pin.desc; handle = pin.handle; name = pin.name; }
+        public virtual void Move(BaseNodePin<Desc, Handle> pin) { connected = pin.connected; desc = pin.desc; handle = pin.handle; name = pin.name; }
 
         public virtual void AllocateResourcces(RenderContext renderContext, int id) { handle = Pool.Get(); }
         public virtual void ReleaseResourcces(RenderContext renderContext) { Pool.Release(handle); }
         public virtual bool Compare(RenderContext renderContext, BaseNodePin<Desc, Handle> pin) { return true; }
         public virtual bool CanCastFrom(RenderContext renderContext, BaseNodePin<Desc, Handle> pin) { return true; }
-        public virtual void CastFrom(RenderContext renderContext, BaseNodePin<Desc, Handle> pin) { desc = pin.desc; handle = pin.handle; }
+        public virtual void CastFrom(RenderContext renderContext, BaseNodePin<Desc, Handle> pin) { connected = pin.connected; desc = pin.desc; handle = pin.handle; }
 
         public static bool CompareType()
         {

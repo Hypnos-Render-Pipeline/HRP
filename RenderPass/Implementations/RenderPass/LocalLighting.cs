@@ -31,7 +31,9 @@ namespace HypnosRenderPipeline.RenderPass
                                                                 SizeCastMode.Fixed,
                                                                 ColorCastMode.Fixed,
                                                                 SizeScale.Full);
-
+#if UNITY_EDITOR
+        public bool debugTiledLight = false;
+#endif
 
         static MaterialWithName lightingMat = new MaterialWithName("Hidden/DeferredLighting");
 
@@ -39,15 +41,15 @@ namespace HypnosRenderPipeline.RenderPass
         {           
             var cam = context.RenderCamera;
 
-            context.CmdBuffer.SetGlobalMatrix("_V", cam.worldToCameraMatrix);
-            context.CmdBuffer.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
-            context.CmdBuffer.SetGlobalMatrix("_VP_Inv", (GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix).inverse);
-
             context.CmdBuffer.SetGlobalTexture("_DepthTex", depth.handle);
             context.CmdBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
             context.CmdBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
             context.CmdBuffer.SetGlobalTexture("_EmissionTex", emission);
-            context.CmdBuffer.SetGlobalTexture("_AOTex", ao); 
+            context.CmdBuffer.SetGlobalTexture("_AOTex", ao);
+
+#if UNITY_EDITOR
+            context.CmdBuffer.SetGlobalInt("_DebugTiledLight", debugTiledLight ? 1 : 0);
+#endif
 
             context.CmdBuffer.Blit(null, lightingResult, lightingMat, 0);
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);

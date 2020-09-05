@@ -33,6 +33,8 @@
 
 		_Sheen("Sheen", Range(0,1)) = 0
 
+		_Modified("Modified", int) = 0
+
 		[HideInInspector] _Mode("__mode", Float) = 0.0
 		[HideInInspector] _SrcBlend("__src", Float) = 1.0
 		[HideInInspector] _DstBlend("__dst", Float) = 0.0
@@ -289,6 +291,197 @@
 			ENDCG
 		}
     }
+
+	// Ray Tracing Shader
+	SubShader
+	{
+		// VRender pass
+		Pass
+		{
+			Name "RT"
+			Tags{ "LightMode" = "RT" }
+
+			CGPROGRAM
+
+			#pragma raytracing test
+
+
+			#pragma shader_feature _NORMALMAP
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _METALLICGLOSSMAP _
+			#pragma shader_feature _AOMAP _
+
+			//If not define Shading, then use LitShading
+			//or un-comment next line to use custom shading function
+			//#define Shading Lambert
+
+			#include "./Includes/RT/Include/RTLitInclude.hlsl" 
+		 
+
+			//----------------------------------------------------------------------------------------
+			//------- Material data input ------------------------------------------------------------
+			//----------------------------------------------------------------------------------------
+			float4       _Color;
+			Texture2D 	_MainTex; SamplerState sampler_MainTex;
+			float4      _MainTex_ST;
+			float _Cutoff;
+
+			#if _NORMALMAP
+
+			Texture2D   _BumpMap; SamplerState sampler_BumpMap;
+			half        _BumpScale;
+
+			#endif // _NORMALMAP
+
+			#if _METALLICGLOSSMAP
+
+			Texture2D   _MetallicGlossMap;
+			float       _GlossMapScale;
+
+			#else
+
+			half        _Metallic;
+			float       _Smoothness;
+
+			#endif // _METALLICGLOSSMAP
+
+			#if _EMISSION
+
+			float4       _EmissionColor;
+			Texture2D   _EmissionMap;
+
+			#endif // _EMISSION
+
+			float _Index;
+
+			float _ClearCoat;
+			float _Sheen;
+
+			float _MipScale;
+
+			//struct SurfaceInfo {
+			//	float3	baseColor;
+			//	float	transparent;
+			//	float	metallic;
+			//	float	smoothness;
+			//	float3	normal;
+			//	float3	emission;
+			//	float	clearCoat;
+			//	float	sheen;
+			//	float	index;
+			//	float	Ld;
+			//	bool	discarded;
+			//};
+			SurfaceInfo GetSurfaceInfo(inout FragInputs i) {
+				SurfaceInfo IN;
+
+				float2 uv = i.uv0.xy * _MainTex_ST.xy + _MainTex_ST.zw;
+				float4 baseColor = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
+				IN.baseColor = _Color * baseColor.xyz;
+
+				IN.transparent = 1 - baseColor.a * _Color.a;
+								
+				#if _METALLICGLOSSMAP
+					float4 m_s = SampleTex(_MetallicGlossMap, uv, 0);
+					IN.metallic = m_s.r;
+					IN.smoothness = m_s.a * _GlossMapScale;
+				#else
+					IN.metallic = _Metallic;
+					IN.smoothness = _Smoothness;
+				#endif
+
+				#if _NORMALMAP
+					half3 normal = UnpackScaleNormal(_BumpMap.SampleLevel(sampler_BumpMap, uv, 0), _BumpScale);
+					IN.normal = normalize(mul(normal * float3(-1,-1,1), i.tangentToWorld));
+					IN.normal *= i.isFrontFace ? 1 : -1;
+					i.tangentToWorld[2] = IN.normal;
+					i.tangentToWorld[0] = cross(i.tangentToWorld[1], i.tangentToWorld[2]);
+					i.tangentToWorld[1] = cross(i.tangentToWorld[2], i.tangentToWorld[0]);
+				#else
+					IN.normal = i.tangentToWorld[2];
+					IN.normal *= i.isFrontFace ? 1 : -1;
+					i.tangentToWorld[2] = IN.normal;
+					i.tangentToWorld[0] = cross(i.tangentToWorld[1], i.tangentToWorld[2]);
+					i.tangentToWorld[1] = cross(i.tangentToWorld[2], i.tangentToWorld[0]);
+				#endif // _NORMALMAP
+
+					IN.clearCoat = _ClearCoat * 0.25;
+					IN.sheen = _Sheen * 2;
+
+				#if _EMISSION
+					IN.emission = _EmissionColor * SampleTex(_EmissionMap, uv, 0);
+				#else
+					IN.emission = 0;
+				#endif
+
+				IN.index = _Index;
+
+				#if _SUBSURFACE
+					IN.Ld = _Ld;
+				#else
+					IN.Ld = 0;
+				#endif
+
+				IN.discarded = baseColor.a < _Cutoff;
+
+				return IN;
+			}
+
+			//----------------------------------------------------------------------------------------
+			//------- Custom shading function --------------------------------------------------------
+			//----------------------------------------------------------------------------------------
+			void Lambert(FragInputs IN, const float3 viewDir,
+				inout int4 sampleState, inout float4 weight, inout float3 position, inout float rayRoughness,
+				out float3 directColor, out float3 nextDir, out float3 gN) {
+
+				SurfaceInfo surface = GetSurfaceInfo(IN);
+
+				int light_count = clamp(_LightCount, 0, 100);
+
+				float2 rnd = float2(SAMPLE, SAMPLE);
+
+				int picked_light = floor(min(rnd.x, 0.999) * light_count);
+
+				Light light = _LightList[picked_light];
+
+				float attenuation; float3 lightDir; float3 end_point;
+				bool in_light_range = ResolveLight(light, position,
+					/*inout*/sampleState,
+					/*out*/attenuation, /*out*/lightDir, /*out*/end_point);
+
+				float3 luminance = attenuation * light.color;
+
+				float NdotL = saturate(dot(lightDir, surface.normal));
+
+				float3 direct_light_without_shadow = NdotL * luminance;
+
+				float3 shadow = TraceShadow(IN.position, end_point,
+					/*inout*/sampleState);
+
+				directColor = surface.baseColor * shadow * direct_light_without_shadow * light_count;
+
+				nextDir = CosineSampleHemisphere(float2(SAMPLE, SAMPLE), surface.normal);
+				weight.xyz = surface.baseColor / PI;
+				gN = IN.gN;
+			}
+
+			//----------------------------------------------------------------------------------------
+			//------- DXR Shader functions - don't change them unless you know what you are doing ----
+			//----------------------------------------------------------------------------------------
+			[shader("closesthit")]
+			void ClosestHit(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes) {
+				LitClosestHit(/*inout*/rayIntersection, attributeData);
+			}
+
+			[shader("anyhit")]
+			void AnyHit(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
+			{
+				LitAnyHit(/*inout*/rayIntersection, attributeData);
+			}
+
+			ENDCG
+		}
+	}
 
     CustomEditor "LitEditor"
 }

@@ -1,0 +1,9 @@
+﻿#pragma kernel CSMain
+
+RWTexture3D<float4> _Volume;
+
+[numthreads(4,4,4)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    _Volume[id] = 0;
+}

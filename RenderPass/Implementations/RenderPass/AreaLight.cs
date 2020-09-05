@@ -39,10 +39,10 @@ namespace HypnosRenderPipeline.RenderPass
             sphere = MeshWithType.sphere;
             tube = MeshWithType.cylinder;
 
-            AmpDiffAmpSpecFresnel = Resources.Load<Texture2D>("Textures/LUT/AmpDiffAmpSpecFresnel");
-            TransformInv_Diffuse = Resources.Load<Texture2D>("Textures/LUT/TransformInv_DisneyDiffuse");
-            TransformInv_Specular = Resources.Load<Texture2D>("Textures/LUT/TransformInv_GGX");
-            DiscClip = Resources.Load<Texture2D>("Textures/LUT/DiscClip");
+            AmpDiffAmpSpecFresnel = Resources.Load<Texture2D>("Textures/LTC Lut/AmpDiffAmpSpecFresnel");
+            TransformInv_Diffuse = Resources.Load<Texture2D>("Textures/LTC Lut/TransformInv_DisneyDiffuse");
+            TransformInv_Specular = Resources.Load<Texture2D>("Textures/LTC Lut/TransformInv_GGX");
+            DiscClip = Resources.Load<Texture2D>("Textures/LTC Lut/DiscClip");
         }
 
         public override void Excute(RenderContext context)
@@ -56,9 +56,17 @@ namespace HypnosRenderPipeline.RenderPass
                 quad.uv = new Vector2[] { float2(1, 0), float2(0, 0), float2(1, 1), float2(0, 1) };
             }
 
-            // clear alpha before render area light mesh
             context.CmdBuffer.SetGlobalFloat("_Alpha", 1);
-            context.CmdBuffer.Blit(null, target, clearAlphaMat, 0);
+            if (!target.connected)
+            {
+                context.CmdBuffer.SetRenderTarget(target);
+                context.CmdBuffer.ClearRenderTarget(false, true, Color.black);
+            }
+            else
+            {
+                // clear alpha before render area light mesh
+                context.CmdBuffer.Blit(null, target, clearAlphaMat, 0);
+            }
 
             context.CmdBuffer.SetGlobalTexture("_AmpDiffAmpSpecFresnel", AmpDiffAmpSpecFresnel);
             context.CmdBuffer.SetGlobalTexture("_TransformInv_Diffuse", TransformInv_Diffuse);

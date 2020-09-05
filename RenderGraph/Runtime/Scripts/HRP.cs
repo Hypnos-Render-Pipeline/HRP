@@ -12,6 +12,8 @@ namespace HypnosRenderPipeline
     {
         HypnosRenderPipelineAsset m_asset;
         RenderGraphResourcePool m_resourcePool;
+        
+        Dictionary<Camera, int> clock;
 
 #if UNITY_EDITOR
 
@@ -29,6 +31,8 @@ namespace HypnosRenderPipeline
             m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
 #endif
             m_asset.defaultMaterial.hideFlags = HideFlags.NotEditable;
+
+            clock = new Dictionary<Camera, int>();
         }
 
         protected override void Dispose(bool disposing)
@@ -75,6 +79,20 @@ namespace HypnosRenderPipeline
                 rc.RenderCamera = cam;
                 rc.CmdBuffer = cb;
 
+                cb.SetGlobalMatrix("_V", cam.worldToCameraMatrix);
+                cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
+                cb.SetGlobalMatrix("_VP_Inv", (GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix).inverse);
+                if (clock.ContainsKey(cam)) {
+                    cb.SetGlobalInt("_Clock", clock[cam]++);
+                }
+                else {
+                    cb.SetGlobalInt("_Clock", 0);
+                    clock[cam] = 0;
+                }
+
+                context.ExecuteCommandBuffer(cb);
+                cb.Clear();
+
 #if UNITY_EDITOR
                 // determinate whether debug this camera
                 bool debugCamera = false;
@@ -91,6 +109,14 @@ namespace HypnosRenderPipeline
 
                 int result = m_executor.Excute(rc, debugCamera);
                 if (result == -1) return;
+
+                {
+                    var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
+                    if (vrender_cb.Length != 0) {
+                        context.ExecuteCommandBuffer(vrender_cb[0]);
+                        cb.Blit(BuiltinRenderTextureType.CameraTarget, result);
+                    }
+                }
 #endif
 
 

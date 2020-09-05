@@ -59,10 +59,6 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetGlobalBuffer("_LocalLightBuffer", lightBuffer);
 
             cb.SetGlobalVector("_TileCount", new Vector4(tileCount.x, tileCount.y, tileCount.z, maxLightCountPerTile));
-            cb.SetGlobalVector("_CameraPos", cam.transform.position);
-            Matrix4x4 a = (GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix).inverse;
-            cb.SetComputeMatrixParam(zbin, "_InvVP", a);
-            cb.SetGlobalVector("_TileCount", new Vector4(tileCount.x, tileCount.y, tileCount.z, maxLightCountPerTile));
 
             cb.SetComputeBufferParam(zbin, 0, "_TileLights", tileLights);
             cb.DispatchCompute(zbin, 0, tileCount.x / 4, tileCount.y / 2, 1);

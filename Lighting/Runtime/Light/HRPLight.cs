@@ -11,7 +11,7 @@ namespace HypnosRenderPipeline
     [Serializable]
     public enum HRPLightType
     {
-        Directional,
+        Directional = 0,
         Point,
         Spot,
         Sphere,
@@ -99,6 +99,27 @@ namespace HypnosRenderPipeline
         public Mesh lightMesh;
 
         /// <summary>
+        /// Only Directional Light can be Sun Light.
+        /// </summary>
+        public bool sunLight { get { return lightType == HRPLightType.Directional && LightManager.sunLight == this; } 
+            set {
+                if (value == true)
+                {
+                    if (lightType != HRPLightType.Directional) return;
+                    var sun = LightManager.sunLight;
+                    if (sun) sun.__m_sunLight__ = false;
+                    __m_sunLight__ = true;
+                    LightManager.sunLight = this;
+                }
+                else
+                {
+                    var sun = LightManager.sunLight;
+                    if (this == sun) LightManager.sunLight = null;
+                    __m_sunLight__ = false;
+                }
+            } }
+        
+        /// <summary>
         /// Global ID of light, started with 0, and will change when light list of the scene changing.
         /// </summary>
         public int id { get; internal set; } = -1;
@@ -116,6 +137,11 @@ namespace HypnosRenderPipeline
 #endif
 
         public bool isArea { get { if (canHasTexture || lightType == HRPLightType.Tube || lightType == HRPLightType.Sphere || lightType == HRPLightType.Disc) return true; return false; } }
+
+        /// <summary>
+        /// Direction of Directional/Spot Light.
+        /// </summary>
+        public Vector3 direction { get { return transform.forward; } }
 
         /// <summary>
         /// Tube length(x), Tube radius(y)
@@ -184,6 +210,9 @@ namespace HypnosRenderPipeline
         #region Private Properties
 
         [SerializeField]
+        bool __m_sunLight__ = false;
+
+        [SerializeField]
         private float m_temperature = 6000;
 
         [NonSerialized]
@@ -247,6 +276,11 @@ namespace HypnosRenderPipeline
 #endif
             l.Copy(light);
             light.Copy(l);
+
+            if (LightManager.sunLight == null && light.type == LightType.Directional)
+            {
+                l.sunLight = true;
+            }
             return l;
         }
 
@@ -282,6 +316,8 @@ namespace HypnosRenderPipeline
         void OnEnable()
         {
             LightManager.ReportCreate(this);
+            if (__m_sunLight__) LightManager.sunLight = this;
+            else if (LightManager.sunLight == this) LightManager.sunLight = null;
         }
 
         void OnDisable()
@@ -298,6 +334,7 @@ namespace HypnosRenderPipeline
                 m_filteredSpecTex = null;
             }
             m_lastTex = null;
+            if (sunLight) LightManager.sunLight = null;
         }
 
         RenderTexture CalculateSpec(Texture2D tex)
@@ -368,6 +405,15 @@ namespace HypnosRenderPipeline
 
 #if UNITY_EDITOR
 
+        /// <summary>
+        /// This function should not be called. It's for editor Undo Redo.
+        /// </summary>
+        public void __TryReportSunlight__()
+        {
+            if (__m_sunLight__) LightManager.sunLight = this;
+            else if (LightManager.sunLight == this) LightManager.sunLight = null;
+        }
+
         [MenuItem("CONTEXT/Light/Remove Component", false, 0)]
         static void RemoveLight(MenuCommand menuCommand)
         {
@@ -411,7 +457,12 @@ namespace HypnosRenderPipeline
             var l = light.GetComponent<HRPLight>();
             if (l == null)
             {
-                return light.GenerateHRPLight();
+                var hrpl = light.GenerateHRPLight();
+                if (LightManager.sunLight == null && light.type == LightType.Directional)
+                {
+                    hrpl.sunLight = true;
+                }
+                return hrpl;
             }
             return l;
         }

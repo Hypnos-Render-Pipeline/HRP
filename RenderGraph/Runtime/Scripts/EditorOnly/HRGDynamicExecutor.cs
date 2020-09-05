@@ -27,6 +27,7 @@ namespace HypnosRenderPipeline.RenderGraph
             valuePool.Clear();
             dependency.Clear();
             pinPool.Clear();
+
             temp_id = context.RenderCamera.GetHashCode();
             FindEnterPoints();
 
@@ -95,6 +96,17 @@ namespace HypnosRenderPipeline.RenderGraph
                 context.CmdBuffer.Clear();
                                 
                 ReleaseNode(context, renderNode);
+
+                if (renderNode.enabled)
+                {
+                    var nodeRec = GetNodeInstance(node);
+                    foreach (var output_value in nodeRec.outputs)
+                    {
+                        var output = output_value.Value.first;
+                        var nameField = output.FieldType.GetField("name");
+                        output.FieldType.GetField("connected").SetValue(output.GetValue(renderNode), true);
+                    }
+                }
             }
 
             context.Context.ExecuteCommandBuffer(context.CmdBuffer);
@@ -193,11 +205,14 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 var input = input_value.Value.first;
                 var pin = input.GetValue(node_instance);
+                var connectedField = input.FieldType.GetField("connected");
+                var nameField = input.FieldType.GetField("name");
                 if (existValue.ContainsKey(input.Name))
                 {
-                    input.FieldType.GetField("connected").SetValue(pin, true);
                     var from_pin = existValue[input.Name];
-                    var from_pin_name = input.FieldType.GetField("name").GetValue(from_pin) as string;
+                    var from_pin_name = nameField.GetValue(from_pin) as string;
+
+                    connectedField.SetValue(pin, connectedField.GetValue(from_pin));
 
                     var compare_method = input.FieldType.GetMethod("Compare");
                     bool same = (bool)compare_method.Invoke(pin, new object[] { context, from_pin });
@@ -215,7 +230,7 @@ namespace HypnosRenderPipeline.RenderGraph
                             string name = input.Name + temp_id++;
                             int id = Shader.PropertyToID(name);
                             init_method.Invoke(pin, new object[] { context, id });
-                            input.FieldType.GetField("name").SetValue(pin, name);
+                            nameField.SetValue(pin, name);
                             pinPool[name] = 1;
                             var cast_method = input.FieldType.GetMethod("CastFrom");
                             cast_method.Invoke(pin, new object[] { context, from_pin });
@@ -234,7 +249,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 }
                 else
                 {
-                    input.FieldType.GetField("connected").SetValue(pin, false);
+                    connectedField.SetValue(pin, false);
                     if (input.GetCustomAttribute<BaseRenderNode.NodePinAttribute>().mustConnect)
                     {
                         Debug.LogError("Must connect Pin \"" + input.Name + "\" of \"" + node.nodeName + "\" is not connected.");
@@ -259,6 +274,7 @@ namespace HypnosRenderPipeline.RenderGraph
             foreach (var output_value in nodeRec.outputs)
             {
                 var output = output_value.Value.first;
+                var nameField = output.FieldType.GetField("name");
                 System.Object value = null;
 
                 var edges = out_edges.FindAll(e => e.output.name == output.Name);
@@ -272,7 +288,8 @@ namespace HypnosRenderPipeline.RenderGraph
                     init_method.Invoke(output.GetValue(node_instance), new object[] { context, id });
                     value = output.GetValue(node_instance);
                     pinPool[name] = 1;
-                    output.FieldType.GetField("name").SetValue(value, name);
+                    nameField.SetValue(value, name);
+                    output.FieldType.GetField("connected").SetValue(value, false);
                     pin_map[output.Name] = new Pair<object, Type>(value, output.FieldType);
 
                 }
@@ -281,7 +298,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     value = pin_map[output.Name].first;
                 }
 
-                pinPool[output.FieldType.GetField("name").GetValue(value) as string] += edges.Count;
+                pinPool[nameField.GetValue(value) as string] += edges.Count;
 
                 foreach (var edge in edges)
                 {

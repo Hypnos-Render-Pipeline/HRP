@@ -2,7 +2,8 @@
     "name": "HypnosRenderPipeline.Light.Editor",
     "references": [
         "GUID:899fc01217e37d745b55404665eceada",
-        "GUID:cdbf49ddc3622ac458d721851183674e"
+        "GUID:cdbf49ddc3622ac458d721851183674e",
+        "GUID:d2fcfd8649fe4f948a7d5f563ba3f62e"
     ],
     "includePlatforms": [
         "Editor"

@@ -46,16 +46,26 @@ namespace HypnosRenderPipeline
             }
         }
 
+        void UndoRedo()
+        {
+            // Changes caused by undo redo, trigger report to LightManager.
+            m_lightData.__TryReportSunlight__(); 
+        }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= UndoRedo;
+        }
+
         protected override void OnEnable()
         {
+            Undo.undoRedoPerformed += UndoRedo;
             base.OnEnable();
             m_light = target as Light;
             m_lightData = m_light.gameObject.GetComponent<HRPLight>();
             if (m_lightData == null)
             {
-                m_lightData = Undo.AddComponent(m_light.gameObject, typeof(HRPLight)) as HRPLight;
-                m_lightData.Copy(m_light);
-                m_light.Copy(m_lightData);
+                m_lightData = m_light.GenerateHRPLight();
             }
             m_lighdDataObject = new SerializedObject(m_lightData);
             m_ColorTempTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/HRP/Lighting/Editor/Textures/ColorTemperature.png");
@@ -103,7 +113,15 @@ namespace HypnosRenderPipeline
 
             EditorGUILayout.PropertyField(Properties.lightType);
 
+            bool sun = m_lightData.sunLight;
+            if (m_lightData.lightType == HRPLightType.Directional)
+            {
+                sun = EditorGUILayout.Toggle("Sun Light", m_lightData.sunLight);
+            }
+
+            EditorGUI.BeginDisabledGroup(m_lightData.sunLight);
             m_sliderMethod(new GUIContent("Temperature"), Properties.temperature);
+            EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.PropertyField(Properties.radiance);
 
@@ -152,6 +170,8 @@ namespace HypnosRenderPipeline
                 m_lighdDataObject.ApplyModifiedProperties();
                 m_light.Copy(m_lightData);
                 m_light.range = lr;
+                m_lightData.sunLight = sun;
+                RTRegister.UndoRedoCallback();
             }
 
             {
@@ -192,6 +212,7 @@ namespace HypnosRenderPipeline
                 {
                     Undo.RecordObject(m_lightData, "Change Light Parameter(s)");
                     m_lightData.sphereRadius = r1;
+                    RTRegister.UndoRedoCallback();
                 }
             }
             else if (m_lightData.lightType == HRPLightType.Tube)
@@ -243,6 +264,7 @@ namespace HypnosRenderPipeline
                 {
                     Undo.RecordObject(m_lightData, "Change Light Parameter(s)");
                     m_lightData.tubeLengthRadius = r;
+                    RTRegister.UndoRedoCallback();
                 }
             }
             else if (m_lightData.lightType == HRPLightType.Disc)
@@ -263,6 +285,7 @@ namespace HypnosRenderPipeline
                 {
                     Undo.RecordObject(m_lightData, "Change Light Parameter(s)");
                     m_lightData.discRadius = m_BoundsHandle.radius;
+                    RTRegister.UndoRedoCallback();
                 }
                 Handles.ArrowHandleCap(0, m_light.transform.position, m_light.transform.rotation, 0.5f, EventType.Repaint);
             }
@@ -274,6 +297,7 @@ namespace HypnosRenderPipeline
                 {
                     Undo.RecordObject(m_lightData, "Change Light Parameter(s)");
                     m_lightData.quadSize = size;
+                    RTRegister.UndoRedoCallback();
                 }
                 Handles.ArrowHandleCap(0, m_light.transform.position, m_light.transform.rotation, 0.5f, EventType.Repaint);
             }

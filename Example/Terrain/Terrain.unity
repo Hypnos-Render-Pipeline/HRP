@@ -190,7 +190,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   terrainData: {fileID: 11400000, guid: e9e990ddadb071a4a9d7651bda89e806, type: 2}
-  lodTexture: {fileID: 899987539}
+  lodTexture: {fileID: 1263841772}
 --- !u!4 &521240030
 Transform:
   m_ObjectHideFlags: 0
@@ -205,7 +205,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!28 &899987539
+--- !u!28 &1263841772
 Texture2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -363,13 +363,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8243755921fcbc54c8da196476fd9749, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lightType: 1
+  lightType: 0
   radiance: 1
   IESProfile: {fileID: 0}
   shadow: 1
   areaTexture: {fileID: 0}
   drawLightMesh: 0
   lightMesh: {fileID: 0}
+  __m_sunLight__: 1
   m_temperature: 6570
   m_areaSize: {x: 1, y: 1}
 --- !u!108 &1723125515

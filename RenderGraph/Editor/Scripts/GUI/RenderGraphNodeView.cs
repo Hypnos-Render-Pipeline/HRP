@@ -1,6 +1,7 @@
 ﻿using HypnosRenderPipeline.RenderPass;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -49,12 +50,47 @@ namespace HypnosRenderPipeline.RenderGraph
             Node.Init(t);
         }
 
+        float t = -1;
         public void InitView(IEdgeConnectorListener listener)
         {
             title = Node.nodeName;
             inputs = new List<Port>();
             outputs = new List<Port>();
 
+            if (Node.nodeType != typeof(TextureDebug))
+            {
+                var openButton = new Button(() => {
+                    if ((DateTime.Now.Second - t) > 0.1f) { t = DateTime.Now.Second; return; }
+                    string floderPath = PathDefine.path + "RenderPass/Implementations";
+                    if (Directory.Exists(floderPath))
+                    {
+                        DirectoryInfo direction = new DirectoryInfo(floderPath);
+                        FileInfo[] files = direction.GetFiles("*", SearchOption.AllDirectories);
+
+                        bool find = false;
+                        for (int i = 0; i < files.Length; i++)
+                        {
+                            var file = files[i];
+                            if (file.Name.Contains(Node.nodeName) && !file.Name.EndsWith(".meta"))
+                            {
+                                find = true;
+                                System.Diagnostics.Process.Start(file.FullName);
+                                break;
+                            }
+                        }
+                        if (!find)
+                            Debug.LogWarning("Didn't find source file, make sure your code is under 'Implementations' floder and has same name of the class.");
+                    }
+                });
+
+                openButton.style.borderBottomColor
+                    = openButton.style.borderLeftColor
+                    = openButton.style.borderTopColor
+                    = openButton.style.borderRightColor = openButton.style.backgroundColor = Color.clear;
+                openButton.style.width = 160;
+                openButton.style.height = 25;
+                this.Q("title-label").Add(openButton);
+            }
             Color nodeColor = Node.nodeType.GetCustomAttribute<NodeColorAttribute>().color;
             this.Children().ElementAt(0).style.backgroundColor = new StyleColor(nodeColor);
             var contents = this.Q("contents");

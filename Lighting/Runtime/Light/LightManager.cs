@@ -10,6 +10,11 @@ namespace HypnosRenderPipeline
     public class LightList
     {
         /// <summary>
+        /// SunLight, if exist. It will also be included in the directionals list.
+        /// </summary>
+        public HRPLight sunLight;
+
+        /// <summary>
         /// directional lights
         /// </summary>
         public List<HRPLight> directionals;
@@ -39,6 +44,7 @@ namespace HypnosRenderPipeline
 
         public void Clear()
         {
+            sunLight = null;
             directionals.Clear();
             locals.Clear();
             areas.Clear();
@@ -48,6 +54,7 @@ namespace HypnosRenderPipeline
         public void Copy(LightList lightList)
         {
             Clear();
+            sunLight = lightList.sunLight;
             directionals.AddRange(lightList.directionals);
             locals.AddRange(lightList.locals);
             areas.AddRange(lightList.areas);
@@ -58,6 +65,11 @@ namespace HypnosRenderPipeline
 
     public sealed class LightManager
     {
+        /// <summary>
+        /// Sun light of the scene.
+        /// </summary>
+        static public HRPLight sunLight;
+
         private LightManager() { }
 
         private class Nested { static Nested() { } internal static readonly LightManager instance = new LightManager(); }
@@ -162,7 +174,7 @@ namespace HypnosRenderPipeline
         private void __GetVisibleLights__(LightList list, Camera cam, float faraway)
         {
             list.Clear();
-
+            list.sunLight = sunLight;
             m_planes = GeometryUtility.CalculateFrustumPlanes(cam);
             Bounds bounds = new Bounds();
 
@@ -202,6 +214,7 @@ namespace HypnosRenderPipeline
             Assert.IsTrue(radius > faraway, "Culling radius must be greater than faraway distance!");
 
             list.Clear();
+            list.sunLight = sunLight;
 
             var camera_pos = cam.transform.position;
 

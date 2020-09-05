@@ -59,7 +59,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
                 GUILayout.Space(26);
 
-                GUILayout.Label(assetName);
+                GUILayout.Label(assetName + "                            Double click Node Name will open the corresponding code file.");
 
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
