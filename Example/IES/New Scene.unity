@@ -235,6 +235,7 @@ MonoBehaviour:
   areaTexture: {fileID: 0}
   drawLightMesh: 0
   lightMesh: {fileID: 0}
+  __m_sunLight__: 0
   m_temperature: 6570
   m_areaSize: {x: 1, y: 1}
 --- !u!1 &1081505806
@@ -314,7 +315,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1081505806}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

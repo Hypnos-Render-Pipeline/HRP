@@ -35,7 +35,7 @@ namespace HypnosRenderPipeline.RenderPass
             HRPLight sun = sunLight.handle.sunLight;
             if (sun == null)
             {
-                context.CmdBuffer.SetGlobalFloat("_Exp", 4.4f);
+                context.CmdBuffer.SetGlobalFloat("_SunRadiance", math.pow(10, 4.3f));
                 context.CmdBuffer.SetGlobalVector("_LightDir", Vector3.down);
             }
             else
