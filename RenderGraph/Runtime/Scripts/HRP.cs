@@ -21,6 +21,7 @@ namespace HypnosRenderPipeline
         MaterialWithName m_iesSphere = new MaterialWithName("Hidden/IESSphere");
 
         HRGDynamicExecutor m_executor;
+        RenderGraphInfo m_hypnosRenderPipelineGraph = null;
 #endif
 
         public HypnosRenderPipeline(HypnosRenderPipelineAsset asset)
@@ -94,21 +95,38 @@ namespace HypnosRenderPipeline
                 cb.Clear();
 
 #if UNITY_EDITOR
-                // determinate whether debug this camera
-                bool debugCamera = false;
-                if (hasGameCamera)
-                {
-                    if (cam.cameraType == CameraType.Game) debugCamera = true;
-                }
-                
-                else if (hasSceneCamera)
-                {
-                    if (cam.cameraType == CameraType.SceneView) debugCamera = true;
-                }
-                else if (cam == cameras[0]) debugCamera = true;
 
-                int result = m_executor.Excute(rc, debugCamera);
-                if (result == -1) return;
+                int result = -1;
+                if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph)
+                {
+                    m_hypnosRenderPipelineGraph = m_asset.hypnosRenderPipelineGraph;
+                    m_executor.Dispose();
+                    m_executor = new HRGDynamicExecutor(m_hypnosRenderPipelineGraph);
+                }
+                if (m_hypnosRenderPipelineGraph != null)
+                {
+                    // determinate whether debug this camera
+                    bool debugCamera = false;
+                    if (hasGameCamera)
+                    {
+                        if (cam.cameraType == CameraType.Game) debugCamera = true;
+                    }
+
+                    else if (hasSceneCamera)
+                    {
+                        if (cam.cameraType == CameraType.SceneView) debugCamera = true;
+                    }
+                    else if (cam == cameras[0]) debugCamera = true;
+
+                    result = m_executor.Excute(rc, debugCamera);
+                }
+                if (result == -1)
+                {
+                    result = Shader.PropertyToID("_TempResult");
+                    cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
+                    cb.SetRenderTarget(result);
+                    cb.ClearRenderTarget(true, true, Color.clear);
+                }
 
                 {
                     var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
@@ -203,6 +221,7 @@ namespace HypnosRenderPipeline
                     cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
 #endif
 
+                cb.ReleaseTemporaryRT(result);
                 context.ExecuteCommandBuffer(cb);
                 cb.Clear();
 
