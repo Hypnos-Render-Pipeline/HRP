@@ -1,6 +1,5 @@
 ﻿#pragma kernel TileCulling
 #pragma kernel BinCulling
-#pragma kernel Debug
 
 #define ZIBIN_COMPUTE
 #include "../Includes/Light.hlsl"
@@ -229,11 +228,12 @@ void BinCulling(uint3 id : SV_DispatchThreadID)
 
 
     uint mask_value = 1 << id.z;
-    float z_uv = id.z * inv_bin;
+    float z_uv = id.z * inv_bin; z_uv *= z_uv;
+    float z_uv_1 = (id.z + 1) * inv_bin; z_uv_1 *= z_uv_1;
 
     float2x4 planes;
-    planes[0] = GetPlane(-viewDir, lerp(cam, farPlane.xyz, z_uv));          // near
-    planes[1] = GetPlane(viewDir, lerp(cam, farPlane.xyz, z_uv + inv_bin)); // far
+    planes[0] = GetPlane(-viewDir, lerp(cam, farPlane.xyz, z_uv));  // near
+    planes[1] = GetPlane(viewDir, lerp(cam, farPlane.xyz, z_uv_1)); // far
 
     for (uint j = 0; j < lightCount; j++)
     {
@@ -246,36 +246,4 @@ void BinCulling(uint3 id : SV_DispatchThreadID)
         }
         InterlockedAdd(_TileLights[start_offset + j], mask_value);
     }
-}
-
-
-sampler2D _Depth;
-
-[numthreads(8, 8, 1)]
-void Debug(uint2 id : SV_DispatchThreadID)
-{
-    float2 uv = (id + 0.5) / _WH;
-
-    float d = tex2Dlod(_Depth, float4(uv, 0, 0)).x;
-    if (d == 0) {
-        _Debug[id] = 0;
-        return;
-    }
-
-    float3 pos;
-    {
-        float4 ndc = float4(uv * 2 - 1, d, 1);
-        float4 worldPos = mul(_VP_Inv, ndc);
-        pos = worldPos.xyz / worldPos.w;
-    }
-
-    float3 res = 0;
-    
-    BegineLocalLightsLoop(uv, pos, _VP_Inv);
-    {
-        res += max(0, dot(light.dir, float3(0, 1, 0))) * light.radiance * 0.1;
-    }
-    EndLocalLightsLoop;
-
-    _Debug[id] = res;
 }
