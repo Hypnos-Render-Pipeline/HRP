@@ -106,7 +106,7 @@
 
 #define T_resolution int2(64, 512)
 #define E_resolution int2(16, 64)
-#define S_resolution int4(32, 256, 32, 8)
+#define S_resolution int4(32, 64, 16, 8)
 
 
 #define planet_radius 6371e3
@@ -147,6 +147,9 @@ float2 Roberts2(uint n) {
 
 inline const float valid(const float x) {
 	return x < 0 ? float_max : x;
+}
+float remap(float v, float a, float b, float c, float d) {
+	return (clamp(v, a, b) - a) / max(0.0001, b - a) * (d - c) + c;
 }
 
 #define atmosphere_radius (planet_radius + atmosphere_thickness)
@@ -320,7 +323,7 @@ float4 xvs_2_u(const float3 x, const float3 v, const float3 s) {
 	return float4(u_r, u_mu, u_mu_s, u_vo);
 }
 
-bool u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
+int u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
 	const float h_g = planet_radius + 1;
 	const float h_t = atmosphere_radius - 1;
 
@@ -356,40 +359,51 @@ bool u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
 	x = float3(0, r, 0);
 	v = GetDir_11(mu);
 
-	float a = v.y;
-	float b = mu_s;
-	float c = vo;
 
-	s.x = (c - a * b) / sqrt(1 - a * a);
-	s.y = b;
-	float y = 1 - s.x * s.x - s.y * s.y;
-	if (y > 0) {
-		s.z = sqrt(y);
-		return true;
-	}
-	else {
-		s.z = 0;
-		s = normalize(s);
-		return false;
-	}
+	float a = mu_s;
+	float b = v.x;
+	float c = v.y;
+	float d = vo;
+	float b_ = (abs(b) < 0.00001 ? b + (sign(b) == 0 ? 1 : sign(b)) * 0.00001f : b);
+	float unx = (d - a * c) / b_;
+
+	s = 0;
+	float t = sqrt(1 - a * a);
+	if (unx > t) return -1;
+	else if (unx < -t) return 1;
+	s = float3(unx, a, sqrt(1 - a * a - unx * unx));
+	return 0;
 }
 #else
+#define MUL_ 4
 float4 xvs_2_u(const float3 x, const float3 v, const float3 s) {
 	float r = length(x);
-	float mu = dot(normalize(x), normalize(v)) / 2 + 0.5;
+	float mu = dot(normalize(x), normalize(v));// / 2 + 0.5;
 	float mu_s = dot(normalize(x), normalize(s))/* / 2 + 0.5*/;
-	float vo = dot(normalize(v), normalize(s)) / 2 + 0.5;
+	float vo = dot(normalize(v), normalize(s));// / 2 + 0.5;
+
+	float horiz = length(x);
+	horiz = -saturate(sqrt(horiz * horiz - planet_radius * planet_radius) / horiz);
+
+	mu = mu < horiz ? remap(mu, -1, horiz, -1, -0.5)  : mu < mu_s ? remap(mu, horiz, mu_s, -0.5, 0.25) : remap(mu, mu_s, 1, 0.25, 1);
 
 	float H_g = planet_radius + 10;
 	float H_t = atmosphere_radius - 10;
 	float H = sqrt(H_t * H_t - H_g * H_g);
 	float u_r = sqrt(max(0, r * r - H_g * H_g)) / H;
-	float u_mu_s = max(0.0, (1 - exp(-3 * mu_s - 0.6)) / (1 - exp(-3.6)));
+	float u_mu_s = saturate(max(0.0, (1 - exp(-3 * mu_s - 0.6)) / (1 - exp(-3.6))) * 1.4 - 0.4);
 
-	return float4(u_r, mu, u_mu_s, vo);
+	vo = 1 - acos(vo) / pi;
+	vo = pow(vo, MUL_);
+
+	mu = mu / 2 + 0.5;
+	//mu = 1 - acos(mu) / pi;
+	//mu = pow(mu, MUL_);
+
+	return float4(u_r, mu, vo, u_mu_s);
 }
 
-bool u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
+int u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
 	float H_g = planet_radius + 10;
 	float H_t = atmosphere_radius - 10;
 	float H = sqrt(H_t * H_t - H_g * H_g);
@@ -397,36 +411,43 @@ bool u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
 	r *= r;
 	r = sqrt(r + H_g * H_g);
 
-
 	x = float3(0, r, 0);
 
-	v = GetDir01(u.y);
+	float horiz = length(x);
+	horiz = -saturate(sqrt(horiz * horiz - planet_radius * planet_radius) / horiz);
 
-	float d = dot(v, float3(0, 1, 0));
+	float u_w = saturate((u.w + 0.4) / 1.4);
+	float mu_s = (log(u_w * (exp(-3.6) - 1) + 1) + 0.6) / -3;
 
-	if (abs(d) < 0.01) {
-		v = normalize(float3(0, sign(d) * 0.01, 0) + v);
+
+	float mu = u.y*2-1;//cos((1 - pow(u.y, 1.0/MUL_)) * pi);
+
+	mu = mu < -0.5 ? remap(mu, -1, -0.5, -1, horiz) : mu < 0.25 ? remap(mu, -0.5, 0.25, horiz, mu_s) : remap(mu, 0.25, 1, mu_s, 1);
+
+	v = GetDir01(mu / 2 + 0.5);
+	//v = GetDir01(cos((1 - pow(u.y, 1.0/MUL_)) * pi) / 2 + 0.5);
+
+	float vo = cos((1 - pow(u.z, 1.0/MUL_)) * pi);
+	//float vo = u.z;
+
+	if (u_w == 1) { // handle delta function.
+		s = float3(0,1,0);
+		return 0;
 	}
 
-	float mu_s = (log(u.z * (exp(-3.6) - 1) + 1) + 0.6) / -3;
-	float vo = u.w;
+	float a = mu_s;
+	float b = v.x;
+	float c = v.y;
+	float d = vo * 2 - 1;
+	float b_ = (abs(b) < 0.00001 ? b + (sign(b) == 0 ? 1 : sign(b)) * 0.00001f : b);
+	float unx = (d - a * c) / b_;
 
-	float a = v.y;
-	float b = mu_s;
-	float c = vo;
-
-	s.x = (c - a * b) / sqrt(1 - a * a);
-	s.y = b;
-	float y = 1 - s.x * s.x - s.y * s.y;
-	if (y > 0) {
-		s.z = sqrt(y);
-		return true;
-	}
-	else {
-		s.z = 0;
-		s = normalize(s);
-		return false;
-	}
+	s = 0;
+	float t = sqrt(1 - a * a);
+	if (unx > t) return -1;
+	else if (unx < -t) return 1;
+	s = float3(unx, a, sqrt(1 - a * a - unx * unx));
+	return 0;
 }
 #endif
 
@@ -551,12 +572,22 @@ const float3 S_L_(const float3 x, float3 v, const float3 s, const int dirSampleN
 
 #ifdef J_L__
 const float3 J_L_(const float3 y, const float3 v, const float3 s, const int sampleNum = 1e4) {
-	float3 res = 0;
-
 	const float altitude = Altitude(y);
 	const float3 beta_R = Beta_R_S(altitude);
 	const float3 beta_M = Beta_M_S(altitude);
 
+	float3 direct;
+	{
+		const float approximate_int_0 = (1 - cos(sun_angle)) / 2;
+		const float3 approximate_int_1 = L(y, s, s);
+		float mu = dot(s, v);
+		float3 p_R = P_R(mu);
+		float3 p_M = P_M(mu);
+		direct = approximate_int_0 * approximate_int_1 * (p_R * beta_R + p_M * beta_M)* 4 * pi;
+	}
+
+	float3 res = 0;
+	
 	for (int i = 0; i < sampleNum; i++)
 	{
 		float3 dir = UniformSampleSphere(SAMPLE2D);
@@ -566,7 +597,7 @@ const float3 J_L_(const float3 y, const float3 v, const float3 s, const int samp
 
 		res += (p_R * beta_R + p_M * beta_M) * S_L(y, dir, s);
 	}
-	return res / sampleNum * 4 * pi;
+	return res / sampleNum * 4 * pi;// + direct;
 }
 #endif
 

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: example graph
   m_EditorClassIdentifier: 
   viewPosition: {x: -294, y: -196, z: 0}
-  viewScale: {x: 0.4315208, y: 0.4315208, z: 1}
+  viewScale: {x: 0.43152082, y: 0.43152082, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters:

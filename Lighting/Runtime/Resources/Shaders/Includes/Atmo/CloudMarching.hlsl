@@ -74,10 +74,6 @@ float GetPhase(float g, float dot) {
 	return (1 - g * g) / pow(1 + g * g - 2 * g * dot, 1.5) * 0.25;
 }
 
-float remap(float v, float a, float b, float c, float d) {
-	return (clamp(v, a, b) - a) / max(0.0001, b - a) * (d - c) + c;
-}
-
 float hash(float3 p)  // replace this by something better
 {
 	p = frac(p*0.3183099 + .1);

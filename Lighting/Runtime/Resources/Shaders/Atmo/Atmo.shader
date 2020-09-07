@@ -38,6 +38,29 @@ Shader "Hidden/Custom/Atmo"
 		return res;
 	}
 
+	const float3 S_L_0_(const float3 x, float3 v, const float3 s, const int dirSampleNum = 1e3, const int sampleNum = 1e3) {
+
+		float3 x_0;
+		bool isGround = X_0(x, v, x_0);
+
+		const float dis = distance(x, x_0);
+
+		float3 res = 0;
+
+		for (int i = 0; i < dirSampleNum; i++)
+		{
+			const float3 y = lerp(x, x_0, SAMPLE1D);
+			const float3 trans = T(x, y);
+			res += trans * J_L(y, v, s, sampleNum);
+		}
+		res *= dis / dirSampleNum;
+
+		if (isGround)
+			res += T_tab_fetch(x, v) * Tu_L(x_0, s);
+
+		return res;
+	}
+
 	float3 main(v2f i) : SV_Target
 	{
 		RandSeed(i.vertex.xy);
@@ -80,7 +103,7 @@ Shader "Hidden/Custom/Atmo"
 		float3 atmo_scatter;
 		[branch]
 		if (s.y < -0.05) atmo_scatter = S_L_Night(x, x_0, -s, 6);
-		else atmo_scatter = S_L(x, x_0, s, 8);
+		else atmo_scatter = S_L(x, x_0, s, 6);
 
 		return (atmo_scatter + sunLight) * sunRadiance + (depth > max_depth ? 0 : SampleColor(UV) * trans);
 	}

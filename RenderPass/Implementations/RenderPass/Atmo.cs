@@ -24,7 +24,7 @@ namespace HypnosRenderPipeline.RenderPass
         {
             t_table = Resources.Load<CustomRenderTexture>("Shaders/Atmo/Lut/T_Table/T_table");
             j_table = Resources.Load<CustomRenderTexture>("Shaders/Atmo/Lut/Loop/J_table_2");
-            s_table = Resources.Load<CustomRenderTexture>("Shaders/Atmo/Lut/Loop/S_table_2");
+            s_table = Resources.Load<CustomRenderTexture>("Shaders/Atmo/Lut/Loop/S_table_0");
         }
 
         public override void Excute(RenderContext context)
