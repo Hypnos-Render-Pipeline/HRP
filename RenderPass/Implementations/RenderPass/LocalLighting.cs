@@ -45,7 +45,10 @@ namespace HypnosRenderPipeline.RenderPass
             context.CmdBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
             context.CmdBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
             context.CmdBuffer.SetGlobalTexture("_EmissionTex", emission);
-            context.CmdBuffer.SetGlobalTexture("_AOTex", ao);
+            if (ao.connected)
+                context.CmdBuffer.SetGlobalTexture("_AOTex", ao);
+            else
+                context.CmdBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
 
 #if UNITY_EDITOR
             context.CmdBuffer.SetGlobalInt("_DebugTiledLight", debugTiledLight ? 1 : 0);

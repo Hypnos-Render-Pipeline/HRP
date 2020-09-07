@@ -153,6 +153,9 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				out float3 directColor, out float3 nextDir, out float3 gN)
 {
 	SurfaceInfo surface = GetSurfaceInfo(IN);
+	// post process spec ao
+	float diffuseAO = surface.diffuseAO_specAO.x;
+	surface.diffuseAO_specAO.y = CalculateSpecAO(surface.diffuseAO_specAO.y, 1 - surface.smoothness, viewDir, IN.gN);
 	// increase bias but remove many flare points.
 	surface.smoothness = min(1 - rayRoughness, surface.smoothness);
 
@@ -162,7 +165,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 	//----------------------------------------------------------------------------------------
 	//--------- direct light -----------------------------------------------------------------
 	//----------------------------------------------------------------------------------------
-	bool useSpecLightDir = SAMPLE < surface.smoothness; sampleState.w++;
+	bool useSpecLightDir = SAMPLE < surface.smoothness / 2; sampleState.w++;
 	{
 		float alpha_2 = bum_alpha2(IN.gN, surface.normal);
 		float3 direct_light = 0;
@@ -181,6 +184,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				/*inout*/sampleState,
 				/*out*/attenuation, /*out*/lightDir, /*out*/end_point);
 
+			surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, lightDir, IN.gN);
+
 			float3 luminance = attenuation * light.color;
 #ifdef _SUBSURFACE
 			float3 direct_light_without_shadow = PBS(PBS_SS_SPEC, surface, lightDir, luminance, viewDir);
@@ -193,7 +198,6 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			if (in_light_range && dot(direct_light_without_shadow, 1) > 0) {
 				float3 position_offset = IN.position;
 
-				float b_m_shadow = bump_shadowing_function(surface.normal, lightDir, alpha_2);
 				float3 shadow = TraceShadow(position_offset, end_point,
 												/*inout*/sampleState);
 
@@ -213,6 +217,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		gN = IN.gN;
 
 		if (dot(nextDir, surface.normal) > 0) {
+
+			surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
 
 			float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
 			directColor +=/* coef * */LightLuminanceCamera(IN.position, nextDir, sampleState);
@@ -319,6 +325,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 					float NdotL = saturate(dot(lightDir, surface.normal));
 
+					surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, lightDir, IN.gN);
+
 					float3 direct_light_without_shadow = NdotL * PBS(PBS_DIFFUSE, surface, lightDir, luminance, viewDir);
 
 					[branch]
@@ -342,6 +350,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				nextDir = CosineSampleHemisphere(sample_2D, surface.normal);
 				rayRoughness = 1;
 
+				surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
+
 				float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
 				weight.xyz = (1 - surface.transparent) * coef / pdf / refr_diff_refl.y;
@@ -355,6 +365,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 			nextDir = CosineSampleHemisphere(sample_2D, surface.normal);
 			rayRoughness = 1;
+
+			surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
 
 			float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 

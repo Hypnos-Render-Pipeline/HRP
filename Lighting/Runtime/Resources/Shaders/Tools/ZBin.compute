@@ -101,7 +101,7 @@ inline bool ConeConeTest(float3 p, float3 v, float t, float3 p1, float3 v1, floa
     if (distance(dis * v_ + p, fp) < d1 * t1 + dis * t) return true;
 
 
-    float3 ta = normalize(cross(v1, normalize(p1 - p)));
+    float3 ta = normalize(cross(v1, normalize(fp - p)));
     float3 n = normalize(cross(ta, v1));
     dis = dot(p1 - p, n) / dot(v, n);
     dis *= t / dot(n, v);
@@ -110,6 +110,8 @@ inline bool ConeConeTest(float3 p, float3 v, float t, float3 p1, float3 v1, floa
     float3 p3 = p1 + (v1 - ta * t1) * (d1 + dis * 2) - ta * dis;
 
     if (IntersectTriangle(p, v, p1, p2, p3)) return true;
+
+    if (dot(normalize(p - p1), v1) > sqrt(1 - t1 * t1) - 0.01)return true;
 
     return false;
 }
@@ -237,13 +239,13 @@ void BinCulling(uint3 id : SV_DispatchThreadID)
 
     for (uint j = 0; j < lightCount; j++)
     {
-        Light light = _LocalLightBuffer[_TileLights[start_offset + j] >> 24];
-        if (light.radiance_type.w == 1) { // point
-            if (!SphereIntersect(light.position_range, planes)) continue;
-        }
-        else { // spot
-            if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
-        }
+        //Light light = _LocalLightBuffer[_TileLights[start_offset + j] >> 24];
+        //if (light.radiance_type.w == 1) { // point
+        //    if (!SphereIntersect(light.position_range, planes)) continue;
+        //}
+        //else { // spot
+        //    if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
+        //}
         InterlockedAdd(_TileLights[start_offset + j], mask_value);
     }
 }

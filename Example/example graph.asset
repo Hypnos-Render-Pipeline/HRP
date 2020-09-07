@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -294, y: -197, z: 0}
+  viewPosition: {x: -294, y: -196, z: 0}
   viewScale: {x: 0.4315208, y: 0.4315208, z: 1}
   nodes:
   - nodeName: OutputNode
@@ -233,8 +233,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1912.5151
-      y: 890.0651
+      x: 1914.3225
+      y: 868.84
       width: 300
       height: 292
     info: 
@@ -441,6 +441,10 @@ MonoBehaviour:
     o: 5
     i_n: sunLight
     o_n: lights
+  - i: 6
+    o: 3
+    i_n: ao
+    o_n: microAO
   node_edgeRecs:
   - node: 2
     in_edges: 1200000013000000
@@ -453,7 +457,7 @@ MonoBehaviour:
     out_edge: 01000000
   - node: 3
     in_edges: 01000000
-    out_edge: 03000000060000000700000008000000090000000b0000000c0000000d00000011000000
+    out_edge: 03000000060000000700000008000000090000000b0000000c0000000d0000001100000017000000
   - node: 5
     in_edges: 
     out_edge: 020000000a00000016000000
@@ -461,7 +465,7 @@ MonoBehaviour:
     in_edges: 0200000003000000
     out_edge: 0400000005000000
   - node: 6
-    in_edges: 040000000500000006000000070000000800000009000000
+    in_edges: 04000000050000000600000007000000080000000900000017000000
     out_edge: 10000000
   - node: 8
     in_edges: 0a0000000b0000000c0000000d0000001000000011000000

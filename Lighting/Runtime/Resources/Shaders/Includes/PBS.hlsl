@@ -14,6 +14,7 @@ struct SurfaceInfo {
 	float	smoothness;
 	float3	normal;
 	float3	emission;
+	float2  diffuseAO_specAO;
 	float	clearCoat;	//清漆
 	float	sheen;		//布料边缘光
 	float	index;		//折射率
@@ -81,11 +82,13 @@ inline float4 Pow5(float4 x)
 	return x * x* x* x* x;
 }
 
+#ifndef UNITY_CG_INCLUDED
 inline float OneMinusReflectivityFromMetallic(const float metallic)
 {
 	float oneMinusDielectricSpec = 1.0 - 0.04;
 	return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
 }
+#endif
 
 
 inline float3 DiffuseAndSpecularFromMetallic(const float3 albedo, const float metallic, out float3 specColor, out float oneMinusReflectivity)
@@ -207,7 +210,7 @@ half4 BRDF1_Unity_PBS(half3 diffColor, half3 specColor, half smoothness,
 }
 
 
-float3 BRDF(const int type, const float3 diffColor, const float3 specColor, const float smoothness, const float clearCoat, const float sheen,
+float3 BRDF(const int type, const float3 diffColor, const float3 specColor, const float smoothness, const float2 ao, const float clearCoat, const float sheen,
 	float3 normal, const float3 viewDir, const float3 lightDir,
 	const float3 lightSatu) {
 
@@ -238,10 +241,11 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	float DFG = D * G;
 	DFG = F * lerp(DFG, DFG + coatDG, clearCoat);
 	 
-	if (type & 1) return (diffuseTerm * diffColor) * lightSatu;
-	else if (type & 2) return nl * (G * F) * lightSatu;
-	else if (type & 4) return nl * (diffuseTerm * diffColor + DFG) * lightSatu;
-	else if (type & 8) return nl * DFG * lightSatu;
+	if (type & 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
+	else if (type & 2) return nl * (G * F) * lightSatu * ao.y;
+	else if (type & 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
+	else if (type & 8) return nl * DFG * ao.y * lightSatu;
+	else return 0;
 }
  
 
@@ -261,11 +265,17 @@ float3 PBS(const int type, const SurfaceInfo IN, const float3 lightDir, const fl
 	float3 normal = IN.normal;
 
 	baseColor *= 1 - IN.transparent;
-	color = BRDF(type, baseColor, specColor, IN.smoothness, IN.clearCoat, IN.sheen, normal, viewDir, lightDir, lightSatu);
+	color = BRDF(type, baseColor, specColor, IN.smoothness, IN.diffuseAO_specAO, IN.clearCoat, IN.sheen, normal, viewDir, lightDir, lightSatu);
 
 	return color;
 }
 
-
+float CalculateDiffuseAO(float ao, float3 L, float3 gN) {
+	float NdotL = max(0, dot(normalize(L), gN));
+	return lerp(ao, 1, NdotL * 0.8 + 0.2);
+}
+float CalculateSpecAO(float ao, float rougness, float3 V, float3 gN) {
+	return lerp(ao + (1 - ao) * rougness * 0.8, 1, saturate(dot(V, gN) * 1.5 - 0.5));
+}
 
 #endif // !PBS_H_

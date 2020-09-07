@@ -14,6 +14,7 @@
             #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/Light.hlsl"
+            #include "../Includes/PBS.hlsl"
 
             struct appdata 
             {
@@ -57,36 +58,35 @@
                 }
                 float3 view = normalize(camPos - pos);
 
-                float3 baseColor;
-                float roughness;
-                float metallic;
-                float3 normal;
-                float3 emission;
+                SurfaceInfo info;
                 float3 gnormal;
                 float ao;
-
                 DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
+                    info.baseColor, info.smoothness, info.metallic, info.normal, info.emission, gnormal, ao);
+                info.transparent = 0;
+                info.clearCoat = 0;
+                info.sheen = 0;
+                info.diffuseAO_specAO.y = CalculateSpecAO(ao, info.smoothness, view, gnormal);
+                info.smoothness = 1 - info.smoothness;
 
                 float3 res = 0;
 
                 BegineLocalLightsLoop(i.uv, pos, _VP_Inv);
                 {
-                    float NdotL = max(0, dot(normalize(light.dir), normal));
-                    float diffuseAO = lerp(ao, 1, NdotL * 0.8 + 0.2);
-                    float specAO = lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5));
+                    info.diffuseAO_specAO.x = 1;// lerp(ao, light.dir, gnormal);
 
-                    res += lerp(pow(max(0, dot(normalize(view + light.dir), normal)), lerp(2000, 10, roughness))* lerp(10, 0.2, roughness) * specAO, NdotL* diffuseAO / 2, 0.96 - metallic)* light.radiance* baseColor;
+                    res += PBS(PBS_FULLY, info, light.dir, light.radiance, view);
+
                     if (_DebugTiledLight) {
                         res += float3(0.05, 0, 0.05);
                     }
                 }
                 EndLocalLightsLoop;
 
-                return float4(res + emission, 1);
+                return float4(res + info.emission, 1);
             }
             ENDCG
         }
@@ -104,6 +104,7 @@
             #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/LTCLight.hlsl"
+            #include "../Includes/PBS.hlsl"
 
             struct appdata
             {
@@ -193,7 +194,7 @@
 
                 half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
                 half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                result += lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5)) * specularTerm * fresnelTerm * UNITY_PI;
+                result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm * UNITY_PI;
 
                 return result * _LightColor;
             }
@@ -212,6 +213,7 @@
             #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/LTCLight.hlsl"
+            #include "../Includes/PBS.hlsl"
 
             struct appdata
             {
@@ -301,7 +303,7 @@
 
                 half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
                 half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                result += lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5)) * specularTerm * fresnelTerm * UNITY_PI;
+                result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm * UNITY_PI;
 
                 return result * _LightColor;
             }
@@ -321,6 +323,7 @@
             #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/LTCLight.hlsl"
+            #include "../Includes/PBS.hlsl"
 
             struct appdata
             {
@@ -421,7 +424,7 @@
                     half3 specularTerm = LTC_Evaluate(normal, view, pos, Minv, points, true);
                     specularTerm *= 1 - smoothstep(0, 0.1, dot(reflect(view, normal), ln)) * (1 - roughness); // prevent float precision lost
                     half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                    result += lerp(ao + (1 - ao) * roughness * 0.8, 1, saturate(dot(view, gnormal) * 1.5 - 0.5)) * specularTerm * fresnelTerm;
+                    result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm;
                 }
 
                 return result * _LightColor;

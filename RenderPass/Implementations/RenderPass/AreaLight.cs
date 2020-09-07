@@ -73,10 +73,13 @@ namespace HypnosRenderPipeline.RenderPass
             context.CmdBuffer.SetGlobalTexture("_TransformInv_Specular", TransformInv_Specular);
             context.CmdBuffer.SetGlobalTexture("_DiscClip", DiscClip);
 
-            context.CmdBuffer.SetGlobalTexture("_DepthTex", depth.handle);
-            context.CmdBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness.handle);
-            context.CmdBuffer.SetGlobalTexture("_NormalTex", normal_metallic.handle);
-            context.CmdBuffer.SetGlobalTexture("_AOTex", ao.handle);
+            context.CmdBuffer.SetGlobalTexture("_DepthTex", depth);
+            context.CmdBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
+            context.CmdBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
+            if (ao.connected)
+                context.CmdBuffer.SetGlobalTexture("_AOTex", ao);
+            else
+                context.CmdBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
 
             foreach (var light in lights.handle.areas)
             {

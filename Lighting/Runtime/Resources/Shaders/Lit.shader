@@ -347,10 +347,14 @@
 
 			#if _EMISSION
 
-			float4       _EmissionColor;
+			float4      _EmissionColor;
 			Texture2D   _EmissionMap;
 
 			#endif // _EMISSION
+			#if _AOMAP
+			Texture2D	_AOMap;
+			float		_AOScale;
+			#endif // _AOMAP
 
 			float _Index;
 
@@ -414,6 +418,12 @@
 					IN.emission = 0;
 				#endif
 
+				#if _AOMAP
+					IN.diffuseAO_specAO = 1 - (_AOScale * (1 - SampleTex(_AOMap, uv, 0).rr));
+				#else
+					IN.diffuseAO_specAO = (1).xx;
+				#endif // _AOMAP
+
 				IN.index = _Index;
 
 				#if _SUBSURFACE
@@ -421,6 +431,9 @@
 				#else
 					IN.Ld = 0;
 				#endif
+
+
+ 1;
 
 				IN.discarded = baseColor.a < _Cutoff;
 
