@@ -13,6 +13,7 @@ struct SurfaceInfo {
 	float	metallic;
 	float	smoothness;
 	float3	normal;
+	float3	gnormal;
 	float3	emission;
 	float2  diffuseAO_specAO;
 	float	clearCoat;	//ÇåÆá
@@ -82,14 +83,11 @@ inline float4 Pow5(float4 x)
 	return x * x* x* x* x;
 }
 
-#ifndef UNITY_CG_INCLUDED
 inline float OneMinusReflectivityFromMetallic(const float metallic)
 {
 	float oneMinusDielectricSpec = 1.0 - 0.04;
 	return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
 }
-#endif
-
 
 inline float3 DiffuseAndSpecularFromMetallic(const float3 albedo, const float metallic, out float3 specColor, out float oneMinusReflectivity)
 {
@@ -254,8 +252,19 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 #define PBS_FULLY (4)
 #define PBS_SS_SPEC (8)
 
+float CalculateDiffuseAO(float ao, float3 L, float3 gN) {
+	float NdotL = max(0, dot(normalize(L), gN));
+	return lerp(ao, 1, NdotL * 0.8 + 0.2);
+}
+float CalculateSpecAO(float ao, float rougness, float3 V, float3 gN) {
+	return lerp(ao + (1 - ao) * rougness * 0.8, 1, saturate(dot(V, gN) * 1.5 - 0.5));
+}
 
-float3 PBS(const int type, const SurfaceInfo IN, const float3 lightDir, const float3 lightSatu, const float3 viewDir) {
+float3 PBS(const int type, SurfaceInfo IN, const float3 lightDir, const float3 lightSatu, const float3 viewDir) {
+	
+	IN.diffuseAO_specAO.x = CalculateDiffuseAO(IN.diffuseAO_specAO.x, lightDir, IN.gnormal);
+	IN.diffuseAO_specAO.y = CalculateSpecAO(IN.diffuseAO_specAO.y, IN.smoothness, viewDir, IN.gnormal);
+
 	float3 color;
 
 	float oneMinusReflectivity;
@@ -270,12 +279,11 @@ float3 PBS(const int type, const SurfaceInfo IN, const float3 lightDir, const fl
 	return color;
 }
 
-float CalculateDiffuseAO(float ao, float3 L, float3 gN) {
-	float NdotL = max(0, dot(normalize(L), gN));
-	return lerp(ao, 1, NdotL * 0.8 + 0.2);
-}
-float CalculateSpecAO(float ao, float rougness, float3 V, float3 gN) {
-	return lerp(ao + (1 - ao) * rougness * 0.8, 1, saturate(dot(V, gN) * 1.5 - 0.5));
+inline float3 DiffuseAndSpecularFromMetallic(const float3 albedo, const float metallic, out float3 specColor)
+{
+	specColor = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+	float oneMinusReflectivity = OneMinusReflectivityFromMetallic(metallic);
+	return albedo * oneMinusReflectivity;
 }
 
 #endif // !PBS_H_

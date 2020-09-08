@@ -41,19 +41,18 @@
 				corrected_uv.xy = (IN.globalTexcoord.xy - uv_grid_size * 0.5) / (1 - uv_grid_size);
 				corrected_uv.z = saturate(((uint)_CustomRenderTexture3DSlice % S_resolution.z) / float(S_resolution.z - 1));
 				corrected_uv.w = saturate(((uint)_CustomRenderTexture3DSlice / S_resolution.z) / float(S_resolution.w - 1));
-				corrected_uv.w = corrected_uv.w * 0.9 + 0.05;
 				corrected_uv = saturate(corrected_uv);
 
 				float3 x, v, s;
 				int vali = u_2_xvs(corrected_uv, x, v, s);
 
-				uint maxLoop = S_resolution.z;
-				int offset = 0;
-				while (maxLoop-- > 0 && vali) {
-					offset += vali;
-					corrected_uv.z = saturate(((uint)(_CustomRenderTexture3DSlice + offset) % S_resolution.z) / float(S_resolution.z - 1));
-					vali = u_2_xvs(corrected_uv, x, v, s);
-				}
+				//uint maxLoop = S_resolution.z;
+				//int offset = 0;
+				//while (maxLoop-- > 0 && vali) {
+				//	offset += vali;
+				//	corrected_uv.z = saturate(((uint)(_CustomRenderTexture3DSlice + offset) % S_resolution.z) / float(S_resolution.z - 1));
+				//	vali = u_2_xvs(corrected_uv, x, v, s);
+				//}
 
 				//if (vali) return float3(1, 0, 1);
 

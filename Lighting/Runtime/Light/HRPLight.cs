@@ -198,10 +198,14 @@ namespace HypnosRenderPipeline
                         break;
                     case HRPLightType.Disc:
                         geo.x = discRadius;
+                        geo.y = discRadius;
                         break;
                     default:
                         break;
                 }
+                Vector3 v = transform.right;
+                geo.z = v.y;
+                geo.w = (v.x < 0 ? Mathf.PI : 0) + Mathf.Atan(v.z / v.x);
                 return new LightStructGPU { position_range = pr, radiance_type = rt, mainDirection_id = mi, geometry = geo };
             } }
 
@@ -343,6 +347,7 @@ namespace HypnosRenderPipeline
             filterd_tex.wrapMode = TextureWrapMode.Clamp;
             filterd_tex.useMipMap = true;
             filterd_tex.autoGenerateMips = false;
+            filterd_tex.filterMode = FilterMode.Trilinear;
             filterd_tex.Create();
             RenderTexture swap_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
             swap_tex.useMipMap = true;
@@ -375,6 +380,7 @@ namespace HypnosRenderPipeline
             filterd_tex.wrapMode = TextureWrapMode.Clamp;
             filterd_tex.useMipMap = true;
             filterd_tex.autoGenerateMips = false;
+            filterd_tex.filterMode = FilterMode.Trilinear;
             filterd_tex.Create();
             RenderTexture swap_tex = new RenderTexture(tex.width, tex.height, 0, RenderTextureFormat.DefaultHDR, tex.mipmapCount);
             swap_tex.useMipMap = true;

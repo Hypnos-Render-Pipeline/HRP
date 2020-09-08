@@ -43,16 +43,16 @@ namespace HypnosRenderPipeline.RenderPass
         {
             if (desc.sizeScale != SizeScale.Custom)
             {
-                desc.basicDesc.width = context.RenderCamera.pixelWidth / (int)desc.sizeScale;
-                desc.basicDesc.height = context.RenderCamera.pixelHeight / (int)desc.sizeScale;
+                desc.basicDesc.width = context.camera.pixelWidth / (int)desc.sizeScale;
+                desc.basicDesc.height = context.camera.pixelHeight / (int)desc.sizeScale;
             }
 
-            context.CmdBuffer.GetTemporaryRT(id, desc.basicDesc);
+            context.commandBuffer.GetTemporaryRT(id, desc.basicDesc);
             handle = id;
         }
         public override void ReleaseResourcces(RenderContext context)
         {
-            context.CmdBuffer.ReleaseTemporaryRT(handle);
+            context.commandBuffer.ReleaseTemporaryRT(handle);
         }
 
         public override bool Compare(RenderContext renderContext, BaseNodePin<TexturePinDesc, int> pin)
@@ -64,7 +64,7 @@ namespace HypnosRenderPipeline.RenderPass
                 Vector2Int descSize;
                 if (desc.sizeScale != SizeScale.Custom)
                 {
-                    descSize = new Vector2Int(renderContext.RenderCamera.pixelWidth, renderContext.RenderCamera.pixelHeight);
+                    descSize = new Vector2Int(renderContext.camera.pixelWidth, renderContext.camera.pixelHeight);
                     descSize /= (int)desc.sizeScale;
                 }
                 else descSize = new Vector2Int(desc.basicDesc.width, desc.basicDesc.height);
@@ -108,11 +108,11 @@ namespace HypnosRenderPipeline.RenderPass
 
             if ((pin as TexturePin).desc.basicDesc.colorFormat == RenderTextureFormat.Depth)
             {
-                renderContext.CmdBuffer.Blit(from, handle, MaterialWithName.depthBlit);
+                renderContext.commandBuffer.Blit(from, handle, MaterialWithName.depthBlit);
             }
             else
             {
-                renderContext.CmdBuffer.Blit(from, handle);
+                renderContext.commandBuffer.Blit(from, handle);
             }
         }
     }

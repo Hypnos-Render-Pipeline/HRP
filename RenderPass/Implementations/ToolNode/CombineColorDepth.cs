@@ -23,10 +23,10 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.Blit(color, combined);
-            context.CmdBuffer.Blit(depth, combined, MaterialWithName.depthBlit);
-            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-            context.CmdBuffer.Clear();
+            context.commandBuffer.Blit(color, combined);
+            context.commandBuffer.Blit(depth, combined, MaterialWithName.depthBlit);
+            context.context.ExecuteCommandBuffer(context.commandBuffer);
+            context.commandBuffer.Clear();
         }
     }
 }

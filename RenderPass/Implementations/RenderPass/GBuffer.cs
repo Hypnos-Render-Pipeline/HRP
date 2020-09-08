@@ -21,7 +21,7 @@ namespace HypnosRenderPipeline.RenderPass
                                                                     SizeCastMode.Fixed,
                                                                     ColorCastMode.Fixed,
                                                                     SizeScale.Full);
-[NodePin(PinType.Out)]
+        [NodePin(PinType.Out)]
         public TexturePin emission = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
                                                                     SizeCastMode.Fixed,
                                                                     ColorCastMode.Fixed,
@@ -34,24 +34,21 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.SetRenderTarget(new RenderTargetIdentifier[]{baseColor_roughness.handle, normal_metallic, emission, microAO }, depth);
+            context.commandBuffer.SetRenderTarget(new RenderTargetIdentifier[]{baseColor_roughness.handle, normal_metallic, emission, microAO }, depth);
 
-            context.CmdBuffer.ClearRenderTarget(!depth.connected, true, Color.clear);
-            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-            context.CmdBuffer.Clear();
+            context.commandBuffer.ClearRenderTarget(!depth.connected, true, Color.clear);
+            context.context.ExecuteCommandBuffer(context.commandBuffer);
+            context.commandBuffer.Clear();
 
-            ScriptableCullingParameters cullingParams;
-            context.RenderCamera.TryGetCullingParameters(out cullingParams);
-            var cullingResults = context.Context.Cull(ref cullingParams);
-
-            var a = new DrawingSettings(new ShaderTagId("GBuffer_Equal"), new SortingSettings(context.RenderCamera));
+            var a = new DrawingSettings(new ShaderTagId("GBuffer_Equal"), new SortingSettings(context.camera));
             if (!depth.connected)
             {
-                a = new DrawingSettings(new ShaderTagId("GBuffer_LEqual"), new SortingSettings(context.RenderCamera));
+                a = new DrawingSettings(new ShaderTagId("GBuffer_LEqual"), new SortingSettings(context.camera));
             }
             var b = FilteringSettings.defaultValue;
+            b.renderQueueRange = RenderQueueRange.opaque;
 
-            context.Context.DrawRenderers(cullingResults, ref a, ref b);
+            context.context.DrawRenderers(context.defaultCullingResult, ref a, ref b);
         }
     }
 

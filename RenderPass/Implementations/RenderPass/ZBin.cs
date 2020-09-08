@@ -38,8 +38,8 @@ namespace HypnosRenderPipeline.RenderPass
             tileCount = tileCount / 8 * 8;
 
             var local_lights = lights.handle.locals;
-            var cam = context.RenderCamera;
-            var cb = context.CmdBuffer;
+            var cam = context.camera;
+            var cb = context.commandBuffer;
             var lightCount = local_lights.Count;
 
             lightBuffer.ReSize(lightCount);

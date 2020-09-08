@@ -176,7 +176,7 @@ void TileCulling(uint2 id : SV_DispatchThreadID, uint3 gtid : SV_GroupThreadID)
         uint index = (i << 2) + gtid.z;
         if (index < _LocalLightCount) {
             Light light = _LocalLightBuffer[index];
-            if (light.radiance_type.w == 1) { // point
+            if (light.radiance_type.w == POINT) { 
                 //if (!SphereIntersect(light.position_range, planes)) continue;
                 // Instead of perform Sphere-plane collision test, we use Sphere-cone test, it's faster and will do a more accurate culling.
                 float3 ldir = light.position_range.xyz - cam;
@@ -239,13 +239,13 @@ void BinCulling(uint3 id : SV_DispatchThreadID)
 
     for (uint j = 0; j < lightCount; j++)
     {
-        //Light light = _LocalLightBuffer[_TileLights[start_offset + j] >> 24];
-        //if (light.radiance_type.w == 1) { // point
-        //    if (!SphereIntersect(light.position_range, planes)) continue;
-        //}
-        //else { // spot
-        //    if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
-        //}
+        Light light = _LocalLightBuffer[_TileLights[start_offset + j] >> 24];
+        if (light.radiance_type.w == POINT) { // point
+            if (!SphereIntersect(light.position_range, planes)) continue;
+        }
+        else { // spot
+            if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
+        }
         InterlockedAdd(_TileLights[start_offset + j], mask_value);
     }
 }

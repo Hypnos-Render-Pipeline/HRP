@@ -1,6 +1,7 @@
 #ifndef LTC_H_
 #define LTC_H_
 
+#include "./PBS.hlsl"
 
 float3 _LightPos;
 float4 _LightX, _LightY;
@@ -476,6 +477,163 @@ float4 LTC_Evaluate(
 
 	float3 fetchDir = normalize(sum);
 	return float4(formFactor * FetchDiffuseFilteredTexture(L_[0], L_[1], L_[2], L_[3], fetchDir, spec), fetchDir.z);
+}
+
+
+
+float3 QuadLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4 lightX, float4 lightY, float3 pos, float3 view) {
+
+	float3 baseColor = surface.baseColor;
+	float roughness = 1 - surface.smoothness;
+	float metallic = surface.metallic;
+	float3 normal = surface.normal;
+	float3 gnormal = surface.gnormal;
+	float ao = surface.diffuseAO_specAO.x;
+
+	float3 lp = lightPos;
+	float3 lx = lightX.xyz;
+	float3 ly = lightY.xyz;
+	float2 size = float2(lightX.w, lightY.w) / 2;
+	lx *= size.x;
+	ly *= size.y;
+	float3 ln = normalize(cross(lx, ly));
+
+	half3x3 basis;
+	basis[0] = normalize(view - normal * dot(view, normal));
+	basis[1] = normalize(cross(normal, basis[0]));
+	basis[2] = normal;
+
+	half4x3 L = half4x3(half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly));
+
+	L = L - half4x3(pos, pos, pos, pos);
+	L = mul(L, transpose(basis));
+
+	half theta = acos(dot(view, normal));
+	half2 uv = half2(lerp(0.09, 0.64, roughness), theta / 1.57);
+
+	half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
+
+	float3 result = 0;
+	float3 specColor;
+	baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
+	baseColor *= 1 - surface.transparent;
+
+	half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
+	result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
+
+	half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
+	half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
+	result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm * M_PI;
+
+	return result * lightColor;
+}
+
+
+float3 TubeLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4 lightX, float4 lightY, float3 pos, float3 view) {
+
+	float3 baseColor = surface.baseColor;
+	float roughness = 1 - surface.smoothness;
+	float metallic = surface.metallic;
+	float3 normal = surface.normal;
+	float3 gnormal = surface.gnormal;
+	float ao = surface.diffuseAO_specAO.x;
+
+
+	float3 lp = lightPos;
+	float3 ly = normalize(cross(lightPos - pos, lightX.xyz));
+	float3 lx = lightX.xyz;
+	float2 size = float2(lightX.w, lightY.w) / 2;
+	lx *= size.x;
+	ly *= size.y;
+	float3 ln = normalize(cross(lx, ly));
+
+	half3x3 basis;
+	basis[0] = normalize(view - normal * dot(view, normal));
+	basis[1] = normalize(cross(normal, basis[0]));
+	basis[2] = normal;
+
+	half4x3 L = half4x3(half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly));
+
+	L = L - half4x3(pos, pos, pos, pos);
+	L = mul(L, transpose(basis));
+
+	half theta = acos(dot(view, normal));
+	half2 uv = half2(lerp(0.09, 0.64, roughness), theta / 1.57);
+
+	half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
+
+	float3 result = 0;
+	float3 specColor;
+	baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
+	baseColor *= 1 - surface.transparent;
+
+	half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
+	result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
+
+	half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
+	half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
+	result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm * M_PI;
+
+	return result * lightColor;
+}
+
+
+float3 DiscLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4 lightX, float4 lightY, float3 pos, float3 view) {
+
+	float3 baseColor = surface.baseColor;
+	float roughness = 1 - surface.smoothness;
+	float metallic = surface.metallic;
+	float3 normal = surface.normal;
+	float3 gnormal = surface.gnormal;
+	float ao = surface.diffuseAO_specAO.x;
+
+	float3 lp = lightPos;
+	float3 lx = lightX.xyz;
+	float3 ly = lightY.xyz;
+	float3 ln = cross(lx, ly);
+	float2 size = float2(lightX.w, lightY.w) / 2;
+	lx *= size.x;
+	ly *= size.y;
+
+	half3x3 basis;
+	basis[0] = normalize(view - normal * dot(view, normal));
+	basis[1] = normalize(cross(normal, basis[0]));
+	basis[2] = normal;
+
+	half4x3 L = half4x3(half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly));
+
+	half theta = acos(dot(view, normal));
+	half2 uv = half2(lerp(0.09, 0.64, roughness), theta / 1.57);
+
+	float3 points[4] = { half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly) };
+
+	half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
+
+	float3 result = 0;
+	float3 specColor;
+	baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
+
+	half3x3 Minv = 0;
+	Minv._m22 = 1;
+	{
+		float3 l = normalize(_LightPos - pos);
+		if (dot(l, ln) > 0.98 && dot(l, normal) < 0.3 && distance(_LightPos, pos) < size.x / 2.2)
+			Minv._m00_m02_m11_m20 = tex2D(_TransformInv_Diffuse, uv);
+		else
+			Minv._m00_m02_m11_m20 = half4(1, 0, 1, 0);
+		half4 diffuseTerm = LTC_Evaluate(normal, view, pos, Minv, points);
+		result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
+		if (any(isnan(result))) result = baseColor;
+	}
+	{
+		Minv._m00_m02_m11_m20 = tex2D(_TransformInv_Specular, uv);
+		half3 specularTerm = LTC_Evaluate(normal, view, pos, Minv, points, true);
+		specularTerm *= 1 - smoothstep(0, 0.1, dot(reflect(view, normal), ln)) * (1 - roughness); // prevent float precision lost
+		half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
+		result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm;
+	}
+
+	return result * lightColor;
 }
 
 

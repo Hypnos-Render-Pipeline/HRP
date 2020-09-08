@@ -229,7 +229,7 @@ public class LitEditor : ShaderGUI
 
         if (alpha == 1)
         {
-            material.SetOverrideTag("RenderType", "Opaque");
+            material.SetOverrideTag("Quque", "Geometry");
             material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
             material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
             material.SetInt("_ZWrite", 1);
@@ -240,7 +240,7 @@ public class LitEditor : ShaderGUI
         }
         else
         {
-            material.SetOverrideTag("RenderType", "Transparent");
+            material.SetOverrideTag("Quque", "Transparent");
             material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
             material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             material.SetInt("_ZWrite", 0);

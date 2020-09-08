@@ -28,7 +28,7 @@ namespace HypnosRenderPipeline.RenderGraph
             dependency.Clear();
             pinPool.Clear();
 
-            temp_id = context.RenderCamera.GetHashCode();
+            temp_id = context.camera.GetHashCode();
             FindEnterPoints();
 
             while (readyNodes.Count != 0)
@@ -81,19 +81,19 @@ namespace HypnosRenderPipeline.RenderGraph
                 if (debug)
                 {
                     if (node.sampler == null/* || node.sampler.isValid == false*/) node.sampler = UnityEngine.Profiling.CustomSampler.Create(node.nodeName + node.GetHashCode(), true);
-                    context.CmdBuffer.BeginSample(node.sampler);
+                    context.commandBuffer.BeginSample(node.sampler);
                 }
-                context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-                context.CmdBuffer.Clear();
+                context.context.ExecuteCommandBuffer(context.commandBuffer);
+                context.commandBuffer.Clear();
                 if (node.nodeType != typeof(TextureDebug) || debug)
                 {
                     if (renderNode.enabled)
                         renderNode.Excute(context);
                 }
                 if (debug)
-                    context.CmdBuffer.EndSample(node.sampler);
-                context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-                context.CmdBuffer.Clear();
+                    context.commandBuffer.EndSample(node.sampler);
+                context.context.ExecuteCommandBuffer(context.commandBuffer);
+                context.commandBuffer.Clear();
                                 
                 ReleaseNode(context, renderNode);
 
@@ -109,8 +109,8 @@ namespace HypnosRenderPipeline.RenderGraph
                 }
             }
 
-            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-            context.CmdBuffer.Clear();
+            context.context.ExecuteCommandBuffer(context.commandBuffer);
+            context.commandBuffer.Clear();
 
             UnityEngine.Profiling.Profiler.EndSample();
             return result;

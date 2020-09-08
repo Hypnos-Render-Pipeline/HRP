@@ -7,9 +7,10 @@ namespace HypnosRenderPipeline.RenderPass
 {
     public struct RenderContext
     {
-        public Camera RenderCamera;
-        public CommandBuffer CmdBuffer;
-        public ScriptableRenderContext Context;
+        public Camera camera;
+        public CommandBuffer commandBuffer;
+        public ScriptableRenderContext context;
+        public CullingResults defaultCullingResult;
         public RenderGraphResourcePool ResourcePool;
     }
 
@@ -77,10 +78,10 @@ namespace HypnosRenderPipeline.RenderPass
         {
             if (texture != null)
             {
-                context.CmdBuffer.SetGlobalFloat("_Multiplier", multiplier);
-                context.CmdBuffer.SetGlobalInt("_Channel", (int)channal);
-                context.CmdBuffer.SetGlobalFloat("_Aspect", (float)tex.desc.basicDesc.width / tex.desc.basicDesc.height);
-                context.CmdBuffer.Blit(tex.handle, texture, MaterialWithName.debugBlit);
+                context.commandBuffer.SetGlobalFloat("_Multiplier", multiplier);
+                context.commandBuffer.SetGlobalInt("_Channel", (int)channal);
+                context.commandBuffer.SetGlobalFloat("_Aspect", (float)tex.desc.basicDesc.width / tex.desc.basicDesc.height);
+                context.commandBuffer.Blit(tex.handle, texture, MaterialWithName.debugBlit);
             }
         }
     }

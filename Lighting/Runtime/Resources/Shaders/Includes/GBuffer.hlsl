@@ -1,6 +1,7 @@
 #ifndef GBUFFER_H_
 #define GBUFFER_H_
 
+#include "PBS.hlsl"
 
 fixed3 EncodeNormal(float3 n) {
 	fixed3 res;
@@ -49,33 +50,19 @@ void Encode2GBuffer(fixed3 baseColor, fixed roughness, fixed metallic, float3 no
 
 
 
-void DecodeGBuffer(fixed4 target0, fixed4 target1, fixed4 target2, fixed4 target3,
-	out fixed3 baseColor, out fixed roughness, out fixed metallic, out float3 normal, out float3 emission, out float3 gnormal, out float ao)
+SurfaceInfo DecodeGBuffer(fixed4 target0, fixed4 target1, fixed4 target2, fixed4 target3)
 {
-	baseColor = target0.rgb;
-	roughness = target0.a;
-	metallic = target1.a;
-	normal = DecodeNormal(target1.xyz);
-	emission = DecodeHDR(target2);
-	gnormal = DecodeNormal(target3.xyz);
-	ao = target3.w;
+	SurfaceInfo info = (SurfaceInfo)0;
+	info.baseColor = target0.rgb;
+	info.smoothness = 1 - target0.a;
+	info.metallic = target1.a;
+	info.normal = DecodeNormal(target1.xyz);
+	info.emission = DecodeHDR(target2);
+	info.gnormal = DecodeNormal(target3.xyz);
+	info.diffuseAO_specAO = target3.ww;
+
+	return info;
 }
-
-inline float OneMinusReflectivityFromMetallic(const float metallic)
-{
-	float oneMinusDielectricSpec = 1.0 - 0.04;
-	return oneMinusDielectricSpec - metallic * oneMinusDielectricSpec;
-}
-
-
-inline float3 DiffuseAndSpecularFromMetallic(const float3 albedo, const float metallic, out float3 specColor)
-{
-	specColor = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
-	float oneMinusReflectivity = OneMinusReflectivityFromMetallic(metallic);
-	return albedo * oneMinusReflectivity;
-}
-
-
 
 
 

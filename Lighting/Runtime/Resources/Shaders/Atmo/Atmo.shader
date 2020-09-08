@@ -63,8 +63,8 @@ Shader "Hidden/Custom/Atmo"
 
 	float3 main(v2f i) : SV_Target
 	{
-		RandSeed(i.vertex.xy);
-		sampleIndex1D = sampleIndex;
+		//RandSeed(i.vertex.xy);
+		//sampleIndex1D = sampleIndex;
 
 		float3 sunRadiance = _SunRadiance;
 
@@ -104,7 +104,6 @@ Shader "Hidden/Custom/Atmo"
 		[branch]
 		if (s.y < -0.05) atmo_scatter = S_L_Night(x, x_0, -s, 6);
 		else atmo_scatter = S_L(x, x_0, s, 6);
-
 		return (atmo_scatter + sunLight) * sunRadiance + (depth > max_depth ? 0 : SampleColor(UV) * trans);
 	}
 

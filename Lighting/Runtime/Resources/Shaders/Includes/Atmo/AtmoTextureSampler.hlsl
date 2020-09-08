@@ -26,7 +26,7 @@ float4 tex4D(const sampler3D tex, const int4 xyzw, const float4 uv) {
 	z = (float2(low, high) + z) / xyzw.w;
 
 	return lerp(tex3Dlod(tex, float4(xy, z.x, 0)), tex3Dlod(tex, float4(xy, z.y, 0)), w_ - low);
-	return lerp(uvTex(float4(xy, z.x, 0)), uvTex(float4(xy, z.y, 0)), w_ - low);
+	//return lerp(uvTex(float4(xy, z.x, 0)), uvTex(float4(xy, z.y, 0)), w_ - low);
 }
 
 #endif

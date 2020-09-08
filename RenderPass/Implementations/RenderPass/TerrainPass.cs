@@ -22,23 +22,23 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.SetRenderTarget(new RenderTargetIdentifier[]{ color, depth }, depth);
+            context.commandBuffer.SetRenderTarget(new RenderTargetIdentifier[]{ color, depth }, depth);
 
-            var cam = gameCameraCull ? Camera.main ?? context.RenderCamera : context.RenderCamera;
+            var cam = gameCameraCull ? Camera.main ?? context.camera : context.camera;
 
-            FrustumCulling.SetCullingCamera(context.CmdBuffer, cam);
+            FrustumCulling.SetCullingCamera(context.commandBuffer, cam);
 
-            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-            context.CmdBuffer.Clear();
+            context.context.ExecuteCommandBuffer(context.commandBuffer);
+            context.commandBuffer.Clear();
 
             if (terrain != null)
             {
                 if (terrain.isActiveAndEnabled && terrain.cb != null)
                 {
-                    terrain.MoveTerrain(context.CmdBuffer, cam);
-                    context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-                    context.CmdBuffer.Clear();
-                    context.Context.ExecuteCommandBuffer(terrain.cb);
+                    terrain.MoveTerrain(context.commandBuffer, cam);
+                    context.context.ExecuteCommandBuffer(context.commandBuffer);
+                    context.commandBuffer.Clear();
+                    context.context.ExecuteCommandBuffer(terrain.cb);
                 }
             }
             else

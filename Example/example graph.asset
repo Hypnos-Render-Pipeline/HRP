@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -294, y: -196, z: 0}
-  viewScale: {x: 0.43152082, y: 0.43152082, z: 1}
+  viewPosition: {x: -2982, y: -1068, z: 0}
+  viewScale: {x: 1.3225, y: 1.3225, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters:
@@ -29,10 +29,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 3863.1504
-      y: 1209.75
+      x: 4025.5886
+      y: 1185.9392
       width: 300.00006
-      height: 105.000015
+      height: 105
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: PreZ
@@ -83,8 +83,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3484.1504
-      y: 1146.75
+      x: 3651.2148
+      y: 1139.1306
       width: 300.00006
       height: 153
     info: 
@@ -124,40 +124,6 @@ MonoBehaviour:
       height: 250.00003
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.GBuffer
-  - nodeName: TerrainPass
-    parameters:
-    - name: gameCameraCull
-      info: 
-      type_str: System.Boolean
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-      obj_ref: {fileID: 0}
-    - name: enabled
-      info: Should this node be excuted.
-      type_str: System.Boolean
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: color
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    outputs:
-    - name: color
-      info: 
-      mustConnect: 0
-    - name: depth
-      info: 
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 2794.9802
-      y: 1015.5616
-      width: 300
-      height: 195.99997
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.TerrainPass
   - nodeName: CullLight
     parameters:
     - name: cullingType
@@ -233,8 +199,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1914.3225
-      y: 868.84
+      x: 1904.7426
+      y: 899.4176
       width: 300
       height: 292
     info: 
@@ -272,10 +238,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1516.0107
-      y: 871.5896
+      x: 1457.7776
+      y: 661.1867
       width: 300
-      height: 221
+      height: 221.00003
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.ZBin
   - nodeName: AreaLight
@@ -313,8 +279,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 2376.075
-      y: 1012.8244
+      x: 2365.42
+      y: 1064.5775
       width: 300
       height: 273
     info: 
@@ -332,150 +298,209 @@ MonoBehaviour:
       mustConnect: 0
     - name: target
       info: 
-      mustConnect: 0
+      mustConnect: 1
     - name: depth
       info: 
       mustConnect: 1
     outputs:
     - name: target
       info: 
+      mustConnect: 1
+    position:
+      serializedVersion: 2
+      x: 2751.4175
+      y: 939.4175
+      width: 300
+      height: 177
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.Atmo
+  - nodeName: Transparent
+    parameters:
+    - name: renderAreaLight
+      info: Enable Area light for transparent objects are more expensive than opaque
+        objects, please remember that.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lights
+      info: 
+      mustConnect: 0
+    - name: areaLightBuffer
+      info: 
+      mustConnect: 0
+    - name: lightBuffer
+      info: 
+      mustConnect: 1
+    - name: tiledLights
+      info: 
+      mustConnect: 1
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: areaLightBuffer
+      info: 
+      mustConnect: 0
+    - name: target
+      info: 
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3152.5654
-      y: 1012.70496
-      width: 300.00006
-      height: 177.00003
+      x: 3095.1267
+      y: 755.9051
+      width: 300
+      height: 292
     info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.Atmo
+    nodeType_str: HypnosRenderPipeline.RenderPass.Transparent
   edgeRecs:
   - i: 0
     o: 2
     i_n: result
     o_n: combined
+  - i: 6
+    o: 4
+    i_n: lights
+    o_n: lights
+  - i: 6
+    o: 3
+    i_n: depth
+    o_n: depth
+  - i: 5
+    o: 6
+    i_n: lightBuffer
+    o_n: lightBuffer
+  - i: 5
+    o: 6
+    i_n: tiledLights
+    o_n: tileLights
+  - i: 5
+    o: 3
+    i_n: depth
+    o_n: depth
+  - i: 5
+    o: 3
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 5
+    o: 3
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 5
+    o: 3
+    i_n: emission
+    o_n: emission
+  - i: 7
+    o: 4
+    i_n: lights
+    o_n: lights
+  - i: 7
+    o: 3
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 7
+    o: 3
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 7
+    o: 3
+    i_n: ao
+    o_n: microAO
+  - i: 7
+    o: 3
+    i_n: depth
+    o_n: depth
+  - i: 8
+    o: 4
+    i_n: sunLight
+    o_n: lights
+  - i: 5
+    o: 3
+    i_n: ao
+    o_n: microAO
   - i: 3
     o: 1
     i_n: depth
     o_n: depth
-  - i: 7
-    o: 5
-    i_n: lights
-    o_n: lights
-  - i: 7
-    o: 3
-    i_n: depth
-    o_n: depth
-  - i: 6
+  - i: 9
     o: 7
-    i_n: lightBuffer
-    o_n: lightBuffer
-  - i: 6
+    i_n: depth
+    o_n: depth
+  - i: 8
     o: 7
-    i_n: tiledLights
-    o_n: tileLights
-  - i: 6
-    o: 3
-    i_n: depth
-    o_n: depth
-  - i: 6
-    o: 3
-    i_n: baseColor_roughness
-    o_n: baseColor_roughness
-  - i: 6
-    o: 3
-    i_n: normal_metallic
-    o_n: normal_metallic
-  - i: 6
-    o: 3
-    i_n: emission
-    o_n: emission
-  - i: 8
-    o: 5
-    i_n: lights
-    o_n: lights
-  - i: 8
-    o: 3
-    i_n: baseColor_roughness
-    o_n: baseColor_roughness
-  - i: 8
-    o: 3
-    i_n: normal_metallic
-    o_n: normal_metallic
-  - i: 8
-    o: 3
-    i_n: ao
-    o_n: microAO
-  - i: 4
-    o: 8
-    i_n: color
-    o_n: target
-  - i: 4
-    o: 8
     i_n: depth
     o_n: depth
   - i: 8
-    o: 6
+    o: 7
     i_n: target
-    o_n: lightingResult
-  - i: 8
-    o: 3
-    i_n: depth
-    o_n: depth
-  - i: 2
-    o: 4
-    i_n: depth
-    o_n: depth
+    o_n: target
   - i: 2
     o: 9
     i_n: color
     o_n: target
-  - i: 9
-    o: 4
+  - i: 2
+    o: 7
     i_n: depth
     o_n: depth
   - i: 9
-    o: 4
-    i_n: target
-    o_n: color
+    o: 6
+    i_n: lightBuffer
+    o_n: lightBuffer
   - i: 9
+    o: 6
+    i_n: tiledLights
+    o_n: tileLights
+  - i: 7
     o: 5
-    i_n: sunLight
+    i_n: target
+    o_n: lightingResult
+  - i: 9
+    o: 8
+    i_n: target
+    o_n: target
+  - i: 9
+    o: 4
+    i_n: lights
     o_n: lights
-  - i: 6
-    o: 3
-    i_n: ao
-    o_n: microAO
   node_edgeRecs:
   - node: 2
-    in_edges: 1200000013000000
+    in_edges: 1400000015000000
     out_edge: 00000000
   - node: 0
     in_edges: 00000000
     out_edge: 
+  - node: 4
+    in_edges: 
+    out_edge: 01000000090000000e0000001a000000
+  - node: 6
+    in_edges: 0100000002000000
+    out_edge: 03000000040000001600000017000000
+  - node: 3
+    in_edges: 10000000
+    out_edge: 02000000050000000600000007000000080000000a0000000b0000000c0000000d0000000f000000
+  - node: 5
+    in_edges: 0300000004000000050000000600000007000000080000000f000000
+    out_edge: 18000000
+  - node: 7
+    in_edges: 090000000a0000000b0000000c0000000d00000018000000
+    out_edge: 11000000120000001300000015000000
+  - node: 8
+    in_edges: 0e0000001200000013000000
+    out_edge: 19000000
   - node: 1
     in_edges: 
-    out_edge: 01000000
-  - node: 3
-    in_edges: 01000000
-    out_edge: 03000000060000000700000008000000090000000b0000000c0000000d0000001100000017000000
-  - node: 5
-    in_edges: 
-    out_edge: 020000000a00000016000000
-  - node: 7
-    in_edges: 0200000003000000
-    out_edge: 0400000005000000
-  - node: 6
-    in_edges: 04000000050000000600000007000000080000000900000017000000
     out_edge: 10000000
-  - node: 8
-    in_edges: 0a0000000b0000000c0000000d0000001000000011000000
-    out_edge: 0e0000000f000000
-  - node: 4
-    in_edges: 0e0000000f000000
-    out_edge: 120000001400000015000000
   - node: 9
-    in_edges: 140000001500000016000000
-    out_edge: 13000000
+    in_edges: 110000001600000017000000190000001a000000
+    out_edge: 14000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.14204344, g: 0.18852712, b: 0.2264151, a: 0.4}

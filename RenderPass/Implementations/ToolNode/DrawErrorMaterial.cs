@@ -32,20 +32,20 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {
-            context.CmdBuffer.SetRenderTarget(color: target, depth: depth);
-            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-            context.CmdBuffer.Clear();
+            context.commandBuffer.SetRenderTarget(color: target, depth: depth);
+            context.context.ExecuteCommandBuffer(context.commandBuffer);
+            context.commandBuffer.Clear();
 
             ScriptableCullingParameters cullingParams;
-            context.RenderCamera.TryGetCullingParameters(out cullingParams);
-            var cullingResults = context.Context.Cull(ref cullingParams);
+            context.camera.TryGetCullingParameters(out cullingParams);
+            var cullingResults = context.context.Cull(ref cullingParams);
 
             foreach (var name in legacyShaderTagIds)
             {
-                var a = new DrawingSettings(name, new SortingSettings(context.RenderCamera)) { overrideMaterial = errorMat };
+                var a = new DrawingSettings(name, new SortingSettings(context.camera)) { overrideMaterial = errorMat };
                 var b = FilteringSettings.defaultValue;
 
-                context.Context.DrawRenderers(cullingResults, ref a, ref b);
+                context.context.DrawRenderers(cullingResults, ref a, ref b);
             }
         }
     }

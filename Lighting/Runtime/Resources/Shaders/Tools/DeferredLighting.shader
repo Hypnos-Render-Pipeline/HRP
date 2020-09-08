@@ -11,7 +11,6 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/Light.hlsl"
             #include "../Includes/PBS.hlsl"
@@ -58,26 +57,16 @@
                 }
                 float3 view = normalize(camPos - pos);
 
-                SurfaceInfo info;
-                float3 gnormal;
-                float ao;
-                DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    info.baseColor, info.smoothness, info.metallic, info.normal, info.emission, gnormal, ao);
-                info.transparent = 0;
-                info.clearCoat = 0;
-                info.sheen = 0;
-                info.diffuseAO_specAO.y = CalculateSpecAO(ao, info.smoothness, view, gnormal);
-                info.smoothness = 1 - info.smoothness;
+                SurfaceInfo info = (SurfaceInfo)0;
+                info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
                 float3 res = 0;
 
                 BegineLocalLightsLoop(i.uv, pos, _VP_Inv);
                 {
-                    info.diffuseAO_specAO.x = 1;// lerp(ao, light.dir, gnormal);
-
                     res += PBS(PBS_FULLY, info, light.dir, light.radiance, view);
 
                     if (_DebugTiledLight) {
@@ -101,7 +90,6 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/LTCLight.hlsl"
             #include "../Includes/PBS.hlsl"
@@ -148,55 +136,12 @@
 
                 float3 view = normalize(camPos - pos);
 
-                float3 baseColor;
-                float roughness;
-                float metallic;
-                float3 normal;
-                float3 emission;
-                float3 gnormal;
-                float ao;
+                SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
-
-                float3 lp = _LightPos;
-                float3 lx = _LightX;
-                float3 ly = _LightY;
-                float2 size = float2(_LightX.w, _LightY.w) / 2;
-                lx *= size.x;
-                ly *= size.y;
-                float3 ln = normalize(cross(lx, ly));
-
-                half3x3 basis;
-                basis[0] = normalize(view - normal * dot(view, normal));
-                basis[1] = normalize(cross(normal, basis[0]));
-                basis[2] = normal;
-
-                half4x3 L = half4x3(half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly));
-
-                L = L - half4x3(pos, pos, pos, pos);
-                L = mul(L, transpose(basis));
-
-                half theta = acos(dot(view, normal));
-                half2 uv = half2(lerp(0.09, 0.64, roughness), theta / 1.57);
-
-                half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
-
-                float3 result = 0;
-                float3 specColor;
-                baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
-
-                half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
-                result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
-
-                half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
-                half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm * UNITY_PI;
-
-                return result * _LightColor;
+                return QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
             }
             ENDCG
         }
@@ -210,7 +155,6 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/LTCLight.hlsl"
             #include "../Includes/PBS.hlsl"
@@ -257,55 +201,12 @@
 
                 float3 view = normalize(camPos - pos);
 
-                float3 baseColor;
-                float roughness;
-                float metallic;
-                float3 normal;
-                float3 emission;
-                float3 gnormal;
-                float ao;
+                SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
-
-                float3 lp = _LightPos;
-                float3 ly = normalize(cross(_LightPos - pos, _LightX));
-                float3 lx = _LightX;
-                float2 size = float2(_LightX.w, _LightY.w) / 2;
-                lx *= size.x;
-                ly *= size.y;
-                float3 ln = normalize(cross(lx, ly));
-
-                half3x3 basis;
-                basis[0] = normalize(view - normal * dot(view, normal));
-                basis[1] = normalize(cross(normal, basis[0]));
-                basis[2] = normal;
-
-                half4x3 L = half4x3(half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly));
-
-                L = L - half4x3(pos, pos, pos, pos);
-                L = mul(L, transpose(basis));
-
-                half theta = acos(dot(view, normal));
-                half2 uv = half2(lerp(0.09, 0.64, roughness), theta / 1.57);
-
-                half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
-
-                float3 result = 0;
-                float3 specColor;
-                baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
-
-                half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
-                result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
-
-                half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
-                half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm * UNITY_PI;
-
-                return result * _LightColor;
+                return QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
             }
             ENDCG
         }
@@ -320,7 +221,6 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
             #include "../Includes/GBuffer.hlsl"
             #include "../Includes/LTCLight.hlsl"
             #include "../Includes/PBS.hlsl"
@@ -375,59 +275,13 @@
                 float3 gnormal;
                 float ao;
 
-                DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    baseColor, roughness, metallic, normal, emission, gnormal, ao);
+                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                float3 lp = _LightPos;
-                float3 lx = _LightX;
-                float3 ly = _LightY;
-                float3 ln = cross(lx, ly);
-                float2 size = float2(_LightX.w, _LightY.w) / 2;
-                lx *= size.x;
-                ly *= size.y;
+                return DiscLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
 
-                half3x3 basis;
-                basis[0] = normalize(view - normal * dot(view, normal));
-                basis[1] = normalize(cross(normal, basis[0]));
-                basis[2] = normal;
-
-                half4x3 L = half4x3(half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly));
-
-                half theta = acos(dot(view, normal));
-                half2 uv = half2(lerp(0.09, 0.64, roughness), theta / 1.57);
-
-                float3 points[4] = { half3(lp - lx - ly), half3(lp + lx - ly), half3(lp + lx + ly), half3(lp - lx + ly) };
-
-                half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
-
-                float3 result = 0;
-                float3 specColor;
-                baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
-
-                half3x3 Minv = 0;
-                Minv._m22 = 1;
-                {
-                    float3 l = normalize(_LightPos - pos);
-                    if (dot(l, ln) > 0.98 && dot(l, normal) < 0.3 && distance(_LightPos, pos) < size.x / 2.2)
-                        Minv._m00_m02_m11_m20 = tex2D(_TransformInv_Diffuse, uv);
-                    else
-                        Minv._m00_m02_m11_m20 = half4(1, 0, 1, 0);
-                    half4 diffuseTerm = LTC_Evaluate(normal, view, pos, Minv, points);
-                    result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
-                    if (any(isnan(result))) result = baseColor;
-                }
-                {
-                    Minv._m00_m02_m11_m20 = tex2D(_TransformInv_Specular, uv);
-                    half3 specularTerm = LTC_Evaluate(normal, view, pos, Minv, points, true);
-                    specularTerm *= 1 - smoothstep(0, 0.1, dot(reflect(view, normal), ln)) * (1 - roughness); // prevent float precision lost
-                    half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
-                    result += CalculateSpecAO(ao, roughness, view, gnormal) * specularTerm * fresnelTerm;
-                }
-
-                return result * _LightColor;
             }
             ENDCG
         }

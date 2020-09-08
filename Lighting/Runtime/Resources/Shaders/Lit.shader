@@ -44,6 +44,7 @@
     // Rasterization Shader
     SubShader
     {
+		Tags { "Queue" = "Geometry" }
 		Pass
 		{
 			ColorMask 0
@@ -286,6 +287,200 @@
 				#endif // _AOMAP
 
 				Encode2GBuffer(baseColor, 1 - smoothness, metallic, normal, emission, i.normal, ao, target0, target1, target2, target3);
+			}
+
+			ENDCG
+		}
+
+		Pass
+		{
+			Tags { "LightMode" = "Transparent" }
+
+			Blend One SrcAlpha
+			ZTest on
+			ZWrite off
+			Cull back
+
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+
+			#include "UnityCG.cginc"
+			#include "./Includes/Light.hlsl"
+			#include "./Includes/LTCLight.hlsl"
+			#include "./Includes/PBS.hlsl"
+
+			#pragma shader_feature _NORMALMAP
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _METALLICGLOSSMAP _
+			#pragma shader_feature _AOMAP _
+
+			CBUFFER_START(UnityPerMaterial)
+				float4			_Color;
+				sampler2D 		_MainTex;
+				float4			_MainTex_ST;
+			#if _NORMALMAP
+				sampler2D		_BumpMap;
+				half			_BumpScale;
+			#endif // _NORMALMAP
+			#if _METALLICGLOSSMAP
+				sampler2D		_MetallicGlossMap;
+				float			_GlossMapScale;
+			#else
+				half			_Metallic;
+				float			_Smoothness;
+			#endif // _METALLICGLOSSMAP
+			#if _EMISSION
+				float4			_EmissionColor;
+				sampler2D		_EmissionMap;
+			#endif // _EMISSION
+			#if _AOMAP
+				sampler2D		_AOMap;
+				float			_AOScale;
+			#endif // _AOMAP
+				float _Index;
+			CBUFFER_END
+
+			sampler2D _ScreenColor;
+			float4x4 _V_Inv, _VP_Inv;
+			float4 _ScreenParameters;
+
+			struct a2v {
+				float4 vertex : POSITION;
+				float3 normal : NORMAL;
+				float4 tangent : TANGENT;
+				float2 uv : TEXCOORD0;
+			};
+
+			struct v2f {
+				float4 vertex : SV_POSITION;
+				float3 normal : NORMAL;
+				float4 tangent : TANGENT;
+				float2 uv : TEXCOORD0;
+				float4 wpos : TEXCOORD1;
+				float4 spos : TEXCOORD2;
+			};
+
+			v2f vert(a2v i) {
+				v2f o;
+				o.wpos = mul(unity_ObjectToWorld, i.vertex);
+				o.vertex = UnityObjectToClipPos(i.vertex);
+				o.normal = UnityObjectToWorldNormal(i.normal);
+				o.tangent = float4(UnityObjectToWorldDir(i.tangent.xyz), i.tangent.w);
+				o.uv = TRANSFORM_TEX(i.uv, _MainTex);
+				o.spos = ComputeScreenPos(o.vertex);
+				return o;
+			}
+
+			half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
+			{
+				#if defined(UNITY_NO_DXT5nm)
+					return packednormal.xyz * 2 - 1;
+				#else
+					half3 normal;
+					normal.xy = (packednormal.wy * 2 - 1);
+					normal.xy *= bumpScale;
+					normal.z = sqrt(1.0 - saturate(dot(normal.xy, normal.xy)));
+					return normal;
+				#endif
+			}
+
+			float4 frag(v2f i) : SV_Target {
+
+				SurfaceInfo info = (SurfaceInfo)0;
+
+				fixed4 baseColor = _Color * tex2D(_MainTex, i.uv);
+				info.baseColor = baseColor.rgb;
+				info.transparent = 1 - baseColor.a;
+
+				#if _METALLICGLOSSMAP
+					float4 m_s = tex2D(_MetallicGlossMap, i.uv);
+					info.metallic = m_s.r;
+					info.smoothness = m_s.a * _GlossMapScale;
+				#else
+					info.metallic = _Metallic;
+					info.smoothness = _Smoothness;
+				#endif //_METALLICGLOSSMAP
+
+				#if _NORMALMAP
+					info.normal = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
+					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
+					float3 binormal = cross(n, t) * i.tangent.w;
+					float3x3 rotation = float3x3(t, binormal, n);
+					info.normal = mul(info.normal, rotation);
+				#else
+					info.normal = normalize(i.normal);
+				#endif // _NORMALMAP
+				#if _EMISSION
+					info.emission = _EmissionColor * tex2D(_EmissionMap, i.uv);
+				#else
+					info.emission = 0;
+				#endif // _EMISSION
+				#if _AOMAP
+					info.diffuseAO_specAO = (1 - (_AOScale * (1 - tex2D(_AOMap, i.uv).r))).xx;
+				#else
+					info.diffuseAO_specAO = (1).xx;
+				#endif // _AOMAP
+				
+				info.gnormal = i.normal;
+
+                float3 pos = i.wpos;
+				float3 camPos = _V_Inv._m03_m13_m23;
+                float3 view = normalize(camPos - pos);
+				float2 screenUV = i.spos.xy / i.spos.w;
+
+                float3 res = 0;
+
+                BegineLocalLightsLoop(screenUV, pos, _VP_Inv);
+                {
+                    res += PBS(PBS_FULLY, info, light.dir, light.radiance, view);
+                }
+                EndLocalLightsLoop;
+
+				for (int i = 0; i < _AreaLightCount; i++)
+				{
+					Light areaLight = _AreaLightBuffer[i];
+
+					float3 lightZ = areaLight.mainDirection_id.xyz;
+					float xz = sqrt(1 - areaLight.geometry.z * areaLight.geometry.z);
+					float3 lightX = float3(xz * cos(areaLight.geometry.w), areaLight.geometry.z, xz * sin(areaLight.geometry.w));
+					float3 lightY = cross(lightZ, lightX);
+
+					if (areaLight.radiance_type.w == TUBE) {
+						res += TubeLight(info, areaLight.radiance_type.xyz,
+											areaLight.position_range.xyz,
+											float4(lightZ, areaLight.geometry.x * 2),
+											float4(lightX, areaLight.geometry.y * 2),
+											pos, view);
+					}
+					else if (areaLight.radiance_type.w == QUAD) {
+						res += QuadLight(info, areaLight.radiance_type.xyz,
+											areaLight.position_range.xyz,
+											float4(-lightX, areaLight.geometry.x),
+											float4(lightY, areaLight.geometry.y),
+											pos, view);
+					}
+					else if (areaLight.radiance_type.w == DISC) {
+						res += DiscLight(info, areaLight.radiance_type.xyz,
+											areaLight.position_range.xyz,
+											float4(-lightX, areaLight.geometry.x * 2),
+											float4(lightY, areaLight.geometry.x * 2),
+											pos, view);
+					}
+				}
+
+				res += info.emission;
+
+				if (_Index != 1) {
+					float3 offset = refract(-view, info.normal, 1 / _Index);
+					float4 p = mul(UNITY_MATRIX_VP, float4(pos + offset, 1));
+					p.xy /= p.w;
+					p.xy = p.xy / 2 + 0.5;
+					p.y = 1 - p.y;
+					return float4(res + tex2Dlod(_ScreenColor, float4(p.xy, 0, lerp(8, 0, info.smoothness))) * info.transparent, 0);
+				}
+				else
+					return float4(res, info.transparent);
 			}
 
 			ENDCG

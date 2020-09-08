@@ -15,6 +15,8 @@ namespace HypnosRenderPipeline
         
         Dictionary<Camera, int> clock;
 
+        ScriptableCullingParameters defaultCullingParams;
+
 #if UNITY_EDITOR
 
         MaterialWithName m_wireFrame = new MaterialWithName("Hidden/Wireframe");
@@ -49,7 +51,7 @@ namespace HypnosRenderPipeline
 
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
-            var rc = new RenderContext() { Context = context, ResourcePool = m_resourcePool };
+            var rc = new RenderContext() { context = context, ResourcePool = m_resourcePool };
 
             CommandBuffer cb = new CommandBuffer();
 
@@ -77,8 +79,10 @@ namespace HypnosRenderPipeline
 
                 context.SetupCameraProperties(cam);
 
-                rc.RenderCamera = cam;
-                rc.CmdBuffer = cb;
+                rc.camera = cam;
+                rc.commandBuffer = cb;
+                cam.TryGetCullingParameters(out defaultCullingParams);
+                rc.defaultCullingResult = context.Cull(ref defaultCullingParams);
 
                 cb.SetGlobalMatrix("_V", cam.worldToCameraMatrix);
                 cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);

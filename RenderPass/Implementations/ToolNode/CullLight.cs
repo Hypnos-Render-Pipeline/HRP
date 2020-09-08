@@ -20,11 +20,11 @@ namespace HypnosRenderPipeline.RenderPass
         {
             if (cullingType == CullingType.Frustum)
             {
-                LightManager.GetVisibleLights(lights, context.RenderCamera, faraway);
+                LightManager.GetVisibleLights(lights, context.camera, faraway);
             }
             else
             {
-                LightManager.GetVisibleLights(lights, context.RenderCamera, radius, faraway);
+                LightManager.GetVisibleLights(lights, context.camera, radius, faraway);
             }
         }
     }

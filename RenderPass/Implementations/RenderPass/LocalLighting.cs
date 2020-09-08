@@ -4,7 +4,6 @@ namespace HypnosRenderPipeline.RenderPass
 {
     public class LocalLighting : BaseRenderPass
     {
-
         [NodePin(PinType.In, true)]
         public BufferPin<LightStructGPU> lightBuffer = new BufferPin<LightStructGPU>(1);
 
@@ -39,24 +38,24 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void Excute(RenderContext context)
         {           
-            var cam = context.RenderCamera;
+            var cam = context.camera;
 
-            context.CmdBuffer.SetGlobalTexture("_DepthTex", depth.handle);
-            context.CmdBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
-            context.CmdBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
-            context.CmdBuffer.SetGlobalTexture("_EmissionTex", emission);
+            context.commandBuffer.SetGlobalTexture("_DepthTex", depth.handle);
+            context.commandBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
+            context.commandBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
+            context.commandBuffer.SetGlobalTexture("_EmissionTex", emission);
             if (ao.connected)
-                context.CmdBuffer.SetGlobalTexture("_AOTex", ao);
+                context.commandBuffer.SetGlobalTexture("_AOTex", ao);
             else
-                context.CmdBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
+                context.commandBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
 
 #if UNITY_EDITOR
-            context.CmdBuffer.SetGlobalInt("_DebugTiledLight", debugTiledLight ? 1 : 0);
+            context.commandBuffer.SetGlobalInt("_DebugTiledLight", debugTiledLight ? 1 : 0);
 #endif
 
-            context.CmdBuffer.Blit(null, lightingResult, lightingMat, 0);
-            context.Context.ExecuteCommandBuffer(context.CmdBuffer);
-            context.CmdBuffer.Clear();
+            context.commandBuffer.Blit(null, lightingResult, lightingMat, 0);
+            context.context.ExecuteCommandBuffer(context.commandBuffer);
+            context.commandBuffer.Clear();
         }
     }
 }

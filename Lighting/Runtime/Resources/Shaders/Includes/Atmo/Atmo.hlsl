@@ -106,7 +106,7 @@
 
 #define T_resolution int2(64, 512)
 #define E_resolution int2(16, 64)
-#define S_resolution int4(32, 64, 16, 8)
+#define S_resolution int4(8, 8, 8, 8)
 
 
 #define planet_radius 6371e3
@@ -149,7 +149,7 @@ inline const float valid(const float x) {
 	return x < 0 ? float_max : x;
 }
 float remap(float v, float a, float b, float c, float d) {
-	return (clamp(v, a, b) - a) / max(0.0001, b - a) * (d - c) + c;
+	return (clamp(v, a, b) - a) / max(0.0001, b - a) * max(0, d - c) + c;
 }
 
 #define atmosphere_radius (planet_radius + atmosphere_thickness)
@@ -376,6 +376,12 @@ int u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
 }
 #else
 #define MUL_ 4
+float angle01(float3 v, float3 s) {
+	return 1 - acos(dot(v, s)) / pi;
+}
+float angle01(float c) {
+	return 1 - acos(c) / pi;
+}
 float4 xvs_2_u(const float3 x, const float3 v, const float3 s) {
 	float r = length(x);
 	float mu = dot(normalize(x), normalize(v));// / 2 + 0.5;
@@ -391,9 +397,12 @@ float4 xvs_2_u(const float3 x, const float3 v, const float3 s) {
 	float H_t = atmosphere_radius - 10;
 	float H = sqrt(H_t * H_t - H_g * H_g);
 	float u_r = sqrt(max(0, r * r - H_g * H_g)) / H;
-	float u_mu_s = saturate(max(0.0, (1 - exp(-3 * mu_s - 0.6)) / (1 - exp(-3.6))) * 1.4 - 0.4);
+	float u_mu_s = saturate(max(0.0, (1 - exp(-3 * mu_s - 0.6)) / (1 - exp(-3.6))) * 1.5 - 0.5);
 
-	vo = 1 - acos(vo) / pi;
+	//vo = 1 - acos(vo) / pi;
+	float sx = sqrt(1 - s.y * s.y);
+	float3 v_ = float3(sqrt(1 - v.y * v.y), v.y, 0);
+	vo = remap(angle01(vo), angle01(v_, float3(-sx, s.y, 0)), angle01(v_, float3(sx, s.y, 0)), 0, 1),
 	vo = pow(vo, MUL_);
 
 	mu = mu / 2 + 0.5;
@@ -416,7 +425,7 @@ int u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
 	float horiz = length(x);
 	horiz = -saturate(sqrt(horiz * horiz - planet_radius * planet_radius) / horiz);
 
-	float u_w = saturate((u.w + 0.4) / 1.4);
+	float u_w = saturate((u.w + 0.5) / 1.5);
 	float mu_s = (log(u_w * (exp(-3.6) - 1) + 1) + 0.6) / -3;
 
 
@@ -427,18 +436,22 @@ int u_2_xvs(const float4 u, out float3 x, out float3 v, out float3 s) {
 	v = GetDir01(mu / 2 + 0.5);
 	//v = GetDir01(cos((1 - pow(u.y, 1.0/MUL_)) * pi) / 2 + 0.5);
 
-	float vo = cos((1 - pow(u.z, 1.0/MUL_)) * pi);
+	float vo = u.z;
+	float sx = sqrt(1 - mu_s * mu_s);
+	vo = pow(vo, 1.0f / MUL_);
+	vo = remap(vo, 0, 1, angle01(v, float3(-sx, mu_s, 0)) + 0.0001, angle01(v, float3(sx, mu_s, 0)) - 0.0001);
+	vo  = cos((1 - vo) * pi);
 	//float vo = u.z;
 
 	if (u_w == 1) { // handle delta function.
-		s = float3(0,1,0);
+		s = float3(0, 1, 0);
 		return 0;
 	}
 
 	float a = mu_s;
 	float b = v.x;
 	float c = v.y;
-	float d = vo * 2 - 1;
+	float d = vo;
 	float b_ = (abs(b) < 0.00001 ? b + (sign(b) == 0 ? 1 : sign(b)) * 0.00001f : b);
 	float unx = (d - a * c) / b_;
 
