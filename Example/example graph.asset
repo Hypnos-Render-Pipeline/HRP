@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -2982, y: -1068, z: 0}
-  viewScale: {x: 1.3225, y: 1.3225, z: 1}
+  viewPosition: {x: -1190, y: -97, z: 0}
+  viewScale: {x: 0.57175326, y: 0.57175326, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters:
@@ -29,10 +29,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 4025.5886
-      y: 1185.9392
+      x: 4811.801
+      y: 1251.45
       width: 300.00006
-      height: 105
+      height: 105.000015
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: PreZ
@@ -83,8 +83,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3651.2148
-      y: 1139.1306
+      x: 4436.801
+      y: 1204.4501
       width: 300.00006
       height: 153
     info: 
@@ -308,8 +308,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 2751.4175
-      y: 939.4175
+      x: 2855.8152
+      y: 892.04175
       width: 300
       height: 177
     info: 
@@ -328,18 +328,21 @@ MonoBehaviour:
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     inputs:
-    - name: lights
-      info: 
-      mustConnect: 0
-    - name: areaLightBuffer
-      info: 
-      mustConnect: 0
     - name: lightBuffer
       info: 
       mustConnect: 1
     - name: tiledLights
       info: 
       mustConnect: 1
+    - name: lights
+      info: 
+      mustConnect: 0
+    - name: areaLightBuffer
+      info: 
+      mustConnect: 0
+    - name: filterdScreenColor
+      info: If has, use filtered screen color for refraction.
+      mustConnect: 0
     - name: target
       info: 
       mustConnect: 0
@@ -355,12 +358,35 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3095.1267
-      y: 755.9051
-      width: 300
-      height: 292
+      x: 4043.7505
+      y: 724.60004
+      width: 300.00006
+      height: 316
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.Transparent
+  - nodeName: PyramidColor
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: filterTarget
+      info: 
+      mustConnect: 1
+    outputs:
+    - name: filterTarget
+      info: 
+      mustConnect: 1
+    position:
+      serializedVersion: 2
+      x: 3405
+      y: 633
+      width: 300
+      height: 129
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.PyramidColor
   edgeRecs:
   - i: 0
     o: 2
@@ -463,13 +489,21 @@ MonoBehaviour:
     i_n: target
     o_n: lightingResult
   - i: 9
-    o: 8
-    i_n: target
-    o_n: target
-  - i: 9
     o: 4
     i_n: lights
     o_n: lights
+  - i: 9
+    o: 8
+    i_n: target
+    o_n: target
+  - i: 10
+    o: 8
+    i_n: filterTarget
+    o_n: target
+  - i: 9
+    o: 10
+    i_n: filterdScreenColor
+    o_n: filterTarget
   node_edgeRecs:
   - node: 2
     in_edges: 1400000015000000
@@ -479,7 +513,7 @@ MonoBehaviour:
     out_edge: 
   - node: 4
     in_edges: 
-    out_edge: 01000000090000000e0000001a000000
+    out_edge: 01000000090000000e00000019000000
   - node: 6
     in_edges: 0100000002000000
     out_edge: 03000000040000001600000017000000
@@ -494,14 +528,17 @@ MonoBehaviour:
     out_edge: 11000000120000001300000015000000
   - node: 8
     in_edges: 0e0000001200000013000000
-    out_edge: 19000000
+    out_edge: 1a0000001b000000
   - node: 1
     in_edges: 
     out_edge: 10000000
   - node: 9
-    in_edges: 110000001600000017000000190000001a000000
+    in_edges: 110000001600000017000000190000001a0000001c000000
     out_edge: 14000000
+  - node: 10
+    in_edges: 1b000000
+    out_edge: 1c000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.14204344, g: 0.18852712, b: 0.2264151, a: 0.4}
-    nodes: 00000000010000000200000003000000040000000500000006000000070000000800000009000000
+    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a000000
