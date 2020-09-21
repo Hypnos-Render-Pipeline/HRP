@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -1190, y: -97, z: 0}
-  viewScale: {x: 0.57175326, y: 0.57175326, z: 1}
+  viewPosition: {x: -2158, y: -323, z: 0}
+  viewScale: {x: 0.8695652, y: 0.8695652, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters:
@@ -376,9 +376,9 @@ MonoBehaviour:
       info: 
       mustConnect: 1
     outputs:
-    - name: filterTarget
+    - name: pyramidColor
       info: 
-      mustConnect: 1
+      mustConnect: 0
     position:
       serializedVersion: 2
       x: 3405
@@ -503,7 +503,7 @@ MonoBehaviour:
   - i: 9
     o: 10
     i_n: filterdScreenColor
-    o_n: filterTarget
+    o_n: pyramidColor
   node_edgeRecs:
   - node: 2
     in_edges: 1400000015000000
