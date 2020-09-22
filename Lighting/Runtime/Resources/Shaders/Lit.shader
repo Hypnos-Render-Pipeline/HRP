@@ -341,7 +341,8 @@
 				float _Index;
 			CBUFFER_END
 
-			sampler2D _ScreenColor;
+			Texture2D _ScreenColor; 
+			SamplerState trilinear_repeat_sampler;
 			float4x4 _V_Inv, _VP_Inv;
 			float4 _ScreenParameters;
 
@@ -473,11 +474,13 @@
 
 				if (_Index != 1) {
 					float3 offset = refract(-view, info.normal, 1 / _Index);
+					offset = 2 * offset + view;
 					float4 p = mul(UNITY_MATRIX_VP, float4(pos + offset, 1));
 					p.xy /= p.w;
 					p.xy = p.xy / 2 + 0.5;
 					p.y = 1 - p.y;
-					return float4(res + tex2Dlod(_ScreenColor, float4(p.xy, 0, lerp(8, 0, info.smoothness))) * info.transparent, 0);
+					float lod = lerp(0, 4, min(1, (_Index - 1) * 4) * (1 - info.smoothness));
+					return float4(res + _ScreenColor.SampleLevel(trilinear_repeat_sampler, p.xy, lod) * info.transparent, 0);
 				}
 				else
 					return float4(res, info.transparent);

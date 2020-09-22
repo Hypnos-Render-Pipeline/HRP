@@ -52,13 +52,13 @@ Material:
     - _Cutoff: 0
     - _DstBlend: 10
     - _GlossMapScale: 1
-    - _Index: 1.4
+    - _Index: 1.44
     - _Ld: 0.1
     - _Metallic: 1
     - _Mode: 0
     - _Modified: 0
     - _Sheen: 0
-    - _Smoothness: 1
+    - _Smoothness: 0.5
     - _SrcBlend: 1
     - _Subsurface: 0
     - _ZWrite: 0
