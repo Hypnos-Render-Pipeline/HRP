@@ -612,6 +612,7 @@ float3 DiscLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 	float3 result = 0;
 	float3 specColor;
 	baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
+	baseColor *= 1 - surface.transparent;
 
 	half3x3 Minv = 0;
 	Minv._m22 = 1;

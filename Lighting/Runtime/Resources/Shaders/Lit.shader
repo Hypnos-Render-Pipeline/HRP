@@ -296,9 +296,9 @@
 		{
 			Tags { "LightMode" = "Transparent" }
 
-			Blend One SrcAlpha
+			Blend off
 			ZTest on
-			ZWrite off
+			ZWrite on
 			Cull back
 
 			CGPROGRAM
@@ -472,6 +472,11 @@
 
 				res += info.emission;
 
+				float3 result = 0;
+				float3 specColor;
+				float3 trans = DiffuseAndSpecularFromMetallic(info.baseColor, info.metallic, /*out*/ specColor);
+				trans *= info.transparent;
+
 				if (_Index != 1) {
 					float3 offset = refract(-view, info.normal, 1 / _Index);
 					offset = 2 * offset + view;
@@ -480,10 +485,10 @@
 					p.xy = p.xy / 2 + 0.5;
 					p.y = 1 - p.y;
 					float lod = lerp(0, 4, min(1, (_Index - 1) * 4) * (1 - info.smoothness));
-					return float4(res + _ScreenColor.SampleLevel(trilinear_repeat_sampler, p.xy, lod) * info.transparent, 0);
+					return float4(res + _ScreenColor.SampleLevel(trilinear_repeat_sampler, p.xy, lod) * trans, 1);
 				}
 				else
-					return float4(res, info.transparent);
+					return float4(res + _ScreenColor.SampleLevel(trilinear_repeat_sampler, screenUV, 0) * trans, 1);
 			}
 
 			ENDCG
@@ -629,9 +634,6 @@
 				#else
 					IN.Ld = 0;
 				#endif
-
-
- 1;
 
 				IN.discarded = baseColor.a < _Cutoff;
 

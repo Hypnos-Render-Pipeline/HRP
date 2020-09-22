@@ -165,16 +165,12 @@ void LitShading(FragInputs IN, const float3 viewDir,
 	//----------------------------------------------------------------------------------------
 	//--------- direct light -----------------------------------------------------------------
 	//----------------------------------------------------------------------------------------
-	bool useSpecLightDir = SAMPLE < surface.smoothness / 2; sampleState.w++;
+	bool useSpecLightDir = SAMPLE < surface.smoothness / 2;
 	{
-		float alpha_2 = bum_alpha2(IN.gN, surface.normal);
-		float3 direct_light = 0;
-					
 		int light_count = clamp(_LightCount, 0, 100);
-		[loop]
-		for (int i = 0; i < light_count; i++) //on the fly
 		{
-			Light light = _LightList[i];
+			float2 rand_num_light = SAMPLE;
+			Light light = _LightList[floor(min(rand_num_light.x, 0.99) * light_count)];
 
 			float attenuation;
 			float3 lightDir;
@@ -201,11 +197,11 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				float3 shadow = TraceShadow(position_offset, end_point,
 												/*inout*/sampleState);
 
-				direct_light += shadow * direct_light_without_shadow;
+				directColor += shadow * direct_light_without_shadow * light_count;
 			}
 		}
-		directColor += direct_light;
-	}	
+	}
+#ifndef _SUBSURFACE
 	if (useSpecLightDir) {
 		float2 sample_2D;
 		sample_2D.x = SAMPLE;
@@ -224,6 +220,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			directColor +=/* coef * */LightLuminanceCamera(IN.position, nextDir, sampleState);
 		}
 	}
+#endif
 
 	//----------------------------------------------------------------------------------------
 	//--------- indirect light ---------------------------------------------------------------
@@ -307,11 +304,10 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			//}
 			{
 				float3 direct_light = 0;
+				float2 rand_num_light = SAMPLE; sampleState.w++;
 				int light_count = clamp(_LightCount, 0, 100);
-				[loop]
-				for (int i = 0; i < light_count; i++) //on the fly
 				{
-					Light light = _LightList[i];
+					Light light = _LightList[floor(min(rand_num_light.y, 0.99) * light_count)];
 
 					float attenuation;
 					float3 lightDir;

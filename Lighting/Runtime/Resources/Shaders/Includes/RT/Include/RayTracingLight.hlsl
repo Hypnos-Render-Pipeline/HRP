@@ -245,12 +245,11 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 
 float3 LightLuminance(float3 pos, float3 dir,
 							inout int4 sampleState) {
+	float rnd = SAMPLE; sampleState.w++;
 	float3 direct_light = 0;
 	int light_count = clamp(_LightCount, 0, 100);
-	[loop]
-	for (int i = 0; i < light_count; i++) //on the fly
 	{
-		Light light = _LightList[i];
+		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
 		float attenuation;
 		float3 lightDir;
@@ -265,7 +264,7 @@ float3 LightLuminance(float3 pos, float3 dir,
 			float3 shadow = TraceShadow(pos, end_point,
 				/*inout*/sampleState);
 
-			direct_light += shadow * luminance;
+			direct_light += shadow * luminance * light_count;
 		}
 	}
 	return direct_light;
