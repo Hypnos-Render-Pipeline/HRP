@@ -111,7 +111,6 @@ namespace HypnosRenderPipeline.RenderPass
             context.commandBuffer.Clear();
 
             var a = new DrawingSettings(new ShaderTagId("Transparent"), new SortingSettings(context.camera));
-            a.sortingSettings = new SortingSettings(context.camera) { criteria = SortingCriteria.CommonTransparent };
             var b = FilteringSettings.defaultValue;
             b.renderQueueRange = RenderQueueRange.transparent;
 
