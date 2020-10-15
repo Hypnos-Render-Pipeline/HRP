@@ -11,7 +11,7 @@ namespace HypnosRenderPipeline.RenderPass
         public CommandBuffer commandBuffer;
         public ScriptableRenderContext context;
         public CullingResults defaultCullingResult;
-        public RenderGraphResourcePool ResourcePool;
+        //public RenderGraphResourcePool ResourcePool;
         public int frameIndex;
     }
 

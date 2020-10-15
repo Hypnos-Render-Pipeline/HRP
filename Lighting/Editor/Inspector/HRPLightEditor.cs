@@ -68,7 +68,7 @@ namespace HypnosRenderPipeline
                 m_lightData = m_light.GenerateHRPLight();
             }
             m_lighdDataObject = new SerializedObject(m_lightData);
-            m_ColorTempTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/HRP/Lighting/Editor/Textures/ColorTemperature.png");
+            m_ColorTempTex = AssetDatabase.LoadAssetAtPath<Texture2D>(PathDefine.path + "/Lighting/Editor/Textures/ColorTemperature.png");
             var sliderMethod = typeof(EditorGUILayout).
                        GetMethod(
                             "SliderWithTexture",

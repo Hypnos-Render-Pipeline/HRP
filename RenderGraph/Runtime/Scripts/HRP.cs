@@ -11,7 +11,7 @@ namespace HypnosRenderPipeline
     public class HypnosRenderPipeline : RenderPipeline
     {
         HypnosRenderPipelineAsset m_asset;
-        RenderGraphResourcePool m_resourcePool;
+        //RenderGraphResourcePool m_resourcePool;
         
         Dictionary<Camera, int> clock;
 
@@ -29,7 +29,7 @@ namespace HypnosRenderPipeline
         public HypnosRenderPipeline(HypnosRenderPipelineAsset asset)
         {
             m_asset = asset;
-            m_resourcePool = new RenderGraphResourcePool();
+            //m_resourcePool = new RenderGraphResourcePool();
 #if UNITY_EDITOR
             m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
 #endif
@@ -51,7 +51,7 @@ namespace HypnosRenderPipeline
 
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
-            var rc = new RenderContext() { context = context, ResourcePool = m_resourcePool };
+            var rc = new RenderContext() { context = context };
 
             CommandBuffer cb = new CommandBuffer();
 

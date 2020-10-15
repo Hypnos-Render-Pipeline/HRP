@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -529, y: -58, z: 0}
-  viewScale: {x: 0.4872654, y: 0.4872654, z: 1}
+  viewPosition: {x: -261, y: 7, z: 0}
+  viewScale: {x: 0.38787603, y: 0.38787603, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters:
