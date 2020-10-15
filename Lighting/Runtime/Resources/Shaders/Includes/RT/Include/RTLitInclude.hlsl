@@ -276,11 +276,6 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			//weight.w = END_TRACE;
 			//return;
 		}
-
-		//Try to conect Light
-		if (!IN.isFrontFace) {
-			directColor += LightLuminance(IN.position, next_dir, sampleState) / threashold.x;
-		} 
 	}
 	else if (rand_num.x <= threashold.y) { //漫射
 #if _SUBSURFACE

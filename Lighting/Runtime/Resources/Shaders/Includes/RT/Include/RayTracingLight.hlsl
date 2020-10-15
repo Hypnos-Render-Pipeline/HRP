@@ -1,8 +1,17 @@
 #ifndef RTLIGHT_H_
 #define RTLIGHT_H_
 
-#include "../include/Sampler.hlsl"
-#include "../include/TraceRay.hlsl"   
+#include "./Sampler.hlsl"
+#include "./TraceRay.hlsl"
+
+#define DIRECTIONAL 0
+#define POINT       1
+#define SPOT        2
+#define SPHERE      3
+#define TUBE        4
+#define QUAD        5
+#define DISC        6
+#define MESH        7
 
 //light info
 struct Light
@@ -272,14 +281,13 @@ float3 LightLuminance(float3 pos, float3 dir,
 
 float3 LightLuminanceCamera(float3 pos, float3 dir,
 	inout int4 sampleState) {
+	float rnd = SAMPLE; sampleState.w++;
 	float3 direct_light = 0;
 	int light_count = clamp(_LightCount, 0, 100);
-	[loop]
-	for (int i = 0; i < light_count; i++) //on the fly
 	{
-		Light light = _LightList[i];
+		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
-		if (light.type == 0 || light.type == 2) continue;
+		if (light.type <= SPOT) return 0;
 
 		float attenuation;
 		float3 lightDir;
@@ -297,6 +305,36 @@ float3 LightLuminanceCamera(float3 pos, float3 dir,
 			direct_light += shadow * luminance;
 		}
 	}
-	return direct_light;
+	return direct_light * light_count;
+}
+
+
+float3 LightLuminanceSpec(float3 pos, float3 dir,
+	inout int4 sampleState) {
+	float rnd = SAMPLE; sampleState.w++;
+	float3 direct_light = 0;
+	int light_count = clamp(_LightCount, 0, 100);
+	{
+		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
+
+		if (light.type > SPOT) return 0;
+
+		float attenuation;
+		float3 lightDir;
+		float3 end_point;
+
+		bool in_light_range = ResolveLightWithDir(light, pos, dir,
+			/*out*/attenuation, /*out*/end_point);
+		 
+		[branch]
+		if (in_light_range) {
+			float3 luminance = attenuation * light.color;
+			float3 shadow = TraceShadow(pos, end_point,
+				/*inout*/sampleState);
+
+			direct_light += shadow * luminance;
+		}
+	}
+	return direct_light * light_count;
 }
 #endif
