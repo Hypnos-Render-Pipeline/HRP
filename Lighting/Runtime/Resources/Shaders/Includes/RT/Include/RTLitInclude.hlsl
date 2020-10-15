@@ -242,7 +242,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 	float3 refr_diff_refl;
 	refr_diff_refl.x = max_diffuse * surface.transparent;
 	refr_diff_refl.y = max_diffuse * (1 - surface.transparent);
-	refr_diff_refl.z = max_ref;
+	refr_diff_refl.z = max_ref * IN.isFrontFace ? 1 : 0;
 	float sum_w = dot(refr_diff_refl, 1);
 	refr_diff_refl /= sum_w;
 	float2 threashold = refr_diff_refl.xy;
@@ -270,15 +270,15 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			gN = -IN.gN;
 		}
 		else {
-			weight.xyz = 1 / threashold.x;
-			next_dir = reflect(-viewDir, n);
-			nextDir = next_dir;
+			nextDir = reflect(-viewDir, n);
 			rayRoughness = 0;
 			gN = IN.gN;
+			//weight.w = END_TRACE;
+			//return;
 		}
 
 		//Try to conect Light
-		if (!IN.isFrontFace && !all_reflect) {
+		if (!IN.isFrontFace) {
 			directColor += LightLuminance(IN.position, next_dir, sampleState) / threashold.x;
 		} 
 	}

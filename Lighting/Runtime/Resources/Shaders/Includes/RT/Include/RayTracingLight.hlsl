@@ -216,7 +216,7 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 		float range = light.b.w;
 
 		att = range;
-		att *= att / 3.14159265359f;
+		att *= att;
 
 		end_point = lpos;
 	}
@@ -235,7 +235,7 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 		float range = light.c;
 
 		att = range;
-		att *= att / 3.14159265359f;
+		att *= att;
 
 		end_point = lpos;
 	}

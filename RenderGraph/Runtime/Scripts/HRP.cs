@@ -86,7 +86,9 @@ namespace HypnosRenderPipeline
 
                 cb.SetGlobalMatrix("_V", cam.worldToCameraMatrix);
                 cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
-                cb.SetGlobalMatrix("_VP_Inv", (GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix).inverse);
+                var vp = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix;
+                cb.SetGlobalMatrix("_VP", vp);
+                cb.SetGlobalMatrix("_VP_Inv", vp.inverse);
                 if (clock.ContainsKey(cam)) {
                     cb.SetGlobalInt("_Clock", clock[cam]++);
                 }
@@ -94,6 +96,7 @@ namespace HypnosRenderPipeline
                     cb.SetGlobalInt("_Clock", 0);
                     clock[cam] = 0;
                 }
+                rc.frameIndex = clock[cam];
 
                 context.ExecuteCommandBuffer(cb);
                 cb.Clear();

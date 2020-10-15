@@ -70,7 +70,7 @@ for (uint i = 0; i < lightCount; i++)\
         float Ldis = length(light.dir);\
         light.dir /= Ldis;\
         light.radiance = light_.radiance_type.xyz * max(0, 1 - Ldis / light_.position_range.w);\
-        if (light_.radiance_type.w == 2){\
+        if (light_.radiance_type.w == SPOT){\
             float dotLDir = max(0, dot(-light.dir, light_.mainDirection_id.xyz)); \
             light.radiance *= max(0, 1 - sqrt(1 -dotLDir*dotLDir) / dotLDir / light_.geometry.x);\
         }\

@@ -78,7 +78,7 @@ namespace HypnosRenderPipeline.RenderPass
             }
 
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension
-                || desc.basicDesc.enableRandomWrite != desc2.basicDesc.enableRandomWrite
+                || (desc.basicDesc.enableRandomWrite && !desc2.basicDesc.enableRandomWrite)
                 || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth
                 || desc.basicDesc.depthBufferBits > desc2.basicDesc.depthBufferBits)
                 return false;

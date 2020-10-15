@@ -16,7 +16,7 @@ namespace HypnosRenderPipeline.RenderPass
         public BufferPin<uint> tileLights = new BufferPin<uint>(200);
 
         [NodePin(PinType.In)]
-        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth));
+        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         List<LightStructGPU> lightBufferCPU = new List<LightStructGPU>();
 

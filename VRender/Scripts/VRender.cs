@@ -138,7 +138,7 @@ public class VRender : IDisposable
 {
     public VRenderParameters parameters;
 
-    BNSLoader bnsLoader;
+    HypnosRenderPipeline.BNSLoader bnsLoader;
     RayTracingShader rtShader;
     Material blitMat;
     Material denoiseMaterial;
@@ -166,8 +166,8 @@ public class VRender : IDisposable
         blitMat = new Material(Shader.Find("Hidden/VRenderBlit"));
         denoiseMaterial = new Material(Shader.Find("Hidden/QuickDenoise"));
         ssLut = Resources.Load<Texture2D>("Lut Data/RdLut");
-        bnsLoader = BNSLoader.instance;
-        cb_LightList = new ComputeBuffer(100, LightListGenerator.lightStructSize);
+        bnsLoader = HypnosRenderPipeline.BNSLoader.instance;
+        cb_LightList = new ComputeBuffer(100, HypnosRenderPipeline.LightListGenerator.lightStructSize);
         cs_clearVolume = Resources.Load<ComputeShader>("ClearVolume");
         tex3D_iv = new RenderTexture(128, 64, 0);
         tex3D_iv.dimension = TextureDimension.Tex3D;
@@ -245,10 +245,10 @@ public class VRender : IDisposable
 
         ParameterChanged();
 
-        if (RTRegister.GetChanged(cam)) ReRender(); 
+        if (HypnosRenderPipeline.RTRegister.GetChanged(cam)) ReRender(); 
         if (parameters.lightSetting.Refresh(cb)) ReRender();
 
-        RTRegister.UpdateLightBuffer(cb, cb_LightList);
+        HypnosRenderPipeline.RTRegister.UpdateLightBuffer(cb, cb_LightList);
         UpdateAccelerationStructure();
         UpdateCamera();
         UpdateSkyBox();
@@ -406,7 +406,7 @@ public class VRender : IDisposable
     int lastlayer = 0;
     void UpdateAccelerationStructure()
     {
-        var acc = RTRegister.AccStruct(parameters.cullingMask);
+        var acc = HypnosRenderPipeline.RTRegister.AccStruct(parameters.cullingMask);
         acc.Build();
         acc.Update();
         cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", acc);

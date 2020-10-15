@@ -36,6 +36,7 @@
             sampler2D   _MainTex;
             float       _Multiplier;
             int         _Channel;
+            int         _Checkboard;
             float       _Aspect;
 
             float4 frag (v2f i) : SV_Target
@@ -44,6 +45,8 @@
                 col.rgb *= _Multiplier;
 
                 if (_Channel) {
+                    if (_Channel == 5)
+                        return float4(col.xyz, 1);
                     return float4(col[_Channel - 1].xxx, 1);
                 }
 
@@ -52,7 +55,7 @@
                 checkboard = int2(checkboard / 0.025f);
 
                 float a = (checkboard.x % 2 + checkboard.y + 1) % 2 * 0.5 + 0.5;
-                return float4(lerp(a, col.rgb, col.a), 1);
+                return float4(lerp(_Checkboard ? a : 0, col.rgb, col.a), 1);
             }
             ENDCG
         }

@@ -6,8 +6,29 @@ using UnityEngine;
 [CustomEditor(typeof(Transform))]
 public class TransformGUI : Editor
 {
+    private void OnEnable()
+    {
+        Transform trans = target as Transform;
+        p = trans.position;
+        r = trans.rotation;
+        s = trans.lossyScale;
+    }
+
+    Vector3 p;
+    Quaternion r;
+    Vector3 s;
+
     public override void OnInspectorGUI()
     {
+        Transform trans = target as Transform;
+        if (p != trans.position || r != trans.rotation || s != trans.lossyScale)
+        {
+            p = trans.position;
+            r = trans.rotation;
+            s = trans.lossyScale;
+            HypnosRenderPipeline.RTRegister.SceneChanged();
+        }
+
         EditorGUI.BeginChangeCheck();
 
         var pos_prop = serializedObject.FindProperty("m_LocalPosition");
@@ -21,15 +42,9 @@ public class TransformGUI : Editor
 
         if (EditorGUI.EndChangeCheck())
         {
-            Transform trans = target as Transform;
-            var mr = trans.GetComponent<MeshRenderer>();
-            var mf = trans.GetComponent<MeshFilter>();
-            if (mr != null && mf != null)
+            if (trans.gameObject.activeInHierarchy == true)
             {
-                if (mr.enabled && trans.gameObject.activeInHierarchy == true)
-                {
-                    RTRegister.SceneChanged();
-                }
+                HypnosRenderPipeline.RTRegister.SceneChanged();
             }
             pos_prop.vector3Value = pos;
             rot_prop.quaternionValue = Quaternion.Euler(rot.x, rot.y, rot.z);

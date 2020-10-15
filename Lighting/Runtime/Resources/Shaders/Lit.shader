@@ -23,7 +23,9 @@
 		_EmissionMap("EmissionMap", 2D) = "white" {}
 		[HDR]_EmissionColor("EmissionColor", Color) = (0,0,0)
 
-		_Index("IOR", Range(1, 4)) = 1.45
+		_Index("IOR", Range(1, 3)) = 1.45
+
+		_IndexRate("Relative IOR", Range(0, 1)) = 0.5
 
 		[Toggle]_Subsurface("SubSurface", int) = 0
 		_Ld("Average Scatter Distance", Range(0, 1)) = 0.1
@@ -475,7 +477,8 @@
 				float3 result = 0;
 				float3 specColor;
 				float3 trans = DiffuseAndSpecularFromMetallic(info.baseColor, info.metallic, /*out*/ specColor);
-				trans *= info.transparent;
+				float3 F = FresnelTerm(specColor, dot(view, info.normal));
+				trans *= info.transparent * (1 - F);
 
 				if (_Index != 1) {
 					float3 offset = refract(-view, info.normal, 1 / _Index);
@@ -508,7 +511,6 @@
 
 			#pragma raytracing test
 
-
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
 			#pragma shader_feature _METALLICGLOSSMAP _
@@ -519,8 +521,7 @@
 			//#define Shading Lambert
 
 			#include "./Includes/RT/Include/RTLitInclude.hlsl" 
-		 
-
+		
 			//----------------------------------------------------------------------------------------
 			//------- Material data input ------------------------------------------------------------
 			//----------------------------------------------------------------------------------------
@@ -692,6 +693,119 @@
 				LitAnyHit(/*inout*/rayIntersection, attributeData);
 			}
 
+			ENDCG
+		}
+
+		// RTGI pass
+		Pass
+		{
+			Name "RTGI"
+			Tags{ "LightMode" = "RTGI" }
+
+			CGPROGRAM
+
+			#pragma raytracing test
+
+			#pragma shader_feature _NORMALMAP
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _METALLICGLOSSMAP _
+			#pragma shader_feature _AOMAP _
+
+			#include "./Includes/RT/Include/RTLitInclude.hlsl" 
+
+			//----------------------------------------------------------------------------------------
+			//------- Material data input ------------------------------------------------------------
+			//----------------------------------------------------------------------------------------
+			float4       _Color;
+			Texture2D 	_MainTex; SamplerState sampler_MainTex;
+			float4      _MainTex_ST;
+			float _Cutoff;
+
+			#if _NORMALMAP
+
+			Texture2D   _BumpMap; SamplerState sampler_BumpMap;
+			half        _BumpScale;
+
+			#endif // _NORMALMAP
+
+			#if _METALLICGLOSSMAP
+
+			Texture2D   _MetallicGlossMap;
+			float       _GlossMapScale;
+
+			#else
+
+			half        _Metallic;
+			float       _Smoothness;
+
+			#endif // _METALLICGLOSSMAP
+
+			#if _EMISSION
+
+			float4      _EmissionColor;
+			Texture2D   _EmissionMap;
+
+			#endif // _EMISSION
+			#if _AOMAP
+			Texture2D	_AOMap;
+			float		_AOScale;
+			#endif // _AOMAP
+
+			float _Index;
+			float _IndexRate;
+
+			float _ClearCoat;
+			float _Sheen;
+
+			float _MipScale;
+
+			void GetSurfaceInfo(inout FragInputs i, out float3 albedo, out float transparent, out float index, out float index_rate, out float metallic, out float smoothness, out float3 normal, out float3 emission) {
+				float2 uv = i.uv0.xy * _MainTex_ST.xy + _MainTex_ST.zw;
+				float4 baseColor = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
+				albedo = _Color * baseColor.xyz;
+
+				transparent = 1 - baseColor.a * _Color.a;
+
+				#if _METALLICGLOSSMAP
+					float4 m_s = SampleTex(_MetallicGlossMap, uv, 0);
+					metallic = m_s.r;
+					smoothness = m_s.a * _GlossMapScale;
+				#else
+					metallic = _Metallic;
+					smoothness = _Smoothness;
+				#endif
+
+				#if _NORMALMAP
+					normal = UnpackScaleNormal(SampleTex(_BumpMap, uv, 0), _BumpScale);
+					normal = normalize(mul(normal * float3(-1,1,1), i.tangentToWorld));
+					normal *= i.isFrontFace ? 1 : -1;
+				#else
+					normal = i.tangentToWorld[2];
+					normal *= i.isFrontFace ? 1 : -1;
+				#endif // _NORMALMAP
+
+				#if _EMISSION
+					emission = _EmissionColor * SampleTex(_EmissionMap, uv, 0);
+				#else
+					emission = 0;
+				#endif
+
+				index = _Index;
+				index_rate = _IndexRate;
+			}
+
+			[shader("closesthit")]
+			void ClosestHit(inout RayIntersection_RTGI rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
+			{
+				CALCULATE_DATA(fragInput, viewDir);
+
+				GBuffer_RTGI gbuffer;
+
+				gbuffer.dis = RayTCurrent();
+				GetSurfaceInfo(fragInput, gbuffer.albedo, gbuffer.transparent, gbuffer.index, gbuffer.index_rate, gbuffer.metallic, gbuffer.smoothness, gbuffer.normal, gbuffer.emission);
+				gbuffer.front = fragInput.isFrontFace;
+				rayIntersection = EncodeGBuffer2RIData(gbuffer);
+			}
 			ENDCG
 		}
 	}

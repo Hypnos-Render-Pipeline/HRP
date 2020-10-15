@@ -34,6 +34,8 @@ public class LitEditor : ShaderGUI
 
     MaterialProperty index = null;
 
+    MaterialProperty index_rate = null;
+
     public void FindProperties(MaterialProperty[] props)
     {
         albedoMap = FindProperty("_MainTex", props);
@@ -64,6 +66,8 @@ public class LitEditor : ShaderGUI
         sheen = FindProperty("_Sheen", props);
 
         index = FindProperty("_Index", props);
+
+        index_rate = FindProperty("_IndexRate", props);
     }
 
     public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
@@ -129,11 +133,12 @@ public class LitEditor : ShaderGUI
                 EditorGUILayout.Space();
 
                 m_MaterialEditor.ShaderProperty(index, Styles.indexText);
+                m_MaterialEditor.ShaderProperty(index_rate, Styles.indexRateText); 
             }
             if (EditorGUI.EndChangeCheck())
             {
                 SetMaterialKeywords(material);
-                RTRegister.SceneChanged();
+                HypnosRenderPipeline.RTRegister.SceneChanged();
             }
         }
         EditorGUI.EndDisabledGroup();
@@ -293,6 +298,7 @@ public class LitEditor : ShaderGUI
         public static GUIContent sheenText = EditorGUIUtility.TrTextContent("Sheen", "Sheen strength. \nOften used to simulate cloth.");
 
         public static GUIContent indexText = EditorGUIUtility.TrTextContent("IOR", "Material Index");
+        public static GUIContent indexRateText = EditorGUIUtility.TrTextContent("Chromatic Dispersion", "Material Index variation rate among different wavelength");
         public static GUIContent mipScaleText = EditorGUIUtility.TrTextContent("Mip Scale", "Use this value to scale mip level. \nTurn this down will cause blur but reduce noise.");
 
         public static GUIContent tracIndirectText = EditorGUIUtility.TrTextContent("Trace Indirect Light", "Whether trace indirect light");

@@ -62,25 +62,24 @@ namespace HypnosRenderPipeline.RenderGraph
                 var openButton = new Button(() => {
                     if ((DateTime.Now.Second - t) > 0.1f) { t = DateTime.Now.Second; return; }
                     string floderPath = PathDefine.path + "RenderPass/Implementations";
-                    if (Directory.Exists(floderPath))
-                    {
-                        DirectoryInfo direction = new DirectoryInfo(floderPath);
-                        FileInfo[] files = direction.GetFiles("*", SearchOption.AllDirectories);
+                    FileInfo[] files = new DirectoryInfo(Application.dataPath).GetFiles("*.cs", SearchOption.AllDirectories);
 
-                        bool find = false;
-                        for (int i = 0; i < files.Length; i++)
+                    DirectoryInfo direction = new DirectoryInfo(floderPath);
+                    files = files.Concat(direction.GetFiles("*.cs", SearchOption.AllDirectories)).ToArray();
+
+                    bool find = false;
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        var file = files[i];
+                        if (file.Name.Contains(Node.nodeName) && !file.Name.EndsWith(".meta"))
                         {
-                            var file = files[i];
-                            if (file.Name.Contains(Node.nodeName) && !file.Name.EndsWith(".meta"))
-                            {
-                                find = true;
-                                System.Diagnostics.Process.Start(file.FullName);
-                                break;
-                            }
+                            find = true;
+                            System.Diagnostics.Process.Start(file.FullName);
+                            break;
                         }
-                        if (!find)
-                            Debug.LogWarning("Didn't find source file, make sure your code is under 'Implementations' floder and has same name of the class.");
                     }
+                    if (!find)
+                        Debug.LogWarning("Didn't find source file, make sure your code is under 'Implementations' floder (or under 'Assets') and has same name of the class.");
                 });
 
                 openButton.style.borderBottomColor

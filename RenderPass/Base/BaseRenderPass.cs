@@ -12,6 +12,7 @@ namespace HypnosRenderPipeline.RenderPass
         public ScriptableRenderContext context;
         public CullingResults defaultCullingResult;
         public RenderGraphResourcePool ResourcePool;
+        public int frameIndex;
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
@@ -66,10 +67,12 @@ namespace HypnosRenderPipeline.RenderPass
         [Range(0.1f, 10)]
         public float multiplier = 1;
 
-        public enum Channal { RGBA,R,G,B,A };
+        public enum Channal { RGBA, R, G, B, A, RGB };
 
         [Range(0.1f, 10)]
         public Channal channal = Channal.RGBA;
+
+        public bool checkboard = true;
 
         [HideInInspector]
         public RenderTexture texture;
@@ -80,6 +83,7 @@ namespace HypnosRenderPipeline.RenderPass
             {
                 context.commandBuffer.SetGlobalFloat("_Multiplier", multiplier);
                 context.commandBuffer.SetGlobalInt("_Channel", (int)channal);
+                context.commandBuffer.SetGlobalInt("_Checkboard", checkboard ? 1 : 0);
                 context.commandBuffer.SetGlobalFloat("_Aspect", (float)tex.desc.basicDesc.width / tex.desc.basicDesc.height);
                 context.commandBuffer.Blit(tex.handle, texture, MaterialWithName.debugBlit);
             }

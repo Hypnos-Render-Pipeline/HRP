@@ -53,21 +53,23 @@ namespace HypnosRenderPipeline.RenderGraph
                             if (node.debugTex == null)
                             {
                                 var desc = debugNode.tex.desc.basicDesc;
+                                node.debugTexDesc = desc;
                                 desc.colorFormat = RenderTextureFormat.ARGBHalf;
+                                desc.enableRandomWrite = false;
                                 node.debugTex = new RenderTexture(desc);
-                                node.debugTexDesc = debugNode.tex.desc.basicDesc;
                             }
                             else
                             {
                                 var desc1 = node.debugTexDesc;
                                 var desc2 = debugNode.tex.desc.basicDesc;
-                                var desc = desc2;
-                                desc.colorFormat = RenderTextureFormat.ARGBHalf;
                                 if (desc1.width != desc2.width || desc1.height != desc2.height || desc1.colorFormat != desc2.colorFormat)
                                 {
+                                    var desc = desc2;
+                                    desc.colorFormat = RenderTextureFormat.ARGBHalf;
+                                    desc.enableRandomWrite = false;
                                     node.debugTex.Release();
                                     node.debugTex = new RenderTexture(desc);
-                                    node.debugTexDesc = debugNode.tex.desc.basicDesc;
+                                    node.debugTexDesc = desc2;
                                 }
                             }
                             node.debugTex.name = debugNode.tex.name;

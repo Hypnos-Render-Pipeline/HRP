@@ -307,6 +307,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     GraphicsSettings.renderPipelineAsset = AssetDatabase.LoadAssetAtPath<HypnosRenderPipelineAsset>(PathDefine.path + "RenderGraph/Runtime/DefaultPipelineAsset.asset");
                 }
                 asset.hypnosRenderPipelineGraph = this;
+                EditorUtility.SetDirty(asset);
             }
             catch (System.Exception) { }
 

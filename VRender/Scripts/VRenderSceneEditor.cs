@@ -41,7 +41,6 @@ class VRenderForScene
         SceneView.duringSceneGui -= OnRepaint;
         EditorSceneManager.sceneOpening -= ChangeScene;
         EditorApplication.playModeStateChanged -= OnChangeState;
-        RTRegister.ClearMaterialCache();
     }
 
     void ChangeScene(string path, OpenSceneMode mode)
@@ -50,7 +49,6 @@ class VRenderForScene
         Dispose();
         EditorApplication.update -= OnRender;
         SceneView.duringSceneGui -= OnRepaint;
-        RTRegister.ClearMaterialCache();
     }
 
     public void Dispose()
@@ -60,7 +58,6 @@ class VRenderForScene
             instance.vRender.Dispose();
         }
         instance.vRender = null;
-        RTRegister.ClearMaterialCache();
     }
 
     static public void CreateVRenderForSceneCamera(Camera cam)
@@ -84,7 +81,6 @@ class VRenderForScene
             instance.Dispose();
             EditorApplication.update -= OnRender;
             SceneView.duringSceneGui -= OnRepaint;
-            RTRegister.ClearMaterialCache();
         }
     }
     
@@ -142,11 +138,6 @@ class VRenderForScene
     bool flodout = false;
     static void OnRepaint(SceneView sceneView)
     {
-        if (Event.current.type == EventType.MouseDrag
-            && Event.current.button == 0 && Selection.gameObjects.Length != 0)
-        {
-            RTRegister.SceneChanged();
-        }
         Handles.BeginGUI();
         EditorGUI.DrawPreviewTexture(new Rect(0, 1, instance.rtxon.width / 2, instance.rtxon.height / 2), instance.rtxon, instance.mat, ScaleMode.ScaleToFit);
         GUILayoutUtility.GetRect(instance.rtxon.width / 2, instance.rtxon.height / 2 - 19, new GUILayoutOption[] { GUILayout.ExpandWidth(false) }); 
@@ -250,20 +241,5 @@ class VRenderForScene
     {
         if (instance.vRender != null)
             instance.vRender.ReRender();
-    }
-}
-
-public class SaveScene : UnityEditor.AssetModificationProcessor
-{
-    static public void OnWillSaveAssets(string[] names)
-    {
-
-        foreach (string name in names)
-        {
-            if (name.EndsWith(".unity"))
-            {
-                RTRegister.ClearMaterialCache();
-            }
-        }
     }
 }

@@ -249,6 +249,7 @@ namespace HypnosRenderPipeline.RenderGraph
             var infoattri = t.GetCustomAttribute<RenderNodeInformationAttribute>();
             info = infoattri != null ? infoattri.info : "";
 
+            node_instance.Dispose();
             return true;
         }
 

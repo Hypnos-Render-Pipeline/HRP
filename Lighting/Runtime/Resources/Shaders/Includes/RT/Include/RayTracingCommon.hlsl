@@ -23,22 +23,27 @@ struct RayIntersection
 };
 
 struct RayIntersection_RTGI
-{						// when not miss																	// when miss
+{						// when not miss																// when miss
 	float t;			// distance																			
-	int data0;			// albedo rgb: 24bits, smoothness: 8bits											
-	int data1;			// normal xy: 24bits, metallic: 6bits, normal z sign: 1bit, miss flag: 1bit		// set miss flag to 1
+	int data0;			// albedo rgb: 24bits, smoothness: 8bits
+	int data1;			// normal: 24bits, metallic: 6bits, front: 1bit, miss flag: 1bit				// set miss flag to 1
 	int data2;			// emission rgb: 24bits, emission multiplier: 8bits								// sky hdr
+	int data3;			// transparent: 8bit, index 8bit, index_rate 8 bit
 };
 
 struct GBuffer_RTGI
 {
-	bool miss;
 	half3 albedo;
 	half metallic;
-	half smoothness;
 	half3 emission;
 	half dis;
 	half3 normal;
+	half smoothness;
+	float transparent;
+	float index;
+	float index_rate;
+	bool miss;
+	bool front;
 };
 
 int EncodeHDR2Int(half3 hdr)
@@ -58,6 +63,27 @@ half3 DecodeInt2HDR(int data)
 	return rgb * exp2(mul);
 }
 
+uint EncodeNormal24(float3 n) {
+	uint3 res;
+	n.xy /= dot(1, abs(n));
+	if (n.z < 0) n.xy = (1 - abs(n.yx)) * (n.xy >= 0 ? 1 : -1);
+	float2 k = (n.xy + 1) / 2;
+	uint2 kk = k * 4095;
+	res.xy = (kk.xy & 255);
+	res.z = dot(1, (kk.xy >> 8) << uint2(4, 0));
+	return (res.x << 16) + (res.y << 8) + res.z;
+}
+
+float3 DecodeNormal24(uint k_) {
+	uint3 a = uint3(k_ >> 16, k_ >> 8, k_) & 0xFF;
+	float3 k;
+	k.xy = (a.xy + (uint2(a.z >> 4, a.z & 15) << 8)) / 4095.0f;
+	k.xy = k.xy * 2 - 1;
+	float3 normal = float3(k.xy, 1 - dot(1, abs(k.xy)));
+	if (normal.z < 0) normal.xy = (1 - abs(normal.yx)) * (normal.xy >= 0 ? 1 : -1);
+	return normalize(normal);
+}
+
 RayIntersection_RTGI EncodeGBuffer2RIData(const GBuffer_RTGI gbuffer)
 {
 	RayIntersection_RTGI o;
@@ -70,21 +96,23 @@ RayIntersection_RTGI EncodeGBuffer2RIData(const GBuffer_RTGI gbuffer)
 				(albedo_rgb.z << 8) +
 				int(gbuffer.smoothness * 0xFF);
 	
-	int2 normal_xy = int2(saturate(gbuffer.normal.xy * 0.5 + 0.5) * 0xFFF);
-	o.data1 = (normal_xy.x << 20) +
-				(normal_xy.y << 8) +
+	o.data1 = (EncodeNormal24(gbuffer.normal) << 8) +
 				(int(gbuffer.metallic * 0x3F) << 2) +
-				(gbuffer.normal.z > 0 ? 2 : 0);
+				(gbuffer.front ? 2 : 0);
 	
 	o.data2 = EncodeHDR2Int(gbuffer.emission);
+
+	o.data3 = (int(saturate(gbuffer.transparent) * 0xFF) << 24) +
+				(int(((clamp(gbuffer.index, 1, 3) - 1) / 2) * 0xFF) << 16) + 
+				(int(gbuffer.index_rate * 0xFF) << 8);
+
 	return o;
 }
 
 
 GBuffer_RTGI DecodeIData2GBuffer(const RayIntersection_RTGI data)
 {
-	GBuffer_RTGI o = (GBuffer_RTGI)0;		 												
-	o.emission = DecodeInt2HDR(data.data2);
+	GBuffer_RTGI o = (GBuffer_RTGI)0;
 										 
 	o.dis = data.t;
 	if ((data.data1 & 1) != 0) { // miss flag is set
@@ -92,12 +120,20 @@ GBuffer_RTGI DecodeIData2GBuffer(const RayIntersection_RTGI data)
 		return o;
 	}
 	else {	
-		o.miss = false;
+		o.miss = false;		 					
 		o.albedo = (int3(data.data0 >> 24, data.data0 >> 16, data.data0 >> 8) & 0xFF) / 255.0f;
 		o.smoothness = (data.data0 & 0xFF) / 255.0f;
+
 		o.metallic = ((data.data1 >> 2) & 0x3F) / 63.0f;
-		o.normal.xy = (int2(data.data1 >> 20, data.data1 >> 8) & 0xFFF) / float(0xFFF) * 2 - 1;
-		o.normal.z = sqrt(1 - min(1, dot(o.normal.xy, o.normal.xy))) * ((data.data1 & 2) == 0 ? -1 : 1);
+		o.normal = DecodeNormal24(data.data1 >> 8);
+		o.front = data.data1 & 2;
+
+		o.emission = DecodeInt2HDR(data.data2);
+
+		o.transparent = ((data.data3 >> 24) & 0xFF) / 255.0f;
+		o.index = 1 + 2 * (((data.data3 >> 16) & 0xFF) / 255.0f);
+		o.index_rate = ((data.data3 >> 8) & 0xFF) / 255.0f;
+
 	}
 	return o;
 }

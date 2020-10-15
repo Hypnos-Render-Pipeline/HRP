@@ -65,17 +65,18 @@ void RayGeneration()
 	float3 color = 0;
 	float3 rnd_length = Length[dispatchIdx].xyz * 10;
 
-	int sample_turn = frameIndex / 256;
+	int sample_turn = frameIndex / 8;
 	float2 roberts = Roberts2(sample_turn);
-	int4 sampleState = int4((dispatchIdx + roberts * 128) * sqrt_spp, frameIndex, sample_turn);
+	int4 sampleState = int4((dispatchIdx + int2(sample_turn / 128, sample_turn % 128)), frameIndex, sample_turn / 128 / 128);
 
 	float rnd = SAMPLE;
 
-	if (rnd > variance) return;
+	//if (rnd > variance) return;
 	
 	for	(int i = 0; i < spp; i++){
 
-		float2 offset = float2(SAMPLE,SAMPLE) - 0.5;
+		roberts = Roberts2(frameIndex * spp + i);
+		float2 offset = roberts;
 		
 
 		float2 dispatch_uv = (dispatchIdx + offset) / _Pixel_WH.xy * 2 - 1;
