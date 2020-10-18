@@ -191,9 +191,9 @@ void LitShading(FragInputs IN, const float3 viewDir,
 #endif
 			[branch]
 			if (in_light_range && dot(direct_light_without_shadow, 1) > 0) {
-				float3 position_offset = IN.position + IN.gN * lerp(0.01, 0.001, dot(lightDir, gN));
+				float3 position_offset = IN.position;// +IN.gN * lerp(0.001, 0.0001, dot(lightDir, gN));
 
-				float3 shadow = TraceShadow(position_offset, end_point,
+				float3 shadow = TraceShadow_PreventSelfShadow(position_offset, end_point,
 												/*inout*/sampleState);
 
 				directColor += shadow * direct_light_without_shadow * light_count;
@@ -286,15 +286,6 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				surface.baseColor, sampleState,
 				pdf, position, surface.normal, gN);
 
-			//if (pdf <= 0) {
-			//	float2 sample_2D;
-			//	sample_2D.x = SAMPLE;
-			//	sample_2D.y = SAMPLE;
-			//	float3 dir = CosineSampleHemisphere(sample_2D);
-			//	dir.z *= -1;
-			//	nextDir = mul(dir, GetMatrixFromNormal(surface.normal)/*IN.tangentToWorld*/);
-			//	//directColor = float3(1000, 0, 1000);
-			//}
 			{
 				float3 direct_light = 0;
 				float2 rand_num_light = SAMPLE; sampleState.w++;
@@ -320,15 +311,13 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 					[branch]
 					if (in_light_range && dot(direct_light_without_shadow, 1) > 0) {
-						float3 position_offset = position + gN * lerp(0.001, 0.01, 1 - dot(gN, lightDir));
-
-						float3 shadow = TraceShadow(position_offset, end_point,
+						float3 shadow = TraceShadow_PreventSelfShadow(position, end_point,
 							/*inout*/sampleState);
 
-						direct_light += shadow * direct_light_without_shadow;
+						direct_light += shadow * direct_light_without_shadow * light_count;
 					}
 				}
-				directColor += direct_light / pdf / refr_diff_refl_coat.y;
+				directColor += direct_light / refr_diff_refl_coat.y / (rayRoughness == 0 ? pdf : 1);
 			}
 
 			{
@@ -460,6 +449,10 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 		return;\
 	}\
 	if (rayIntersection.weight.w == TRACE_SHADOW) {\
+		if (rayIntersection.weight.x == InstanceID()) {\
+			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(fragInput.gN, WorldRayDirection())) < 0.27)\
+				IgnoreHit();\
+		}\
 		if (surface.index == 1) {\
 			float3 place_holder1; float place_holder2;\
 			float3 baseColor = DiffuseAndSpecularFromMetallic(surface.baseColor, surface.metallic, place_holder1, place_holder2);\
@@ -489,6 +482,10 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 		return;\
 	}\
 	if (rayIntersection.weight.w == TRACE_SHADOW) {\
+		if (rayIntersection.weight.x == InstanceID()) {\
+			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(surface.normal, WorldRayDirection())) < 0.14)\
+				IgnoreHit();\
+		}\
 		if (surface.index == 1) {\
 			float3 place_holder1; float place_holder2;\
 			float3 baseColor = DiffuseAndSpecularFromMetallic(surface.baseColor, surface.metallic, place_holder1, place_holder2);\

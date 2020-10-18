@@ -10,7 +10,6 @@
 //---------------------------------------------
 //----------Expensive Version------------------
 //---------------------------------------------
-
 float3 TraceShadow(const float3 start, const float3 end, 
 					inout int4 sampleState) {
 
@@ -23,13 +22,34 @@ float3 TraceShadow(const float3 start, const float3 end,
 		
 		RayIntersection rayIntersection;
 		rayIntersection.t = rayDescriptor.TMax;
-		rayIntersection.weight = TRACE_SHADOW;
+		rayIntersection.weight = float4(-1, -1, 0, TRACE_SHADOW);
 		rayIntersection.sampleState = sampleState;
 		rayIntersection.directColor = 1;
 
 		TraceRay(_RaytracingAccelerationStructure, RAY_FLAG_FORCE_NON_OPAQUE, 0xFF, 0, 1, 0, rayDescriptor, rayIntersection);
 
 		return rayIntersection.directColor;
+}
+
+float3 TraceShadow_PreventSelfShadow(const float3 start, const float3 end,
+	inout int4 sampleState) {
+
+	RayDesc rayDescriptor;
+	rayDescriptor.Origin = start;
+	rayDescriptor.Direction = end - start;
+	rayDescriptor.TMin = 0;
+	rayDescriptor.TMax = length(rayDescriptor.Direction);
+	rayDescriptor.Direction = normalize(rayDescriptor.Direction);
+
+	RayIntersection rayIntersection;
+	rayIntersection.t = rayDescriptor.TMax;
+	rayIntersection.weight = float4(InstanceID(), PrimitiveIndex(), 0, TRACE_SHADOW);
+	rayIntersection.sampleState = sampleState;
+	rayIntersection.directColor = 1;
+
+	TraceRay(_RaytracingAccelerationStructure, RAY_FLAG_FORCE_NON_OPAQUE, 0xFF, 0, 1, 0, rayDescriptor, rayIntersection);
+
+	return rayIntersection.directColor;
 }
 
 float4 TraceNext(const float3 start, const float3 dir,
