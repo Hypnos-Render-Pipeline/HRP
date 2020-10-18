@@ -135,7 +135,7 @@ struct SubsurfaceHitInfo {
 	float4 t;
 };
 
-float4 TraceSelf(const float3 start, const float3 dir, const int id, const float max_dis,
+float4 TraceSelf(const float3 start, const float3 dir, const float max_dis,
 					inout int4 sampleState,
 					out int num, out float3 albedo, out float3 normal, out float3 gN) {
 	RayDesc rayDescriptor;
@@ -147,7 +147,7 @@ float4 TraceSelf(const float3 start, const float3 dir, const int id, const float
 	RayIntersection rayIntersection;
 	rayIntersection.t = rayDescriptor.TMax;
 	rayIntersection.sampleState = sampleState;
-	rayIntersection.weight = float4(id, 0, 0, TRACE_SELF);
+	rayIntersection.weight = float4(InstanceID(), 0, 0, TRACE_SELF);
 	rayIntersection.directColor = 0;
 	rayIntersection.nextDir = -1;
 

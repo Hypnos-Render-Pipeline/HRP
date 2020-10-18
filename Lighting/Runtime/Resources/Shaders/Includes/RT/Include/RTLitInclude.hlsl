@@ -51,7 +51,6 @@ float bump_shadowing_function(float3 gN, float3 L, float alpha2) {
 #if _SUBSURFACE
 
 float _Ld;
-int _ID;
 Texture2D   _ScatterProfile; SamplerState sampler_ScatterProfile;
 
 float Rd(float r, float v) {
@@ -115,7 +114,7 @@ void SampleSS(float3 E, float3 ns, float3 ss, float3 ts, float3 p, float Ld,
 	float3 albedo;
 
 	int hitNum;
-	float4 t = TraceSelf(pos, vz, _ID, l,
+	float4 t = TraceSelf(pos, vz, l,
 							sampleState,
 							hitNum, albedo, hitN, hitgN);
 
@@ -165,7 +164,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 	//----------------------------------------------------------------------------------------
 	//--------- direct light -----------------------------------------------------------------
 	//----------------------------------------------------------------------------------------
-	bool useSpecLightDir = SAMPLE < surface.smoothness / 2;
+	bool useSpecLightDir = SAMPLE < surface.smoothness;
 	{
 		int light_count = clamp(_LightCount, 0, 100);
 		{
@@ -209,7 +208,6 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		float4 n = ImportanceSampleGGX(sample_2D, max(1 - surface.smoothness, 0.02));
 		n.xyz = mul(n.xyz, IN.tangentToWorld);
 		nextDir = reflect(-viewDir, n);
-		rayRoughness = 1 - surface.smoothness;
 		gN = IN.gN;
 
 		if (dot(nextDir, surface.normal) > 0) {
@@ -339,13 +337,13 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				sample_2D.y = SAMPLE;
 
 				nextDir = CosineSampleHemisphere(sample_2D, surface.normal);
-				rayRoughness = 1;
 
 				surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
 
 				float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
-				weight.xyz = (1 - surface.transparent) * coef / pdf / refr_diff_refl_coat.y;
+				weight.xyz = (1 - surface.transparent) * coef / refr_diff_refl_coat.y / (rayRoughness == 0 ?  pdf : 1);
+				rayRoughness = 1;
 			}
 		}
 		else {
@@ -479,7 +477,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 		}\
 	}\
 	else if (rayIntersection.weight.w == TRACE_SELF) {\
-		if (rayIntersection.weight.x != _ID) {\
+		if (rayIntersection.weight.x != InstanceID()) {\
 			IgnoreHit();\
 		}\
 	}
