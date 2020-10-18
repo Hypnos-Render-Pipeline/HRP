@@ -513,8 +513,11 @@
 
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP _
-			#pragma shader_feature _AOMAP _
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
+			#pragma shader_feature _SUBSURFACE
+			#pragma shader_feature _CLEARCOAT
+		
 
 			//If not define Shading, then use LitShading
 			//or un-comment next line to use custom shading function
@@ -637,6 +640,8 @@
 				#endif
 
 				IN.discarded = baseColor.a < _Cutoff;
+				
+				IN.clearCoat *= 1 - IN.transparent;
 
 				return IN;
 			}

@@ -192,7 +192,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 #endif
 			[branch]
 			if (in_light_range && dot(direct_light_without_shadow, 1) > 0) {
-				float3 position_offset = IN.position;
+				float3 position_offset = IN.position + IN.gN * lerp(0.01, 0.001, dot(lightDir, gN));
 
 				float3 shadow = TraceShadow(position_offset, end_point,
 												/*inout*/sampleState);
@@ -216,18 +216,15 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 			surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
 
-			float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
-			directColor +=/* coef * */LightLuminanceCamera(IN.position, nextDir, sampleState);
+			directColor += PBS(PBS_SPECULAR, surface, nextDir, LightLuminanceCamera(IN.position, nextDir, sampleState), viewDir);
 		}
 	}
 #endif
 
 	//----------------------------------------------------------------------------------------
 	//--------- indirect light ---------------------------------------------------------------
-	//----------------------------------------------------------------------------------------	
-//#if _TRACE_INDIRECT			
+	//----------------------------------------------------------------------------------------		
 	weight.w = 1;
-
 	float2 rand_num = float2(SAMPLE, SAMPLE);
 				
 	// choice tracing type based on surface data
@@ -239,14 +236,16 @@ void LitShading(FragInputs IN, const float3 viewDir,
 	float max_diffuse = max(max(diff.x, diff.y), diff.z);
 	float max_ref = max(max(F.x, F.y), F.z);
 				  
-	float3 refr_diff_refl;
-	refr_diff_refl.x = max_diffuse * surface.transparent;
-	refr_diff_refl.y = max_diffuse * (1 - surface.transparent);
-	refr_diff_refl.z = max_ref * IN.isFrontFace ? 1 : 0;
-	float sum_w = dot(refr_diff_refl, 1);
-	refr_diff_refl /= sum_w;
-	float2 threashold = refr_diff_refl.xy;
+	float4 refr_diff_refl_coat;
+	refr_diff_refl_coat.x = max_diffuse * surface.transparent * (1 - surface.clearCoat);
+	refr_diff_refl_coat.y = max_diffuse * (1 - surface.transparent) * (1 - surface.clearCoat);
+	refr_diff_refl_coat.z = max_ref * (1 - surface.clearCoat);
+	refr_diff_refl_coat.w = surface.clearCoat;
+	float sum_w = dot(refr_diff_refl_coat, 1);
+	refr_diff_refl_coat /= sum_w;
+	float3 threashold = refr_diff_refl_coat.xyz;
 	threashold.y += threashold.x;
+	threashold.z += threashold.y;
 				
 	if (rand_num.x <= threashold.x) //透射
 	{
@@ -258,23 +257,24 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		n.xyz = mul(n.xyz, IN.tangentToWorld);
 
 
-		float3 coef = baseColor * surface.transparent;
+		float3 coef = baseColor * surface.transparent * (IN.isFrontFace ? (1 - F) : 1);
 		weight.xyz = coef / threashold.x;
 
-		float3 next_dir = refract(-viewDir, n, IN.isFrontFace ? (1.0f / surface.index) : surface.index);
+		float IOR = IN.isFrontFace ? (1.0f / surface.index) : surface.index;
+		float3 next_dir = refract(-viewDir, n, IOR);
 		bool all_reflect = length(next_dir) < 0.5;
 
-		if (!all_reflect) {
-			nextDir = next_dir;
-			rayRoughness = 0;
-			gN = -IN.gN;
-		}
-		else {
+		float r_thre = IN.isFrontFace ? 0 : PhysicsFresnel(1.0 / IOR, viewDir, surface.normal);
+		if (all_reflect) r_thre = 1;
+		if (rand_num.y < r_thre) {
 			nextDir = reflect(-viewDir, n);
 			rayRoughness = 0;
 			gN = IN.gN;
-			//weight.w = END_TRACE;
-			//return;
+		}
+		else {
+			nextDir = next_dir;
+			rayRoughness = 0;
+			gN = -IN.gN;
 		}
 	}
 	else if (rand_num.x <= threashold.y) { //漫射
@@ -330,7 +330,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 						direct_light += shadow * direct_light_without_shadow;
 					}
 				}
-				directColor += direct_light / pdf / refr_diff_refl.y;
+				directColor += direct_light / pdf / refr_diff_refl_coat.y;
 			}
 
 			{
@@ -345,7 +345,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 				float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
-				weight.xyz = (1 - surface.transparent) * coef / pdf / refr_diff_refl.y;
+				weight.xyz = (1 - surface.transparent) * coef / pdf / refr_diff_refl_coat.y;
 			}
 		}
 		else {
@@ -361,60 +361,59 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 			float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
-			weight.xyz = (1 - surface.transparent) * coef / refr_diff_refl.y;
+			weight.xyz = (1 - surface.transparent) * coef / refr_diff_refl_coat.y;
 
 			gN = IN.gN;
 #if _SUBSURFACE
 		}
 #endif
+		weight.xyz *= 1 - surface.clearCoat;
 	} 
 	else { // 反射
+
 		float2 sample_2D;
 		sample_2D.x = SAMPLE;
 		sample_2D.y = SAMPLE;
 
+#if _CLEARCOAT
+		if (rand_num.x <= threashold.z) {
+#endif
+			float4 n = ImportanceSampleGGX(sample_2D, 1 - surface.smoothness);
+			n.xyz = mul(n.xyz, IN.tangentToWorld);
+			nextDir = reflect(-viewDir, n);
+			rayRoughness = 1 - surface.smoothness;
+			gN = IN.gN;
 
-#if _CLEAR_COAT
-		float coatCut = 1 - surface.clearCoat;
-
-		if (surface.clearCoat != 0) {
-			if (rand_num.y > coatCut) {
-				nextDir = reflect(-viewDir, surface.normal);
-				rayRoughness = 0;
-				gN = IN.gN;
-
-				surface.metallic = 1;
-				surface.baseColor = 1;
-				surface.smoothness = 1;
-
+			if (dot(nextDir, surface.normal) > 0) {
+				float coat = surface.clearCoat;
+				surface.clearCoat = 0;
 				float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
 
-				weight.xyz = coef / refr_diff_refl.z;
-
-				directColor += weight.xyz * LightLuminance(IN.position, nextDir, sampleState);
-
-				return;
+				weight.xyz = coef * (1 - coat) / refr_diff_refl_coat.z;
 			}
-		}
-#else
-		float coatCut = 1;
-#endif
-
-		float4 n = ImportanceSampleGGX(sample_2D, 1 - surface.smoothness);
-		n.xyz = mul(n.xyz, IN.tangentToWorld);
-		nextDir = reflect(-viewDir, n);
-		rayRoughness = 1 - surface.smoothness;
-		gN = IN.gN;
-
-		if (dot(nextDir, surface.normal) > 0) {
-
-			float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
-
-			weight.xyz = coef / coatCut / refr_diff_refl.z;
+			else {
+				weight = END_TRACE;
+			}
+#if _CLEARCOAT
 		}
 		else {
-			weight = END_TRACE;
+			nextDir = reflect(-viewDir, surface.normal);
+			rayRoughness = 0;
+			gN = IN.gN;
+
+			surface.metallic = 1;
+			surface.baseColor = 1;
+			surface.smoothness = 1;
+			float coat = surface.clearCoat;
+			surface.clearCoat = 0;
+			float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
+
+			weight.xyz = coef * coat / refr_diff_refl_coat.w;
+
+			directColor += weight.xyz * LightLuminance(IN.position, nextDir, sampleState);
 		}
+#endif
+
 	}
 
 //#else

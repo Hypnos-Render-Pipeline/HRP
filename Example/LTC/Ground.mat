@@ -55,6 +55,7 @@ Material:
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Index: 1.45
+    - _IndexRate: 0.5
     - _Ld: 0.1
     - _Metallic: 0
     - _Mode: 0

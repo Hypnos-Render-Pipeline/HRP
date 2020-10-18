@@ -165,7 +165,7 @@ public class VRender : IDisposable
         rtShader = Resources.Load<RayTracingShader>("RayTracer");
         blitMat = new Material(Shader.Find("Hidden/VRenderBlit"));
         denoiseMaterial = new Material(Shader.Find("Hidden/QuickDenoise"));
-        ssLut = Resources.Load<Texture2D>("Lut Data/RdLut");
+        ssLut = Resources.Load<Texture2D>("Textures/Random Lut/RdLut");
         bnsLoader = HypnosRenderPipeline.BNSLoader.instance;
         cb_LightList = new ComputeBuffer(100, HypnosRenderPipeline.LightListGenerator.lightStructSize);
         cs_clearVolume = Resources.Load<ComputeShader>("ClearVolume");

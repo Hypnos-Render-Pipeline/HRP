@@ -118,13 +118,8 @@ inline float PerceptualRoughnessToRoughness(const float perceptualRoughness)
 
 inline float SmithJointGGXVisibilityTerm(const float NdotL, const float NdotV, const float roughness)
 {
-	float k = roughness;
-
-	float a = NdotV + 1e-5;
-	float b = NdotL + 1e-5;
-	float G_1 = a * (a*(1-k) + k);
-	float G_2 = b * (b*(1-k) + k);
-	return 0.5 / (G_1 + G_2 + 1e-4f);
+	float k = (roughness + 0.1) * (roughness + 0.1) / 1.1 / 1.1 / 3;
+	return NdotL * NdotV / lerp(NdotL, 1, k) / lerp(NdotV, 1, k);
 }
 
 inline float SmithJointGGXVisibilityTerm2(const float NdotL, const float NdotV, const float roughness)
@@ -156,6 +151,17 @@ inline float3 FresnelLerp(const float3 F0, const float3 F90, const float cosA)
 {
 	float t = Pow5(1 - cosA);   // ala Schlick interpoliation
 	return lerp(F0, F90, t);
+}
+
+float PhysicsFresnel(float IOR, float3 i, float3 n) {
+	float cosi = abs(dot(i, n));
+	float sini = sqrt(max(0, 1 - cosi * cosi));
+	float sint = sini / IOR;
+	float cost = sqrt(max(0, 1 - sint * sint));
+
+	float r1 = (IOR * cosi - cost) / (IOR * cosi + cost);
+	float r2 = (cosi - IOR * cost) / (cosi + IOR * cost);
+	return (r1 * r1 + r2 * r2) / 2;
 }
 
 half4 BRDF1_Unity_PBS(half3 diffColor, half3 specColor, half smoothness,
@@ -230,7 +236,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 
 	float roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
 
-	roughness = max(roughness, 0.02);
+	roughness = max(roughness, 0.008);
 	float G = SmithJointGGXVisibilityTerm(nl, nv, roughness) * M_PI;
 	float D = GGXTerm(nh, roughness);
 	float3 F = FresnelTerm(specColor, lh) * (any(specColor) ? 1.0 : 0.0);
@@ -240,7 +246,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	DFG = F * lerp(DFG, DFG + coatDG, clearCoat);
 	 
 	if (type & 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
-	else if (type & 2) return nl * (G * F) * lightSatu * ao.y;
+	else if (type & 2) return (G * M_1_PI * F) * lightSatu * ao.y;
 	else if (type & 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
 	else if (type & 8) return nl * DFG * ao.y * lightSatu;
 	else return 0;

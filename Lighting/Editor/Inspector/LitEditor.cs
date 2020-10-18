@@ -220,7 +220,7 @@ public class LitEditor : ShaderGUI
 
         SetKeyword(material, "_METALLICGLOSSMAP", material.GetTexture("_MetallicGlossMap"));
         
-        SetKeyword(material, "_CLEAR_COAT", material.GetFloat("_ClearCoat") != 0);
+        SetKeyword(material, "_CLEARCOAT", material.GetFloat("_ClearCoat") != 0);
 
         SetKeyword(material, "_SUBSURFACE", material.GetInt("_Subsurface") != 0);
         // A material's GI flag internally keeps track of whether emission is enabled at all, it's enabled but has no effect

@@ -98,7 +98,6 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		float ldis = length(L);
 		att = 1 / ldis;
 		L *= att;
-		att = range * att;
 		att *= att;
 		att *= saturate(dot(L, lnormal));
 		att *= light.c.w;
@@ -124,7 +123,6 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		float ldis = length(L);
 		att = 1 / ldis;
 		L *= att;
-		att = range * att;
 		att *= att;
 		att *= saturate(dot(L, lnormal));
 		att *= light.b.w * light.b.w;
