@@ -5,7 +5,8 @@
 
 #define TRACE_SELF (-1)
 #define TRACE_SHADOW (-2)
-#define END_TRACE (-3)
+#define TRACE_FOG_VOLUME (-3)
+#define END_TRACE (-4)
 
 //---------------------------------------------
 //----------Expensive Version------------------

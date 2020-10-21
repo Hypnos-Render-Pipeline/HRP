@@ -19,7 +19,7 @@ float3 PathTracer(const int maxDepth,
 	float3 res = 0;
 	[branch]
 	if (includeDirectional)
-		res = LightLuminanceCamera(origin, direction, sampleState);
+		res = LightLuminanceCameraWithFog(origin, direction, sampleState);
 	float4 weight = 1;
 	float4 nextWeight = 1;
 	float3 pos = origin, dir = direction;
@@ -27,6 +27,7 @@ float3 PathTracer(const int maxDepth,
 
     sampleState.w = 0;
 
+    [loop]
 	while (weight.w > 0 && depth-- > 0) {
 
 		nextWeight = weight;
@@ -45,9 +46,9 @@ float3 PathTracer(const int maxDepth,
 		float3 fogColor, fogNextPos, fogNextDir; 
 		float4 fogWeight = 1;
 		fogColor = fogNextPos = fogNextDir = 0;
-		float test = 0;
-		if (_enableGlobalFog && traceFog) {
-			DeterminateNextVertex(pos, dir, t.x,
+
+		if (_EnableFog && traceFog) {
+            DeterminateNextVertex(pos, dir, t.x,
 				/*inout*/sampleState, 
 				/*out*/fogColor, fogWeight, fogNextPos, fogNextDir);
 		}
@@ -73,7 +74,7 @@ float3 PathTracer(const int maxDepth,
 			weight.xyz *= fogWeight.xyz;
 			weight.w = 1;
 
-			float co = min(1, Average(weight.xyz)) * cutoff;
+			float co = min(1, Average(weight.xyz));
 			if (SAMPLE > co) {
 				break;
 			}
@@ -102,19 +103,21 @@ float3 PathTracer_IrrCache(const int maxDepth,
 {
 
     float4 firstHit = 0;
-    float3 firstNormal;
     int depth = min(max(maxDepth, 1), 16);
     float3 res = 0;
 	[branch]
     if (includeDirectional)
-        res = LightLuminanceCamera(origin, direction, sampleState);
+        res = LightLuminanceCameraWithFog(origin, direction, sampleState);
     float4 weight = 1;
     float4 nextWeight = 1;
     float3 pos = origin, dir = direction;
     float cutoff = 1;
     
     PosIrr cache;
-    int cacheIndex = 0;   
+    int cacheIndex = 0;
+    bool firstFog = false;
+
+    [loop]
     while (weight.w > 0 && depth-- > 0)
     {
         nextWeight = weight;
@@ -132,13 +135,12 @@ float3 PathTracer_IrrCache(const int maxDepth,
         if (firstHit.w == 0)
         {
             firstHit = float4(t.yzw, 1);
-            firstNormal = normal;
         }
         float3 fogColor, fogNextPos, fogNextDir;
         float4 fogWeight = 1;
         fogColor = fogNextPos = fogNextDir = 0;
-        float test = 0;
-        if (_enableGlobalFog && traceFog)
+
+        if (_EnableFog && traceFog)
         {
             DeterminateNextVertex(pos, dir, t.x,
 				/*inout*/sampleState,
@@ -149,7 +151,7 @@ float3 PathTracer_IrrCache(const int maxDepth,
         float4 decre_weight;
         bool use_cache = false;
 		// stop here, use irr cache
-        if (cacheIndex && nextWeight.w > 0) {
+        if (cacheIndex && nextWeight.w > 0 && fogWeight.w) {
             float2 e = float2(SAMPLE, SAMPLE);
             if (e.x < min(t.x, min(r, roughness)))
             {
@@ -185,7 +187,7 @@ float3 PathTracer_IrrCache(const int maxDepth,
                 incre_res = weight.xyz * fogColor;
                 decre_weight = float4(fogWeight.xyz, 1);
 
-                float co = min(1, Average(weight.xyz)) * cutoff;
+                float co = min(1, Average(weight.xyz));
                 if (SAMPLE > co)
                 {
                     break;
@@ -194,11 +196,12 @@ float3 PathTracer_IrrCache(const int maxDepth,
                 decre_weight.xyz /= co;
             }
         }
-        res += incre_res;
+        res += incre_res * ((_EnableFog && traceFog) ? Tr(pos, dir, t.x, sampleState) : 1);
         weight *= decre_weight;
         weight.w = decre_weight.w;
         if (cacheIndex < 1)
         {
+            if (!fogWeight.w) firstFog = true;
             cache.pos = pos;
             cache.weight = decre_weight;
             cache.irr = directColor;
@@ -212,10 +215,7 @@ float3 PathTracer_IrrCache(const int maxDepth,
         if (use_cache)
             break;
     }
-    for (int i = 0; i < 1; i++)
-    {
-        SetIrr(cache.pos, cache.irr);
-    }
+    if (!firstFog) SetIrr(cache.pos, cache.irr);
 
     if (debug)
         return GetIrr(firstHit.xyz);

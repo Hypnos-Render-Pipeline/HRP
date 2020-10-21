@@ -814,6 +814,5 @@
 			ENDCG
 		}
 	}
-
-    CustomEditor "LitEditor"
+    CustomEditor "HypnosRenderPipeline.LitEditor" 
 }

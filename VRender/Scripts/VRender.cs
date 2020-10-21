@@ -6,6 +6,7 @@ using UnityEngine.Rendering;
 using Unity.Mathematics;
 using System.Collections.Generic;
 using UnityEditor;
+using HypnosRenderPipeline;
 
 [System.Serializable]
 public class VRenderParameters
@@ -33,6 +34,7 @@ public class VRenderParameters
     [Tooltip("Recommend to use it when render indoor scene.")]
     public bool cacheIrradiance = false;
 
+    public bool enableFog = false;
 
     [System.Serializable]
     public struct DOF
@@ -118,7 +120,7 @@ public class VRenderParameters
 
 
     [System.Serializable]
-    public enum DebugMode { none, varience, albedo, normal, irradianceCache, allInDock };
+    public enum DebugMode { none, varience, /*albedo, normal,*/ irradianceCache, /*allInDock */};
 
     [Space(10.0f)]
 
@@ -131,6 +133,8 @@ public class VRenderParameters
     public Mode denosieMode = Mode.none;
     [Range(0.01f, 1)]
     public float strength = 0.1f;
+    [Range(1, 100)]
+    public float removeFlare = 10;
 }
 
 
@@ -226,6 +230,8 @@ public class VRender : IDisposable
             record.Release();
             record = null;
         }
+        defaultBuffer.Dispose();
+        defaultArray.Release();
     }
 
     int FrameIndex = 0;
@@ -314,20 +320,20 @@ public class VRender : IDisposable
             case VRenderParameters.DebugMode.varience:
                 cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 0);
                 break;
-            case VRenderParameters.DebugMode.albedo:
-                cb.Blit(new RenderTargetIdentifier(BuiltinRenderTextureType.GBuffer0), new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
-                break;
-            case VRenderParameters.DebugMode.normal:
-                cb.Blit(null, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 1);
-                break;
-            case VRenderParameters.DebugMode.allInDock:
-                BlitResultToScreen(history);
-                cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 2);
-                cb.Blit(new RenderTargetIdentifier(BuiltinRenderTextureType.GBuffer0), albedo);
-                cb.Blit(albedo, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 3);
-                cb.Blit(null, normal, blitMat, 1);
-                cb.Blit(normal, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 4);
-                break;
+            //case VRenderParameters.DebugMode.albedo:
+            //    cb.Blit(new RenderTargetIdentifier(BuiltinRenderTextureType.GBuffer0), new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+            //    break;
+            //case VRenderParameters.DebugMode.normal:
+            //    cb.Blit(null, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 1);
+            //    break;
+            //case VRenderParameters.DebugMode.allInDock:
+            //    BlitResultToScreen(history);
+            //    cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 2);
+            //    cb.Blit(new RenderTargetIdentifier(BuiltinRenderTextureType.GBuffer0), albedo);
+            //    cb.Blit(albedo, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 3);
+            //    cb.Blit(null, normal, blitMat, 1);
+            //    cb.Blit(normal, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 4);
+            //    break;
             default:
                 break;
         }
@@ -393,7 +399,11 @@ public class VRender : IDisposable
                 break;
             case VRenderParameters.Mode.SmartDenoise:
                 cb.SetGlobalFloat("_DenoiseStrength", parameters.strength * 0.1f);
-                cb.Blit(res, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), denoiseMaterial, 0);
+                int k = Shader.PropertyToID("_VRenderTempDenoise");
+                cb.GetTemporaryRT(k, res.descriptor);
+                cb.SetGlobalFloat("_Flare", parameters.removeFlare);
+                cb.Blit(res, k, denoiseMaterial, 2);
+                cb.Blit(k, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), denoiseMaterial, 0);
                 break;
             case VRenderParameters.Mode.Another:
 
@@ -406,8 +416,7 @@ public class VRender : IDisposable
     int lastlayer = 0;
     void UpdateAccelerationStructure()
     {
-        var acc = HypnosRenderPipeline.RTRegister.AccStruct(parameters.cullingMask);
-        acc.Build();
+        var acc = RTRegister.AccStruct(parameters.cullingMask);
         acc.Update();
         cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", acc);
         if (parameters.cullingMask != lastlayer)
@@ -453,16 +462,57 @@ public class VRender : IDisposable
         }
     }
 
+    bool enalbeFog = false;
+
+    ComputeBuffer defaultBuffer = new ComputeBuffer(1, 1);
+    RenderTexture defaultArray = new RenderTexture(
+        new RenderTextureDescriptor(1, 1, RenderTextureFormat.R8, 0, 0) { dimension = TextureDimension.Tex2DArray, volumeDepth = 1 });
+
     void UpdateFog()
     {
-        if (enableFog)
+        if (enalbeFog != parameters.enableFog)
         {
-            cb.SetRayTracingIntParam(rtShader, "_enableGlobalFog", 1);
-            cb.SetRayTracingVectorParam(rtShader, "_globalFogParameter", float4(0, fogAbsorb, fogScatter, fogG));
+            enalbeFog = parameters.enableFog;
+            ReRender();
+        }
+        cb.SetRayTracingIntParam(rtShader, "_EnableFog", enalbeFog ? 1 : 0);
+        cb.SetGlobalInt("_EnableFog", enalbeFog ? 1 : 0);
+
+        if (enalbeFog)
+        {
+            ComputeBuffer buffer;
+            RenderTexture tex;
+            SmokeManager.GetSmokeAtlas(out buffer, out tex);
+            cb.SetGlobalBuffer("_MaterialArray", buffer);
+            if (tex == null)
+            {
+                cb.SetGlobalTexture("_VolumeAtlas", defaultArray);
+                cb.SetRayTracingTextureParam(rtShader, "_VolumeAtlas", defaultArray);
+                cb.SetGlobalVector("_VolumeAtlasPixelSize", new Vector4(1.0f / defaultArray.width, 1.0f / defaultArray.height, 0, 0) * 2.1f);
+            }
+            else
+            {
+                cb.SetGlobalTexture("_VolumeAtlas", tex);
+                cb.SetRayTracingTextureParam(rtShader, "_VolumeAtlas", tex);
+                cb.SetGlobalVector("_VolumeAtlasPixelSize", new Vector4(1.0f / tex.width, 1.0f / tex.height, 0, 0) * 2.1f);
+            }
+            if (buffer != null)
+            {
+                cb.SetGlobalBuffer("_MaterialArray", buffer);
+                cb.SetRayTracingBufferParam(rtShader, "_MaterialArray", buffer);
+            }
+            else
+            {
+                cb.SetGlobalBuffer("_MaterialArray", defaultBuffer);
+                cb.SetRayTracingBufferParam(rtShader, "_MaterialArray", defaultBuffer);
+            }
         }
         else
         {
-            cb.SetRayTracingIntParam(rtShader, "_enableGlobalFog", 0);
+            cb.SetGlobalTexture("_VolumeAtlas", defaultArray);
+            cb.SetRayTracingTextureParam(rtShader, "_VolumeAtlas", defaultArray);
+            cb.SetGlobalBuffer("_MaterialArray", defaultBuffer);
+            cb.SetRayTracingBufferParam(rtShader, "_MaterialArray", defaultBuffer);
         }
     }
 
@@ -520,18 +570,5 @@ public class VRender : IDisposable
             normal.Create();
 
         }
-    }
-
-    bool enableFog = false;
-    float fogAbsorb;
-    float fogScatter;
-    float fogG;
-    public void Fog(bool enable, float absorb = 0, float scatter = 1, float G = 0.5f)
-    {
-        enableFog = enable;
-        fogAbsorb = absorb;
-        fogScatter = max(0, scatter) * 0.01f;
-        fogG = saturate(G);
-        ReRender();
     }
 }

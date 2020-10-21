@@ -71,7 +71,7 @@ void RayGeneration()
 
 	float rnd = SAMPLE;
 
-	//if (rnd > variance) return;
+	if (rnd > variance) return;
 	
 	for	(int i = 0; i < spp; i++){
 
@@ -105,6 +105,8 @@ void RayGeneration()
 		int4 pixelSampleState = sampleState + int4(i % sqrt_spp, i / sqrt_spp, 0, 0);
 
 		float3 ori_offset = origin + _NearPlane / dotCV * direction;
+		
+		//color += Tr(ori_offset, direction, 9999, sampleState);
 
 		if (_CacheIrradiance != 0)
 		{
@@ -174,4 +176,10 @@ void AnyHitMain(inout RayIntersection rayIntersection : SV_RayPayload, Attribute
 void Miss(inout RayIntersection rayIntersection : SV_RayPayload)
 {
 	SkyLight(/*inout*/ rayIntersection);
+}
+
+[shader("miss")]
+void Miss_FogVolume(inout RayIntersection rayIntersection : SV_RayPayload)
+{
+	rayIntersection.t = -1;
 }

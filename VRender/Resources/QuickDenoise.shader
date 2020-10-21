@@ -28,6 +28,7 @@
 			Texture2D _MainTex; SamplerState sampler_MainTex;
 			int2 _Pixel_WH;
 			float _DenoiseStrength;
+			float _Flare;
 
 			v2f vert(appdata v)
 			{
@@ -176,6 +177,30 @@
 
 				return res.rgb / res.a;
 			}
+
+			float3 RemoveFlare(float2 uv) {
+				int3 offset = int3(1, -1, 0);
+
+				float3 c = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
+				float3 l = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.yz);
+				float3 r = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.xz);
+				float3 u = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.zx);
+				float3 d = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.zy);
+				float3 lu = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.yx);
+				float3 ld = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.yy);
+				float3 ru = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.xx);
+				float3 rd = _MainTex.SampleLevel(sampler_MainTex, uv, 0, offset.xy);
+
+				float avl = Luminance(l) + Luminance(r) + Luminance(u) + Luminance(d) + Luminance(lu) + Luminance(ld) + Luminance(ru) + Luminance(rd);
+				avl /= 8;
+
+				if (Luminance(c) > avl * _Flare) {
+					return (l + r + u + d) / 4;
+				}
+
+				return c;
+			}
+
 		ENDCG
 
 
@@ -206,6 +231,21 @@
 			float3 frag(v2f i) : SV_Target
 			{
 				return Upsample(i.uv);
+			}
+			ENDCG
+		}
+		Pass
+		{	
+			Ztest off
+			ZWrite off
+
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+
+			float3 frag(v2f i) : SV_Target
+			{
+				return RemoveFlare(i.uv);
 			}
 			ENDCG
 		}

@@ -131,8 +131,8 @@ float2 UniformSampleRegularPolygon(int sides, float2 Random) {
 	float inv_sides = 1.0f / sides;
 	float theta = 2 * PI * inv_sides;
 	int triangle_index = floor(Random.x * sides);
-	float2 a; sincos(theta * triangle_index, a.y, a.x);
-	float2 b; sincos(theta * (triangle_index + 1), b.y, b.x);
+	float2 a; sincos(theta * triangle_index + theta / 2, a.y, a.x);
+	float2 b; sincos(theta * (triangle_index + 1) + theta / 2, b.y, b.x);
 	Random.x = (Random.x - (float)triangle_index * inv_sides) * sides;
 	Random.y = sqrt(Random.y);
 	return (1 - Random.y) * a + Random.x * Random.y * b;

@@ -14,7 +14,11 @@ namespace HypnosRenderPipeline
         private HashSet<int> changed;
         private Dictionary<int, RayTracingAccelerationStructure> rayTracingAccelerationStructures;
 
+        RayTracingAccelerationStructure fogAcc;
+
         private List<HRPLight> rtLights;
+
+        private List<Smoke> smokes;
 
         private RTRegister()
         {
@@ -92,6 +96,21 @@ namespace HypnosRenderPipeline
             var rayTracingAccelerationStructure = new RayTracingAccelerationStructure(settings);
             rayTracingAccelerationStructure.Build();
             instance.rayTracingAccelerationStructures[layer] = rayTracingAccelerationStructure;
+
+            return rayTracingAccelerationStructure;
+        }
+
+        public static RayTracingAccelerationStructure FogAccStruct()
+        {
+            if (instance.fogAcc != null) return instance.fogAcc;
+
+            RayTracingAccelerationStructure.RASSettings settings = new RayTracingAccelerationStructure.RASSettings(
+                                                                            RayTracingAccelerationStructure.ManagementMode.Automatic,
+                                                                            RayTracingAccelerationStructure.RayTracingModeMask.Everything,
+                                                                            1 << 31);
+            var rayTracingAccelerationStructure = new RayTracingAccelerationStructure(settings);
+            rayTracingAccelerationStructure.Build();
+            instance.fogAcc = rayTracingAccelerationStructure;
 
             return rayTracingAccelerationStructure;
         }

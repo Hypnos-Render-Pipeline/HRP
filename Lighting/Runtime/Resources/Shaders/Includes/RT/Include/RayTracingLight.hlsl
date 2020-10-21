@@ -252,9 +252,10 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 
 float3 LightLuminance(float3 pos, float3 dir,
 							inout int4 sampleState) {
+	int light_count = clamp(_LightCount, 0, 100);
+	if (light_count == 0) return 0;
 	float rnd = SAMPLE; sampleState.w++;
 	float3 direct_light = 0;
-	int light_count = clamp(_LightCount, 0, 100);
 	{
 		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
@@ -279,9 +280,10 @@ float3 LightLuminance(float3 pos, float3 dir,
 
 float3 LightLuminanceCamera(float3 pos, float3 dir,
 	inout int4 sampleState) {
+	int light_count = clamp(_LightCount, 0, 100);
+	if (light_count == 0) return 0;
 	float rnd = SAMPLE; sampleState.w++;
 	float3 direct_light = 0;
-	int light_count = clamp(_LightCount, 0, 100);
 	{
 		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
@@ -309,9 +311,10 @@ float3 LightLuminanceCamera(float3 pos, float3 dir,
 
 float3 LightLuminanceSpec(float3 pos, float3 dir,
 	inout int4 sampleState) {
+	int light_count = clamp(_LightCount, 0, 100);
+	if (light_count == 0) return 0;
 	float rnd = SAMPLE; sampleState.w++;
 	float3 direct_light = 0;
-	int light_count = clamp(_LightCount, 0, 100);
 	{
 		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 

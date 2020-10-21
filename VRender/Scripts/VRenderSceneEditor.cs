@@ -17,6 +17,9 @@ class VRenderForScene
     public float nearPlane = 0.3f;
     public VRenderParameters.DOF dof;
     public VRenderParameters.LightSetting lightSetting;
+    public bool enableFog;
+    public VRenderParameters.DebugMode debug;
+    public float removeFlare = 10;
     public LayerMask layer = -1;
 
     Texture2D rtxon;
@@ -47,6 +50,7 @@ class VRenderForScene
     {
         instance.enable = false;
         Dispose();
+        SmokeManager.ReleaseResources();
         EditorApplication.update -= OnRender;
         SceneView.duringSceneGui -= OnRepaint;
     }
@@ -100,8 +104,11 @@ class VRenderForScene
         instance.vRender.parameters.maxDepth = instance.maxBounce;
         instance.vRender.parameters.DOFConfig = instance.dof;
         instance.vRender.parameters.lightSetting.Set(instance.lightSetting);
+        instance.vRender.parameters.enableFog = instance.enableFog; 
         instance.vRender.parameters.nearPlane = instance.nearPlane;
         instance.vRender.parameters.cullingMask = instance.layer;
+        instance.vRender.parameters.debugMode = instance.debug;
+        instance.vRender.parameters.removeFlare = instance.removeFlare; 
         instance.vRender.Render();
         
         SceneView.lastActiveSceneView.Repaint();
@@ -184,6 +191,11 @@ class VRenderForScene
             instance.lightSetting.attenuationCurve = EditorGUILayout.CurveField("Attenuation Cureve", instance.lightSetting.attenuationCurve);
 
             EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Other settings");
+
+            instance.enableFog = EditorGUILayout.Toggle("Enable Fog Rendering", instance.enableFog);
+            instance.debug = (VRenderParameters.DebugMode)EditorGUILayout.EnumPopup("Debug Mode", instance.debug);
+            instance.removeFlare = EditorGUILayout.Slider("Remove flare", instance.removeFlare, 1, 10);
 
             instance.layer = DrawLayerMaskField(instance.layer);
         }
