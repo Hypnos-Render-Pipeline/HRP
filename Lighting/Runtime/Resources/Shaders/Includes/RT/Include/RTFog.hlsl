@@ -157,7 +157,7 @@ bool SampleVolume(VolumeRec rec, SmokeInfo si, float3 pos, inout float sigmaS, i
 	G = lerp(si.g, G, sigmaS / max(s, 0.0000001));
 	sigmaS = s;
 	sigmaE = e;
-	//if (sigmaS == 0)sigmaS = 0.00001;
+	
 	return true;
 }
 
@@ -167,13 +167,13 @@ void GetFog(const VolumeRecs recs, float3 pos, inout float t, out float sigmaS, 
 	sigmaTMax = 0.0001;
 	G = 0;
 	bool flag = false;
-	//float jump = 99999;
+	float jump = 99999;
 	[loop]
 	for (int i = 0; i < recs.count; i++)
 	{
 		VolumeRec rec = recs.recs[i];
 
-		//jump = min(jump, rec.range.x > t ? rec.range.x : 99999);
+		jump = min(jump, rec.range.y < t ? 99999 : rec.range.x);
 
 		float3 volume_uv = mul(rec.w2o, pos) + 0.5;
 		int materialIndex = rec.materialIndex;
@@ -183,7 +183,7 @@ void GetFog(const VolumeRecs recs, float3 pos, inout float t, out float sigmaS, 
 		if (SampleVolume(rec, si, pos, sigmaS, sigmaE, sigmaTMax, G)) flag = true;
 	}
 	sigmaE += sigmaS;
-	//if (!flag) t = jump;
+	if (!flag) t = max(t, jump);
 }
 
 float Tr(float3 pos, float3 dir, float dis, inout int4 sampleState, float delta = 0.00001) {
