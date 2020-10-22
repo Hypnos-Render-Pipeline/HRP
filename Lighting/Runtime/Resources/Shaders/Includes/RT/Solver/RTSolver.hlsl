@@ -47,11 +47,13 @@ float3 PathTracer(const int maxDepth,
 		float4 fogWeight = 1;
 		fogColor = fogNextPos = fogNextDir = 0;
 
-		if (_EnableFog && traceFog) {
+#ifdef _ENABLEFOG
+		if (traceFog) {
             DeterminateNextVertex(pos, dir, t.x,
 				/*inout*/sampleState, 
 				/*out*/fogColor, fogWeight, fogNextPos, fogNextDir);
 		}
+#endif
          
 		if (fogWeight.w) { //pick surface 
 
@@ -140,12 +142,14 @@ float3 PathTracer_IrrCache(const int maxDepth,
         float4 fogWeight = 1;
         fogColor = fogNextPos = fogNextDir = 0;
 
-        if (_EnableFog && traceFog)
+#ifdef _ENABLEFOG
+        if (traceFog)
         {
             DeterminateNextVertex(pos, dir, t.x,
 				/*inout*/sampleState,
 				/*out*/fogColor, fogWeight, fogNextPos, fogNextDir);
         }
+#endif
         
         float3 incre_res = 0;
         float4 decre_weight;
@@ -196,7 +200,12 @@ float3 PathTracer_IrrCache(const int maxDepth,
                 decre_weight.xyz /= co;
             }
         }
-        res += incre_res * ((_EnableFog && traceFog) ? Tr(pos, dir, t.x, sampleState) : 1);
+
+#ifdef _ENABLEFOG
+        res += incre_res * (traceFog ? Tr(pos, dir, t.x, sampleState) : 1);
+#else
+        res += incre_res;
+#endif
         weight *= decre_weight;
         weight.w = decre_weight.w;
         if (cacheIndex < 1)

@@ -93,9 +93,9 @@ namespace HypnosRenderPipeline
             foreach (var smoke in smokes)
             {
                 var mat = smoke.meshRenderer.sharedMaterial;
-                var tex = mat.GetTexture("_Volume");
-                if (tex != null)
-                    matsList.Add(mat);
+                //var tex = mat.GetTexture("_Volume");
+                //if (tex != null)
+                matsList.Add(mat);
             }
 
             regenerateAtlas |= !IsSame();
@@ -113,6 +113,7 @@ namespace HypnosRenderPipeline
                 foreach (var mat in matsSet)
                 {
                     var tex = mat.GetTexture("_Volume") as Texture2D;
+                    if (tex == null) tex = Texture2D.whiteTexture;
                     if (!texs.ContainsKey(tex)) texs.Add(tex, new List<Material>());
                     texs[tex].Add(mat);
                 }
@@ -139,25 +140,33 @@ namespace HypnosRenderPipeline
                 foreach (var tex in texs)
                 {
                     var t = tex.Key;
-                    bool readable = t.isReadable;
-                    if (!readable)
-                    {
-                        SetTextureImporterFormat(t, true);
-                    }
-
-                    var pixs = t.GetPixels();
                     float maxDensity = 0;
-                    foreach (var pix in pixs)
-                    {
-                        maxDensity = math.max(pix.r, maxDensity);
-                    }
-
-                    if (!readable)
-                    {
-                        SetTextureImporterFormat(t, false);
-                    }
-
                     var wh = math.int2(t.width, t.height);
+                    if (t == Texture2D.whiteTexture)
+                    {
+                        maxDensity = 1;
+                        wh = max_size;
+                    }
+                    else
+                    {
+                        bool readable = t.isReadable;
+                        if (!readable)
+                        {
+                            SetTextureImporterFormat(t, true);
+                        }
+
+                        var pixs = t.GetPixels();
+                        foreach (var pix in pixs)
+                        {
+                            maxDensity = math.max(pix.r, maxDensity);
+                        }
+
+                        if (!readable)
+                        {
+                            SetTextureImporterFormat(t, false);
+                        }
+                    }
+
                     float2 scale = math.float2(wh) / max_size;
 
                     cb.SetGlobalVector("_Scale_Offset", math.float4(scale, 0, 0));

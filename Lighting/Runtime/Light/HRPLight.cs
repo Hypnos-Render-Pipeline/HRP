@@ -322,6 +322,7 @@ namespace HypnosRenderPipeline
             LightManager.ReportCreate(this);
             if (__m_sunLight__) LightManager.sunLight = this;
             else if (LightManager.sunLight == this) LightManager.sunLight = null;
+            RTRegister.SceneChanged();
         }
 
         void OnDisable()
@@ -339,6 +340,7 @@ namespace HypnosRenderPipeline
             }
             m_lastTex = null;
             if (sunLight) LightManager.sunLight = null;
+            RTRegister.SceneChanged();
         }
 
         RenderTexture CalculateSpec(Texture2D tex)

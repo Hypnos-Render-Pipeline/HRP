@@ -61,7 +61,7 @@ Material:
     - _Index: 1.45
     - _IndexRate: 0.5
     - _Ld: 0.1
-    - _MaterialID: 1
+    - _MaterialID: 0
     - _Metallic: 0
     - _Mode: 0
     - _Modified: 0

@@ -412,7 +412,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				weight = END_TRACE;
 			}
 
-			directColor += weight.xyz * LightLuminance(IN.position, nextDir, sampleState);
+			directColor += weight.xyz * LightLuminanceCameraWithFog(IN.position, nextDir, sampleState);
 		}
 #endif
 

@@ -143,7 +143,17 @@ public class VRender : IDisposable
     public VRenderParameters parameters;
 
     HypnosRenderPipeline.BNSLoader bnsLoader;
-    RayTracingShader rtShader;
+
+
+    RayTracingShader rtShader_fog, rtShader_nofog;
+
+    RayTracingShader rtShader {
+        get 
+        {
+            if (parameters.enableFog) return rtShader_fog;
+            else return rtShader_nofog;
+        } 
+    }
     Material blitMat;
     Material denoiseMaterial;
     Texture2D ssLut;
@@ -166,7 +176,8 @@ public class VRender : IDisposable
         cb = GetCB(cam, "RayTrace", CameraEvent.BeforeImageEffects);
         cam.depthTextureMode |= DepthTextureMode.DepthNormals | DepthTextureMode.Depth;
 
-        rtShader = Resources.Load<RayTracingShader>("RayTracer");
+        rtShader_fog = Resources.Load<RayTracingShader>("Camera_Fog");
+        rtShader_nofog = Resources.Load<RayTracingShader>("Camera");
         blitMat = new Material(Shader.Find("Hidden/VRenderBlit"));
         denoiseMaterial = new Material(Shader.Find("Hidden/QuickDenoise"));
         ssLut = Resources.Load<Texture2D>("Textures/Random Lut/RdLut");
@@ -404,6 +415,7 @@ public class VRender : IDisposable
                 cb.SetGlobalFloat("_Flare", parameters.removeFlare);
                 cb.Blit(res, k, denoiseMaterial, 2);
                 cb.Blit(k, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), denoiseMaterial, 0);
+                cb.ReleaseTemporaryRT(k);
                 break;
             case VRenderParameters.Mode.Another:
 
@@ -506,13 +518,11 @@ public class VRender : IDisposable
                 cb.SetGlobalBuffer("_MaterialArray", defaultBuffer);
                 cb.SetRayTracingBufferParam(rtShader, "_MaterialArray", defaultBuffer);
             }
+            cb.EnableShaderKeyword("_ENABLEFOG");
         }
         else
         {
-            cb.SetGlobalTexture("_VolumeAtlas", defaultArray);
-            cb.SetRayTracingTextureParam(rtShader, "_VolumeAtlas", defaultArray);
-            cb.SetGlobalBuffer("_MaterialArray", defaultBuffer);
-            cb.SetRayTracingBufferParam(rtShader, "_MaterialArray", defaultBuffer);
+            cb.DisableShaderKeyword("_ENABLEFOG");
         }
     }
 

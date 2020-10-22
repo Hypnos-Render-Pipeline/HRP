@@ -103,43 +103,58 @@ namespace HypnosRenderPipeline
 
 #if UNITY_EDITOR
 
-                int result = -1;
-                if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph)
-                {
-                    m_hypnosRenderPipelineGraph = m_asset.hypnosRenderPipelineGraph;
-                    m_executor.Dispose();
-                    m_executor = new HRGDynamicExecutor(m_hypnosRenderPipelineGraph);
-                }
-                if (m_hypnosRenderPipelineGraph != null)
-                {
-                    // determinate whether debug this camera
-                    bool debugCamera = false;
-                    if (hasGameCamera)
-                    {
-                        if (cam.cameraType == CameraType.Game) debugCamera = true;
-                    }
-
-                    else if (hasSceneCamera)
-                    {
-                        if (cam.cameraType == CameraType.SceneView) debugCamera = true;
-                    }
-                    else if (cam == cameras[0]) debugCamera = true;
-
-                    result = m_executor.Excute(rc, debugCamera);
-                }
-                if (result == -1)
-                {
-                    result = Shader.PropertyToID("_TempResult");
-                    cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
-                    cb.SetRenderTarget(result);
-                    cb.ClearRenderTarget(true, true, Color.clear);
-                }
-
+                int result = -1;                
                 {
                     var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
                     if (vrender_cb.Length != 0) {
+
+                        result = Shader.PropertyToID("_TempResult");
+                        cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 24, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
+                        cb.SetRenderTarget(result);
+                        cb.ClearRenderTarget(true, true, Color.clear);
+                        cb.SetRenderTarget(result);
+                        context.ExecuteCommandBuffer(cb);
+                        cb.Clear();
+                        var a = new DrawingSettings(new ShaderTagId("PreZ"), new SortingSettings(cam));
+                        var b = FilteringSettings.defaultValue;
+                        b.renderQueueRange = RenderQueueRange.all;
+                        context.DrawRenderers(rc.defaultCullingResult, ref a, ref b);
+
                         context.ExecuteCommandBuffer(vrender_cb[0]);
                         cb.Blit(BuiltinRenderTextureType.CameraTarget, result);
+                    }
+                    else
+                    {
+                        if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph)
+                        {
+                            m_hypnosRenderPipelineGraph = m_asset.hypnosRenderPipelineGraph;
+                            m_executor.Dispose();
+                            m_executor = new HRGDynamicExecutor(m_hypnosRenderPipelineGraph);
+                        }
+                        if (m_hypnosRenderPipelineGraph != null)
+                        {
+                            // determinate whether debug this camera
+                            bool debugCamera = false;
+                            if (hasGameCamera)
+                            {
+                                if (cam.cameraType == CameraType.Game) debugCamera = true;
+                            }
+
+                            else if (hasSceneCamera)
+                            {
+                                if (cam.cameraType == CameraType.SceneView) debugCamera = true;
+                            }
+                            else if (cam == cameras[0]) debugCamera = true;
+
+                            result = m_executor.Excute(rc, debugCamera);
+                        }
+                        if (result == -1)
+                        {
+                            result = Shader.PropertyToID("_TempResult");
+                            cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
+                            cb.SetRenderTarget(result);
+                            cb.ClearRenderTarget(true, true, Color.clear);
+                        }
                     }
                 }
 #endif

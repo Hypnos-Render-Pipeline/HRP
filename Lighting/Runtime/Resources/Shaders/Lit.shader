@@ -314,8 +314,8 @@
 
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP _
-			#pragma shader_feature _AOMAP _
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
 
 			CBUFFER_START(UnityPerMaterial)
 				float4			_Color;
@@ -517,6 +517,7 @@
 			#pragma shader_feature _AOMAP
 			#pragma shader_feature _SUBSURFACE
 			#pragma shader_feature _CLEARCOAT
+			#pragma multi_compile _ENABLEFOG __
 		
 
 			//If not define Shading, then use LitShading
@@ -713,8 +714,8 @@
 
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP _
-			#pragma shader_feature _AOMAP _
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
 
 			#include "./Includes/RT/Include/RTLitInclude.hlsl" 
 

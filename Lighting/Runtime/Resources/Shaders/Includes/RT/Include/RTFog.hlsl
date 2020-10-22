@@ -5,7 +5,11 @@
 #include "./Sampler.hlsl"
 
 
-int _EnableFog;
+inline float Average(const float2 i) { return dot(i, 1. / 2); }
+inline float Average(const float3 i) { return dot(i, 1. / 3); }
+inline float Average(const float4 i) { return dot(i, 1. / 4); }
+
+#ifdef _ENABLEFOG
 
 struct SmokeInfo
 {
@@ -18,15 +22,10 @@ struct SmokeInfo
 	float maxDensity;
 };
 
-
 StructuredBuffer<SmokeInfo> _MaterialArray;
 
 Texture2DArray<float> _VolumeAtlas; SamplerState linear_clamp_VolumeAtlas_sampler;
 float2 _VolumeAtlasPixelSize;
-
-inline float Average(const float2 i) { return dot(i, 1./2); }
-inline float Average(const float3 i) { return dot(i, 1./3); }
-inline float Average(const float4 i) { return dot(i, 1./4); }
 
 struct RayIntersection_FogVolume {
 	float4 world2Object[3];
@@ -186,8 +185,13 @@ void GetFog(const VolumeRecs recs, float3 pos, inout float t, out float sigmaS, 
 	if (!flag) t = max(t, jump);
 }
 
+#endif
+
 float Tr(float3 pos, float3 dir, float dis, inout int4 sampleState, float delta = 0.00001) {
-	if (!_EnableFog) return 1;
+
+#ifndef _ENABLEFOG
+	return 1;
+#else
 
 	VolumeRecs all_recs;
 	float2 min_max = InitVolumeRecs(pos, dir, all_recs); if (all_recs.count == 0) return 1;
@@ -216,18 +220,22 @@ float Tr(float3 pos, float3 dir, float dis, inout int4 sampleState, float delta 
 	}
 
 	return tr;
+
+#endif
 }
 
 float3 TraceShadowWithFog(const float3 start, const float3 end,
 	inout int4 sampleState) {
 	float3 shadow = TraceShadow(start, end, sampleState);
 
-	if (_EnableFog && any(shadow != 0)) {
+#ifdef _ENABLEFOG
+	if (any(shadow != 0)) {
 		float3 dir = end - start;
 		float len = length(dir);
 		dir /= len;
 		shadow *= Tr(start, dir, len, sampleState);
 	}
+#endif
 	return shadow;
 }
 
@@ -235,12 +243,14 @@ float3 TraceShadowWithFog_PreventSelfShadow(const float3 start, const float3 end
 	inout int4 sampleState) {
 	float3 shadow = TraceShadow_PreventSelfShadow(start, end, sampleState);
 
-	if (_EnableFog && any(shadow != 0)) {
+#ifdef _ENABLEFOG
+	if (any(shadow != 0)) {
 		float3 dir = end - start;
 		float len = length(dir);
 		dir /= len;
 		shadow *= Tr(start, dir, len, sampleState);
 	}
+#endif
 	return shadow;
 }
 
@@ -270,12 +280,15 @@ float3 LightLuminanceCameraWithFog(float3 pos, float3 dir,
 				/*inout*/sampleState);
 
 			direct_light = shadow * luminance;
+#ifdef _ENABLEFOG
 			if (any(direct_light != 0)) direct_light *= Tr(pos, dir, distance(pos, end_point), sampleState);
+#endif
 		}
 	}
 	return direct_light * light_count;
 }
 
+#ifdef _ENABLEFOG
 float PhaseFunction(float3 i, float3 o, float g)
 {
    	//return 1.0/(4.0*3.14);
@@ -336,15 +349,17 @@ float3 SampleHenyeyGreenstein(const float2 s, const float g) {
 	H.z = CosTheta;
 	return H;
 }
-
+#endif
 
 void DeterminateNextVertex(float3 pos, float3 dir, float dis,
 	inout int4 sampleState,
 	out float3 directColor, out float4 weight, out float3 nextPos, out float3 nextDir) {
 
-	//weight = float4(1, 1, 1, 1);
-	//directColor = nextPos = nextDir = 0;
-	//return;
+#ifndef _ENABLEFOG
+	weight = float4(1, 1, 1, 1);
+	directColor = nextPos = nextDir = 0;
+	return;
+#else
 
 	VolumeRecs all_recs;
 	float2 min_max = InitVolumeRecs(pos, dir, all_recs);
@@ -400,6 +415,7 @@ void DeterminateNextVertex(float3 pos, float3 dir, float dis,
 			/*inout*/sampleState);
 	}
 	directColor = S * weight.xyz;
+#endif
 }
 
 #endif

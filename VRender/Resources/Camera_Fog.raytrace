@@ -1,0 +1,5 @@
+#pragma max_recursion_depth 6
+
+#define _ENABLEFOG
+
+#include "./Camera.hlsl"
