@@ -7,26 +7,15 @@ namespace HypnosRenderPipeline.RenderPass
     public class Atmo : BaseRenderPass
     {
         // parameters
-        public float planetRadius = 6371e3f;
-        public float AtmosphereThickness = 8e3f;
-        public Color GroundAlbedo = new Color(0.25f, 0.25f, 0.25f);
-        public Color RayleighScatter = new Color(0.1752f, 0.40785f, 1f);
-        public float RayleighScatterStrength = 1;
-        public float MieScatterStrength = 1;
-        public float OzoneStrength = 1;
-        public float sunSolidAngle = (0.5f / 180.0f * Mathf.PI);
-
-        public float MultiScatterStrength = 1f;
-
         public Vector2Int TLutResolution = new Vector2Int(128, 128);
 
         public Vector2Int SkyLutResolution = new Vector2Int(200, 256);
 
-        public Vector2Int MultiScatterLutResolution = new Vector2Int(32, 32);
+        public Vector2Int MSLutResolution = new Vector2Int(32, 32);
 
-        public Vector3Int VolumeScatterLutResolution = new Vector3Int(32, 32, 32);
+        public Vector3Int VolumeResolution = new Vector3Int(32, 32, 32);
 
-        public float maxDepth = 32000;
+        public float VolumeMaxDepth = 32000;
 
         // pins
         [NodePin(PinType.In)]
@@ -37,15 +26,15 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
-        static MaterialWithName lutMat = new MaterialWithName("Hidden/AtmoLut");
-
         RenderTexture t_table = null;
         RenderTexture sky_table = null;
         RenderTexture multiScatter_table = null;
         RenderTexture volumeScatter_table = null;
 
         static ComputeShaderWithName volumeScatter = new ComputeShaderWithName("Shaders/Atmo/VolumeScatterLut");
+        static MaterialWithName lutMat = new MaterialWithName("Hidden/AtmoLut");
 
+        HRPAtmo atmo;
 
         bool TestRTChange(ref RenderTexture rt, RenderTextureFormat format, Vector2Int wh)
         {
@@ -83,12 +72,14 @@ namespace HypnosRenderPipeline.RenderPass
             var sun = sunLight.handle.sunLight;
             if (sun == null)
             {
-                context.commandBuffer.SetGlobalFloat("_SunLuminance", math.pow(10, 4.6f));
+                atmo = null;
+                context.commandBuffer.SetGlobalVector("_SunLuminance", Vector3.one * math.pow(10, 4.6f));
                 context.commandBuffer.SetGlobalVector("_SunDir", Vector3.up);
             }
             else
             {
-                context.commandBuffer.SetGlobalFloat("_SunLuminance", sun.radiance * math.pow(10, 4.6f));
+                atmo = sun.atmoPreset;
+                context.commandBuffer.SetGlobalVector("_SunLuminance", sun.color * sun.radiance * math.pow(10, 4.6f));
                 context.commandBuffer.SetGlobalVector("_SunDir", -sun.direction);
             }
 
@@ -100,16 +91,15 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetGlobalTexture("_DepthTex", depth);
             cb.Blit(tempColor, target, lutMat, 3);
             cb.ReleaseTemporaryRT(tempColor);
-            context.context.ExecuteCommandBuffer(cb);
-            cb.Clear();
         }
 
 
         void InitLut(CommandBuffer cb)
         {
             bool regenerate = false;
+            TLutResolution.y = TLutResolution.y / 2 * 2 + 1;
             regenerate |= TestRTChange(ref t_table, RenderTextureFormat.ARGBFloat, TLutResolution);
-            regenerate |= TestRTChange(ref multiScatter_table, RenderTextureFormat.ARGBFloat, MultiScatterLutResolution);
+            regenerate |= TestRTChange(ref multiScatter_table, RenderTextureFormat.ARGBFloat, MSLutResolution);
             regenerate |= CheckParameters();
 
 
@@ -122,7 +112,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetGlobalFloat("_SunAngle", sunAngle);
 
             cb.SetGlobalFloat("_MultiScatterStrength", ms);
-            cb.SetGlobalFloat("_MaxDepth", maxDepth);
+            cb.SetGlobalFloat("_MaxDepth", VolumeMaxDepth);
 
             cb.SetGlobalVector("_TLutResolution", new Vector4(TLutResolution.x, TLutResolution.y));
             cb.SetGlobalVector("_SLutResolution", new Vector4(SkyLutResolution.x, SkyLutResolution.y));
@@ -142,12 +132,12 @@ namespace HypnosRenderPipeline.RenderPass
                 sky_table.wrapModeV = TextureWrapMode.Clamp;
             }
 
-            TestRTChange(ref volumeScatter_table, RenderTextureFormat.ARGB32, VolumeScatterLutResolution);
+            TestRTChange(ref volumeScatter_table, RenderTextureFormat.ARGB32, VolumeResolution);
 
             cb.Blit(null, sky_table, lutMat, 2);
             cb.SetComputeTextureParam(volumeScatter, 0, "_Result", volumeScatter_table);
-            Vector3Int size = VolumeScatterLutResolution;
-            cb.SetComputeVectorParam(volumeScatter, "_Size", new Vector4(VolumeScatterLutResolution.x, VolumeScatterLutResolution.y, VolumeScatterLutResolution.z));
+            Vector3Int size = VolumeResolution;
+            cb.SetComputeVectorParam(volumeScatter, "_Size", new Vector4(VolumeResolution.x, VolumeResolution.y, VolumeResolution.z));
             size.x = size.x / 4 + (size.x % 4 != 0 ? 1 : 0);
             size.y = size.y / 4 + (size.y % 4 != 0 ? 1 : 0);
             size.z = size.z / 4 + (size.z % 4 != 0 ? 1 : 0);
@@ -169,50 +159,51 @@ namespace HypnosRenderPipeline.RenderPass
         bool CheckParameters()
         {
             bool changed = false;
-            if (planetRadius != radius)
+            if (atmo == null) return changed;
+            if (atmo.planetRadius != radius)
             {
                 changed = true;
-                radius = planetRadius;
+                radius = atmo.planetRadius;
             }
-            if (AtmosphereThickness != at)
+            if (atmo.AtmosphereThickness != at)
             {
                 changed = true;
-                at = AtmosphereThickness;
+                at = atmo.AtmosphereThickness;
             }
-            if (GroundAlbedo != gr)
+            if (atmo.GroundAlbedo != gr)
             {
                 changed = true;
-                gr = GroundAlbedo;
+                gr = atmo.GroundAlbedo;
             }
-            if (RayleighScatter != raylei)
+            if (atmo.RayleighScatter != raylei)
             {
                 changed = true;
-                raylei = RayleighScatter;
+                raylei = atmo.RayleighScatter;
             }
-            if (RayleighScatterStrength != rayleiS)
+            if (atmo.RayleighScatterStrength != rayleiS)
             {
                 changed = true;
-                rayleiS = RayleighScatterStrength;
+                rayleiS = atmo.RayleighScatterStrength;
             }
-            if (MieScatterStrength != meiS)
+            if (atmo.MieScatterStrength != meiS)
             {
                 changed = true;
-                meiS = MieScatterStrength;
+                meiS = atmo.MieScatterStrength;
             }
-            if (OzoneStrength != oz)
+            if (atmo.OzoneStrength != oz)
             {
                 changed = true;
-                oz = OzoneStrength;
+                oz = atmo.OzoneStrength;
             }
-            if (sunSolidAngle != sunAngle)
+            if (atmo.sunSolidAngle != sunAngle)
             {
                 changed = true;
-                sunAngle = sunSolidAngle;
+                sunAngle = atmo.sunSolidAngle;
             }
-            if (MultiScatterStrength != ms)
+            if (atmo.MultiScatterStrength != ms)
             {
                 changed = true;
-                ms = MultiScatterStrength;
+                ms = atmo.MultiScatterStrength;
             }
 
             return changed;

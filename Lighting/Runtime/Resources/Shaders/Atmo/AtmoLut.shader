@@ -90,7 +90,6 @@
 
                 fixed3 frag(v2f i) : SV_Target
                 {
-                    sampleIndex1D = frac(sin(dot(i.uv * 1024, float2(12.9898, 78.233))) * 43758.5453) * 1024;
                     float3 s = normalize(_SunDir);
                     float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
 

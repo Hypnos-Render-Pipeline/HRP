@@ -75,11 +75,12 @@ namespace HypnosRenderPipeline.RenderPass
             context.commandBuffer.SetGlobalTexture("_DepthTex", depth);
             context.commandBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
             context.commandBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
+
             if (ao.connected)
                 context.commandBuffer.SetGlobalTexture("_AOTex", ao);
             else
                 context.commandBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
-            Debug.Log(lights.handle.areas.Count);
+
             foreach (var light in lights.handle.areas)
             {
                 if (light.isArea)

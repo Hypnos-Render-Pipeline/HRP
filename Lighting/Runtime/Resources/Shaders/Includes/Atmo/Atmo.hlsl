@@ -33,7 +33,7 @@ float _MeiScatter;
 float _OZone;
 float _SunAngle;
 float3 _SunDir;
-float _SunLuminance;
+float3 _SunLuminance;
 
 float _MultiScatterStrength;
 
@@ -212,8 +212,8 @@ const float3 T_cal(const float3 x, const float3 y, const int sampleNum = 1e4) {
 	
 	for (int i = 0; i < sampleNum; i++)
 	{
-		float altitude = Altitude(lerp(x, y, (float(i + SAMPLE1D) / sampleNum)));
-		res += Beta_R_S(altitude) + 1.11 * Beta_M_A(altitude) + Beta_OZO_A(altitude);
+		float altitude = Altitude(lerp(x, y, (float(i/* + SAMPLE1D*/) / sampleNum)));
+		res += Beta_R_S(altitude) + Beta_M_A(altitude) + Beta_OZO_A(altitude);
 	}
 	res *= dis / sampleNum;
 	return exp(-res);
@@ -250,26 +250,11 @@ const float3 T_tab(const float3 x, const float3 y) {
 	const float3 v = normalize(y - x);
 
 	float3 a = T_tab_fetch(x, v);
-	float3 b = T_tab_fetch(lerp(x, y, 0.97), v);
+	float3 b = T_tab_fetch(y, v);
 
 	return min(1.0, a / b);
 }
 #endif
-
-
-const float3 L_0(const float3 x, const float3 v, const float3 s) {
-	float3 x_0;
-	bool isGround = X_0(x, v, x_0);
-	if (isGround) return 0;
-
-	// > sun angle (0.5 degree)
-	if (dot(v, s) > cos(sun_angle)) {
-		return T(x, x_0);
-	}
-	else {
-		return 0;
-	}
-}
 
 const float3 J(const float3 y, const float3 v, const float3 s, const int sampleNum = 1) {
 	float3 res = 0;
@@ -280,7 +265,12 @@ const float3 J(const float3 y, const float3 v, const float3 s, const int sampleN
 
 	const float approximate_int_0 = (1 - cos(sun_angle)) / 2;
 
-	const float3 approximate_int_1 = L_0(y, s, s);
+	float3 approximate_int_1 = 0;
+	float horiz = length(y);
+	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
+	if (dot(normalize(y), s) > horiz) {
+		approximate_int_1 = T_tab_fetch(y, s);
+	}
 
 	float mu = dot(s, v);
 	float3 p_R = P_R(mu);
@@ -291,7 +281,7 @@ const float3 J(const float3 y, const float3 v, const float3 s, const int sampleN
 	return res * 4 * pi;
 }
 
-const float3 Tu_L(const float3 x_0, const float3 s, const int sampleNum = 1) {
+const float3 Tu_L(const float3 x_0, const float3 s) {
 
 	const float3 albedo = GroundAlbedo(x_0);
 	const float3 normal = normalize(x_0);
@@ -299,7 +289,10 @@ const float3 Tu_L(const float3 x_0, const float3 s, const int sampleNum = 1) {
 
 	const float approximate_int_0 = (1 - cos(sun_angle));
 
-	const float3 approximate_int_1 = L_0(x_0, s, s);
+	float3 approximate_int_1 = 0;
+	if (dot(normalize(x_0), s) > 0) {
+		approximate_int_1 = T_tab_fetch(x_0, s);
+	}
 
 	float cos = dot(normal, s);
 
@@ -308,29 +301,8 @@ const float3 Tu_L(const float3 x_0, const float3 s, const int sampleNum = 1) {
 	return res;
 }
 
-#ifdef J_L_0_
-const float3 J_L_0(const float3 y, const float3 v, const float3 s, const int sampleNum = 1) {
-	float3 res = 0;
-	
-	const float altitude = Altitude(y);
-	const float3 beta_R = Beta_R_S(altitude);
-	const float3 beta_M = Beta_M_S(altitude);
-
-	const float approximate_int_0 = (1 - cos(sun_angle)) / 2;
-
-	const float3 approximate_int_1 = L(y, s, s);
-
-	float mu = dot(s, v);
-	float3 p_R = P_R(mu);
-	float3 p_M = P_M(mu);
-
-	res = approximate_int_0 * approximate_int_1 * (p_R * beta_R + p_M * beta_M);
-
-	return res * 4 * pi;
-}
-#endif
-
-const float3 Scatter0(const float3 x, const float3 x_0, const float3 s, const int dirSampleNum = 64) {
+const float3 Scatter0(const float3 x, float3 x_0, const float3 s, const int dirSampleNum = 64) {
+	x_0 = lerp(x, x_0, 0.99);
 	const float dis = distance(x, x_0);
 
 	const float3 v = normalize(x_0 - x);
@@ -362,7 +334,8 @@ const float3 Scatter1234_(const float3 x, const float3 s) {
 	return (beta_R + beta_M) * scatter;
 }
 
-const float3 Scatter(const float3 x, const float3 x_0, const float3 s, const int dirSampleNum = 128) {
+const float3 Scatter(const float3 x, float3 x_0, const float3 s, const int dirSampleNum = 128) {
+	x_0 = lerp(x, x_0, 0.99);
 	const float dis = distance(x, x_0);
 
 	const float3 v = normalize(x_0 - x);
@@ -378,10 +351,16 @@ const float3 Scatter(const float3 x, const float3 x_0, const float3 s, const int
 	}
 	res *= dis / dirSampleNum;
 
+	float horiz = length(x);
+	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
+	if (dot(normalize(x), v) < horiz)
+		res += Tu_L(x_0, s) * T_tab_fetch(x_0, -v);
+
 	return res;
 }
 
-const float3 Lf(const float3 x, const float3 x_0, const float3 s, const int dirSampleNum = 128) {
+const float3 Lf(const float3 x, float3 x_0, const float3 s, const int dirSampleNum = 128) {
+	x_0 = lerp(x, x_0, 0.99);
 	const float dis = distance(x, x_0);
 	const float3 v = normalize(x_0 - x);
 
@@ -468,11 +447,11 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s) {
 			X_Up(x, v, dis);
 			x_0 = x + dis.y * v;
 			x = x + dis.x * v;
-			scatter = lerp(Scatter(x, x_0, s, 32), scatter, rho / (1 - coef));
+			scatter = Scatter(x, x_0, s);
 		}
 		else {
 			X_0(x, v, x_0);
-			scatter = lerp(Scatter(x, x_0, s, 16), scatter, rho / (1 - coef));
+			scatter = Scatter(x, x_0, s);// lerp(Scatter(x, x_0, s, 16), scatter, rho / (1 - coef));
 		}
 	}
 	// prevent error
@@ -492,7 +471,7 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s) {
 		X_0(x, v, x_0);
 		sun = T(x, x_0);
 	}
-	sun *= smoothstep(cos(sun_angle) - 3e-5, cos(sun_angle), dot(v, s)) * (v.y > horiz);
+	sun *= smoothstep(cos(sun_angle + 0.005), cos(sun_angle), dot(v, s)) * (v.y > horiz);
 	sun /= 0.2e4;
 
 	return scatter + sun;

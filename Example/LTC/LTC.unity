@@ -160,6 +160,7 @@ MonoBehaviour:
   areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
   drawLightMesh: 1
   lightMesh: {fileID: -9011939121449005131, guid: 00445d675aeb3be46b0a98f8491a69c1, type: 3}
+  atmoPreset: {fileID: 0}
   __m_sunLight__: 0
   m_temperature: 0
   m_areaSize: {x: 1.6450837, y: 0.03}
@@ -269,6 +270,7 @@ Transform:
   - {fileID: 918533636}
   - {fileID: 1476412820}
   - {fileID: 1303553362}
+  - {fileID: 1838033258}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -356,7 +358,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 10000
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -426,6 +428,7 @@ MonoBehaviour:
   areaTexture: {fileID: 0}
   drawLightMesh: 0
   lightMesh: {fileID: 0}
+  atmoPreset: {fileID: 0}
   __m_sunLight__: 0
   m_temperature: 6570
   m_areaSize: {x: 1, y: 1}
@@ -636,6 +639,7 @@ MonoBehaviour:
   areaTexture: {fileID: 0}
   drawLightMesh: 1
   lightMesh: {fileID: 0}
+  atmoPreset: {fileID: 0}
   __m_sunLight__: 0
   m_temperature: 20000
   m_areaSize: {x: 2.0299404, y: 1.2586685}
@@ -751,6 +755,7 @@ MonoBehaviour:
   areaTexture: {fileID: 0}
   drawLightMesh: 0
   lightMesh: {fileID: 0}
+  atmoPreset: {fileID: 11400000, guid: 3c36e43b2f3325b409841da3fa7b039c, type: 2}
   __m_sunLight__: 1
   m_temperature: 6570
   m_areaSize: {x: 1, y: 1}
@@ -822,13 +827,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1165389292}
-  m_LocalRotation: {x: 0.030334707, y: 0.09413832, z: 0.05315385, w: 0.99367625}
+  m_LocalRotation: {x: 0.023001729, y: 0.09656958, z: -0.0008131191, w: 0.9950601}
   m_LocalPosition: {x: -1.2803702, y: 1.9822869, z: -0.124745846}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 2.882, y: 10.985, z: 6.401}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 2.633, y: 3.522, z: 0.162}
 --- !u!1 &1284777602
 GameObject:
   m_ObjectHideFlags: 0
@@ -866,6 +871,7 @@ MonoBehaviour:
   areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
   drawLightMesh: 1
   lightMesh: {fileID: 0}
+  atmoPreset: {fileID: 0}
   __m_sunLight__: 0
   m_temperature: 4198
   m_areaSize: {x: 0.54566145, y: 1.6616112}
@@ -1267,6 +1273,7 @@ MonoBehaviour:
   areaTexture: {fileID: 0}
   drawLightMesh: 0
   lightMesh: {fileID: 0}
+  atmoPreset: {fileID: 0}
   __m_sunLight__: 0
   m_temperature: 6570
   m_areaSize: {x: 1, y: 1}
@@ -1358,7 +1365,7 @@ GameObject:
   - component: {fileID: 1838033256}
   - component: {fileID: 1838033255}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Far Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1434,10 +1441,10 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1838033254}
   m_LocalRotation: {x: -0, y: 0.0032204739, z: -0, w: 0.9999948}
-  m_LocalPosition: {x: 0, y: 487, z: -9753}
-  m_LocalScale: {x: 1600, y: 1200, z: 1}
+  m_LocalPosition: {x: 207.168, y: 1880.616, z: -9754.067}
+  m_LocalScale: {x: 2720.64, y: 4000, z: 1}
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 26650425}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0.369, z: 0}
 --- !u!1 &1874378685
@@ -1477,6 +1484,7 @@ MonoBehaviour:
   areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
   drawLightMesh: 1
   lightMesh: {fileID: 0}
+  atmoPreset: {fileID: 0}
   __m_sunLight__: 0
   m_temperature: 6270
   m_areaSize: {x: 2.7803977, y: 1.6616112}

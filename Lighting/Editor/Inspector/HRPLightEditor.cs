@@ -12,6 +12,8 @@ namespace HypnosRenderPipeline
         public Light m_light;
         public HRPLight m_lightData;
 
+        Editor m_cacheEditor;
+
         SerializedObject m_lighdDataObject;
 
         Action<GUIContent, SerializedProperty> m_sliderMethod;
@@ -19,6 +21,7 @@ namespace HypnosRenderPipeline
         Texture2D m_ColorTempTex;
 
         bool showLegacyLightInspector = false;
+        bool showAtmoInspector = false;
 
         class Properties
         {
@@ -31,6 +34,8 @@ namespace HypnosRenderPipeline
             public static SerializedProperty areaTexture;
             public static SerializedProperty lightMesh;
             public static SerializedProperty drawLightMesh;
+            public static SerializedProperty atmoPreset;
+
 
             public static void Gets(SerializedObject obj)
             {
@@ -43,6 +48,7 @@ namespace HypnosRenderPipeline
                 areaTexture = obj.FindProperty("areaTexture");
                 lightMesh = obj.FindProperty("lightMesh");
                 drawLightMesh = obj.FindProperty("drawLightMesh");
+                atmoPreset = obj.FindProperty("atmoPreset");                
             }
         }
 
@@ -119,9 +125,34 @@ namespace HypnosRenderPipeline
                 sun = EditorGUILayout.Toggle("Sun Light", m_lightData.sunLight);
             }
 
-            EditorGUI.BeginDisabledGroup(m_lightData.sunLight);
+            if (m_lightData.sunLight)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.ObjectField(Properties.atmoPreset);
+                if (GUILayout.Button("new", new GUILayoutOption[] { GUILayout.Width(50) }))
+                {
+                    var atmo = HRPAtmo.Create();
+                    if (atmo)
+                    {
+                        Properties.atmoPreset.objectReferenceValue = atmo;
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+                if (m_lightData.atmoPreset != null)
+                {
+                    if (m_cacheEditor == null)
+                        m_cacheEditor = Editor.CreateEditor(m_lightData.atmoPreset);
+
+                    Rect rect = EditorGUILayout.BeginVertical();
+                    EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.3f));
+                    showAtmoInspector = EditorGUILayout.Foldout(showAtmoInspector, new GUIContent("Show Atmo Inspector"));
+                    if (showAtmoInspector)
+                        m_cacheEditor.OnInspectorGUI();
+                    EditorGUILayout.EndVertical();
+                }
+            }
+
             m_sliderMethod(new GUIContent("Temperature"), Properties.temperature);
-            EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.PropertyField(Properties.radiance);
 

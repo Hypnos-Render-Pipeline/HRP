@@ -170,6 +170,11 @@ namespace HypnosRenderPipeline
         public float spotAngle { get { return m_light.spotAngle; } set { m_light.spotAngle = spotAngle; } }
 
         /// <summary>
+        /// The atmosphere preset associated with this light, the preset will work only when this light is the sunlight.
+        /// </summary>
+        public HRPAtmo atmoPreset;
+
+        /// <summary>
         /// This will trigger regenrate of light struct, call this frequently may cause performance issue
         /// </summary>
         public LightStructGPU lightStructGPU { get {

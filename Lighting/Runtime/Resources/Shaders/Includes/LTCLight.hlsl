@@ -579,7 +579,7 @@ float3 TubeLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 
 
 float3 DiscLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4 lightX, float4 lightY, float3 pos, float3 view) {
-
+	if (distance(pos, lightPos) > 500) return 0; // some weird bug happend in faraway from light pos
 	float3 baseColor = surface.baseColor;
 	float roughness = 1 - surface.smoothness;
 	float metallic = surface.metallic;

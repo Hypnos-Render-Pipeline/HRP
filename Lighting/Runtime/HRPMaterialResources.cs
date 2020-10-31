@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class HRPMaterialResources : ScriptableObject
+namespace HypnosRenderPipeline
 {
-    public Material defaultMaterial;
+    public class HRPMaterialResources : ScriptableObject
+    {
+        public Material defaultMaterial;
+    }
 }
