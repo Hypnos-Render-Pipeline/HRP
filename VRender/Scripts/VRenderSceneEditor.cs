@@ -19,7 +19,7 @@ class VRenderForScene
     public VRenderParameters.LightSetting lightSetting;
     public bool enableFog;
     public VRenderParameters.DebugMode debug;
-    public float removeFlare = 10;
+    public float removeFlare = 2;
     public LayerMask layer = -1;
 
     Texture2D rtxon;

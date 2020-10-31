@@ -192,11 +192,12 @@ namespace HypnosRenderPipeline
                 bounds.size = Vector3.one * light.range;
                 if (GeometryUtility.TestPlanesAABB(m_planes, bounds))
                 {
-                    if (light.isArea)
+                    float dis = Vector3.Distance(camera_pos, light.transform.position);
+                    if (light.isArea && dis < faraway)
                     {
                         list.areas.Add(light);
                     }
-                    else if (Vector3.Distance(camera_pos, bounds.center) > faraway)
+                    else if (dis > faraway)
                     {
                         list.faraways.Add(light);
                     }
@@ -230,7 +231,7 @@ namespace HypnosRenderPipeline
                 float dis = Vector3.Distance(camera_pos, light.transform.position);
                 if (dis < radius + light.range)
                 {
-                    if (light.isArea)
+                    if (light.isArea && dis < faraway)
                     {
                         list.areas.Add(light);
                     }

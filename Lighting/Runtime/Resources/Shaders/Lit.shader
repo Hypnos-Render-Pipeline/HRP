@@ -601,6 +601,8 @@
 					IN.metallic = _Metallic;
 					IN.smoothness = _Smoothness;
 				#endif
+				
+				IN.gnormal = i.tangentToWorld[2];
 
 				#if _NORMALMAP
 					half3 normal = UnpackScaleNormal(_BumpMap.SampleLevel(sampler_BumpMap, uv, 0), _BumpScale);

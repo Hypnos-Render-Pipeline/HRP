@@ -57,7 +57,7 @@ float3 PathTracer(const int maxDepth,
          
 		if (fogWeight.w) { //pick surface 
 
-			pos = t.yzw + (lerp(0.001, 0.0001, abs(dot(normal, dir))) + lerp(0.001, 0.0001, abs(dot(normal, nextDir)))) * normal;
+			pos = t.yzw;
 			dir = nextDir;
 
 			res += weight.xyz * fogWeight.xyz * directColor;
@@ -175,7 +175,7 @@ float3 PathTracer_IrrCache(const int maxDepth,
             if (fogWeight.w)
             { //pick surface 
 
-                pos = t.yzw + (lerp(0.001, 0.0001, abs(dot(normal, dir))) + lerp(0.001, 0.0001, abs(dot(normal, nextDir)))) * normal;
+                pos = t.yzw;
                 dir = nextDir;
 
                 incre_res = weight.xyz * fogWeight.xyz * directColor;   

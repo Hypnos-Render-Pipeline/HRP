@@ -1,0 +1,61 @@
+﻿#pragma kernel CSMain
+
+#define T T_TAB
+#include "../Includes/Atmo/Atmo.hlsl"
+
+RWTexture3D<float3> _Result;
+float3 _Size;
+
+float4 _ProjectionParams, _ScreenParams;
+float4x4 unity_CameraProjection, unity_CameraToWorld;
+float4 _WorldSpaceCameraPos;
+
+float3 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)
+{
+    float camPosZ = _ProjectionParams.y + (_ProjectionParams.z - _ProjectionParams.y) * linearDepth;
+    float height = 2 * camPosZ / unity_CameraProjection._m11;
+    float width = _ScreenParams.x / _ScreenParams.y * height;
+
+    float camPosX = width * uv.x - width / 2;
+    float camPosY = height * uv.y - height / 2;
+    float4 camPos = float4(camPosX, camPosY, camPosZ, 1.0);
+    return mul(unity_CameraToWorld, camPos).xyz;
+}
+
+[numthreads(4, 4, 4)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    if (any(id >= uint3(_Size))) return;
+
+    float3 uv = (id + 0.5) / _Size;
+
+    float3 wpos = GetWorldPositionFromDepthValue(uv.xy, 1);
+    float3 v = normalize(wpos - _WorldSpaceCameraPos.xyz);
+    float3 s = normalize(_SunDir);
+    float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
+    float d = uv.z * _MaxDepth;
+
+    float3 res = 0;
+
+    [unroll]
+    do {
+        float3 x_0;
+        if (x.y > atmosphere_radius - 1) {
+            float2 dis;
+            if (!X_Up(x, v, dis)) break;
+            if (dis.x > d) break;
+            dis.y = min(d, dis.y);
+            x = x + dis.x * v;
+            x_0 = x + dis.y * v;
+        }
+        else {
+            X_0(x, v, x_0);
+            float d_ = distance(x, x_0);
+            d_ = min(d_, d);
+            x_0 = x + v * d_;
+        }
+        res = Scatter(x, x_0, s, 16);
+    } while (0);
+
+    _Result[id] = res * _SunLuminance;
+}

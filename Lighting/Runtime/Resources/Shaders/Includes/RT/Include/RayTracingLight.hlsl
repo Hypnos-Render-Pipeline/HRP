@@ -40,7 +40,7 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 
 	[branch]
 	if (light.type == 2) { //Spot
-		float3 lpos = light.position;
+		float3 lpos = UniformSampleSphere(sample_2D + 0.5).xyz * 0.01 + light.position;
 		L = (lpos - position);
 		float range = light.c;
 		float3 dir = light.b.xyz;
@@ -62,15 +62,15 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		float k = saturate(1 - (1 - dot(L, dir)) / (1 - cos_angle));
 		att *= sqrt(k);
 
-		end_point = float3(sample_2D, SAMPLE) * 0.1 + light.position; sampleState.w++;
+		end_point = lpos;
 	}
 	else if (light.type == 0) { //Directional
 		L = light.b;
 		att = 1;
-		end_point = position + float3(sample_2D, SAMPLE) * 10 + L * 100; sampleState.w++;
+		end_point = position + UniformSampleSphere(sample_2D + 0.5).xyz * 10 + L * 100;
 	}
 	else if (light.type == 1) { //Point
-		float3 lpos = light.position;
+		float3 lpos = UniformSampleSphere(sample_2D + 0.5).xyz * light.b.y + light.position;
 		L = (lpos - position);
 		float range = light.b;
 
@@ -86,7 +86,7 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 			att *= att;
 		}
 
-		end_point = float3(sample_2D, SAMPLE) * light.b.y * 2 + light.position; sampleState.w++;
+		end_point = lpos;
 	} 
 	else if (light.type == 5) { //Rectangle
 		float3 lpos = (light.b.xyz * sample_2D.x + light.c.xyz * sample_2D.y) + light.position;

@@ -79,7 +79,7 @@ namespace HypnosRenderPipeline.RenderPass
                 context.commandBuffer.SetGlobalTexture("_AOTex", ao);
             else
                 context.commandBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
-
+            Debug.Log(lights.handle.areas.Count);
             foreach (var light in lights.handle.areas)
             {
                 if (light.isArea)

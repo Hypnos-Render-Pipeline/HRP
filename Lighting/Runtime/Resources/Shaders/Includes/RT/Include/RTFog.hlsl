@@ -254,6 +254,36 @@ float3 TraceShadowWithFog_PreventSelfShadow(const float3 start, const float3 end
 	return shadow;
 }
 
+float3 LightLuminanceWithFog(float3 pos, float3 dir,
+	inout int4 sampleState) {
+	int light_count = clamp(_LightCount, 0, 100);
+	if (light_count == 0) return 0;
+	float rnd = SAMPLE; sampleState.w++;
+	float3 direct_light = 0;
+	{
+		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
+
+		float attenuation;
+		float3 lightDir;
+		float3 end_point;
+
+		bool in_light_range = ResolveLightWithDir(light, pos, dir,
+			/*out*/attenuation, /*out*/end_point);
+
+		[branch]
+		if (in_light_range) {
+			float3 luminance = attenuation * light.color;
+			float3 shadow = TraceShadow(pos, end_point,
+				/*inout*/sampleState);
+
+			direct_light = shadow * luminance * light_count;
+#ifdef _ENABLEFOG
+			if (any(direct_light != 0)) direct_light *= Tr(pos, dir, distance(pos, end_point), sampleState);
+#endif
+		}
+	}
+	return direct_light;
+}
 
 float3 LightLuminanceCameraWithFog(float3 pos, float3 dir,
 	inout int4 sampleState) {

@@ -43,11 +43,11 @@ namespace HypnosRenderPipeline
                         break;
                     case HRPLightType.Point:
                         s.b.x = light.range / 10;
-                        s.b.y = 0.001f;
+                        s.b.y = 0.01f;
                         break;
                     case HRPLightType.Sphere:
                         s.b.x = light.range / 10;
-                        s.b.y = light.sphereRadius;
+                        s.b.y = math.max(0.01f, light.sphereRadius);
                         break;
                     case HRPLightType.Quad:
                         s.b = float4(float4(light.transform.localToWorldMatrix.GetColumn(0)).xyz * light.quadSize.x, light.range / 10);

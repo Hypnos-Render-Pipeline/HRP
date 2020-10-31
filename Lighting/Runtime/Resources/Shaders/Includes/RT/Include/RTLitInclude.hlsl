@@ -153,9 +153,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				out float3 directColor, out float3 nextDir, out float3 gN)
 {
 	SurfaceInfo surface = GetSurfaceInfo(IN);
-	// post process spec ao
-	float diffuseAO = surface.diffuseAO_specAO.x;
-	surface.diffuseAO_specAO.y = CalculateSpecAO(surface.diffuseAO_specAO.y, 1 - surface.smoothness, viewDir, IN.gN);
+
 	// increase bias but remove many flare points.
 	surface.smoothness = min(1 - rayRoughness, surface.smoothness);
 
@@ -177,6 +175,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			float2 rand_num_light = SAMPLE;
 			Light light = _LightList[floor(min(rand_num_light.x, 0.99) * light_count)];
 
+			if (light.type <= SPOT) useSpecLightDir = false;
+
 			float attenuation;
 			float3 lightDir;
 			float3 end_point;
@@ -184,8 +184,6 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			bool in_light_range = ResolveLight(light, IN.position,
 				/*inout*/sampleState,
 				/*out*/attenuation, /*out*/lightDir, /*out*/end_point);
-
-			surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, lightDir, IN.gN);
 
 			float3 luminance = attenuation * light.color;
 #ifdef _SUBSURFACE
@@ -211,15 +209,12 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		float2 sample_2D;
 		sample_2D.x = SAMPLE;
 		sample_2D.y = SAMPLE;
-		float4 n = ImportanceSampleGGX(sample_2D, max(1 - surface.smoothness, 0.02));
+		float4 n = ImportanceSampleGGX(sample_2D, max((1 - surface.smoothness) * (1 - surface.smoothness), 0.008));
 		n.xyz = mul(n.xyz, IN.tangentToWorld);
 		nextDir = reflect(-viewDir, n);
 		gN = IN.gN;
 
 		if (dot(nextDir, surface.normal) > 0) {
-
-			surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
-
 			directColor += PBS(PBS_SPECULAR, surface, nextDir, LightLuminanceCameraWithFog(IN.position, nextDir, sampleState), viewDir);
 		}
 	}
@@ -294,7 +289,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 			{
 				float3 direct_light = 0;
-				float2 rand_num_light = SAMPLE; sampleState.w++;
+				float2 rand_num_light = SAMPLE; /*sampleState.w++;*/
 				int light_count = clamp(_LightCount, 0, 100);
 				if (light_count)
 				{
@@ -312,13 +307,11 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 					float NdotL = saturate(dot(lightDir, surface.normal));
 
-					surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, lightDir, IN.gN);
-
 					float3 direct_light_without_shadow = NdotL * PBS(PBS_DIFFUSE, surface, lightDir, luminance, viewDir);
 
 					[branch]
 					if (in_light_range && dot(direct_light_without_shadow, 1) > 0) {
-						float3 shadow = TraceShadowWithFog_PreventSelfShadow(position, end_point,
+						float3 shadow = TraceShadowWithFog_PreventSelfShadow(position + gN * 0.00001, end_point,
 							/*inout*/sampleState);
 
 						direct_light += shadow * direct_light_without_shadow * light_count;
@@ -334,8 +327,6 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 				nextDir = CosineSampleHemisphere(sample_2D, surface.normal);
 
-				surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
-
 				float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
 				weight.xyz = (1 - surface.transparent) * coef / refr_diff_refl_coat.y / (rayRoughness == 0 ?  pdf : 1);
@@ -350,8 +341,6 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 			nextDir = CosineSampleHemisphere(sample_2D, surface.normal);
 			rayRoughness = 1;
-
-			surface.diffuseAO_specAO.x = CalculateDiffuseAO(diffuseAO, nextDir, IN.gN);
 
 			float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
@@ -465,8 +454,10 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 	}\
 	if (rayIntersection.weight.w == TRACE_SHADOW) {\
 		if (rayIntersection.weight.x == InstanceID()) {\
-			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(fragInput.gN, WorldRayDirection())) < 0.27)\
+			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(surface.normal, WorldRayDirection())) < 0.14) {\
 				IgnoreHit();\
+				return;\
+			}\
 		}\
 		if (surface.index == 1) {\
 			float3 place_holder1; float place_holder2;\
@@ -477,16 +468,19 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 			}\
 			else {\
 				IgnoreHit();\
+				return;\
 			}\
 		}\
 		else {\
 			rayIntersection.directColor *= 0;\
 			AcceptHitAndEndSearch();\
+			return;\
 		}\
 	}\
 	else if (rayIntersection.weight.w == TRACE_SELF) {\
 		if (rayIntersection.weight.x != InstanceID()) {\
 			IgnoreHit();\
+			return;\
 		}\
 	}
 #else
@@ -498,8 +492,10 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 	}\
 	if (rayIntersection.weight.w == TRACE_SHADOW) {\
 		if (rayIntersection.weight.x == InstanceID()) {\
-			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(surface.normal, WorldRayDirection())) < 0.14)\
+			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(surface.normal, WorldRayDirection())) < 0.14) {\
 				IgnoreHit();\
+				return;\
+			}\
 		}\
 		if (surface.index == 1) {\
 			float3 place_holder1; float place_holder2;\
@@ -507,18 +503,22 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 			rayIntersection.directColor *= surface.transparent * baseColor;\
 			if (max(rayIntersection.directColor.x, max(rayIntersection.directColor.y, rayIntersection.directColor.z)) == 0) {\
 				AcceptHitAndEndSearch();\
+				return;\
 			}\
 			else {\
 				IgnoreHit();\
+				return;\
 			}\
 		}\
 		else {\
 			rayIntersection.directColor *= 0;\
 			AcceptHitAndEndSearch();\
+			return;\
 		}\
 	}\
 	else if (rayIntersection.weight.w == TRACE_SELF) {\
 		IgnoreHit();\
+		return;\
 	}
 #endif
 

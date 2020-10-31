@@ -269,7 +269,7 @@ float CalculateSpecAO(float ao, float rougness, float3 V, float3 gN) {
 float3 PBS(const int type, SurfaceInfo IN, const float3 lightDir, const float3 lightSatu, const float3 viewDir) {
 	
 	IN.diffuseAO_specAO.x = CalculateDiffuseAO(IN.diffuseAO_specAO.x, lightDir, IN.gnormal);
-	IN.diffuseAO_specAO.y = CalculateSpecAO(IN.diffuseAO_specAO.y, IN.smoothness, viewDir, IN.gnormal);
+	IN.diffuseAO_specAO.y = CalculateSpecAO(IN.diffuseAO_specAO.y, 1 - IN.smoothness, viewDir, IN.gnormal);
 
 	float3 color;
 
