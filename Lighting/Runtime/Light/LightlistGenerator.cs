@@ -31,7 +31,7 @@ namespace HypnosRenderPipeline
                 s.a = float4(trans.position, (int)light.lightType);
                 if (light.lightType == HRPLightType.Sphere) s.a.w = (int)(HRPLightType.Point);
                 s.d = float3(light.color.r, light.color.g, light.color.b) * light.radiance;
-                s.mask = -1;
+                s.mask = light.sunLight ? 1 : -1;
                 switch (light.lightType)
                 {
                     case HRPLightType.Spot:

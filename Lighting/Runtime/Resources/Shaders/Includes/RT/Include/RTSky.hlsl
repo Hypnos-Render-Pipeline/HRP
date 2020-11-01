@@ -3,6 +3,7 @@
 
 #include "./RayTracingLight.hlsl"
 #include "./Sampler.hlsl"
+#include "./RTAtmo.hlsl"
 
 
 int _Procedural;
@@ -39,17 +40,66 @@ inline float2 ToRadialCoords(float3 coords)
    
 //---------------------------------------------
 //----------Expensive Version------------------
-//--------------------------------------------- 
+//---------------------------------------------
+const float3 Scatter(float3 x, const float3 v, const float3 s) {
+	float phi = atan(v.z / v.x) + (v.x > 0 ? (v.z < 0 ? 2 * 3.14159265 : 0) : 3.14159265);
+	phi /= 2 * 3.14159265; phi = v.x == 0 ? (v.z > 0 ? 0.25 : -0.25) : phi;
+
+	float rho;
+	float horiz = length(x);
+	horiz = -sqrt(horiz * horiz - _PlanetRadius * _PlanetRadius) / horiz;
+
+	if (v.y < horiz) {
+		rho = pow((v.y + 1) / (horiz + 1), 2) * 0.5;
+	}
+	else {
+		rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
+	}
+	//return float3(0, rho, 0);
+	float3 scatter = _Skybox.SampleLevel(sampler_Skybox, float2(phi, rho), 0).xyz;
+
+	// prevent error
+	scatter = max(0, scatter);
+
+	float3 sun = 1;
+	sun = T(x, v);
+	sun *= smoothstep(cos(_SunAngle + 0.005), cos(_SunAngle), dot(v, s));
+	sun /= 0.2e4;
+
+	return scatter + sun;
+}
+
 void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
 	if(rayIntersection.weight.w < 0){
 		return;
 	}
 	rayIntersection.t = distance;
-	rayIntersection.weight = 0;
-	if (_Procedural > 0.5) {
-		rayIntersection.directColor = lerp(_MainTex_HDR, _Tint, smoothstep(-0.1, 0.1, WorldRayDirection().y));
+	rayIntersection.weight = 0; 
+	if (_Procedural == 0) {
+		float2 tc = ToRadialCoords(RotateAroundYInDegrees(WorldRayDirection(), -_Rotation));
+		float3 x = mul(_V_Inv, float4(0, 0, 0, 1));
+		x = float3(0, _PlanetRadius + max(95, x.y), 0);
+		rayIntersection.directColor = Scatter(x, WorldRayDirection(), _SunDir) * _SunLuminance;
+
+
+	//	float3 s = normalize(_SunDir);
+	//	float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
+	//	float depth = Linear01Depth(tex2Dlod(_DepthTex, float4(i.uv, 0, 0)));
+
+	//	float3 wpos = GetWorldPositionFromDepthValue(i.uv, depth);
+	//	float3 v = wpos - _WorldSpaceCameraPos;
+	//	bool sky_occ = depth != 1;
+	//	depth = length(v);
+	//	v /= depth;
+
+	//	float3 x_0;
+	//	X_0(x, v, x_0);
+	//	depth = min(depth, distance(x, x_0));
+
+	//	return lerp(ScatterTable(x, v, s) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
+	//		+ (sky_occ ? tex2Dlod(_MainTex, float4(i.uv, 0, 0)).xyz : 0) * T(x, x + depth * v);
 	}
-	else {
+	else if (_Procedural == 1) {
 		float2 tc = ToRadialCoords(RotateAroundYInDegrees(WorldRayDirection(), -_Rotation));
 
 		half4 tex = _Skybox.SampleLevel(sampler_Skybox, tc, rayIntersection.roughness * 7);
@@ -57,6 +107,9 @@ void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
 		c = c * _Tint.rgb;
 		c *= _Exposure;
 		rayIntersection.directColor = c;
+	}
+	else {
+		rayIntersection.directColor = lerp(_MainTex_HDR, _Tint, smoothstep(-0.1, 0.1, WorldRayDirection().y));
 	}
 }
 

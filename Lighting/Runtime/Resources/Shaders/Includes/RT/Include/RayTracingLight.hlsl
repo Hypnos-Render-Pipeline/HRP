@@ -3,6 +3,7 @@
 
 #include "./Sampler.hlsl"
 #include "./TraceRay.hlsl"
+#include "./RTAtmo.hlsl"
 
 #define DIRECTIONAL 0
 #define POINT       1
@@ -31,7 +32,7 @@ int _UseAttenuationCureve;
 Texture2D<float> _AttenuationTex; SamplerState sampler_linear_clamp;
 
 bool ResolveLight(const Light light, const float3 position, inout int4 sampleState,
-					out float att, out float3 L, out float3 end_point)
+					out float3 att, out float3 L, out float3 end_point)
 {
 	float2 sample_2D;
 	sample_2D.x = SAMPLE;
@@ -49,7 +50,7 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		if (_UseAttenuationCureve) {
 			att = length(L);
 			L /= att;
-			att = _AttenuationTex.SampleLevel(sampler_linear_clamp, float2((att / range / 10), 0.5), 0);
+			att = _AttenuationTex.SampleLevel(sampler_linear_clamp, float2((att.x / range / 10), 0.5), 0);
 		}
 		else {
 			att = 1 / length(L);
@@ -65,9 +66,12 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		end_point = lpos;
 	}
 	else if (light.type == 0) { //Directional
-		L = light.b;
+		end_point = position + UniformSampleSphere(sample_2D + 0.5).xyz * sin(_SunAngle) * 9999 + light.b * 9999;
+		L = normalize(end_point - position);
 		att = 1;
-		end_point = position + UniformSampleSphere(sample_2D + 0.5).xyz * 10 + L * 100;
+		if (light.mask == 1) {
+			att = T(float3(0, _PlanetRadius + max(95, position.y), 0), L);
+		}
 	}
 	else if (light.type == 1) { //Point
 		float3 lpos = UniformSampleSphere(sample_2D + 0.5).xyz * light.b.y + light.position;
@@ -77,7 +81,7 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		if (_UseAttenuationCureve) {
 			att = length(L);
 			L /= att;
-			att = _AttenuationTex.SampleLevel(sampler_linear_clamp, float2((att / range / 10), 0.5), 0);
+			att = _AttenuationTex.SampleLevel(sampler_linear_clamp, float2((att.x / range / 10), 0.5), 0);
 		}
 		else {
 			att = 1 / length(L);
@@ -154,7 +158,7 @@ float4 FindPlanePoint(float3 pos, float3 dir, float3 p, float3 n) {
 }
 
 bool ResolveLightWithDir(const Light light, const float3 position, const float3 direction,
-							out float att, out float3 end_point)
+							out float3 att, out float3 end_point)
 {
 	[branch]
 	if (light.type == 2) { //Spot
@@ -189,6 +193,9 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 		}
 
 		att = dot(direction, L) * (10 - lpos.w) / 10;
+		if (light.mask == 1) {
+			att = T(float3(0, _PlanetRadius + max(95, position.y), 0), direction);
+		}
 		end_point = lpos.xyz;
 	}
 	else if (light.type == 1) { //Point
@@ -259,7 +266,7 @@ float3 LightLuminance(float3 pos, float3 dir,
 	{
 		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
-		float attenuation;
+		float3 attenuation;
 		float3 lightDir;
 		float3 end_point;
 
@@ -289,7 +296,7 @@ float3 LightLuminanceCamera(float3 pos, float3 dir,
 
 		if (light.type <= SPOT) return 0;
 
-		float attenuation;
+		float3 attenuation;
 		float3 lightDir;
 		float3 end_point;
 
@@ -320,7 +327,7 @@ float3 LightLuminanceSpec(float3 pos, float3 dir,
 
 		if (light.type > SPOT) return 0;
 
-		float attenuation;
+		float3 attenuation;
 		float3 lightDir;
 		float3 end_point;
 

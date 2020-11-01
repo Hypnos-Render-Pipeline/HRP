@@ -334,7 +334,7 @@ const float3 Scatter1234_(const float3 x, const float3 s) {
 	return (beta_R + beta_M) * scatter;
 }
 
-const float3 Scatter(const float3 x, float3 x_0, const float3 s, const int dirSampleNum = 128) {
+const float3 Scatter(const float3 x, float3 x_0, const float3 s, const int dirSampleNum = 128, bool includeTu = true) {
 	x_0 = lerp(x, x_0, 0.99);
 	const float dis = distance(x, x_0);
 
@@ -353,7 +353,8 @@ const float3 Scatter(const float3 x, float3 x_0, const float3 s, const int dirSa
 
 	float horiz = length(x);
 	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
-	if (dot(normalize(x), v) < horiz)
+
+	if (includeTu && dot(normalize(x), v) < horiz)
 		res += Tu_L(x_0, s) * T_tab_fetch(x_0, -v);
 
 	return res;

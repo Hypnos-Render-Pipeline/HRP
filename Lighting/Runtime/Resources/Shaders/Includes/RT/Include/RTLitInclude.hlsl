@@ -177,7 +177,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 			if (light.type <= SPOT) useSpecLightDir = false;
 
-			float attenuation;
+			float3 attenuation;
 			float3 lightDir;
 			float3 end_point;
 
@@ -295,7 +295,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				{
 					Light light = _LightList[floor(min(rand_num_light.y, 0.99) * light_count)];
 
-					float attenuation;
+					float3 attenuation;
 					float3 lightDir;
 					float3 end_point;
 

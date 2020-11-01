@@ -145,9 +145,7 @@ namespace HypnosRenderPipeline
 
                     Rect rect = EditorGUILayout.BeginVertical();
                     EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.3f));
-                    showAtmoInspector = EditorGUILayout.Foldout(showAtmoInspector, new GUIContent("Show Atmo Inspector"));
-                    if (showAtmoInspector)
-                        m_cacheEditor.OnInspectorGUI();
+                    m_cacheEditor.OnInspectorGUI();
                     EditorGUILayout.EndVertical();
                 }
             }

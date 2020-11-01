@@ -142,7 +142,7 @@ public class VRender : IDisposable
 {
     public VRenderParameters parameters;
 
-    HypnosRenderPipeline.BNSLoader bnsLoader;
+    BNSLoader bnsLoader;
 
 
     RayTracingShader rtShader_fog, rtShader_nofog;
@@ -171,6 +171,13 @@ public class VRender : IDisposable
 
     RenderTexture history = null, record = null;
 
+    RenderTexture TLut;
+    RenderTexture MSLut;
+    RenderTexture VolumeLut;
+    RenderTexture SkyLut;
+
+    int hash;
+
     public VRender(Camera cam, VRenderParameters parameters = null)
     {
         cb = GetCB(cam, "RayTrace", CameraEvent.BeforeImageEffects);
@@ -191,6 +198,29 @@ public class VRender : IDisposable
         tex3D_iv.autoGenerateMips = false;
         tex3D_iv.enableRandomWrite = true;
         tex3D_iv.Create();
+
+        TLut = new RenderTexture(512, 513, 0, RenderTextureFormat.ARGBFloat);
+        MSLut = new RenderTexture(128, 128, 0, RenderTextureFormat.ARGBFloat);
+        SkyLut = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGBFloat);
+        VolumeLut = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGBFloat);
+        VolumeLut.enableRandomWrite = true;
+        VolumeLut.dimension = TextureDimension.Tex3D;
+        VolumeLut.volumeDepth = 1;
+        VolumeLut.Create();
+
+        hash = Time.time.GetHashCode();
+
+        //if (LightManager.sunLight != null && LightManager.sunLight.atmoPreset != null)
+        //{
+        //    Color lum;
+        //    Vector3 dir;
+        //    var sun = LightManager.sunLight;
+        //    var atmo = sun.atmoPreset;
+        //    atmo = sun.atmoPreset;
+        //    lum = sun.color * sun.radiance * math.pow(10, 4.6f);
+        //    dir = -sun.direction;
+        //    atmo.GenerateLut(hash, cb, TLut, MSLut, lum, dir, true);
+        //}
 
         if (parameters == null)
         {
@@ -348,6 +378,7 @@ public class VRender : IDisposable
             default:
                 break;
         }
+
         parameters.temporalFrameNum = temporalFrameNumSwith;
     }
 
@@ -454,9 +485,28 @@ public class VRender : IDisposable
         {
             shaderName = RenderSettings.skybox.shader.name;
         }
-        if (shaderName == "Skybox/Panoramic")
+        if (LightManager.sunLight != null && LightManager.sunLight.atmoPreset != null)
         {
+            Color lum;
+            Vector3 dir;
+            var sun = LightManager.sunLight;
+            var atmo = sun.atmoPreset;
+            atmo = sun.atmoPreset;
+            lum = sun.color * sun.radiance * math.pow(10, 4.6f);
+            dir = -sun.direction;
+
+            if (atmo.GenerateLut(hash, cb, TLut, MSLut, lum, dir)) ReRender();
+
+            atmo.GenerateVolumeSkyTexture(cb, VolumeLut, SkyLut, 0);
+
             cb.SetRayTracingIntParam(rtShader, "_Procedural", 0);
+
+            cb.SetRayTracingTextureParam(rtShader, "_Skybox", SkyLut);
+            cb.SetGlobalTexture("_TLut", TLut);
+        }
+        else if (shaderName == "Skybox/Panoramic")
+        {
+            cb.SetRayTracingIntParam(rtShader, "_Procedural", 1);
             Texture tex = RenderSettings.skybox.GetTexture("_MainTex");
             if (tex == null) tex = Texture2D.whiteTexture;
             cb.SetRayTracingTextureParam(rtShader, "_Skybox", tex);
@@ -464,13 +514,15 @@ public class VRender : IDisposable
             cb.SetRayTracingFloatParam(rtShader, "_Exposure", RenderSettings.skybox.GetFloat("_Exposure"));
             cb.SetRayTracingFloatParam(rtShader, "_Rotation", RenderSettings.skybox.GetFloat("_Rotation"));
             cb.SetRayTracingVectorParam(rtShader, "_MainTex_HDR", RenderSettings.skybox.GetVector("_MainTex_HDR"));
+            cb.SetGlobalTexture("_TLut", Texture2D.whiteTexture);
         }
         else
         {
-            cb.SetRayTracingIntParam(rtShader, "_Procedural", 1);
+            cb.SetRayTracingIntParam(rtShader, "_Procedural", 2);
             cb.SetRayTracingTextureParam(rtShader, "_Skybox", Texture2D.whiteTexture);
             cb.SetRayTracingVectorParam(rtShader, "_Tint", new Vector4(103, 128, 165) / 256);
             cb.SetRayTracingVectorParam(rtShader, "_MainTex_HDR", new Vector4(107, 91, 58) / 256);
+            cb.SetGlobalTexture("_TLut", Texture2D.whiteTexture);
         }
     }
 
