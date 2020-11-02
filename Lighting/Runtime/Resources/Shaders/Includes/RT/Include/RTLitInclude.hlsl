@@ -16,12 +16,8 @@
 
 half3 UnpackScaleNormalRGorAG(half4 packednormal, half bumpScale)
 {
-
-	// This do the trick
-	packednormal.x *= packednormal.w;
-
 	half3 normal;
-	normal.xy = (packednormal.xy * 2 - 1);
+	normal.xy = (packednormal.wy * 2 - 1);
 
 	// SM2.0: instruction count limitation
 	// SM2.0: normal scaler is not supported

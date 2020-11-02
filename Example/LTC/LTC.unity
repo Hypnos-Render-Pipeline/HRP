@@ -141,7 +141,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2664259
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -873,7 +873,7 @@ MonoBehaviour:
   radiance: 2
   IESProfile: {fileID: 0}
   shadow: 1
-  areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
+  areaTexture: {fileID: 0}
   drawLightMesh: 1
   lightMesh: {fileID: 0}
   atmoPreset: {fileID: 0}
@@ -1393,7 +1393,7 @@ MonoBehaviour:
   radiance: 4
   IESProfile: {fileID: 0}
   shadow: 1
-  areaTexture: {fileID: 2800000, guid: 76e2862a0fff4134890687eb0da3a3b0, type: 3}
+  areaTexture: {fileID: 0}
   drawLightMesh: 1
   lightMesh: {fileID: 0}
   atmoPreset: {fileID: 0}
