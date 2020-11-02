@@ -88,6 +88,8 @@
                 #define T T_TAB
                 #include "../Includes/Atmo/Atmo.hlsl"
 
+                int _RenderGround;
+
                 fixed3 frag(v2f i) : SV_Target
                 {
                     float3 s = normalize(_SunDir);
@@ -132,7 +134,7 @@
                         X_0(x, v, x_0);
                     }
 
-                    float3 res = Scatter(x, x_0, s);
+                    float3 res = Scatter(x, x_0, s, 128, _RenderGround);
                     return res;
                 }
             ENDCG
@@ -150,6 +152,8 @@
 
                 sampler2D _DepthTex;
                 sampler2D _MainTex;
+
+                int _RenderGround;
 
                 float4 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)
                 {
@@ -179,7 +183,7 @@
                     X_0(x, v, x_0);
                     depth = min(depth, distance(x, x_0));
 
-                    return lerp(ScatterTable(x, v, s) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
+                    return lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
                             +(sky_occ ? tex2Dlod(_MainTex, float4(i.uv, 0, 0)).xyz : 0) * T(x, x + depth * v);
                 }
             ENDCG

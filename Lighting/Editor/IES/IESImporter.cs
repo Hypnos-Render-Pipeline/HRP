@@ -1,10 +1,10 @@
-﻿using UnityEditor.Experimental.AssetImporters;
+﻿
 
 namespace HypnosRenderPipeline
 {
 
-    [ScriptedImporter(1, ".ies")]
-    public class IESImporter : ScriptedImporter
+    [UnityEditor.AssetImporters.ScriptedImporter(1, ".ies")]
+    public class IESImporter : UnityEditor.AssetImporters.ScriptedImporter
     {
         public int resolution = 256;
 
@@ -15,7 +15,7 @@ namespace HypnosRenderPipeline
         public float candela;
 
 
-        public override void OnImportAsset(AssetImportContext ctx)
+        public override void OnImportAsset(UnityEditor.AssetImporters.AssetImportContext ctx)
         {
             var parser = new IESParser(ctx.assetPath);
             var cubemap = parser.RenderCubemap(resolution);

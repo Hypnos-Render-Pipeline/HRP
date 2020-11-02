@@ -71,7 +71,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     for (int i = 0; i < files.Length; i++)
                     {
                         var file = files[i];
-                        if (file.Name.Contains(Node.nodeName) && !file.Name.EndsWith(".meta"))
+                        if (file.Name == Node.nodeName + ".cs")
                         {
                             find = true;
                             System.Diagnostics.Process.Start(file.FullName);

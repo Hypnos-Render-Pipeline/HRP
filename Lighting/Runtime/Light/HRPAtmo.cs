@@ -27,6 +27,8 @@ namespace HypnosRenderPipeline
         [Min(0)]
         public float MultiScatterStrength = 1f;
 
+        public bool RenderGround = false;
+
         static ComputeShaderWithName volumeScatter = new ComputeShaderWithName("Shaders/Atmo/VolumeScatterLut");
         static MaterialWithName lutMat = new MaterialWithName("Hidden/AtmoLut");
 
@@ -151,6 +153,7 @@ namespace HypnosRenderPipeline
         /// <param name="sky"></param>
         public void GenerateVolumeSkyTexture(CommandBuffer cb, RenderTexture volume, RenderTexture sky, float maxDepth)
         {
+            cb.SetGlobalFloat("_RenderGround", RenderGround ? 1 : 0);
             cb.SetGlobalVector("_SLutResolution", new Vector4(sky.width, sky.height));
             cb.SetGlobalFloat("_MaxDepth", maxDepth); 
             cb.Blit(null, sky, lutMat, 2); 

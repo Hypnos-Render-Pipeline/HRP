@@ -460,7 +460,7 @@ public class VRender : IDisposable
     void UpdateAccelerationStructure()
     {
         var acc = RTRegister.AccStruct(parameters.cullingMask);
-        acc.Update();
+        acc.Build();
         cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", acc);
         if (parameters.cullingMask != lastlayer)
         {

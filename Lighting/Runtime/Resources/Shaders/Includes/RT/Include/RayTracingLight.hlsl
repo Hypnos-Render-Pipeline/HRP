@@ -70,7 +70,7 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		L = normalize(end_point - position);
 		att = 1;
 		if (light.mask == 1) {
-			att = T(float3(0, _PlanetRadius + max(95, position.y), 0), L);
+			att = Sunlight(float3(0, _PlanetRadius + max(95, position.y), 0), L);
 		}
 	}
 	else if (light.type == 1) { //Point
@@ -194,7 +194,7 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 
 		att = dot(direction, L) * (10 - lpos.w) / 10;
 		if (light.mask == 1) {
-			att = T(float3(0, _PlanetRadius + max(95, position.y), 0), direction);
+			att = Sunlight(float3(0, _PlanetRadius + max(95, position.y), 0), direction);
 		}
 		end_point = lpos.xyz;
 	}

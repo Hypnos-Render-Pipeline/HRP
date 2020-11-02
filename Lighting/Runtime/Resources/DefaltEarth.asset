@@ -21,3 +21,4 @@ MonoBehaviour:
   OzoneStrength: 1
   sunSolidAngle: 0.008726647
   MultiScatterStrength: 1
+  RenderGround: 0

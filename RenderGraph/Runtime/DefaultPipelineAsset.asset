@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8437931b8738e3b4c93d5bde231201df, type: 3}
   m_Name: DefaultPipelineAsset
   m_EditorClassIdentifier: NewAssembly::HypnosRenderPipelineAsset
-  hypnosRenderPipelineGraph: {fileID: 11400000, guid: 6675f19fb88da4c4792e873c1e25bef9, type: 2}
+  hypnosRenderPipelineGraph: {fileID: 11400000, guid: 6675f19fb88da4c4792e873c1e25bef9,
+    type: 2}
   materialResources: {fileID: 11400000, guid: 7198c7ce62b96034191bf467226244b1, type: 2}

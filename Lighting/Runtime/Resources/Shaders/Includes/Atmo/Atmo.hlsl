@@ -355,7 +355,7 @@ const float3 Scatter(const float3 x, float3 x_0, const float3 s, const int dirSa
 	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
 
 	if (includeTu && dot(normalize(x), v) < horiz)
-		res += Tu_L(x_0, s) * T_tab_fetch(x_0, -v);
+		res += Tu_L(x_0, s) / pi * T_tab_fetch(x_0, v);
 
 	return res;
 }
@@ -411,7 +411,7 @@ const float3 L2(const float3 x, const float3 s, const int sampleNum = 128) {
 	return res;
 }
 
-const float3 ScatterTable(float3 x, const float3 v, const float3 s) {
+const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool includeTu = true) {
 	float phi = atan(v.z / v.x) + (v.x > 0 ? (v.z < 0 ? 2 * pi : 0) : pi);
 	phi /= 2 * pi; phi = v.x == 0 ? (v.z > 0 ? 0.25 : -0.25) : phi;
 
@@ -439,7 +439,7 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s) {
 	if (rho > coef) {
 		float3 x_0;
 		X_0(x, v, x_0);
-		scatter = lerp(scatter, Scatter(x, x_0, s, 32), (rho - coef) / (1 - coef));
+		scatter = lerp(scatter, Scatter(x, x_0, s, 32, includeTu), (rho - coef) / (1 - coef));
 	}
 	else if (rho < 1 - coef) {
 		float3 x_0;
@@ -448,11 +448,11 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s) {
 			X_Up(x, v, dis);
 			x_0 = x + dis.y * v;
 			x = x + dis.x * v;
-			scatter = Scatter(x, x_0, s);
+			scatter = Scatter(x, x_0, s, 128, includeTu);
 		}
 		else {
 			X_0(x, v, x_0);
-			scatter = Scatter(x, x_0, s);// lerp(Scatter(x, x_0, s, 16), scatter, rho / (1 - coef));
+			scatter = Scatter(x, x_0, s, 128, includeTu);
 		}
 	}
 	// prevent error
@@ -480,6 +480,10 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s) {
 
 const float3 Scatter(const float2 uv, const float depth) {
 	return tex3Dlod(Volume_table, float4(uv, depth / _MaxDepth, 0)).xyz;
+}
+
+const float3 Sunlight(const float3 x, const float3 s) {
+	return T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810;
 }
 
 #endif

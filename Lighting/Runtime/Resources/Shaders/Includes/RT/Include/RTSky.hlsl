@@ -53,10 +53,19 @@ const float3 Scatter(float3 x, const float3 v, const float3 s) {
 		rho = pow((v.y + 1) / (horiz + 1), 2) * 0.5;
 	}
 	else {
-		rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
+		float atmosphere_radius = _PlanetRadius + _AtmosphereThickness;
+		if (length(x) > atmosphere_radius) {
+			float ahoriz = length(x);
+			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
+			if (v.y > ahoriz) rho = -1;
+			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
+		}
+		else {
+			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
+		}
 	}
-	//return float3(0, rho, 0);
-	float3 scatter = _Skybox.SampleLevel(sampler_Skybox, float2(phi, rho), 0).xyz;
+
+	float3 scatter = rho >= 0 ? _Skybox.SampleLevel(sampler_Skybox, float2(phi, rho), 0).xyz : 0;
 
 	// prevent error
 	scatter = max(0, scatter);
@@ -79,7 +88,7 @@ void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
 		float2 tc = ToRadialCoords(RotateAroundYInDegrees(WorldRayDirection(), -_Rotation));
 		float3 x = mul(_V_Inv, float4(0, 0, 0, 1));
 		x = float3(0, _PlanetRadius + max(95, x.y), 0);
-		rayIntersection.directColor = Scatter(x, WorldRayDirection(), _SunDir) * _SunLuminance;
+		rayIntersection.directColor = Scatter(x, WorldRayDirection(), _SunDir) *_SunLuminance;
 
 
 	//	float3 s = normalize(_SunDir);

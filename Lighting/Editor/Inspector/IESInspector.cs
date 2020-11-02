@@ -1,11 +1,11 @@
 ﻿using UnityEditor;
-using UnityEditor.Experimental.AssetImporters;
+
 
 namespace HypnosRenderPipeline
 {
 
     [CustomEditor(typeof(IESImporter))]
-    class IESInspector : AssetImporterEditor
+    class IESInspector : UnityEditor.AssetImporters.AssetImporterEditor
     {
         protected override bool needsApplyRevert => true;
         public override bool showImportedObject => false;
