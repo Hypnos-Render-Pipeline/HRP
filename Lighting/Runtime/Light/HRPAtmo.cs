@@ -178,6 +178,37 @@ namespace HypnosRenderPipeline
             cb.Blit(sceneColor, target, lutMat, 3);
         }
 
+        /// <summary>
+        /// Render atmo, will use the preset camera parameters(_ProjectionParams, _ScreenParams, unity_CameraProjection, unity_CameraToWorld, _WorldSpaceCameraPos). 
+        /// If these value are not set in your pipeline, please set them before call this function.
+        /// </summary>
+        public void RenderToCubeMap(CommandBuffer cb, int target)
+        {
+            cb.SetRenderTarget(target, 0, CubemapFace.PositiveX); 
+            cb.SetGlobalInt("_Slice", 0);
+            cb.Blit(null, BuiltinRenderTextureType.CurrentActive, lutMat, 4);
+
+            cb.SetRenderTarget(target, 0, CubemapFace.NegativeX);
+            cb.SetGlobalInt("_Slice", 1);
+            cb.Blit(null, BuiltinRenderTextureType.CurrentActive, lutMat, 4);
+
+            cb.SetRenderTarget(target, 0, CubemapFace.PositiveY);
+            cb.SetGlobalInt("_Slice", 2);
+            cb.Blit(null, BuiltinRenderTextureType.CurrentActive, lutMat, 4);
+
+            cb.SetRenderTarget(target, 0, CubemapFace.NegativeY);
+            cb.SetGlobalInt("_Slice", 3);
+            cb.Blit(null, BuiltinRenderTextureType.CurrentActive, lutMat, 4);
+
+            cb.SetRenderTarget(target, 0, CubemapFace.PositiveZ);
+            cb.SetGlobalInt("_Slice", 4);
+            cb.Blit(null, BuiltinRenderTextureType.CurrentActive, lutMat, 4);
+
+            cb.SetRenderTarget(target, 0, CubemapFace.NegativeZ);
+            cb.SetGlobalInt("_Slice", 5);
+            cb.Blit(null, BuiltinRenderTextureType.CurrentActive, lutMat, 4);
+        }
+
 #if UNITY_EDITOR
         static public HRPAtmo Create()
         {

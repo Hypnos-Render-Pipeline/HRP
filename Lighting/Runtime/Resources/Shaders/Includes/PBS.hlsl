@@ -245,10 +245,11 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	float DFG = D * G;
 	DFG = F * lerp(DFG, DFG + coatDG, clearCoat);
 	 
-	if (type & 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
-	else if (type & 2) return (G * M_1_PI * F) * lightSatu * ao.y;
-	else if (type & 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
-	else if (type & 8) return nl * DFG * ao.y * lightSatu;
+	if (type == 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
+	else if (type == 2) return (G * M_1_PI * F) * lightSatu * ao.y;
+	else if (type == 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
+	else if (type == 8) return nl * DFG * ao.y * lightSatu;
+	else if (type == 16) return nl * diffuseTerm * diffColor * ao.x * lightSatu;
 	else return 0;
 }
  
@@ -257,6 +258,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 #define PBS_SPECULAR (2)
 #define PBS_FULLY (4)
 #define PBS_SS_SPEC (8)
+#define PBS_SS_DIFFUSE (16)
 
 float CalculateDiffuseAO(float ao, float3 L, float3 gN) {
 	float NdotL = max(0, dot(normalize(L), gN));

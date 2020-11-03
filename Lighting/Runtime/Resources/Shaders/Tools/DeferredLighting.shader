@@ -332,10 +332,12 @@
                 return o;
             }
 
-            float3 frag(v2f i) : SV_Target
+            float4 frag(v2f i) : SV_Target
             {
                 float d = _DepthTex.SampleLevel(sampler_point_clamp, i.uv, 0).x;
                 if (d == 0) return 0;
+                float4 sceneColor = tex2Dlod(_MainTex, float4(i.uv, 0, 0));
+                if (sceneColor.a == 0) return sceneColor;
 
                 float3 camPos = _V_Inv._m03_m13_m23;
                 float3 pos; 
@@ -344,7 +346,8 @@
                     float4 worldPos = mul(_VP_Inv, ndc);
                     pos = worldPos.xyz / worldPos.w;
                 }
-                float3 view = normalize(camPos - pos);
+                float dis = distance(camPos, pos);
+                float3 view = (camPos - pos) / dis;
 
                 SurfaceInfo info = (SurfaceInfo)0;
                 info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
@@ -352,9 +355,19 @@
                                         _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                float3 res = 0;
                 float3 sunColor = _SunColor * Sunlight(float3(0, planet_radius + max(pos.y, 95), 0), _SunDir);
-                return PBS(PBS_FULLY, info, _SunDir, sunColor, view) + tex2Dlod(_MainTex, float4(i.uv, 0, 0));
+                
+#if 1           // trick for the sun disk size
+                float3 halfDir = normalize(view + _SunDir);
+                float3 no = info.normal;
+                info.normal = normalize(lerp(halfDir, info.normal, 1 - dot(halfDir, info.normal) * 0.3 * (pow(sun_angle, 0.2) / pow(0.008726647, 0.2))));
+                float3 res = PBS(PBS_SS_SPEC, info, _SunDir, sunColor, view);
+                info.normal = no;
+                res += PBS(PBS_SS_DIFFUSE, info, _SunDir, sunColor, view);
+#else
+                float3 res = PBS(PBS_FULLY, info, _SunDir, sunColor, view);
+#endif
+                return float4(res, 1) + sceneColor;
             }
             ENDCG
         }

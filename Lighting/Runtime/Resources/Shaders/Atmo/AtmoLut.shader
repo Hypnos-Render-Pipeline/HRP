@@ -167,7 +167,7 @@
                     return mul(unity_CameraToWorld, camPos);
                 }
 
-                fixed3 frag(v2f i) : SV_Target
+                fixed4 frag(v2f i) : SV_Target
                 {
                     float3 s = normalize(_SunDir);
                     float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
@@ -183,11 +183,57 @@
                     X_0(x, v, x_0);
                     depth = min(depth, distance(x, x_0));
 
-                    return lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
-                            +(sky_occ ? tex2Dlod(_MainTex, float4(i.uv, 0, 0)).xyz : 0) * T(x, x + depth * v);
+                    float4 sceneColor = tex2Dlod(_MainTex, float4(i.uv, 0, 0));
+
+                    return float4(lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
+                            +(sky_occ ? sceneColor.xyz : 0) * T(x, x + depth * v), sceneColor.a);
                 }
             ENDCG
         }
+        
+        Pass // Skybox
+        {
+            CGPROGRAM
+                #pragma vertex vert
+                #pragma fragment frag
 
+                #define T T_TAB
+                #include "../Includes/Atmo/Atmo.hlsl"
+
+                int _RenderGround;
+                int _Slice;
+
+                fixed3 frag(v2f i) : SV_Target
+                {
+                    float3 s = normalize(_SunDir);
+                    float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
+                    float3 v = 0;
+
+                    if (_Slice == 0) {
+                        v = normalize(float3(1, lerp(1, -1, i.uv.y), lerp(1, -1, i.uv.x)));
+                    }
+                    else if (_Slice == 1) {
+                        v = normalize(float3(-1, lerp(1, -1, i.uv.y), lerp(-1, 1, i.uv.x)));
+                    }
+                    else if (_Slice == 2) {
+                        v = normalize(float3(lerp(-1, 1, i.uv.x), 1, lerp(-1, 1, i.uv.y)));
+                    }
+                    else if (_Slice == 3) {
+                        v = normalize(float3(lerp(-1, 1, i.uv.x), -1, lerp(1, -1, i.uv.y)));
+                    }
+                    else if (_Slice == 4) {
+                        v = normalize(float3(lerp(-1, 1, i.uv.x), lerp(1, -1, i.uv.y), 1));
+                    }
+                    else if (_Slice == 5) {
+                        v = normalize(float3(lerp(1, -1, i.uv.x), lerp(1, -1, i.uv.y), -1));
+                    }
+
+                    float3 x_0;
+                    X_0(x, v, x_0);
+
+                    return ScatterTable(x, v, s, _RenderGround) * _SunLuminance;
+                }
+            ENDCG
+        }
     }
 }

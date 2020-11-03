@@ -20,6 +20,7 @@ namespace HypnosRenderPipeline.RenderPass
         // pins
         [NodePin(PinType.In)]
         public LightListPin sunLight = new LightListPin();
+
         [NodePin(PinType.InOut, true)]
         public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1));
 
@@ -37,6 +38,9 @@ namespace HypnosRenderPipeline.RenderPass
 
         [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.Out)]
+        public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf) { dimension = TextureDimension.Cube, sRGB = false, useMipMap = false }, sizeScale: SizeScale.Custom);
 
         RenderTexture t_table = null;
         RenderTexture sky_table = null;
@@ -84,19 +88,12 @@ namespace HypnosRenderPipeline.RenderPass
 
                 atmo.RenderToRT(cb, tempColor, depth, target);
 
+                atmo.RenderToCubeMap(cb, skyBox);
+
                 cb.ReleaseTemporaryRT(tempColor);
+
+                //cb.Blit(skyBox, target, skyBoxMat, 0);
             }
-
-
-            //context.commandBuffer.SetGlobalTexture("_DepthTex", depth.handle);
-            //context.commandBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
-            //context.commandBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
-            //context.commandBuffer.SetGlobalTexture("_EmissionTex", emission);
-            //if (ao.connected)
-            //    context.commandBuffer.SetGlobalTexture("_AOTex", ao);
-            //else
-            //    context.commandBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
-
         }
 
         bool TestRTChange(ref RenderTexture rt, RenderTextureFormat format, Vector2Int wh)
@@ -106,6 +103,7 @@ namespace HypnosRenderPipeline.RenderPass
                 if (rt != null) rt.Release();
                 rt = new RenderTexture(wh.x, wh.y, 0, format, RenderTextureReadWrite.Linear);
                 rt.wrapMode = TextureWrapMode.Clamp;
+                rt.filterMode = FilterMode.Bilinear;
                 rt.Create();
                 return true;
             }
@@ -121,6 +119,7 @@ namespace HypnosRenderPipeline.RenderPass
                 rt.volumeDepth = whd.z;
                 rt.enableRandomWrite = true;
                 rt.wrapMode = TextureWrapMode.Clamp;
+                rt.filterMode = FilterMode.Bilinear;
                 rt.Create();
                 return true;
             }
