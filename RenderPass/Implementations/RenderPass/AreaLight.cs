@@ -55,7 +55,6 @@ namespace HypnosRenderPipeline.RenderPass
                 quad.uv = new Vector2[] { float2(1, 0), float2(0, 0), float2(1, 1), float2(0, 1) };
             }
 
-            context.commandBuffer.SetGlobalFloat("_Alpha", 1);
             if (!target.connected)
             {
                 context.commandBuffer.SetRenderTarget(target);
@@ -64,6 +63,7 @@ namespace HypnosRenderPipeline.RenderPass
             else
             {
                 // clear alpha before render area light mesh
+                context.commandBuffer.SetGlobalFloat("_Alpha", 1);
                 context.commandBuffer.Blit(null, target, clearAlphaMat, 0);
             }
 

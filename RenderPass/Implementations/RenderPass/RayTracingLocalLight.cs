@@ -9,10 +9,16 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In, true)]
         public LightListPin lights = new LightListPin();
 
-        [NodePin(PinType.In, true)]
+        [NodePin(PinType.InOut, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In, true)]
+        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In, true)]
+        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin]
@@ -45,8 +51,14 @@ namespace HypnosRenderPipeline.RenderPass
             var cpos = cam.transform.position;
             var cb = context.commandBuffer;
 
-            cb.SetGlobalTexture("_DepthTex", depth.handle);
-            cb.SetGlobalTexture("_AOTex", ao);
+            context.commandBuffer.SetGlobalTexture("_DepthTex", depth);
+            context.commandBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
+            context.commandBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
+
+            if (ao.connected)
+                context.commandBuffer.SetGlobalTexture("_AOTex", ao);
+            else
+                context.commandBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
 
             int shadowRT = Shader.PropertyToID("ShadowRT");
             var desc = target.desc.basicDesc;
@@ -69,6 +81,8 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetGlobalConstantBuffer(lightConstBuffer, "_TargetLocalLight", 0, lsGPUsize);
 
             cb.SetRenderTarget(target);
+            if (!target.connected)
+                cb.ClearRenderTarget(false, true, Color.black);
 
             foreach (var light in lights.handle.locals)
             {

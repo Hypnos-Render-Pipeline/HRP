@@ -13,7 +13,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         public Vector2Int MSLutResolution = new Vector2Int(32, 32);
 
-        public Vector3Int VolumeResolution = new Vector3Int(32, 32, 32);
+        public Vector3Int VolumeResolution = new Vector3Int(32, 96, 32);
 
         public float VolumeMaxDepth = 32000;
 
@@ -85,7 +85,6 @@ namespace HypnosRenderPipeline.RenderPass
 
                 atmo.RenderToRT(cb, tempColor, depth, target);
 
-                cb.SetGlobalVector("_WH", new Vector4(target.desc.basicDesc.width, target.desc.basicDesc.height));
                 atmo.RenderToCubeMap(cb, skyBox);
 
                 cb.ReleaseTemporaryRT(tempColor);

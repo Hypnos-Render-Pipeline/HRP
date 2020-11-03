@@ -54,7 +54,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
             d_ = min(d_, d);
             x_0 = x + v * d_;
         }
-        res = Scatter(x, x_0, s, 16, false);
+        res = Scatter(x, x_0, v, s, 16, false);
     } while (0);
 
     _Result[id] = res * _SunLuminance;

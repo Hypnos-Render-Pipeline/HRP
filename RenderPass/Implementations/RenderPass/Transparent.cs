@@ -68,7 +68,7 @@ namespace HypnosRenderPipeline.RenderPass
             }
 
             context.commandBuffer.SetRenderTarget(color: target, depth: depth);
-            context.commandBuffer.ClearRenderTarget(!depth.connected, !target.connected, Color.black);
+            context.commandBuffer.ClearRenderTarget(!depth.connected, !target.connected, Color.clear);
 
             bool area = false;
             if (renderAreaLight)
