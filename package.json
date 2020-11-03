@@ -2,7 +2,7 @@
   "name": "com.hjk.hypnos",
   "description": "Hypnos render pipeline",
   "version": "0.1.0",
-  "unity": "2020.1",
+  "unity": "2020.2",
   "unityRelease": "0b16",
   "displayName": "HRP",
   "dependencies": {
