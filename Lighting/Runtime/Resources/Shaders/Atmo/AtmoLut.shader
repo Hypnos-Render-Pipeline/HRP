@@ -134,7 +134,7 @@
                         X_0(x, v, x_0);
                     }
 
-                    float3 res = Scatter(x, x_0, s, 128, _RenderGround);
+                    float3 res = Scatter(x, x_0, v, s, 128, _RenderGround);// *_SunLuminance;
                     return res;
                 }
             ENDCG
@@ -153,8 +153,15 @@
                 sampler2D _DepthTex;
                 sampler2D _MainTex;
 
-                int _RenderGround;
-
+                int _RenderGround;    
+                float4x4 _P_Inv, _V_Inv;
+                float2 _WH;
+                float hash12(float2 p)
+                {
+                    float3 p3 = frac(float3(p.xyx) * .1031);
+                    p3 += dot(p3, p3.yzx + 33.33);
+                    return frac((p3.x + p3.y) * p3.z);
+                }
                 float4 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)
                 {
                     float camPosZ = _ProjectionParams.y + (_ProjectionParams.z - _ProjectionParams.y) * linearDepth;
@@ -167,17 +174,25 @@
                     return mul(unity_CameraToWorld, camPos);
                 }
 
-                fixed4 frag(v2f i) : SV_Target
+                float4 frag(v2f i) : SV_Target
                 {
+                    int2 id = i.vertex.xy;
+                    int k[16] = {15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10};
+                    int index = id.x % 4 + id.y % 4 * 4;
+                    float noise = hash12(id); 
+                    //index = k[index];
+                    //float2 uv = (int2(index % 4, index / 4) + id.xy / 4 * 4 + 0.5) / _WH;
+                    //return float4(uv, 0, 0);
                     float3 s = normalize(_SunDir);
                     float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
                     float depth = Linear01Depth(tex2Dlod(_DepthTex, float4(i.uv, 0, 0)));
-
-                    float3 wpos = GetWorldPositionFromDepthValue(i.uv, depth);
-                    float3 v = wpos - _WorldSpaceCameraPos;
                     bool sky_occ = depth != 1;
-                    depth = length(v);
-                    v /= depth;
+
+                    float4 dispatch_dir = mul(_P_Inv, float4(i.uv * 2 - 1, 1, 1));
+                    dispatch_dir /= dispatch_dir.w;
+                    float dotCV = -normalize(dispatch_dir.xyz).z;
+                    dispatch_dir = mul(_V_Inv, float4(dispatch_dir.xyz, 0));
+                    float3 v = normalize(dispatch_dir.xyz);
 
                     float3 x_0;
                     X_0(x, v, x_0);
@@ -185,8 +200,12 @@
 
                     float4 sceneColor = tex2Dlod(_MainTex, float4(i.uv, 0, 0));
 
-                    return float4(lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
-                            +(sky_occ ? sceneColor.xyz : 0) * T(x, x + depth * v), sceneColor.a);
+                    float4 output= float4(lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
+                                    +(sky_occ ? sceneColor.xyz : 0) * T(x, x + depth * v), sceneColor.a);
+                    if (noise * 16 > k[index]) {
+                        output.xyz += 0.1/255.;
+                    }
+                    return output;
                 }
             ENDCG
         }

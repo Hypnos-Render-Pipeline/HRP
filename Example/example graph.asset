@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: example graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -1222, y: -417, z: 0}
-  viewScale: {x: 0.49717674, y: 0.49717674, z: 1}
+  viewPosition: {x: -2921, y: -2201, z: 0}
+  viewScale: {x: 1, y: 1, z: 1}
   nodes:
   - nodeName: OutputNode
     parameters:
@@ -57,10 +57,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 775.64404
-      y: 1117.6531
-      width: 300.00006
-      height: 150.00003
+      x: 503.74695
+      y: 1135
+      width: 300
+      height: 150
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.PreZ
   - nodeName: CombineColorDepth
@@ -83,8 +83,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 4351.8794
-      y: 1102
+      x: 4314
+      y: 1144.5
       width: 300
       height: 153
     info: 
@@ -118,10 +118,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1129.3501
-      y: 1099.6002
-      width: 300.00006
-      height: 250.00003
+      x: 856.74695
+      y: 1117
+      width: 300
+      height: 225
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.GBuffer
   - nodeName: CullLight
@@ -153,8 +153,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 899.8187
-      y: 884.5054
+      x: 627.74695
+      y: 902
       width: 300
       height: 178
     info: 
@@ -199,8 +199,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1903.775
-      y: 836.0001
+      x: 1631.747
+      y: 853
       width: 300
       height: 292
     info: 
@@ -238,10 +238,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1457.7776
-      y: 661.1867
+      x: 1185.747
+      y: 678
       width: 300
-      height: 221.00003
+      height: 221
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.ZBin
   - nodeName: AreaLight
@@ -279,8 +279,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 2310.9507
-      y: 1036.05
+      x: 2552.9392
+      y: 1297.331
       width: 300
       height: 273
     info: 
@@ -368,7 +368,7 @@ MonoBehaviour:
     - name: SkyLutResolution
       info: 
       type_str: UnityEngine.Vector2Int
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c566563746f7232496e7420786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c783e3230303c2f783e0d0a20203c793e3235363c2f793e0d0a3c2f566563746f7232496e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c566563746f7232496e7420786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c783e3136303c2f783e0d0a20203c793e3232343c2f793e0d0a3c2f566563746f7232496e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     - name: MSLutResolution
       info: 
@@ -404,9 +404,6 @@ MonoBehaviour:
       info: 
       mustConnect: 1
     - name: normal_metallic
-      info: 
-      mustConnect: 1
-    - name: emission
       info: 
       mustConnect: 1
     - name: ao
@@ -485,6 +482,73 @@ MonoBehaviour:
       height: 625
     info: Use this to debug texture, drag from output pin to create it.
     nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
+  - nodeName: RayTracingLocalLight
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lights
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: ao
+      info: 
+      mustConnect: 1
+    - name: target
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2104.1216
+      y: 1120.5
+      width: 300
+      height: 201
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.RayTracingLocalLight
+  - nodeName: TextureDebug
+    parameters:
+    - name: multiplier
+      info: 
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e313c2f666c6f61743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: channal
+      info: 
+      type_str: HypnosRenderPipeline.RenderPass.TextureDebug+Channal
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c4368616e6e616c3e523c2f4368616e6e616c3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: checkboard
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: tex
+      info: 
+      mustConnect: 0
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 3423
+      y: 2062.9512
+      width: 633
+      height: 625
+    info: Use this to debug texture, drag from output pin to create it.
+    nodeType_str: HypnosRenderPipeline.RenderPass.TextureDebug
   edgeRecs:
   - i: 0
     o: 2
@@ -558,10 +622,6 @@ MonoBehaviour:
     o: 7
     i_n: depth
     o_n: depth
-  - i: 7
-    o: 5
-    i_n: target
-    o_n: lightingResult
   - i: 10
     o: 4
     i_n: sunLight
@@ -582,10 +642,6 @@ MonoBehaviour:
     o: 3
     i_n: normal_metallic
     o_n: normal_metallic
-  - i: 10
-    o: 3
-    i_n: emission
-    o_n: emission
   - i: 10
     o: 3
     i_n: ao
@@ -610,10 +666,6 @@ MonoBehaviour:
     o: 4
     i_n: lights
     o_n: lights
-  - i: 2
-    o: 8
-    i_n: color
-    o_n: target
   - i: 8
     o: 10
     i_n: target
@@ -626,47 +678,81 @@ MonoBehaviour:
     o: 11
     i_n: tex
     o_n: target
+  - i: 13
+    o: 4
+    i_n: lights
+    o_n: lights
+  - i: 13
+    o: 3
+    i_n: depth
+    o_n: depth
+  - i: 13
+    o: 3
+    i_n: ao
+    o_n: microAO
+  - i: 13
+    o: 5
+    i_n: target
+    o_n: lightingResult
+  - i: 7
+    o: 13
+    i_n: target
+    o_n: target
+  - i: 14
+    o: 10
+    i_n: tex
+    o_n: target
+  - i: 2
+    o: 10
+    i_n: color
+    o_n: target
   node_edgeRecs:
   - node: 2
-    in_edges: 110000001f000000
+    in_edges: 1100000026000000
     out_edge: 00000000
   - node: 0
     in_edges: 00000000
     out_edge: 
   - node: 4
     in_edges: 
-    out_edge: 0100000009000000130000001e000000
+    out_edge: 0100000009000000120000001c00000020000000
   - node: 6
     in_edges: 0100000002000000
-    out_edge: 03000000040000001c0000001d000000
+    out_edge: 03000000040000001a0000001b000000
   - node: 3
     in_edges: 0f000000
-    out_edge: 02000000050000000600000007000000080000000a0000000b0000000c0000000d0000000e00000016000000170000001800000019000000
+    out_edge: 02000000050000000600000007000000080000000a0000000b0000000c0000000d0000000e0000001500000016000000170000002100000022000000
   - node: 5
     in_edges: 0300000004000000050000000600000007000000080000000e000000
-    out_edge: 12000000
+    out_edge: 23000000
   - node: 7
-    in_edges: 090000000a0000000b0000000c0000000d00000012000000
-    out_edge: 10000000110000001400000015000000
+    in_edges: 090000000a0000000b0000000c0000000d00000024000000
+    out_edge: 10000000110000001300000014000000
   - node: 1
     in_edges: 
     out_edge: 0f000000
   - node: 8
-    in_edges: 100000001b0000001c0000001d0000001e00000020000000
-    out_edge: 1f000000
+    in_edges: 10000000190000001a0000001b0000001c0000001d000000
+    out_edge: 
   - node: 10
-    in_edges: 13000000140000001500000016000000170000001800000019000000
-    out_edge: 1a0000002000000021000000
+    in_edges: 120000001300000014000000150000001600000017000000
+    out_edge: 180000001d0000001e0000002500000026000000
   - node: 9
-    in_edges: 1a000000
-    out_edge: 1b000000
+    in_edges: 18000000
+    out_edge: 19000000
   - node: 11
-    in_edges: 21000000
-    out_edge: 22000000
+    in_edges: 1e000000
+    out_edge: 1f000000
   - node: 12
-    in_edges: 22000000
+    in_edges: 1f000000
+    out_edge: 
+  - node: 13
+    in_edges: 20000000210000002200000023000000
+    out_edge: 24000000
+  - node: 14
+    in_edges: 25000000
     out_edge: 
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
-    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c000000
+    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d000000

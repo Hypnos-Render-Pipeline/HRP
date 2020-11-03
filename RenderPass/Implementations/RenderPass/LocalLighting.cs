@@ -54,8 +54,6 @@ namespace HypnosRenderPipeline.RenderPass
 #endif
 
             context.commandBuffer.Blit(null, lightingResult, lightingMat, 0);
-            context.context.ExecuteCommandBuffer(context.commandBuffer);
-            context.commandBuffer.Clear();
         }
     }
 }

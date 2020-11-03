@@ -3,7 +3,7 @@
     Properties { _MainTex("Texture", 2D) = "white" {} }
     SubShader
     {
-        Pass // normal light
+        Pass // local light
         {
             ZWrite off
             Cull off
@@ -106,7 +106,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -138,7 +138,7 @@
 
                 SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    0,
                                                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
                 return QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
@@ -171,7 +171,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -203,7 +203,7 @@
 
                 SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    0,
                                                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
                 return QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
@@ -237,7 +237,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -277,7 +277,7 @@
 
                 SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                    0,
                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
                 return DiscLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
@@ -313,7 +313,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
             sampler2D _MainTex;
 
@@ -352,7 +352,7 @@
                 SurfaceInfo info = (SurfaceInfo)0;
                 info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                        _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        0,
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
                 float3 sunColor = _SunColor * Sunlight(float3(0, planet_radius + max(pos.y, 95), 0), _SunDir);
@@ -372,5 +372,176 @@
             ENDCG
         }
 
+        
+        Pass // ray traced local light
+        {
+            ZWrite off
+            Cull off
+            Blend One One
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "../Includes/GBuffer.hlsl"
+            #include "../Includes/Light.hlsl"
+            #include "../Includes/PBS.hlsl"
+
+            struct appdata 
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct v2f
+            {
+                float2 uv : TEXCOORD0;
+                float4 vertex : SV_POSITION;
+            };
+
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
+            SamplerState sampler_point_clamp;
+
+            cbuffer _TargetLocalLight {
+                float4 position_range;
+                float4 radiance_type;
+                float4 mainDirection_id;
+                float4 geometry;        // Spot:    cosineAngle(x)
+                                        // Sphere:  radius(x)
+                                        // Tube:    length(x), radius(y)
+                                        // Quad:    size(xy)
+                                        // Disc:    radius(x)
+            }
+
+            int _DebugTiledLight;
+
+            float4x4 _V, _V_Inv;
+            float4x4 _VP_Inv;
+
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = v.uv;
+                return o;
+            }
+
+            float4 frag(v2f i) : SV_Target
+            {
+                float d = _DepthTex.SampleLevel(sampler_point_clamp, i.uv, 0).x;
+                if (d == 0) return 0;
+
+                float3 camPos = _V_Inv._m03_m13_m23;
+                float3 pos;
+                {
+                    float4 ndc = float4(i.uv * 2 - 1, d, 1);
+                    float4 worldPos = mul(_VP_Inv, ndc);
+                    pos = worldPos.xyz / worldPos.w;
+                }
+                float3 view = normalize(camPos - pos);
+
+                SurfaceInfo info = (SurfaceInfo)0;
+                info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        0,
+                                        _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
+
+                float3 res = 0;
+                float shadow = _RayTracedLocalShadowMask.SampleLevel(sampler_point_clamp, i.uv, 0);
+
+                if (shadow == 0) return 0;
+
+                Light light = {position_range, radiance_type, mainDirection_id, geometry};
+                SolvedLocalLight l = SolveLight(light, pos);
+
+                return float4(PBS(PBS_FULLY, info, l.dir, l.radiance, view) * shadow, 0);
+            }
+            ENDCG
+        }
+                
+        Pass // ray traced local light volume
+        {
+            ZWrite off
+            Cull back
+            Blend One One
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "../Includes/GBuffer.hlsl"
+            #include "../Includes/Light.hlsl"
+            #include "../Includes/PBS.hlsl"
+
+            struct appdata 
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct v2f
+            {
+                float2 uv : TEXCOORD0;
+                float4 vertex : SV_POSITION;
+            };
+
+            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
+            SamplerState sampler_point_clamp;
+
+            cbuffer _TargetLocalLight {
+                float4 position_range;
+                float4 radiance_type;
+                float4 mainDirection_id;
+                float4 geometry;        // Spot:    cosineAngle(x)
+                                        // Sphere:  radius(x)
+                                        // Tube:    length(x), radius(y)
+                                        // Quad:    size(xy)
+                                        // Disc:    radius(x)
+            }
+
+            int _DebugTiledLight;
+
+            float4x4 _V, _V_Inv;
+            float4x4 _VP_Inv;
+            float4 _Pixel_WH;
+
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                return o;
+            }
+
+            float4 frag(v2f i) : SV_Target
+            {
+                i.uv = (i.vertex.xy + 0.5) * _Pixel_WH.zw;
+                float d = _DepthTex.SampleLevel(sampler_point_clamp, i.uv, 0).x;
+                if (d == 0 || i.vertex.z < d) return 0;
+
+                float3 camPos = _V_Inv._m03_m13_m23;
+                float3 pos;
+                {
+                    float4 ndc = float4(i.uv * 2 - 1, d, 1);
+                    float4 worldPos = mul(_VP_Inv, ndc);
+                    pos = worldPos.xyz / worldPos.w;
+                }
+                float3 view = normalize(camPos - pos);
+
+                SurfaceInfo info = (SurfaceInfo)0;
+                info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        0,
+                                        _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
+
+                float3 res = 0;
+                float shadow = _RayTracedLocalShadowMask.SampleLevel(sampler_point_clamp, i.uv, 0);
+
+                if (shadow == 0) return 0;
+
+                Light light = {position_range, radiance_type, mainDirection_id, geometry};
+                SolvedLocalLight l = SolveLight(light, pos);
+
+                return float4(PBS(PBS_FULLY, info, l.dir, l.radiance, view) * shadow, 0);
+            }
+            ENDCG
+        }
     }
 }

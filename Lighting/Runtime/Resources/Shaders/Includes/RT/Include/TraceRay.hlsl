@@ -221,6 +221,7 @@ bool TraceShadow_RTGI(const float3 start, const float3 end)
 		
 	RayIntersection_RTGI rayIntersection;
 	rayIntersection.t = rayDescriptor.TMax;
+	rayIntersection.data1 = 1;
 	//rayIntersection.albedo_flags = 0;
 	
 	TraceRay(_RaytracingAccelerationStructure, /*RAY_FLAG_CULL_BACK_FACING_TRIANGLES*/0, 0xFF, 0, 1, 0, rayDescriptor, rayIntersection);

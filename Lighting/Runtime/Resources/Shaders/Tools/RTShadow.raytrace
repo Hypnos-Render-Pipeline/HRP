@@ -1,0 +1,68 @@
+RWTexture2D<float> RenderTarget;
+
+#pragma max_recursion_depth 1
+
+#include "../Includes/RT/Include/RayTracingCommon.hlsl"
+#include "../Includes/RT/Include/TraceRay.hlsl"
+#include "../Includes/Light.hlsl"
+#include "../Includes/GBuffer.hlsl"
+
+float4x4 _VP_Inv;
+
+Texture2D<float> _DepthTex;
+Texture2D<float4> _AOTex;
+
+cbuffer _TargetLocalLight {
+    float4 position_range;
+    float4 radiance_type;
+    float4 mainDirection_id;
+    float4 geometry;        // Spot:    cosineAngle(x)
+                            // Sphere:  radius(x)
+                            // Tube:    length(x), radius(y)
+                            // Quad:    size(xy)
+                            // Disc:    radius(x)
+}
+
+
+float LocalLightShadow_(uint2 id) {
+    
+    float2 uv = (id + 0.5) / _Pixel_WH;
+
+    float d = _DepthTex[id];
+    if (d == 0) return 0;
+
+    float3 camPos = _V_Inv._m03_m13_m23;
+    float3 pos; 
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_VP_Inv, ndc);
+        pos = worldPos.xyz / worldPos.w;
+    }
+    float dis = distance(camPos, pos);
+    float3 view = (camPos - pos) / dis;
+
+    float3 gnormal = DecodeNormal(_AOTex[id].xyz);
+
+    float3 lpos =  position_range.xyz;
+    float3 L = normalize(lpos - pos);
+
+    if (dot(L, gnormal) < 0 || distance(lpos, pos) > position_range.w) return 0;
+
+    if (radiance_type.w == SPOT) {
+        float dotl = max(0, dot(-L, mainDirection_id.xyz));
+        if (1 - sqrt(1 - dotl * dotl) / dotl / geometry.x < 0) return 0;
+    }
+
+    return TraceShadow_RTGI(pos, lpos);
+}
+
+
+
+[shader("raygeneration")]
+void LocalLightShadow()
+{
+    uint2 dispatchIdx = DispatchRaysIndex().xy;
+       
+    RenderTarget[dispatchIdx] = LocalLightShadow_(dispatchIdx);
+}
+

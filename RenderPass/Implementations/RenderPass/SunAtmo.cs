@@ -9,7 +9,7 @@ namespace HypnosRenderPipeline.RenderPass
         // parameters
         public Vector2Int TLutResolution = new Vector2Int(128, 128);
 
-        public Vector2Int SkyLutResolution = new Vector2Int(200, 256);
+        public Vector2Int SkyLutResolution = new Vector2Int(160, 224);
 
         public Vector2Int MSLutResolution = new Vector2Int(32, 32);
 
@@ -22,7 +22,7 @@ namespace HypnosRenderPipeline.RenderPass
         public LightListPin sunLight = new LightListPin();
 
         [NodePin(PinType.InOut, true)]
-        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1));
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBFloat), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
@@ -32,9 +32,6 @@ namespace HypnosRenderPipeline.RenderPass
 
         [NodePin(PinType.In, true)]
         public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
-
-        [NodePin(PinType.In, true)]
-        public TexturePin emission = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
@@ -88,6 +85,7 @@ namespace HypnosRenderPipeline.RenderPass
 
                 atmo.RenderToRT(cb, tempColor, depth, target);
 
+                cb.SetGlobalVector("_WH", new Vector4(target.desc.basicDesc.width, target.desc.basicDesc.height));
                 atmo.RenderToCubeMap(cb, skyBox);
 
                 cb.ReleaseTemporaryRT(tempColor);

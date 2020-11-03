@@ -132,6 +132,7 @@ inline const float3 Beta_R_S(const float h) {
 }
 
 inline const float P_R(const float mu) {
+	//return 1.0 / 4 / pi;
 	const float a = 3.0 / (16.0 * pi);
 	const float b = 1 + mu * mu;
 
@@ -334,14 +335,12 @@ const float3 Scatter1234_(const float3 x, const float3 s) {
 	return (beta_R + beta_M) * scatter;
 }
 
-const float3 Scatter(const float3 x, float3 x_0, const float3 s, const int dirSampleNum = 128, bool includeTu = true) {
+const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const int dirSampleNum = 128, bool includeTu = true) {
 	x_0 = lerp(x, x_0, 0.99);
 	const float dis = distance(x, x_0);
 
-	const float3 v = normalize(x_0 - x);
-
 	float3 res = 0;
-
+	//return P_R(dot(s, v));
 	for (int i = 0; i < dirSampleNum; i++)
 	{
 		const float layered_rnd = float(i + SAMPLE1D) / dirSampleNum;
@@ -405,7 +404,7 @@ const float3 L2(const float3 x, const float3 s, const int sampleNum = 128) {
 		float3 x_0;
 		bool ground = X_0(x, dir, x_0);
 		res += Scatter0(x, x_0, s, 16);
-		if (ground) res += T(x, x_0) * Tu_L(x_0, s);
+		if (ground) res += T_tab_fetch(x, dir) * Tu_L(x_0, s);
 	}
 	res = res / sampleNum;
 	return res;
@@ -439,7 +438,7 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 	if (rho > coef) {
 		float3 x_0;
 		X_0(x, v, x_0);
-		scatter = lerp(scatter, Scatter(x, x_0, s, 32, includeTu), (rho - coef) / (1 - coef));
+		scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, includeTu), (rho - coef) / (1 - coef));
 	}
 	else if (rho < 1 - coef) {
 		float3 x_0;
@@ -448,11 +447,11 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 			X_Up(x, v, dis);
 			x_0 = x + dis.y * v;
 			x = x + dis.x * v;
-			scatter = Scatter(x, x_0, s, 128, includeTu);
+			scatter = Scatter(x, x_0, v, s, 128, includeTu);
 		}
 		else {
 			X_0(x, v, x_0);
-			scatter = Scatter(x, x_0, s, 128, includeTu);
+			scatter = Scatter(x, x_0, v, s, 128, includeTu);
 		}
 	}
 	// prevent error
@@ -464,13 +463,11 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 		if (X_Up(x, v, dis)) {
 			float3 x_0 = x + dis.y * v;
 			x = x + dis.x * v;
-			sun = T(x, x_0);
+			sun = T_tab_fetch(x, v);
 		}
 	}
 	else {
-		float3 x_0;
-		X_0(x, v, x_0);
-		sun = T(x, x_0);
+		sun = T_tab_fetch(x, v);
 	}
 	sun *= smoothstep(cos(sun_angle + 0.005), cos(sun_angle), dot(v, s)) * (v.y > horiz);
 	sun /= 0.2e4;

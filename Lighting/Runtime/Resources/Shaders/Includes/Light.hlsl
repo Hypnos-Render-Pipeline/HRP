@@ -44,6 +44,20 @@ StructuredBuffer<uint> _TileLights;
 #endif
 
 
+SolvedLocalLight SolveLight(Light light_, float3 pos) {
+    SolvedLocalLight light;
+    light.dir = light_.position_range.xyz - pos;
+    float Ldis = length(light.dir);
+    light.dir /= Ldis;
+    light.radiance = light_.radiance_type.xyz * max(0, 1 - Ldis / light_.position_range.w);
+    if (light_.radiance_type.w == SPOT) {
+            float dotLDir = max(0, dot(-light.dir, light_.mainDirection_id.xyz));
+            light.radiance *= max(0, 1 - sqrt(1 - dotLDir * dotLDir) / dotLDir / light_.geometry.x);
+    }
+    light.id = light_.mainDirection_id.w;
+    return light;
+}
+
 
 #define BegineLocalLightsLoop(uv, pos, invVP) {\
 uint4 tileCount = _TileCount;\
@@ -65,15 +79,8 @@ for (uint i = 0; i < lightCount; i++)\
     uint lmask = lIdx & 0xFFFFFF;\
     Light light_ = _LocalLightBuffer[lIdx >> 24];\
     if (bin & lmask) {\
-        SolvedLocalLight light;\
-        light.dir = light_.position_range.xyz - pos;\
-        float Ldis = length(light.dir);\
-        light.dir /= Ldis;\
-        light.radiance = light_.radiance_type.xyz * max(0, 1 - Ldis / light_.position_range.w);\
-        if (light_.radiance_type.w == SPOT){\
-            float dotLDir = max(0, dot(-light.dir, light_.mainDirection_id.xyz)); \
-            light.radiance *= max(0, 1 - sqrt(1 -dotLDir*dotLDir) / dotLDir / light_.geometry.x);\
-        }\
+        SolvedLocalLight light = SolveLight(light_, pos);
+
 
 #define EndLocalLightsLoop }}}
 

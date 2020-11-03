@@ -40,20 +40,20 @@ namespace HypnosRenderPipeline.RenderPass
             var local_lights = lights.handle.locals;
             var cam = context.camera;
             var cb = context.commandBuffer;
-            var lightCount = local_lights.Count;
 
-            lightBuffer.ReSize(lightCount);
             tileLights.ReSize(tileCount.x * tileCount.y * (maxLightCountPerTile + 1));
 
-            if (lightCount != 0)
+            lightBufferCPU.Clear();
+            foreach (var light in local_lights)
             {
-                lightBufferCPU.Clear();
-                foreach (var light in local_lights)
+                if (light.shadow != HRPLightShadowType.RayTrace)
                 {
                     lightBufferCPU.Add(light.lightStructGPU);
                 }
-                cb.SetComputeBufferData(lightBuffer, lightBufferCPU);
             }
+            var lightCount = lightBufferCPU.Count;
+            lightBuffer.ReSize(lightCount);
+            cb.SetComputeBufferData(lightBuffer, lightBufferCPU);
 
             cb.SetGlobalInt("_LocalLightCount", lightCount);
             cb.SetGlobalBuffer("_LocalLightBuffer", lightBuffer);

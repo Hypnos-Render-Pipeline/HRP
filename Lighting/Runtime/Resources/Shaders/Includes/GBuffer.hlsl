@@ -3,8 +3,8 @@
 
 #include "PBS.hlsl"
 
-fixed3 EncodeNormal(float3 n) {
-	fixed3 res;
+half3 EncodeNormal(float3 n) {
+	half3 res;
 	n.xy /= dot(1, abs(n));
 	if (n.z < 0) n.xy = (1 - abs(n.yx)) * (n.xy >= 0 ? 1 : -1);
 	float2 k = (n.xy + 1) / 2;
@@ -14,7 +14,7 @@ fixed3 EncodeNormal(float3 n) {
 	return res;
 }
 
-float3 DecodeNormal(fixed3 k) {
+float3 DecodeNormal(half3 k) {
 	uint3 a = k * 255;
 	k.xy = (a.xy + (uint2(a.z >> 4, a.z & 15) << 8)) / 4095.0f;
 	k.xy = k.xy * 2 - 1;
@@ -23,21 +23,21 @@ float3 DecodeNormal(fixed3 k) {
 	return normalize(normal);
 }
 
-fixed4 EncodeHDR(float3 e) {
+half4 EncodeHDR(float3 e) {
 	half m = max(max(max(e.x, e.y), e.z), 1);
 	half3 rgb = min(1, e / m);
 	half a = min(1, log2(m) / 10);
-	return fixed4(rgb, a);
+	return half4(rgb, a);
 }
 
-float3 DecodeHDR(fixed4 k) {
+float3 DecodeHDR(half4 k) {
 	return k.xyz * exp2(k.w * 10);
 }
 
-void Encode2GBuffer(fixed3 baseColor, fixed roughness, fixed metallic, float3 normal, float3 emission, float3 gnormal, float ao,
-	out fixed4 target0, out fixed4 target1, out fixed4 target2, out fixed4 target3)
+void Encode2GBuffer(half3 baseColor, half roughness, half metallic, float3 normal, float3 emission, float3 gnormal, float ao,
+	out half4 target0, out half4 target1, out half4 target2, out half4 target3)
 {
-	target0 = fixed4(baseColor, roughness);
+	target0 = half4(baseColor, roughness);
 
 	target1.xyz = EncodeNormal(normal);
 	target1.w = metallic;
@@ -50,7 +50,7 @@ void Encode2GBuffer(fixed3 baseColor, fixed roughness, fixed metallic, float3 no
 
 
 
-SurfaceInfo DecodeGBuffer(fixed4 target0, fixed4 target1, fixed4 target2, fixed4 target3)
+SurfaceInfo DecodeGBuffer(half4 target0, half4 target1, half4 target2, half4 target3)
 {
 	SurfaceInfo info = (SurfaceInfo)0;
 	info.baseColor = target0.rgb;
