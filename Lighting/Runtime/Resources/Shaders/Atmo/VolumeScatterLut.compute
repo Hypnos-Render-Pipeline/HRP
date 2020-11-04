@@ -6,21 +6,8 @@
 RWTexture3D<float3> _Result;
 float3 _Size;
 
-float4 _ProjectionParams, _ScreenParams;
-float4x4 unity_CameraProjection, unity_CameraToWorld;
+float4x4 _P_Inv, _V_Inv;
 float4 _WorldSpaceCameraPos;
-
-float3 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)
-{
-    float camPosZ = _ProjectionParams.y + (_ProjectionParams.z - _ProjectionParams.y) * linearDepth;
-    float height = 2 * camPosZ / unity_CameraProjection._m11;
-    float width = _ScreenParams.x / _ScreenParams.y * height;
-
-    float camPosX = width * uv.x - width / 2;
-    float camPosY = height * uv.y - height / 2;
-    float4 camPos = float4(camPosX, camPosY, camPosZ, 1.0);
-    return mul(unity_CameraToWorld, camPos).xyz;
-}
 
 [numthreads(4, 4, 4)]
 void CSMain (uint3 id : SV_DispatchThreadID)
@@ -29,11 +16,43 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     float3 uv = (id + 0.5) / _Size;
 
-    float3 wpos = GetWorldPositionFromDepthValue(uv.xy, 1);
-    float3 v = normalize(wpos - _WorldSpaceCameraPos.xyz);
+    float4 dispatch_dir = mul(_V_Inv, float4(0, 0, -1, 0));
+    float3 dir = normalize(dispatch_dir.xyz);
+
+
     float3 s = normalize(_SunDir);
     float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
     float d = uv.z * _MaxDepth;
+
+    float phi = atan(dir.z / dir.x) + (dir.x > 0 ? (dir.z < 0 ? 2 * pi : 0) : pi);
+    phi = dir.x == 0 ? (dir.z > 0 ? pi / 2 : -pi / 2) : phi;
+    phi += uv.x * pi - pi / 2;
+
+    float vx, vz;
+    sincos(phi, vz, vx);
+
+    float ro = uv.y;
+    if (ro > 0.5) {
+        ro = ro - 0.5;
+        float horiz = length(x);
+        horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
+
+        if (length(x) > atmosphere_radius) {
+            float ahoriz = length(x);
+            ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
+            ro = lerp(horiz + 0.0001, ahoriz - 0.0001, ro * 2);
+        }
+        else
+            ro = lerp(horiz + 0.0001, 1, pow(ro * 2, 2));
+    }
+    else {
+        float horiz = length(x);
+        horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
+        ro = lerp(-1, horiz - 0.0001, pow(ro * 2, 0.5));
+    }
+
+    float vy = ro / sqrt(max(0, 1 - ro * ro));
+    float3 v = normalize(float3(vx, vy, vz));
 
     float3 res = 0;
 

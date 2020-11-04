@@ -475,8 +475,39 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 	return scatter + sun;
 }
 
-const float3 Scatter(const float2 uv, const float depth) {
-	return tex3Dlod(Volume_table, float4(uv, depth / _MaxDepth, 0)).xyz;
+const float3 Scatter(const float3 x, const float3 v, const float depth, const float3 dir) {
+
+	float phi = atan(v.z / v.x) + (v.x > 0 ? (v.z < 0 ? 2 * pi : 0) : pi);
+	phi /= 2 * pi; phi = v.x == 0 ? (v.z > 0 ? 0.25 : -0.25) : phi;
+
+	float phi_ = atan(dir.z / dir.x) + (dir.x > 0 ? (dir.z < 0 ? 2 * pi : 0) : pi);
+	phi_ /= 2 * pi; phi_ = dir.x == 0 ? (dir.z > 0 ? 0.25 : -0.25) : phi_;
+
+	phi -= phi_;
+	phi = phi > 0.5 ? phi - 1 : (phi < -0.5 ? phi + 1 : phi);
+	phi += 0.5;
+	//return phi;
+
+	float rho;
+	float horiz = length(x);
+	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
+
+	if (v.y < horiz) {
+		rho = pow((v.y + 1) / (horiz + 1), 2) * 0.5;
+	}
+	else {
+		if (length(x) > atmosphere_radius) {
+			float ahoriz = length(x);
+			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
+			if (v.y > ahoriz) rho = -1;
+			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
+		}
+		else {
+			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
+		}
+	}
+	float3 scatter = rho >= 0 ? tex3Dlod(Volume_table, float4(phi, rho, depth / _MaxDepth, 0)).xyz : 0;
+	return scatter;
 }
 
 const float3 Sunlight(const float3 x, const float3 s) {

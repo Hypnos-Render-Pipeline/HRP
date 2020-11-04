@@ -121,6 +121,13 @@
                 return o;
             }
 
+            float hash12(float2 p)
+            {
+                float3 p3 = frac(float3(p.xyx) * .1031);
+                p3 += dot(p3, p3.yzx + 33.33);
+                return frac((p3.x + p3.y) * p3.z);
+            }
+
             float3 frag(v2f i) : SV_Target
             {
                 float d = _DepthTex.SampleLevel(sampler_point_clamp, i.uv, 0).x;
@@ -141,7 +148,17 @@
                                                     0,
                                                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                return QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
+                float3 res = QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
+
+                int2 id = i.vertex.xy;
+                int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
+                int index = id.x % 4 + id.y % 4 * 4;
+                float noise = hash12(id);
+
+                if (noise * 16 > k[index]) {
+                    res += .2 / 255.;
+                }
+                return res;
             }
             ENDCG
         }
@@ -186,6 +203,13 @@
                 return o;
             }
 
+            float hash12(float2 p)
+            {
+                float3 p3 = frac(float3(p.xyx) * .1031);
+                p3 += dot(p3, p3.yzx + 33.33);
+                return frac((p3.x + p3.y) * p3.z);
+            }
+
             float3 frag(v2f i) : SV_Target
             {
                 float d = _DepthTex.SampleLevel(sampler_point_clamp, i.uv, 0).x;
@@ -206,7 +230,17 @@
                                                     0,
                                                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                return QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
+                float3 res = TubeLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
+
+                int2 id = i.vertex.xy;
+                int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
+                int index = id.x % 4 + id.y % 4 * 4;
+                float noise = hash12(id);
+
+                if (noise * 16 > k[index]) {
+                    res += .2 / 255.;
+                }
+                return res;
             }
             ENDCG
         }
@@ -252,6 +286,13 @@
                 return o;
             }
 
+            float hash12(float2 p)
+            {
+                float3 p3 = frac(float3(p.xyx) * .1031);
+                p3 += dot(p3, p3.yzx + 33.33);
+                return frac((p3.x + p3.y) * p3.z);
+            }
+
             float3 frag(v2f i) : SV_Target
             {
                 float d = _DepthTex.SampleLevel(sampler_point_clamp, i.uv, 0).x;
@@ -280,7 +321,17 @@
                     0,
                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                return DiscLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
+                float3 res = DiscLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
+
+                int2 id = i.vertex.xy;
+                int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
+                int index = id.x % 4 + id.y % 4 * 4;
+                float noise = hash12(id);
+
+                if (noise * 16 > k[index]) {
+                    res += .2 / 255.;
+                }
+                return res;
 
             }
             ENDCG

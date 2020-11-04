@@ -175,11 +175,6 @@
 
                 float3 frag(v2f i) : SV_Target
                 {
-                    int2 id = i.vertex.xy;
-                    int k[16] = {15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10};
-                    int index = id.x % 4 + id.y % 4 * 4;
-                    float noise = hash12(id); 
-
                     float3 s = normalize(_SunDir);
                     float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
                     float depth = tex2Dlod(_DepthTex, float4(i.uv, 0, 0)).x;
@@ -191,6 +186,7 @@
                     float dotCV = -normalize(dispatch_dir.xyz).z;
                     dispatch_dir = mul(_V_Inv, float4(dispatch_dir.xyz, 0));
                     float3 v = normalize(dispatch_dir.xyz);
+                    float3 dir = normalize(mul(_V_Inv, float4(0, 0, -1, 0)));
                     
                     float3 x_0;
                     X_0(x, v, x_0);
@@ -199,10 +195,16 @@
 
                     float4 sceneColor = tex2Dlod(_MainTex, float4(i.uv, 0, 0));
 
-                    float4 output= float4(lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
+                    float4 output = float4(lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(x, v, depth, dir), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
                                     +(sky_occ ? sceneColor.xyz : 0) * T(x, x + depth * v), sceneColor.a);
+
+                    int2 id = i.vertex.xy;
+                    int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
+                    int index = id.x % 4 + id.y % 4 * 4;
+                    float noise = hash12(id);
+
                     if (noise * 16 > k[index]) {
-                        output.xyz += 0.1/255.;
+                        output.xyz += 0.2/255.;
                     }
                     return output;
                 }
@@ -223,11 +225,6 @@
 
                 fixed3 frag(v2f i) : SV_Target
                 {
-                    int2 id = i.vertex.xy;
-                    int k[16] = {15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10};
-                    int index = id.x % 4 + id.y % 4 * 4;
-                    float noise = hash12(id);
-
                     float3 s = normalize(_SunDir);
                     float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
                     float3 v = 0;
@@ -255,6 +252,11 @@
                     X_0(x, v, x_0);
 
                     float3 res = ScatterTable(x, v, s, _RenderGround) * _SunLuminance;
+
+                    int2 id = i.vertex.xy;
+                    int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
+                    int index = id.x % 4 + id.y % 4 * 4;
+                    float noise = hash12(id);
                     if (noise * 16 > k[index]) {
                         res += 0.1 / 255.;
                     }
