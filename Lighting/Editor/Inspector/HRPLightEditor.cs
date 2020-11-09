@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 using Expression = System.Linq.Expressions.Expression;
+using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline
 {

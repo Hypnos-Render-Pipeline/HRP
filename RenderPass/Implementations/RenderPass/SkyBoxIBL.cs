@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline.RenderPass
 {

@@ -232,9 +232,9 @@
 
                 float3 res = TubeLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
 
-                int2 id = i.vertex.xy;
+                uint2 id = i.vertex.xy;
                 int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
-                int index = id.x % 4 + id.y % 4 * 4;
+                uint index = id.x % 4 + id.y % 4 * 4;
                 float noise = hash12(id);
 
                 if (noise * 16 > k[index]) {

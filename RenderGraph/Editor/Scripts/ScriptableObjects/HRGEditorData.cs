@@ -1,5 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
+using HypnosRenderPipeline.Tools;
 
 public class HRGEditorData : ScriptableObject
 {
@@ -15,7 +16,7 @@ public class HRGEditorData : ScriptableObject
        
     static bool Quit()
     {
-        var self = AssetDatabase.LoadAssetAtPath<HRGEditorData>(HypnosRenderPipeline.PathDefine.path + "RenderGraph/Editor/EditorData.asset");
+        var self = AssetDatabase.LoadAssetAtPath<HRGEditorData>(PathDefine.path + "RenderGraph/Editor/EditorData.asset");
         self.lastOpenPath = "unnamed";
         EditorUtility.SetDirty(self);
         AssetDatabase.Refresh();

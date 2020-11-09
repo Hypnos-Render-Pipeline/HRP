@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace HypnosRenderPipeline
+namespace HypnosRenderPipeline.Tools
 {
 
     public class MeshWithType

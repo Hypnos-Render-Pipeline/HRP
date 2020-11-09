@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 using System.Runtime.InteropServices;
+using HypnosRenderPipeline.Tools;
 
 #if UNITY_EDITOR
 using UnityEditor;

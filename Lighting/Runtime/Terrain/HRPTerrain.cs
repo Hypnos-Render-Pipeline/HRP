@@ -2,6 +2,7 @@
 using static Unity.Mathematics.math;
 using UnityEngine;
 using UnityEngine.Rendering;
+using HypnosRenderPipeline.Tools;
 
 
 namespace HypnosRenderPipeline

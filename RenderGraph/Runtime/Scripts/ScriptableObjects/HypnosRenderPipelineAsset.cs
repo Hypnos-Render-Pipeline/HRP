@@ -2,8 +2,9 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using HypnosRenderPipeline.Tools;
 
-namespace HypnosRenderPipeline
+namespace HypnosRenderPipeline.RenderGraph
 {
     public class HypnosRenderPipelineAsset : RenderPipelineAsset
     {

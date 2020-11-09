@@ -9,6 +9,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline.RenderGraph
 {

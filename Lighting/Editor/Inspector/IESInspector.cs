@@ -5,7 +5,11 @@ namespace HypnosRenderPipeline
 {
 
     [CustomEditor(typeof(IESImporter))]
+#if UNITY_2020_2_OR_NEWER
     class IESInspector : UnityEditor.AssetImporters.AssetImporterEditor
+#else
+    class IESInspector : UnityEditor.Experimental.AssetImporters.AssetImporterEditor
+#endif
     {
         protected override bool needsApplyRevert => true;
         public override bool showImportedObject => false;

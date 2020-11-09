@@ -1,7 +1,6 @@
-using System.Linq;
 using System.Threading;
 
-namespace HypnosRenderPipeline
+namespace HypnosRenderPipeline.Tools
 {
     public class PathDefine
     {
@@ -25,6 +24,6 @@ namespace HypnosRenderPipeline
                     check_done = true;
                 }
                 return inPackage ? package_path : asset_path; 
-            } }// = ;
+            } }
     }
 }

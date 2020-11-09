@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline.RenderGraph
 {

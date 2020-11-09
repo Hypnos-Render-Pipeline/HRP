@@ -37,5 +37,21 @@
         [System.Runtime.InteropServices.DllImport("Comdlg32.dll", SetLastError = true, ThrowOnUnmappableChar = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         public static extern bool GetSaveFileName([System.Runtime.InteropServices.In, System.Runtime.InteropServices.Out] OpenFileName ofn);
 
+        public static T SaveAssetInProject<T>() where T : UnityEngine.ScriptableObject
+        {
+            string filePath = UnityEditor.EditorUtility.SaveFilePanelInProject("", "New " + typeof(T).Name, "asset", "Create new " + typeof(T).Name);
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                var old_asset = UnityEditor.AssetDatabase.LoadAssetAtPath(filePath, typeof(T));
+                if (old_asset != null)
+                {
+                    UnityEditor.AssetDatabase.DeleteAsset(filePath);
+                }
+                var obj = UnityEngine.ScriptableObject.CreateInstance<T>();
+                UnityEditor.AssetDatabase.CreateAsset(obj, filePath);
+                return obj;
+            }
+            return null;
+        }
     }
 }

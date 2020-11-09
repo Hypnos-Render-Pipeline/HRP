@@ -1,6 +1,7 @@
 ﻿using Unity.Mathematics;
 using UnityEngine;
 using static Unity.Mathematics.math;
+using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline.RenderPass
 {

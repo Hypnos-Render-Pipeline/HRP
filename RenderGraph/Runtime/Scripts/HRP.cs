@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline
 {

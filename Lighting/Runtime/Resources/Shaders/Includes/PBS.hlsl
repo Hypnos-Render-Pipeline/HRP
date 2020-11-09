@@ -43,6 +43,8 @@ struct SurfaceInfo {
 #define M_SQRT2    1.41421356237309504880   // sqrt(2)
 #define M_SQRT1_2  0.707106781186547524401  // 1/sqrt(2)
 
+#ifndef UNITY_COMMON_INCLUDED
+
 inline float Pow4(float x)
 {
 	return x * x* x* x;
@@ -63,24 +65,26 @@ inline float4 Pow4(float4 x)
 	return x * x* x* x;
 }
 
+#endif
+
 inline float Pow5(float x)
 {
-	return x * x* x* x* x;
+	return x * x * x * x * x;
 }
 
 inline float2 Pow5(float2 x)
 {
-	return x * x* x* x* x;
+	return x * x * x * x * x;
 }
 
 inline float3 Pow5(float3 x)
 {
-	return x * x* x* x* x;
+	return x * x * x * x * x;
 }
 
 inline float4 Pow5(float4 x)
 {
-	return x * x* x* x* x;
+	return x * x * x * x * x;
 }
 
 inline float OneMinusReflectivityFromMetallic(const float metallic)
@@ -242,7 +246,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	float3 F = FresnelTerm(specColor, lh) * (any(specColor) ? 1.0 : 0.0);
 
 	float coatDG = GGXTerm(nh, 0.02) * SmithJointGGXVisibilityTerm(nl, nv, 0.02);
-	float DFG = D * G;
+	float3 DFG = D * G;
 	DFG = F * lerp(DFG, DFG + coatDG, clearCoat);
 	 
 	if (type == 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
