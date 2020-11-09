@@ -21,7 +21,6 @@ namespace HypnosRenderPipeline
         Texture2D m_ColorTempTex;
 
         bool showLegacyLightInspector = false;
-        bool showAtmoInspector = false;
 
         class Properties
         {

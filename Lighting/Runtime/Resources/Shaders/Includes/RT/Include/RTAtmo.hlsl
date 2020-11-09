@@ -1,6 +1,7 @@
 #ifndef RTATMO_H_
 #define RTATMO_H_
 
+Texture2D _Skybox; SamplerState sampler_Skybox;
 float2 _TLutResolution;
 float _PlanetRadius, _AtmosphereThickness;
 float3 _GroundAlbedo, _RayleighScatter;
@@ -46,6 +47,42 @@ const float3 AtmoTrans(const float3 x, const float3 y) {
 	float3 b = T(y, v);
 
 	return min(1.0, a / b);
+}
+
+const float3 Atmo(float3 x, const float3 v, const float3 s) {
+	float phi = acos(clamp(dot(normalize(v.xz), normalize(s.xz)), -1, 1)) / 3.14159265359;
+
+	float rho;
+	float horiz = length(x);
+	horiz = -sqrt(horiz * horiz - _PlanetRadius * _PlanetRadius) / horiz;
+
+	if (v.y < horiz) {
+		rho = pow((v.y + 1) / (horiz + 1), 2) * 0.5;
+	}
+	else {
+		float atmosphere_radius = _PlanetRadius + _AtmosphereThickness;
+		if (length(x) > atmosphere_radius) {
+			float ahoriz = length(x);
+			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
+			if (v.y > ahoriz) rho = -1;
+			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
+		}
+		else {
+			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
+		}
+	}
+
+	float3 scatter = rho >= 0 ? _Skybox.SampleLevel(sampler_Skybox, float2(phi, rho), 0).xyz : 0;
+
+	// prevent error
+	scatter = max(0, scatter);
+
+	float3 sun = 1;
+	sun = T(x, v);
+	sun *= smoothstep(cos(_SunAngle + 0.005), cos(_SunAngle), dot(v, s));
+	sun /= 0.2e4;
+
+	return (scatter + sun) * _SunLuminance;
 }
 
 const float3 Sunlight(const float3 x, const float3 s) {

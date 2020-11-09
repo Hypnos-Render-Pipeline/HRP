@@ -75,7 +75,7 @@ namespace HypnosRenderPipeline
         public void MoveTerrain(CommandBuffer commandBuffer, Camera cam)
         {
             var terrain_center = new Vector4(cam.transform.position.x, 0, cam.transform.position.z);
-            float min_quad_size = tileSize / maxTileVertexCount * 2;
+            float min_quad_size = tileSize / maxTileVertexCount * 4;
             terrain_center = floor(terrain_center / min_quad_size) * min_quad_size;
             float k = tileSize * tileCount / -2;
             commandBuffer.SetGlobalVector("_TileLB_tileSize", new Vector4(k + terrain_center.x, k + terrain_center.z, tileSize));
@@ -148,7 +148,7 @@ namespace HypnosRenderPipeline
 
                 properties[i].SetBuffer("_TilePos", cullingBuffers.offsetBuffer);
                 properties[i].SetBuffer("_TIleIndex", cullingBuffers.indexBuffer);
-                cb.DrawMeshInstancedIndirect(lodMeshs[i], 0, mat, 0, cullingBuffers.argsBuffer, 0, properties[i]);
+                cb.DrawMeshInstancedIndirect(lodMeshs[i], 0, mat, i == 0 ? 0 : 1, cullingBuffers.argsBuffer, 0, properties[i]);
             }
         }
 

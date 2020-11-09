@@ -32,6 +32,8 @@ namespace HypnosRenderPipeline.RenderPass
         /// <para>so as you don't need to do necessary init of the pin resources. For example, TexturePin</para>
         /// <para>with 'connected == true' means it contains valid pixel data from parent node, otherwise</para>
         /// <para>you may want to clear it before starting to use it, this is determined by its usage.   </para>
+        /// <para>*Or*, for the Out only pin, whether this pin is connected to a child node. You may want</para>
+        /// <para>to skip some calculation of the un-used outgoing pin.</para>
         /// </summary>
         public bool connected;
 

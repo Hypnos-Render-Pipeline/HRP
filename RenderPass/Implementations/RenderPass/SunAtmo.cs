@@ -9,11 +9,11 @@ namespace HypnosRenderPipeline.RenderPass
         // parameters
         public Vector2Int TLutResolution = new Vector2Int(128, 128);
 
-        public Vector2Int SkyLutResolution = new Vector2Int(160, 224);
+        public Vector2Int SkyLutResolution = new Vector2Int(64, 224);
 
         public Vector2Int MSLutResolution = new Vector2Int(32, 32);
 
-        public Vector3Int VolumeResolution = new Vector3Int(32, 96, 32);
+        public Vector3Int VolumeResolution = new Vector3Int(32, 32, 32);
 
         public float VolumeMaxDepth = 32000;
 
@@ -37,7 +37,7 @@ namespace HypnosRenderPipeline.RenderPass
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.Out)]
-        public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf) { dimension = TextureDimension.Cube, sRGB = false, useMipMap = false }, sizeScale: SizeScale.Custom);
+        public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf, 0, 6) { dimension = TextureDimension.Cube, useMipMap = true }, sizeScale: SizeScale.Custom);
 
         RenderTexture t_table = null;
         RenderTexture sky_table = null;
@@ -85,7 +85,8 @@ namespace HypnosRenderPipeline.RenderPass
 
                 atmo.RenderToRT(cb, tempColor, depth, target);
 
-                atmo.RenderToCubeMap(cb, skyBox);
+                if (skyBox.connected) 
+                    atmo.RenderToCubeMap(cb, skyBox);
 
                 cb.ReleaseTemporaryRT(tempColor);
 
@@ -132,7 +133,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             if (TestRTChange(ref sky_table, RenderTextureFormat.ARGBFloat, SkyLutResolution))
             {
-                sky_table.wrapModeU = TextureWrapMode.Repeat;
+                sky_table.wrapModeU = TextureWrapMode.Mirror;
                 sky_table.wrapModeV = TextureWrapMode.Clamp;
             }
 

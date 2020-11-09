@@ -18,12 +18,13 @@ namespace HypnosRenderPipeline
 
         public float tileSize = 128;
 
+        public Vector2 heightRange = new Vector2(0, 500);
 
-
+        public Texture2D[] height = new Texture2D[16 * 16];
 
 #if UNITY_EDITOR
 
-        [UnityEditor.MenuItem("HypnosRenderPipeline/Terrain/Terrain Data")]
+         [UnityEditor.MenuItem("HypnosRenderPipeline/Terrain/Terrain Data")]
         static void CreateTerrainData()
         {
             var openFileName = new FileUtil.OpenFileName();

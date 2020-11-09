@@ -30,6 +30,16 @@
 
             [shader("closesthit")]
             void ClosestHit(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes) {
+
+            }
+
+            [shader("anyhit")]
+            void AnyHit(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes) {
+
+                if (rayIntersection.weight.w != TRACE_FOG_VOLUME) {
+                    IgnoreHit();
+                    return;
+                }
                 rayIntersection.t.x = RayTCurrent();
                 rayIntersection.t.y = _MaterialID;
                 rayIntersection.t.z = InstanceID();
@@ -42,14 +52,7 @@
                 rayIntersection.weight.xyz = mat._m01_m11_m21;
                 rayIntersection.nextDir = mat._m02_m12_m22;
                 rayIntersection.normal = mat._m03_m13_m23;
-            }
-
-            [shader("anyhit")]
-            void AnyHit(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes) {
-
-                if (rayIntersection.weight.w != TRACE_FOG_VOLUME) {
-                    IgnoreHit();
-                }
+                AcceptHitAndEndSearch();
             }
             
             ENDCG

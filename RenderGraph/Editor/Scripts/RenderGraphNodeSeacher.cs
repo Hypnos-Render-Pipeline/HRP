@@ -66,7 +66,10 @@ namespace HypnosRenderPipeline.RenderGraph
             var baseType = typeof(BaseRenderPass);
             var types = Assembly.GetAssembly(baseType).GetTypes();
             //types = Assembly.LoadFile(Application.dataPath + "/../Library/ScriptAssemblies/Assembly-CSharp.dll").GetTypes();
-            types = types.Concat(Assembly.LoadFile(Application.dataPath + "/../Library/ScriptAssemblies/Assembly-CSharp.dll").GetTypes()).ToArray();
+            try {
+                types = types.Concat(Assembly.LoadFile(Application.dataPath + "/../Library/ScriptAssemblies/Assembly-CSharp.dll").GetTypes()).ToArray();
+            }
+            catch (Exception){ }
             List<Tuple<string, Type>> nodes = new List<Tuple<string, Type>>();
             foreach (var t in types)
             {

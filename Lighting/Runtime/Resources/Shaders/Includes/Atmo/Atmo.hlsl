@@ -411,8 +411,8 @@ const float3 L2(const float3 x, const float3 s, const int sampleNum = 128) {
 }
 
 const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool includeTu = true) {
-	float phi = atan(v.z / v.x) + (v.x > 0 ? (v.z < 0 ? 2 * pi : 0) : pi);
-	phi /= 2 * pi; phi = v.x == 0 ? (v.z > 0 ? 0.25 : -0.25) : phi;
+
+	float phi = acos(clamp(dot(normalize(v.xz), normalize(s.xz)), -1, 1)) / pi;
 
 	float rho;
 	float horiz = length(x);
@@ -475,18 +475,60 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 	return scatter + sun;
 }
 
+
+const float3 SkyBox(float3 x, const float3 v, const float3 s) {
+
+	float phi = acos(clamp(dot(normalize(v.xz), normalize(s.xz)), -1, 1)) / pi;
+
+	float rho;
+	float horiz = length(x);
+	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
+
+	if (v.y < horiz) {
+		rho = pow((v.y + 1) / (horiz + 1), 2) * 0.5;
+	}
+	else {
+		if (length(x) > atmosphere_radius) {
+			float ahoriz = length(x);
+			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
+			if (v.y > ahoriz) rho = -1;
+			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
+		}
+		else {
+			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
+		}
+	}
+	float3 scatter = rho >= 0 ? tex2Dlod(S_table, float4(phi, rho, 0, 0)).xyz : 0;
+
+	float coef = 1 - 4.0f / _SLutResolution.y;
+	if (rho > coef) {
+		float3 x_0;
+		X_0(x, v, x_0);
+		scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, false), (rho - coef) / (1 - coef));
+	}
+	else if (rho < 1 - coef) {
+		float3 x_0;
+		if (x.y > atmosphere_radius - 1) {
+			float2 dis;
+			X_Up(x, v, dis);
+			x_0 = x + dis.y * v;
+			x = x + dis.x * v;
+			scatter = Scatter(x, x_0, v, s, 128, false);
+		}
+		else {
+			X_0(x, v, x_0);
+			scatter = Scatter(x, x_0, v, s, 128, false);
+		}
+	}
+	// prevent error
+	scatter = max(0, scatter);
+
+	return scatter;
+}
+
 const float3 Scatter(const float3 x, const float3 v, const float depth, const float3 dir) {
 
-	float phi = atan(v.z / v.x) + (v.x > 0 ? (v.z < 0 ? 2 * pi : 0) : pi);
-	phi /= 2 * pi; phi = v.x == 0 ? (v.z > 0 ? 0.25 : -0.25) : phi;
-
-	float phi_ = atan(dir.z / dir.x) + (dir.x > 0 ? (dir.z < 0 ? 2 * pi : 0) : pi);
-	phi_ /= 2 * pi; phi_ = dir.x == 0 ? (dir.z > 0 ? 0.25 : -0.25) : phi_;
-
-	phi -= phi_;
-	phi = phi > 0.5 ? phi - 1 : (phi < -0.5 ? phi + 1 : phi);
-	phi += 0.5;
-	//return phi;
+	float phi = pow(acos(dot(normalize(v.xz), normalize(dir.xz))) / pi, 0.33333);
 
 	float rho;
 	float horiz = length(x);
@@ -511,7 +553,7 @@ const float3 Scatter(const float3 x, const float3 v, const float depth, const fl
 }
 
 const float3 Sunlight(const float3 x, const float3 s) {
-	return T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810;
+	return T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810 * (s.y > 0);
 }
 
 #endif

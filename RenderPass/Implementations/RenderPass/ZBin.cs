@@ -31,6 +31,8 @@ namespace HypnosRenderPipeline.RenderPass
         [Range(16, 200)]
         public int maxLightCountPerTile = 64;
 
+        public bool includeRTLight = false;
+
 
         public override void Excute(RenderContext context)
         {
@@ -46,7 +48,7 @@ namespace HypnosRenderPipeline.RenderPass
             lightBufferCPU.Clear();
             foreach (var light in local_lights)
             {
-                if (light.shadow != HRPLightShadowType.RayTrace)
+                if (includeRTLight || light.shadow != HRPLightShadowType.RayTrace)
                 {
                     lightBufferCPU.Add(light.lightStructGPU);
                 }

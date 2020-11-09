@@ -155,7 +155,7 @@
 				#if _NORMALMAP
 					float4 ndata = tex2D(_BumpMap, i.uv);
 					float3 normal = UnpackScaleNormal(ndata, _BumpScale);
-					//smoothness *= saturate(1 - ndata.r * abs(_BumpScale) * 12);
+					smoothness *= saturate(1 - ndata.r * abs(_BumpScale) * 12);
 					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
 					float3 binormal = cross(n, t) * i.tangent.w;
 					float3x3 rotation = float3x3(t, binormal, n);
@@ -271,7 +271,9 @@
 				#endif //_METALLICGLOSSMAP
 
 				#if _NORMALMAP
-					float3 normal = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
+					float4 ndata = tex2D(_BumpMap, i.uv);
+					float3 normal = UnpackScaleNormal(ndata, _BumpScale);
+					smoothness *= saturate(1 - ndata.r * abs(_BumpScale) * 12);
 					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
 					float3 binormal = cross(n, t) * i.tangent.w;
 					float3x3 rotation = float3x3(t, binormal, n);
@@ -816,6 +818,18 @@
 				gbuffer.front = fragInput.isFrontFace;
 				rayIntersection = EncodeGBuffer2RIData(gbuffer);
 			}
+
+			[shader("anyhit")]
+			void AnyHit(inout RayIntersection_RTGI rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
+			{
+				CALCULATE_DATA(fragInput, viewDir);
+				if (abs(dot(fragInput.tangentToWorld[2], WorldRayDirection())) < 0.13) {
+					IgnoreHit(); return;
+				}
+				rayIntersection.data1 = 0;
+				AcceptHitAndEndSearch();
+			}
+
 			ENDCG
 		}
 	}

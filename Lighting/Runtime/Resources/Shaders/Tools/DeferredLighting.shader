@@ -150,7 +150,7 @@
 
                 float3 res = QuadLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
 
-                int2 id = i.vertex.xy;
+                uint2 id = i.vertex.xy;
                 int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
                 int index = id.x % 4 + id.y % 4 * 4;
                 float noise = hash12(id);
@@ -375,6 +375,12 @@
 
             float3 _SunColor;
 
+            sampler2D _TerrainHeight;
+            float2 _HeightRange;
+            float H(float2 xz) {
+                return lerp(_HeightRange.x, _HeightRange.y, tex2Dlod(_TerrainHeight, float4(xz / 1024, 0, 0)).x);
+            }
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -406,8 +412,8 @@
                                         0,
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                float3 sunColor = _SunColor * Sunlight(float3(0, planet_radius + max(pos.y, 95), 0), _SunDir);
-                
+                float3 sunColor = _SunColor * Sunlight(float3(pos.x - camPos.x, planet_radius + max(pos.y, 95), pos.z - camPos.z), _SunDir);
+
 #if 1           // trick for the sun disk size
                 float3 halfDir = normalize(view + _SunDir);
                 float3 no = info.normal;
@@ -418,6 +424,20 @@
 #else
                 float3 res = PBS(PBS_FULLY, info, _SunDir, sunColor, view);
 #endif
+
+                if (any(res > 0)) {
+                    float3 p = pos;
+                    p.y = max(p.y, H(p.xz));
+                    for (int i = 0; i < 32; i++)
+                    {
+                        p += _SunDir * lerp(0.5, 1, (float)i / 32);
+                        if (H(p.xz) > p.y + 1) {
+                            res = 0;
+                            break;
+                        }
+                    }
+                }
+
                 return float4(res, 1) + sceneColor;
             }
             ENDCG

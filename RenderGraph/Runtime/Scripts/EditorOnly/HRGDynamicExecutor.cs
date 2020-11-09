@@ -263,12 +263,12 @@ namespace HypnosRenderPipeline.RenderGraph
                         var init_method = input.FieldType.GetMethod("AllocateResourcces");
                         string name = input.Name + temp_id++;
                         int id = Shader.PropertyToID(name);
-                        init_method.Invoke(input.GetValue(node_instance), new object[] { context, id });
-                        input.FieldType.GetField("name").SetValue(input.GetValue(node_instance), name);
-                        pinPool[input.FieldType.GetField("name").GetValue(input.GetValue(node_instance)) as string] = 1;
+                        init_method.Invoke(pin, new object[] { context, id });
+                        nameField.SetValue(pin, name);
+                        pinPool[name] = 1;
                     }
                 }
-                pin_map[input.Name] = new Pair<object, Type>(input.GetValue(node_instance), input.FieldType);
+                pin_map[input.Name] = new Pair<object, Type>(pin, input.FieldType);
             }
 
             var out_edges = m_graph.SearchNodeInDic(node).Item2;
@@ -276,6 +276,7 @@ namespace HypnosRenderPipeline.RenderGraph
             foreach (var output_value in nodeRec.outputs)
             {
                 var output = output_value.Value.first;
+                var pin = output.GetValue(node_instance);
                 var nameField = output.FieldType.GetField("name");
                 System.Object value = null;
 
@@ -287,13 +288,12 @@ namespace HypnosRenderPipeline.RenderGraph
                     var init_method = output.FieldType.GetMethod("AllocateResourcces");
                     string name = output.Name + temp_id++;
                     int id = Shader.PropertyToID(name);
-                    init_method.Invoke(output.GetValue(node_instance), new object[] { context, id });
-                    value = output.GetValue(node_instance);
+                    init_method.Invoke(pin, new object[] { context, id });
+                    value = pin;
                     pinPool[name] = 1;
                     nameField.SetValue(value, name);
-                    output.FieldType.GetField("connected").SetValue(value, false);
                     pin_map[output.Name] = new Pair<object, Type>(value, output.FieldType);
-
+                    output.FieldType.GetField("connected").SetValue(pin, edges.Count != 0);
                 }
                 else
                 {

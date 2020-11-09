@@ -13,5 +13,8 @@ MonoBehaviour:
   m_Name: TD
   m_EditorClassIdentifier: 
   center: {x: 0, y: 0}
-  tileCount: {x: 16, y: 16}
+  tileCount: {x: 1, y: 1}
   tileSize: 256
+  heightRange: {x: -20, y: 190}
+  height:
+  - {fileID: 2800000, guid: 2a2b2b9a79181cd4bb1964304cc5b1e3, type: 3}

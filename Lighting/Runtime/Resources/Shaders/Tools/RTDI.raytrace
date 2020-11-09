@@ -1,0 +1,105 @@
+RWTexture2D<float4> RenderTarget;
+
+#pragma max_recursion_depth 1
+
+#include "../Includes/RT/Include/RayTracingCommon.hlsl"
+#include "../Includes/RT/Include/TraceRay.hlsl"
+#include "../Includes/Light.hlsl"
+#include "../Includes/GBuffer.hlsl"
+#include "../Includes/PBS.hlsl"
+
+float4x4 _VP_Inv;
+int _Clock;
+
+Texture2D<float> _DepthTex;
+Texture2D<float4> _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
+
+
+[shader("raygeneration")]
+void LocalLight()
+{
+    uint2 dispatchIdx = DispatchRaysIndex().xy;
+    float2 uv = (dispatchIdx + 0.5) * _Pixel_WH.zw;
+
+    float d = _DepthTex[dispatchIdx];
+    if (d == 0) {
+        RenderTarget[dispatchIdx] = 0; 
+        return;
+    }
+
+
+    float3 camPos = _V_Inv._m03_m13_m23;
+    float3 pos; 
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_VP_Inv, ndc);
+        pos = worldPos.xyz / worldPos.w;
+    }
+    float3 view = normalize(camPos - pos);
+
+    SurfaceInfo info = (SurfaceInfo)0;
+    info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _NormalTex[dispatchIdx],
+                            _EmissionTex[dispatchIdx],
+                            _AOTex[dispatchIdx]);
+
+    float3 res = 0;
+    
+	int4 sampleState = int4(dispatchIdx, _Clock, 0);
+
+    BegineLocalLightsLoop(uv, pos, _VP_Inv);
+    {
+        sampleState.w = 0;
+        float3 lres = PBS(PBS_FULLY, info, light.dir, light.radiance, view);
+        [branch]
+        if (any(lres > 0)) {
+            res += lres * TraceShadow_RTGI(pos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+        }
+    }
+    EndLocalLightsLoop;
+
+    RenderTarget[dispatchIdx] = float4(res + info.emission, 1);
+}
+
+
+[shader("raygeneration")]
+void DirecionalLight()
+{
+    uint2 dispatchIdx = DispatchRaysIndex().xy;
+    float2 uv = (dispatchIdx + 0.5) * _Pixel_WH.zw;
+
+    float d = _DepthTex[dispatchIdx];
+    if (d == 0) return;
+
+    float3 camPos = _V_Inv._m03_m13_m23;
+    float3 pos; 
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_VP_Inv, ndc);
+        pos = worldPos.xyz / worldPos.w;
+    }
+    float3 view = normalize(camPos - pos);
+
+    SurfaceInfo info = (SurfaceInfo)0;
+    info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _NormalTex[dispatchIdx],
+                            _EmissionTex[dispatchIdx],
+                            _AOTex[dispatchIdx]);
+
+    float3 res = 0;
+    
+	int4 sampleState = int4(dispatchIdx, _Clock, 0);
+
+    BegineDirectionalLightsLoop(pos);
+    {
+        sampleState.w = 0;
+        float3 lres = PBS(PBS_FULLY, info, light.dir, light.radiance, view);
+        [branch]
+        if (any(lres > 0)) {
+            res += lres * TraceShadow_RTGI(pos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
+        }
+    }
+    EndDirectionalLightsLoop;
+    
+    RenderTarget[dispatchIdx] += float4(res, 0);
+}

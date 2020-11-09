@@ -10,7 +10,6 @@ int _Procedural;
 float3 _Tint;
 float _Exposure;
 float _Rotation;
-Texture2D _Skybox; SamplerState sampler_Skybox;
 half4 _MainTex_HDR;
 
 float3 RotateAroundYInDegrees (float3 vertex, float degrees)
@@ -41,43 +40,6 @@ inline float2 ToRadialCoords(float3 coords)
 //---------------------------------------------
 //----------Expensive Version------------------
 //---------------------------------------------
-const float3 Scatter(float3 x, const float3 v, const float3 s) {
-	float phi = atan(v.z / v.x) + (v.x > 0 ? (v.z < 0 ? 2 * 3.14159265 : 0) : 3.14159265);
-	phi /= 2 * 3.14159265; phi = v.x == 0 ? (v.z > 0 ? 0.25 : -0.25) : phi;
-
-	float rho;
-	float horiz = length(x);
-	horiz = -sqrt(horiz * horiz - _PlanetRadius * _PlanetRadius) / horiz;
-
-	if (v.y < horiz) {
-		rho = pow((v.y + 1) / (horiz + 1), 2) * 0.5;
-	}
-	else {
-		float atmosphere_radius = _PlanetRadius + _AtmosphereThickness;
-		if (length(x) > atmosphere_radius) {
-			float ahoriz = length(x);
-			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
-			if (v.y > ahoriz) rho = -1;
-			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
-		}
-		else {
-			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
-		}
-	}
-
-	float3 scatter = rho >= 0 ? _Skybox.SampleLevel(sampler_Skybox, float2(phi, rho), 0).xyz : 0;
-
-	// prevent error
-	scatter = max(0, scatter);
-
-	float3 sun = 1;
-	sun = T(x, v);
-	sun *= smoothstep(cos(_SunAngle + 0.005), cos(_SunAngle), dot(v, s));
-	sun /= 0.2e4;
-
-	return scatter + sun;
-}
-
 void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
 	if(rayIntersection.weight.w < 0){
 		return;
@@ -88,7 +50,7 @@ void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
 		float2 tc = ToRadialCoords(RotateAroundYInDegrees(WorldRayDirection(), -_Rotation));
 		float3 x = mul(_V_Inv, float4(0, 0, 0, 1));
 		x = float3(0, _PlanetRadius + max(95, x.y), 0);
-		rayIntersection.directColor = Scatter(x, WorldRayDirection(), _SunDir) *_SunLuminance;
+		rayIntersection.directColor = Atmo(x, WorldRayDirection(), _SunDir);
 
 
 	//	float3 s = normalize(_SunDir);

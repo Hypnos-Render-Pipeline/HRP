@@ -37,12 +37,15 @@ void PlaneCuling(uint id : SV_DispatchThreadID)
 	float3 center = _LocalToWorld  + float3(_PlaneSize,0, _PlaneSize) / 2 + float3(offset.x, 0, offset.y);
 	float3 size = float3(_PlaneSize, 0, -_PlaneSize) / 2;
 
-	float4x3 corners = float4x3(center + size.zyz, center + size.xyz, center + size.zyx, center + size.xyx);
+	float4x3 low = float4x3(center + size.zyz, center + size.xyz, center + size.zyx, center + size.xyx);
+
+	float4x3 high = float4x3(center + size.zyz + float3(0, 210, 0), center + size.xyz + float3(0, 210, 0), center + size.zyx + float3(0, 210, 0), center + size.xyx + float3(0, 210, 0));
 
 	for (int i = 0; i < 6; i++)
 	{
-		float4 dis = mul(corners, _FrustumPlanes[i].xyz);
-		if (all(dis < _FrustumPlanes[i].w)) return;
+		float4 dis1 = mul(low, _FrustumPlanes[i].xyz);
+		float4 dis2 = mul(high, _FrustumPlanes[i].xyz);
+		if (all(dis1 < _FrustumPlanes[i].w) && all(dis2 < _FrustumPlanes[i].w)) return;
 	}
 
 	Append(id);

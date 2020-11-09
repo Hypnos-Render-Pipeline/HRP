@@ -7,6 +7,7 @@
   "displayName": "HRP",
   "dependencies": {
     "com.unity.mathematics": "1.1.0",
-    "com.unity.postprocessing": "2.3.0"
+    "com.unity.postprocessing": "2.3.0",
+    "com.unity.visualeffectgraph": "8.1.0"
   }
 }

@@ -222,9 +222,8 @@ bool TraceShadow_RTGI(const float3 start, const float3 end)
 	RayIntersection_RTGI rayIntersection;
 	rayIntersection.t = rayDescriptor.TMax;
 	rayIntersection.data1 = 1;
-	//rayIntersection.albedo_flags = 0;
-	
-	TraceRay(_RaytracingAccelerationStructure, /*RAY_FLAG_CULL_BACK_FACING_TRIANGLES*/0, 0xFF, 0, 1, 0, rayDescriptor, rayIntersection);
+
+	TraceRay(_RaytracingAccelerationStructure, RAY_FLAG_FORCE_NON_OPAQUE | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, 0xFF, 0, 1, 0, rayDescriptor, rayIntersection);
 
 	return rayIntersection.data1 & 1;
 }

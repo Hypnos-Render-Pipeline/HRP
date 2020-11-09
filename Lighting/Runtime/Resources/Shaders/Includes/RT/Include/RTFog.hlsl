@@ -60,7 +60,7 @@ bool TraceFog(float3 pos, float3 dir, out VolumeRec rec) {
 	rayIntersection.t = 99999;
 	rayIntersection.weight = TRACE_FOG_VOLUME;
 
-	TraceRay(_RaytracingAccelerationStructure, RAY_FLAG_FORCE_NON_OPAQUE, 0xFF, 0, 1, 1, rayDescriptor, rayIntersection);
+	TraceRay(_RaytracingAccelerationStructure, RAY_FLAG_FORCE_NON_OPAQUE | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, 0xFF, 0, 1, 1, rayDescriptor, rayIntersection);
 
 	if (rayIntersection.t.x >= 0) {
 		rec.w2o._m00_m10_m20 = rayIntersection.directColor;

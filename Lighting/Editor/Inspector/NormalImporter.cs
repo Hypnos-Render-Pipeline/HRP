@@ -22,7 +22,6 @@ public class NormalImporter : AssetPostprocessor
             if (tex.width != tex.height || !Mathf.IsPowerOfTwo(tex.width))
                 Debug.LogError("Only support width = height and pow of two normal map.");
             Vector2Int wh = new Vector2Int(tex.width, tex.height);
-            Debug.Log(wh);
             Vector3[,] normals = new Vector3[wh.x, wh.y];
             {
                 Color[] colors = tex.GetPixels();
