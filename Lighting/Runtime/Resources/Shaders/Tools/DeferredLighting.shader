@@ -545,12 +545,10 @@
             struct appdata 
             {
                 float4 vertex : POSITION;
-                float2 uv : TEXCOORD0;
             };
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
             };
 
@@ -583,27 +581,27 @@
 
             float4 frag(v2f i) : SV_Target
             {
-                i.uv = (i.vertex.xy + 0.5) * _Pixel_WH.zw;
-                float d = _DepthTex.SampleLevel(sampler_point_clamp, i.uv, 0).x;
+                float2 uv = (i.vertex.xy + 0.5) * _Pixel_WH.zw;
+                float d = _DepthTex.SampleLevel(sampler_point_clamp, uv, 0).x;
                 if (d == 0 || i.vertex.z < d) return 0;
 
                 float3 camPos = _V_Inv._m03_m13_m23;
                 float3 pos;
                 {
-                    float4 ndc = float4(i.uv * 2 - 1, d, 1);
+                    float4 ndc = float4(uv * 2 - 1, d, 1);
                     float4 worldPos = mul(_VP_Inv, ndc);
                     pos = worldPos.xyz / worldPos.w;
                 }
                 float3 view = normalize(camPos - pos);
 
                 SurfaceInfo info = (SurfaceInfo)0;
-                info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                                        _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, uv, 0),
+                                        _NormalTex.SampleLevel(sampler_point_clamp, uv, 0),
                                         0,
-                                        _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
+                                        _AOTex.SampleLevel(sampler_point_clamp, uv, 0));
 
                 float3 res = 0;
-                float shadow = _RayTracedLocalShadowMask.SampleLevel(sampler_point_clamp, i.uv, 0);
+                float shadow = _RayTracedLocalShadowMask.SampleLevel(sampler_point_clamp, uv, 0);
 
                 if (shadow == 0) return 0;
 

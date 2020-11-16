@@ -789,7 +789,7 @@
 
 				#if _NORMALMAP
 					normal = UnpackScaleNormal(SampleTex(_BumpMap, uv, 0), _BumpScale);
-					normal = normalize(mul(normal * float3(-1,1,1), i.tangentToWorld));
+					normal = normalize(mul(normal * float3(-1,-1,1), i.tangentToWorld));
 					normal *= i.isFrontFace ? 1 : -1;
 				#else
 					normal = i.tangentToWorld[2];

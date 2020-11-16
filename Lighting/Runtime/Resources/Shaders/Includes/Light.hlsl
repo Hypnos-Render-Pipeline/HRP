@@ -30,6 +30,7 @@ struct SolvedLocalLight
     int id;
 };
 
+uint _LocalLightCount;
 float4 _TileCount;
 StructuredBuffer<Light> _LocalLightBuffer;
 
@@ -40,6 +41,8 @@ StructuredBuffer<Light> _AreaLightBuffer;
 int _DirecionalLightCount;
 StructuredBuffer<Light> _DirecionalLightBuffer;
 
+int _LightCount;
+StructuredBuffer<Light> _LightBuffer;
 
 #ifdef ZIBIN_COMPUTE
 RWStructuredBuffer<uint> _TileLights;
@@ -78,8 +81,7 @@ float3 viewDir_ = (farPlane_.xyz - nearPlane_) / far;\
 uint bin = 1 << uint(floor(sqrt(dot(pos - nearPlane_, viewDir_) / far) * tileCount.z));\
 uint lightCount = min(_TileLights[start_offset], tileCount.w);\
 start_offset += 1;\
-for (uint i = 0; i < lightCount; i++)\
-{\
+for (uint i = 0; i < lightCount; i++) {\
     uint lIdx = _TileLights[start_offset + i];\
     uint lmask = lIdx & 0xFFFFFF;\
     Light light_ = _LocalLightBuffer[lIdx >> 24];\
@@ -90,6 +92,14 @@ for (uint i = 0; i < lightCount; i++)\
 #define EndLocalLightsLoop }}}
 
 
+#define BegineAllLocalLightsLoop(uv, pos, invVP) {\
+uint lightCount = _LocalLightCount;\
+for (uint i = 0; i < lightCount; i++) {\
+    Light light_ = _LocalLightBuffer[i];\
+    SolvedLocalLight light = SolveLight(light_, pos);
+
+
+#define EndAllLocalLightsLoop }}
 
 #define BegineDirectionalLightsLoop(pos) {\
 uint lightCount = _DirecionalLightCount;\

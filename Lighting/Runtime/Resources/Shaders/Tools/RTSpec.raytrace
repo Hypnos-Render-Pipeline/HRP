@@ -1,0 +1,141 @@
+RWTexture2D<float4> RenderTarget;
+
+#pragma max_recursion_depth 1
+
+#include "../Includes/RT/Include/RayTracingCommon.hlsl"
+#include "../Includes/RT/Include/TraceRay.hlsl"
+#include "../Includes/Light.hlsl"
+#include "../Includes/GBuffer.hlsl"
+#include "../Includes/PBS.hlsl"
+#include "../Includes/Atmo/Sun.hlsl"
+
+float4x4 _VP_Inv, _VP, _V, _P;
+int _Clock;
+
+int _UseRTShadow;
+
+float4 _WH;
+
+Texture2D<float> _DepthTex;
+Texture2D<float4> _BaseColorTex, _NormalTex, _AOTex, _SceneColor;
+Texture2D<float4> _FilteredColor;
+Texture2D<float2> _MotionTex;
+TextureCube<float3> _SkyBox;
+
+SamplerState point_clamp_sampler;
+SamplerState linear_clamp_sampler;
+SamplerState trilinear_clamp_sampler;
+
+RWTexture2D<float4> _TempResult;
+
+float PD2VD(const float d) {
+     return -_P._m23 / (d + _P._m22);
+}
+
+float Luminance(float3 col) {
+    return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
+}
+float3 ToneMap(float3 color) {
+    return color / (1 + Luminance(color));
+}
+
+[shader("raygeneration")]
+void Specular()
+{
+    uint2 dispatchIdx = DispatchRaysIndex().xy;
+    float2 uv = (dispatchIdx + 0.5) * _WH.zw;
+
+    float d = _DepthTex[dispatchIdx];
+    if (d == 0) {
+        _TempResult[dispatchIdx] = 0;
+        return;
+    }
+    float3 camPos = _V_Inv._m03_m13_m23;
+    float3 pos; 
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_VP_Inv, ndc);
+        pos = worldPos.xyz / worldPos.w;
+    }
+    float3 view = normalize(camPos - pos);
+
+    SurfaceInfo info = (SurfaceInfo)0;
+    info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _NormalTex[dispatchIdx],
+                            0,
+                            1);
+
+	int4 sampleState = int4(dispatchIdx, _Clock % 4, 0);
+
+    
+    float3 n = normalize(float3(0, 0, 0.5) + ImportanceSampleGGX(float2(SAMPLE, SAMPLE), 1 - info.smoothness).xyz);
+
+    n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
+
+    float3 dir = reflect(-view, n);
+
+    GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
+
+    float3 res = 0;
+    if (gbuffer.miss) {
+        res = _SkyBox.SampleLevel(trilinear_clamp_sampler, dir, lerp(7, 0, info.smoothness));
+    }
+    else {
+        float3 hitPos = gbuffer.dis * dir + pos;
+        float4 ppos = mul(_VP, float4(hitPos, 1));
+        float2 uv = ppos.xy / ppos.w;
+        uv = (uv + 1) * 0.5;
+        res = _FilteredColor.SampleLevel(trilinear_clamp_sampler, uv, lerp(7, 0, info.smoothness));
+        bool offscreen = any(uv < 0) || any(uv > 1);
+        bool illegal = info.smoothness > SAMPLE || offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.01; sampleState.w++;
+        if (illegal) { // can't find illegal hit in screen, calculate it
+            SurfaceInfo hitInfo = (SurfaceInfo)0;
+            hitInfo.baseColor = gbuffer.albedo;
+            hitInfo.smoothness = gbuffer.smoothness;
+            hitInfo.metallic = gbuffer.metallic;
+            hitInfo.gnormal = hitInfo.normal = gbuffer.normal;
+            hitInfo.transparent = gbuffer.transparent;
+            hitInfo.diffuseAO_specAO = 1;
+            
+            float3 hitView = -dir;
+            res = 0;//float3(1,0,1);
+            [branch]
+            if (offscreen) {   
+                BegineAllLocalLightsLoop(uv, hitPos, _VP_Inv);
+                {
+                    sampleState.w = 0;
+                    float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+                    [branch]
+                    if (_UseRTShadow && any(lres > 0)) {
+                        lres *= TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+                    }
+                    res += lres;
+                }
+                EndAllLocalLightsLoop;  
+            }
+            else{           
+                BegineLocalLightsLoop(uv, hitPos, _VP_Inv); // use zbin to cull light.
+                {
+                    sampleState.w = 0;
+                    float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+                    [branch]
+                    if (_UseRTShadow && any(lres > 0)) {
+                        lres *=  TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+                    }
+                    res += lres;
+                }
+                EndLocalLightsLoop;
+            }
+
+            SunLight sun = _Sun[0];
+            float3 sl = PBS(PBS_FULLY, hitInfo, sun.dir, sun.color, hitView);
+             if (_UseRTShadow && any(sl > 0)) {
+                sl *= TraceShadow_RTGI(hitPos, sun.dir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sun.angle));
+            }
+            res += sl;
+        }
+    }
+
+    float3 spec = ToneMap(PBS(PBS_SPECULAR, info, dir, res, view));
+    _TempResult[dispatchIdx] = float4(spec, 1);
+}

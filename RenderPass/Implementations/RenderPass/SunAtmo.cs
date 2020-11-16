@@ -38,7 +38,18 @@ namespace HypnosRenderPipeline.RenderPass
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.Out)]
-        public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf, 0, 6) { dimension = TextureDimension.Cube, useMipMap = true }, sizeScale: SizeScale.Custom);
+        public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf) { dimension = TextureDimension.Cube, useMipMap = true }, sizeScale: SizeScale.Custom);
+
+        public struct SunLight
+        {
+            float3 dir;
+            float angle;
+            float3 color;
+            float padding;
+        }
+
+        [NodePin(PinType.Out)]
+        public BufferPin<SunLight> sunBuffer = new BufferPin<SunLight>(1);
 
         RenderTexture t_table = null;
         RenderTexture sky_table = null;
@@ -77,12 +88,14 @@ namespace HypnosRenderPipeline.RenderPass
 
                 atmo.GenerateLut(hash, cb, t_table, multiScatter_table, lum, dir, LutSizeChanged);
 
-                atmo.GenerateVolumeSkyTexture(cb, volumeScatter_table, sky_table, VolumeMaxDepth);
-
                 int tempColor = Shader.PropertyToID("TempColor");
                 cb.GetTemporaryRT(tempColor, target.desc.basicDesc);
-                cb.SetGlobalVector("_SunColor", sun.color * sun.radiance);
                 cb.Blit(target, tempColor, lightMat, 4);
+
+                atmo.GenerateVolumeSkyTexture(cb, volumeScatter_table, sky_table, VolumeMaxDepth);
+
+                if (sunBuffer.connected)
+                    atmo.GenerateSunBuffer(cb, sunBuffer, sun.color * sun.radiance);
 
                 atmo.RenderToRT(cb, tempColor, depth, target);
 

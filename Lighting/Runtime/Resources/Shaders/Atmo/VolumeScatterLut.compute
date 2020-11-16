@@ -1,7 +1,9 @@
 ﻿#pragma kernel CSMain
+#pragma kernel WriteSunBuffer
 
 #define T T_TAB
 #include "../Includes/Atmo/Atmo.hlsl"
+#include "../Includes/Atmo/Sun.hlsl"
 
 RWTexture3D<float3> _Result;
 float3 _Size;
@@ -73,4 +75,18 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     res = Scatter(x, x_0, v, s, 16, false);
 
     _Result[id] = res * _SunLuminance;
+}
+
+float3 _SunColor;
+
+RWStructuredBuffer<SunLight> _Sun_;
+
+[numthreads(1, 1, 1)]
+void WriteSunBuffer(uint3 id : SV_DispatchThreadID)
+{
+    SunLight sl;
+    sl.dir = _SunDir;
+    sl.color = _SunColor * Sunlight(float3(0, planet_radius + max(_WorldSpaceCameraPos.y, 95), 0), sl.dir);
+    sl.angle = _SunAngle;
+    _Sun_[0] = sl;
 }

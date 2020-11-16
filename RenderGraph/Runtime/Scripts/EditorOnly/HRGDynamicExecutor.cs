@@ -56,6 +56,7 @@ namespace HypnosRenderPipeline.RenderGraph
                                 node.debugTexDesc = desc;
                                 desc.colorFormat = RenderTextureFormat.ARGBHalf;
                                 desc.enableRandomWrite = false;
+                                desc.useMipMap = false;
                                 node.debugTex = new RenderTexture(desc);
                             }
                             else
@@ -67,6 +68,7 @@ namespace HypnosRenderPipeline.RenderGraph
                                     var desc = desc2;
                                     desc.colorFormat = RenderTextureFormat.ARGBHalf;
                                     desc.enableRandomWrite = false;
+                                    desc.useMipMap = false;
                                     node.debugTex.Release();
                                     node.debugTex = new RenderTexture(desc);
                                     node.debugTexDesc = desc2;

@@ -12,9 +12,15 @@ namespace HypnosRenderPipeline
     public class HypnosRenderPipeline : RenderPipeline
     {
         HypnosRenderPipelineAsset m_asset;
-        //RenderGraphResourcePool m_resourcePool;
-        
-        Dictionary<Camera, int> clock;
+
+        class PerCameraData
+        {
+            public Matrix4x4 lastVP;
+            public int clock;
+        }
+
+        Dictionary<Camera, PerCameraData> clock;
+        Dictionary<Camera, RenderGraphResourcesPool> resourcesPool;
 
         ScriptableCullingParameters defaultCullingParams;
 
@@ -36,7 +42,8 @@ namespace HypnosRenderPipeline
 #endif
             m_asset.defaultMaterial.hideFlags = HideFlags.NotEditable;
 
-            clock = new Dictionary<Camera, int>();
+            clock = new Dictionary<Camera, PerCameraData>();
+            resourcesPool = new Dictionary<Camera, RenderGraphResourcesPool>();
         }
 
         protected override void Dispose(bool disposing)
@@ -46,6 +53,11 @@ namespace HypnosRenderPipeline
             if (disposing)
             {
                 m_executor.Dispose();
+                foreach (var pair in resourcesPool)
+                {
+                    pair.Value.Dispose();
+                }
+                resourcesPool.Clear();
             }
 #endif
         }
@@ -85,20 +97,38 @@ namespace HypnosRenderPipeline
                 cam.TryGetCullingParameters(out defaultCullingParams);
                 rc.defaultCullingResult = context.Cull(ref defaultCullingParams);
 
-                cb.SetGlobalMatrix("_V", cam.worldToCameraMatrix);
+                Matrix4x4 v = cam.worldToCameraMatrix, p = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false);
+                cb.SetGlobalMatrix("_V", v);
+                cb.SetGlobalMatrix("_P", p);
                 cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
-                cb.SetGlobalMatrix("_P_Inv", GL.GetGPUProjectionMatrix(cam.projectionMatrix, false).inverse);
-                var vp = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false) * cam.worldToCameraMatrix;
+                cb.SetGlobalMatrix("_P_Inv", p.inverse);
+                var vp = p * v;
                 cb.SetGlobalMatrix("_VP", vp);
                 cb.SetGlobalMatrix("_VP_Inv", vp.inverse);
                 if (clock.ContainsKey(cam)) {
-                    cb.SetGlobalInt("_Clock", clock[cam]++);
+                    cb.SetGlobalInt("_Clock", clock[cam].clock++);
                 }
                 else {
                     cb.SetGlobalInt("_Clock", 0);
-                    clock[cam] = 0;
+                    var pcd = new PerCameraData();
+                    pcd.clock = 0;
+                    pcd.lastVP = vp;
+                    clock[cam] = pcd;
                 }
-                rc.frameIndex = clock[cam];
+                cb.SetGlobalMatrix("_Last_VP", clock[cam].lastVP);
+                clock[cam].lastVP = vp;
+                RenderGraphResourcesPool pool;
+                if (!resourcesPool.ContainsKey(cam))
+                {
+                    pool = new RenderGraphResourcesPool();
+                    resourcesPool.Add(cam, pool);
+                }
+                else
+                {
+                    pool = resourcesPool[cam];
+                }
+                rc.frameIndex = clock[cam].clock;
+                rc.resourcesPool = pool;
 
                 context.ExecuteCommandBuffer(cb);
                 cb.Clear();

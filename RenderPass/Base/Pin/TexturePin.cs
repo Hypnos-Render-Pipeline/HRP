@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
+using Unity.Mathematics;
 
 namespace HypnosRenderPipeline.RenderPass
 {
@@ -26,13 +27,16 @@ namespace HypnosRenderPipeline.RenderPass
 
     public class TexturePin : BaseNodePin<TexturePinDesc, int>
     {
-        public TexturePin(TexturePinDesc desc)
+        TexturePin srcPin;
+        public TexturePin(TexturePinDesc desc, TexturePin srcPin = null)
         {
             this.desc = desc;
+            this.srcPin = srcPin;
         }
-        public TexturePin(RenderTextureDescriptor descriptor, SizeCastMode sizeCastMode = SizeCastMode.ResizeToInput, ColorCastMode colorCastMode = ColorCastMode.FitToInput, SizeScale sizeScale = SizeScale.Full)
+        public TexturePin(RenderTextureDescriptor descriptor, SizeCastMode sizeCastMode = SizeCastMode.ResizeToInput, ColorCastMode colorCastMode = ColorCastMode.FitToInput, SizeScale sizeScale = SizeScale.Full, TexturePin srcPin = null)
         {
             desc = new TexturePinDesc(descriptor, sizeCastMode, colorCastMode, sizeScale);
+            this.srcPin = srcPin;
         }
 
         public static implicit operator RenderTargetIdentifier(TexturePin self)
@@ -42,11 +46,20 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void AllocateResourcces(RenderContext context, int id)
         {
+            int2 wh;
+            if (srcPin != null)
+                wh = new int2(srcPin.desc.basicDesc.width, srcPin.desc.basicDesc.height);
+            else
+                wh = new int2(context.camera.pixelWidth, context.camera.pixelHeight);
+
             if (desc.sizeScale != SizeScale.Custom)
             {
-                desc.basicDesc.width = context.camera.pixelWidth / (int)desc.sizeScale;
-                desc.basicDesc.height = context.camera.pixelHeight / (int)desc.sizeScale;
+                desc.basicDesc.width = wh.x / (int)desc.sizeScale;
+                desc.basicDesc.height = wh.y / (int)desc.sizeScale;
             }
+
+            if (srcPin != null && desc.colorMode != ColorCastMode.Fixed)
+                desc.basicDesc.colorFormat = srcPin.desc.basicDesc.colorFormat;
 
             context.commandBuffer.GetTemporaryRT(id, desc.basicDesc);
             handle = id;
@@ -81,7 +94,7 @@ namespace HypnosRenderPipeline.RenderPass
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension
                 || (desc.basicDesc.enableRandomWrite && !desc2.basicDesc.enableRandomWrite)
                 || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth
-                || desc.basicDesc.depthBufferBits > desc2.basicDesc.depthBufferBits)
+                || (desc.basicDesc.depthBufferBits > desc2.basicDesc.depthBufferBits && desc.colorMode != ColorCastMode.FitToInput))
                 return false;
 
             return true;
@@ -97,7 +110,8 @@ namespace HypnosRenderPipeline.RenderPass
         {
             var desc2 = pin.desc;
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension
-                || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth)
+                || desc.basicDesc.volumeDepth != desc2.basicDesc.volumeDepth
+                || (desc.basicDesc.colorFormat != desc2.basicDesc.colorFormat && (desc.basicDesc.colorFormat == RenderTextureFormat.Depth || desc2.basicDesc.colorFormat == RenderTextureFormat.Depth)))
                 return false;
 
             return true;
@@ -109,7 +123,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             if ((pin as TexturePin).desc.basicDesc.colorFormat == RenderTextureFormat.Depth)
             {
-                renderContext.commandBuffer.Blit(from, handle, MaterialWithName.depthBlit);
+                renderContext.commandBuffer.BlitDepth(from, handle);
             }
             else
             {

@@ -4,8 +4,6 @@
 #define ZIBIN_COMPUTE
 #include "../Includes/Light.hlsl"
  
-uint _LocalLightCount;
-
 float4x4 _V_Inv;
 float4x4 _VP_Inv;
 

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using HypnosRenderPipeline.Tools;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderPass
@@ -31,14 +32,22 @@ namespace HypnosRenderPipeline.RenderPass
                                                                     SizeCastMode.Fixed,
                                                                     ColorCastMode.Fixed,
                                                                     SizeScale.Full);
+        [NodePin(PinType.Out)]
+        public TexturePin motion = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RGFloat, 0),
+                                                                    SizeCastMode.Fixed,
+                                                                    ColorCastMode.Fixed,
+                                                                    SizeScale.Full);
+
+        static MaterialWithName motionMat = new MaterialWithName("Hidden/CalculateMotion");
 
         public override void Excute(RenderContext context)
         {
-            context.commandBuffer.SetRenderTarget(new RenderTargetIdentifier[]{baseColor_roughness.handle, normal_metallic, emission, microAO }, depth);
+            var cb = context.commandBuffer;
+            cb.SetRenderTarget(new RenderTargetIdentifier[]{baseColor_roughness.handle, normal_metallic, emission, microAO }, depth);
 
-            context.commandBuffer.ClearRenderTarget(!depth.connected, true, Color.clear);
+            cb.ClearRenderTarget(!depth.connected, true, Color.clear);
             context.context.ExecuteCommandBuffer(context.commandBuffer);
-            context.commandBuffer.Clear();
+            cb.Clear();
 
             var a = new DrawingSettings(new ShaderTagId("GBuffer_Equal"), new SortingSettings(context.camera));
             if (!depth.connected)
@@ -49,6 +58,12 @@ namespace HypnosRenderPipeline.RenderPass
             b.renderQueueRange = RenderQueueRange.opaque;
 
             context.context.DrawRenderers(context.defaultCullingResult, ref a, ref b);
+
+            if (motion.connected)
+            {
+                cb.SetGlobalTexture("_DepthTex", depth);
+                cb.Blit(null, motion, motionMat, 0);
+            }
         }
     }
 

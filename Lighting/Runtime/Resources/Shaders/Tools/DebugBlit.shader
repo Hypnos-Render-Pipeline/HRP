@@ -38,10 +38,11 @@
             int         _Channel;
             int         _Checkboard;
             float       _Aspect;
+            int _Lod;
 
             float4 frag (v2f i) : SV_Target
             {
-                float4 col = tex2D(_MainTex, i.uv);
+                float4 col = tex2Dlod(_MainTex, float4(i.uv, 0, _Lod));
                 col.rgb *= _Multiplier;
 
                 if (_Channel) {

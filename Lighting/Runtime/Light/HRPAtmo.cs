@@ -156,8 +156,8 @@ namespace HypnosRenderPipeline
         {
             cb.SetGlobalFloat("_RenderGround", RenderGround ? 1 : 0);
             cb.SetGlobalVector("_SLutResolution", new Vector4(sky.width, sky.height));
-            cb.SetGlobalFloat("_MaxDepth", maxDepth); 
-            cb.Blit(null, sky, lutMat, 2); 
+            cb.SetGlobalFloat("_MaxDepth", maxDepth);
+            cb.Blit(null, sky, lutMat, 2);
             cb.SetComputeTextureParam(volumeScatter, 0, "_Result", volume);
             Vector3Int size = new Vector3Int(volume.width, volume.height, volume.volumeDepth);
             cb.SetComputeVectorParam(volumeScatter, "_Size", new Vector4(size.x, size.y, size.z));
@@ -167,6 +167,16 @@ namespace HypnosRenderPipeline
             cb.DispatchCompute(volumeScatter, 0, size.x, size.y, size.z);
             cb.SetGlobalTexture("Volume_table", volume);
             cb.SetGlobalTexture("S_table", sky);
+        }
+
+        /// <summary>
+        /// Generate sun buffer
+        /// </summary>
+        public void GenerateSunBuffer(CommandBuffer cb, ComputeBuffer sunBuffer, Color sunColor)
+        {
+            cb.SetGlobalVector("_SunColor", sunColor);
+            cb.SetComputeBufferParam(volumeScatter, 1, "_Sun_", sunBuffer);
+            cb.DispatchCompute(volumeScatter, 1, 1, 1, 1);
         }
 
         /// <summary>

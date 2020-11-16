@@ -1,34 +1,37 @@
 using UnityEngine;
 using Unity.Mathematics;
 using UnityEngine.Rendering;
+using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline.RenderPass
 {
-    public static class PyramidColorUniform
-    {
-        public static int PrevLevelColor = Shader.PropertyToID("_Source");
-        public static int CurrLevelColor = Shader.PropertyToID("_Result");
-        public static int PrevCurr_Size = Shader.PropertyToID("_Size");
-        public static int ColorPyramidNumLOD = Shader.PropertyToID("ColorPyramidNumLOD");
-    }
 
     public class PyramidColor : BaseRenderPass
     {
+        public static class PyramidColorUniform
+        {
+            public static int PrevLevelColor = Shader.PropertyToID("_Source");
+            public static int CurrLevelColor = Shader.PropertyToID("_Result");
+            public static int PrevCurr_Size = Shader.PropertyToID("_Size");
+            public static int ColorPyramidNumLOD = Shader.PropertyToID("ColorPyramidNumLOD");
+        }
+
         [NodePin(PinType.In, true)]
         public TexturePin filterTarget = new TexturePin(new RenderTextureDescriptor(1, 1));
-        
+
         [NodePin(PinType.Out)]
-        public TexturePin pyramidColor = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.DefaultHDR, 0){bindMS = false, useMipMap = true, autoGenerateMips = false, dimension = TextureDimension.Tex2D}, SizeCastMode.Fixed, ColorCastMode.Fixed, SizeScale.Full);
+        public TexturePin pyramidColor;
 
 
         private int[] ColorPyramidMipIDs;
-        private ComputeShader PyramidColorShader;
+        static ComputeShaderWithName PyramidColorShader = new ComputeShaderWithName("Shaders/Tools/PyramidColorGenerator");
 
 
         public PyramidColor()
         {
-            PyramidColorShader = Resources.Load<ComputeShader>("Shaders/PyramidColorGenerator");
             ColorPyramidInit();
+            pyramidColor = new TexturePin(new RenderTextureDescriptor(1, 1) { bindMS = false, useMipMap = true, autoGenerateMips = false, dimension = TextureDimension.Tex2D }, srcPin: filterTarget);
+
         }
 
         public void ColorPyramidInit()
@@ -53,7 +56,7 @@ namespace HypnosRenderPipeline.RenderPass
                 ColorPyramidSize.x >>= 1;
                 ColorPyramidSize.y >>= 1;
 
-                CmdBuffer.GetTemporaryRT(ColorPyramidMipIDs[i], ColorPyramidSize.x, ColorPyramidSize.y, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Default, 1, true);
+                CmdBuffer.GetTemporaryRT(ColorPyramidMipIDs[i], ColorPyramidSize.x, ColorPyramidSize.y, 0, FilterMode.Bilinear, filterTarget.desc.basicDesc.colorFormat, RenderTextureReadWrite.Default, 1, true);
                 CmdBuffer.SetComputeTextureParam(PyramidColorShader, 0, PyramidColorUniform.PrevLevelColor, PrevColorPyramid);
                 CmdBuffer.SetComputeTextureParam(PyramidColorShader, 0, PyramidColorUniform.CurrLevelColor, ColorPyramidMipIDs[i]);
                 CmdBuffer.SetComputeVectorParam(PyramidColorShader, PyramidColorUniform.PrevCurr_Size, new float4(ColorPyramidSize.x, ColorPyramidSize.y, 1f / ColorPyramidSize.x, 1f / ColorPyramidSize.y));

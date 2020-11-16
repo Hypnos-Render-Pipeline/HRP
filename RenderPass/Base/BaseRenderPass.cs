@@ -3,16 +3,55 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
+using System.Collections.Generic;
 
 namespace HypnosRenderPipeline.RenderPass
 {
+    public class RenderGraphResourcesPool
+    {
+        Dictionary<int, RenderTexture> texs;
+        public RenderGraphResourcesPool() { texs = new Dictionary<int, RenderTexture>(); }
+        public RenderTexture GetTexture(int id, RenderTextureDescriptor desc)
+        {
+            RenderTexture res = null;
+            if (texs.ContainsKey(id))
+            {
+                res = texs[id];
+            }
+            // RenderTextureDescriptor RenderTexture.RenderTextureDescriptor is not equal, 
+            // even when their values are all same.
+            if (res == null || !desc.Equal(res.descriptor)) 
+            {
+                if (res != null)
+                {
+                    res.Release();
+                    Debug.LogWarning("Desc Changed");
+                }
+                res = new RenderTexture(desc);
+                res.Create();
+                texs[id] = res;
+            }
+            return res;
+        }
+        public void Dispose()
+        {
+            foreach (var pair in texs)
+            {
+                if (pair.Value != null)
+                    pair.Value.Release();
+            }
+            texs.Clear();
+        }
+    }
+
+
     public struct RenderContext
     {
         public Camera camera;
         public CommandBuffer commandBuffer;
         public ScriptableRenderContext context;
         public CullingResults defaultCullingResult;
-        //public RenderGraphResourcePool ResourcePool;
+        public RenderGraphResourcesPool resourcesPool;
         public int frameIndex;
     }
 
@@ -68,6 +107,9 @@ namespace HypnosRenderPipeline.RenderPass
         [Range(0.1f, 10)]
         public float multiplier = 1;
 
+        [Range(0, 15)]
+        public int lod = 0;
+
         public enum Channal { RGBA, R, G, B, A, RGB };
 
         [Range(0.1f, 10)]
@@ -86,6 +128,7 @@ namespace HypnosRenderPipeline.RenderPass
                 context.commandBuffer.SetGlobalInt("_Channel", (int)channal);
                 context.commandBuffer.SetGlobalInt("_Checkboard", checkboard ? 1 : 0);
                 context.commandBuffer.SetGlobalFloat("_Aspect", (float)tex.desc.basicDesc.width / tex.desc.basicDesc.height);
+                context.commandBuffer.SetGlobalInt("_Lod", lod);
                 context.commandBuffer.Blit(tex.handle, texture, MaterialWithName.debugBlit);
             }
         }
