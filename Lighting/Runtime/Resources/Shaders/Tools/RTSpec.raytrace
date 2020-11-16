@@ -87,7 +87,7 @@ void Specular()
         uv = (uv + 1) * 0.5;
         res = _FilteredColor.SampleLevel(trilinear_clamp_sampler, uv, lerp(7, 0, info.smoothness));
         bool offscreen = any(uv < 0) || any(uv > 1);
-        bool illegal = info.smoothness > SAMPLE || offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.01; sampleState.w++;
+        bool illegal = info.smoothness > SAMPLE || offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.1; sampleState.w++;
         if (illegal) { // can't find illegal hit in screen, calculate it
             SurfaceInfo hitInfo = (SurfaceInfo)0;
             hitInfo.baseColor = gbuffer.albedo;
