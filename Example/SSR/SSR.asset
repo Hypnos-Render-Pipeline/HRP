@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: SSR
   m_EditorClassIdentifier: 
-  viewPosition: {x: -815, y: -348, z: 0}
-  viewScale: {x: 0.4664706, y: 0.4664706, z: 1}
+  viewPosition: {x: -1150, y: -296, z: 0}
+  viewScale: {x: 0.375937, y: 0.375937, z: 1}
   nodes:
   - nodeName: GBuffer
     parameters:
@@ -47,8 +47,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2223.2678
-      y: 1330.8899
+      x: 1454.661
+      y: 1304.8522
       width: 300
       height: 249
     info: 
@@ -67,8 +67,8 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 4884.6377
-      y: 1475.68
+      x: 5910.4727
+      y: 1330.0001
       width: 300
       height: 105
     info: 
@@ -125,8 +125,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1837.268
-      y: 1080.8899
+      x: 1068.6611
+      y: 1054.8522
       width: 300
       height: 168
     info: 
@@ -169,8 +169,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2218.2678
-      y: 1083.8899
+      x: 1454.661
+      y: 1034.852
       width: 300
       height: 240
     info: 
@@ -282,10 +282,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3582.3574
-      y: 1083.0479
+      x: 3085.3389
+      y: 1061
       width: 300
-      height: 378.00003
+      height: 402
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SunAtmo
   - nodeName: LocalLighting
@@ -328,8 +328,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2955.16
-      y: 1150.32
+      x: 1882.661
+      y: 1144.852
       width: 300
       height: 292
     info: 
@@ -351,8 +351,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3964.4226
-      y: 1142.1
+      x: 4000.2432
+      y: 1347
       width: 300
       height: 129
     info: 
@@ -407,9 +407,6 @@ MonoBehaviour:
       info: 
       mustConnect: 0
     outputs:
-    - name: lights
-      info: 
-      mustConnect: 0
     - name: result
       info: 
       mustConnect: 0
@@ -421,11 +418,162 @@ MonoBehaviour:
       height: 345
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.RTSpecular
+  - nodeName: SkyBoxIBL
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: skyBox
+      info: 
+      mustConnect: 1
+    - name: target
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: baseColor_roughness
+      info: 
+      mustConnect: 1
+    - name: normal_metallic
+      info: 
+      mustConnect: 1
+    - name: ao
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 1
+    - name: irradiance
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 3537.6094
+      y: 1232.0199
+      width: 300
+      height: 273
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.SkyBoxIBL
+  - nodeName: Transparent
+    parameters:
+    - name: renderAreaLight
+      info: Enable Area light for transparent objects are more expensive than opaque
+        objects, please remember that.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lightBuffer
+      info: 
+      mustConnect: 1
+    - name: tiledLights
+      info: 
+      mustConnect: 1
+    - name: lights
+      info: 
+      mustConnect: 0
+    - name: areaLightBuffer
+      info: 
+      mustConnect: 0
+    - name: filterdScreenColor
+      info: If has, use filtered screen color for refraction.
+      mustConnect: 0
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: areaLightBuffer
+      info: 
+      mustConnect: 0
+    - name: target
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 5407.4727
+      y: 1172.0001
+      width: 300
+      height: 316
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.Transparent
+  - nodeName: PyramidColor
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: filterTarget
+      info: 
+      mustConnect: 1
+    outputs:
+    - name: pyramidColor
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 4953.27
+      y: 1232
+      width: 300
+      height: 129
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.PyramidColor
+  - nodeName: AreaLight
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lights
+      info: 
+      mustConnect: 1
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: baseColor_roughness
+      info: 
+      mustConnect: 1
+    - name: normal_metallic
+      info: 
+      mustConnect: 1
+    - name: ao
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 1
+    position:
+      serializedVersion: 2
+      x: 2386.522
+      y: 1145
+      width: 300
+      height: 273
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.AreaLight
   edgeRecs:
-  - i: 2
-    o: 0
-    i_n: depth
-    o_n: depth
   - i: 4
     o: 3
     i_n: lights
@@ -464,10 +612,6 @@ MonoBehaviour:
     o_n: microAO
   - i: 5
     o: 6
-    i_n: sceneColor
-    o_n: target
-  - i: 5
-    o: 6
     i_n: skybox
     o_n: skyBox
   - i: 7
@@ -502,22 +646,10 @@ MonoBehaviour:
     o: 0
     i_n: motion
     o_n: motion
-  - i: 8
-    o: 6
-    i_n: filterTarget
-    o_n: target
   - i: 5
     o: 8
     i_n: filteredColor
     o_n: pyramidColor
-  - i: 6
-    o: 7
-    i_n: target
-    o_n: lightingResult
-  - i: 6
-    o: 0
-    i_n: depth
-    o_n: depth
   - i: 9
     o: 6
     i_n: skybox
@@ -526,10 +658,6 @@ MonoBehaviour:
     o: 8
     i_n: filteredColor
     o_n: pyramidColor
-  - i: 9
-    o: 6
-    i_n: sceneColor
-    o_n: target
   - i: 9
     o: 2
     i_n: hiZ
@@ -550,10 +678,6 @@ MonoBehaviour:
     o: 0
     i_n: ao
     o_n: microAO
-  - i: 1
-    o: 9
-    i_n: result
-    o_n: result
   - i: 9
     o: 6
     i_n: sun
@@ -570,38 +694,154 @@ MonoBehaviour:
     o: 4
     i_n: tiledLights
     o_n: tileLights
+  - i: 10
+    o: 6
+    i_n: skyBox
+    o_n: skyBox
+  - i: 10
+    o: 6
+    i_n: target
+    o_n: target
+  - i: 10
+    o: 0
+    i_n: depth
+    o_n: depth
+  - i: 10
+    o: 0
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 10
+    o: 0
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 10
+    o: 0
+    i_n: ao
+    o_n: microAO
+  - i: 5
+    o: 10
+    i_n: sceneColor
+    o_n: target
+  - i: 9
+    o: 10
+    i_n: sceneColor
+    o_n: target
+  - i: 8
+    o: 10
+    i_n: filterTarget
+    o_n: target
+  - i: 11
+    o: 4
+    i_n: lightBuffer
+    o_n: lightBuffer
+  - i: 11
+    o: 4
+    i_n: tiledLights
+    o_n: tileLights
+  - i: 11
+    o: 3
+    i_n: lights
+    o_n: lights
+  - i: 11
+    o: 9
+    i_n: target
+    o_n: result
+  - i: 11
+    o: 0
+    i_n: depth
+    o_n: depth
+  - i: 12
+    o: 9
+    i_n: filterTarget
+    o_n: result
+  - i: 11
+    o: 12
+    i_n: filterdScreenColor
+    o_n: pyramidColor
+  - i: 13
+    o: 3
+    i_n: lights
+    o_n: lights
+  - i: 13
+    o: 7
+    i_n: target
+    o_n: lightingResult
+  - i: 13
+    o: 0
+    i_n: depth
+    o_n: depth
+  - i: 13
+    o: 0
+    i_n: baseColor_roughness
+    o_n: baseColor_roughness
+  - i: 13
+    o: 0
+    i_n: normal_metallic
+    o_n: normal_metallic
+  - i: 13
+    o: 0
+    i_n: ao
+    o_n: microAO
+  - i: 6
+    o: 13
+    i_n: target
+    o_n: target
+  - i: 2
+    o: 13
+    i_n: depth
+    o_n: depth
+  - i: 6
+    o: 13
+    i_n: depth
+    o_n: depth
+  - i: 1
+    o: 11
+    i_n: result
+    o_n: target
   node_edgeRecs:
-  - node: 0
-    in_edges: 
-    out_edge: 000000000300000004000000050000000700000008000000090000000e0000000f00000010000000110000001200000013000000170000001c0000001d0000001e0000001f000000
-  - node: 2
-    in_edges: 00000000
-    out_edge: 020000001b000000
   - node: 3
     in_edges: 
-    out_edge: 010000000600000022000000
+    out_edge: 00000000050000001b000000290000002e000000
   - node: 4
-    in_edges: 01000000
-    out_edge: 0c0000000d0000002300000024000000
+    in_edges: 00000000
+    out_edge: 0a0000000b0000001c0000001d0000002700000028000000
+  - node: 2
+    in_edges: 35000000
+    out_edge: 0100000015000000
   - node: 5
-    in_edges: 020000000300000004000000050000000a0000000b0000001300000015000000
+    in_edges: 0100000002000000030000000400000009000000110000001200000024000000
     out_edge: 
+  - node: 0
+    in_edges: 
+    out_edge: 0200000003000000040000000600000007000000080000000c0000000d0000000e0000000f000000100000001100000016000000170000001800000019000000200000002100000022000000230000002b00000030000000310000003200000033000000
   - node: 6
-    in_edges: 060000000700000008000000090000001600000017000000
-    out_edge: 0a0000000b00000014000000180000001a00000021000000
+    in_edges: 050000000600000007000000080000003400000036000000
+    out_edge: 09000000130000001a0000001e0000001f000000
   - node: 7
-    in_edges: 0c0000000d0000000e0000000f000000100000001100000012000000
-    out_edge: 16000000
+    in_edges: 0a0000000b0000000c0000000d0000000e0000000f00000010000000
+    out_edge: 2f000000
   - node: 8
-    in_edges: 14000000
-    out_edge: 1500000019000000
+    in_edges: 26000000
+    out_edge: 1200000014000000
   - node: 9
-    in_edges: 18000000190000001a0000001b0000001c0000001d0000001e0000001f00000021000000220000002300000024000000
-    out_edge: 20000000
+    in_edges: 130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d00000025000000
+    out_edge: 2a0000002c000000
+  - node: 10
+    in_edges: 1e0000001f00000020000000210000002200000023000000
+    out_edge: 240000002500000026000000
+  - node: 11
+    in_edges: 2700000028000000290000002a0000002b0000002d000000
+    out_edge: 37000000
+  - node: 12
+    in_edges: 2c000000
+    out_edge: 2d000000
+  - node: 13
+    in_edges: 2e0000002f00000030000000310000003200000033000000
+    out_edge: 340000003500000036000000
   - node: 1
-    in_edges: 20000000
+    in_edges: 37000000
     out_edge: 
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
-    nodes: 00000000010000000200000003000000040000000500000006000000070000000800000009000000
+    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d000000

@@ -513,11 +513,11 @@ const float3 SkyBox(float3 x, const float3 v, const float3 s) {
 			X_Up(x, v, dis);
 			x_0 = x + dis.y * v;
 			x = x + dis.x * v;
-			scatter = Scatter(x, x_0, v, s, 128, false);
+			scatter = Scatter(x, x_0, v, s, 128, true);
 		}
 		else {
 			X_0(x, v, x_0);
-			scatter = Scatter(x, x_0, v, s, 128, false);
+			scatter = Scatter(x, x_0, v, s, 128, true);
 		}
 	}
 	// prevent error

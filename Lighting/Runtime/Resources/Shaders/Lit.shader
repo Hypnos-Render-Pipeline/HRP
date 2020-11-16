@@ -155,7 +155,6 @@
 				#if _NORMALMAP
 					float4 ndata = tex2D(_BumpMap, i.uv);
 					float3 normal = UnpackScaleNormal(ndata, _BumpScale);
-					smoothness *= saturate(1 - ndata.r * abs(_BumpScale) * 12);
 					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
 					float3 binormal = cross(n, t) * i.tangent.w;
 					float3x3 rotation = float3x3(t, binormal, n);
@@ -273,7 +272,6 @@
 				#if _NORMALMAP
 					float4 ndata = tex2D(_BumpMap, i.uv);
 					float3 normal = UnpackScaleNormal(ndata, _BumpScale);
-					smoothness *= saturate(1 - ndata.r * abs(_BumpScale) * 12);
 					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
 					float3 binormal = cross(n, t) * i.tangent.w;
 					float3x3 rotation = float3x3(t, binormal, n);
@@ -348,7 +346,7 @@
 			CBUFFER_END
 
 			Texture2D _ScreenColor; 
-			SamplerState trilinear_repeat_sampler;
+			SamplerState trilinear_clamp_sampler;
 			float4x4 _V_Inv, _VP_Inv;
 			float4 _ScreenParameters;
 
@@ -492,10 +490,10 @@
 					p.xy = p.xy / 2 + 0.5;
 					p.y = 1 - p.y;
 					float lod = lerp(0, 4, min(1, (_Index - 1) * 4) * (1 - info.smoothness));
-					return float4(res + _ScreenColor.SampleLevel(trilinear_repeat_sampler, p.xy, lod) * trans, 1);
+					return float4(res + _ScreenColor.SampleLevel(trilinear_clamp_sampler, p.xy, lod) * trans, 1);
 				}
 				else
-					return float4(res + _ScreenColor.SampleLevel(trilinear_repeat_sampler, screenUV, 0) * trans, 1);
+					return float4(res + _ScreenColor.SampleLevel(trilinear_clamp_sampler, screenUV, 0) * trans, 1);
 			}
 
 			ENDCG

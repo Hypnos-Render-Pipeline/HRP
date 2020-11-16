@@ -46,7 +46,7 @@ void Specular()
     float2 uv = (dispatchIdx + 0.5) * _WH.zw;
 
     float d = _DepthTex[dispatchIdx];
-    if (d == 0) {
+    if (-PD2VD(d) > 1024) {
         _TempResult[dispatchIdx] = 0;
         return;
     }

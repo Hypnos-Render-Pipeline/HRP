@@ -7,6 +7,6 @@ struct SunLight {
 	float3 color;
 };
 
-RWStructuredBuffer<SunLight> _Sun;
+StructuredBuffer<SunLight> _Sun;
 
 #endif

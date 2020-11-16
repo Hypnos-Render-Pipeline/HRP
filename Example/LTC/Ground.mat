@@ -53,11 +53,11 @@ Material:
     - _ClearCoat: 0
     - _Cutoff: 0
     - _DstBlend: 0
-    - _GlossMapScale: 1
+    - _GlossMapScale: 0.888
     - _Index: 1.45
     - _IndexRate: 0.5
     - _Ld: 0.1
-    - _Metallic: 0
+    - _Metallic: 1
     - _Mode: 0
     - _Modified: 0
     - _Sheen: 0

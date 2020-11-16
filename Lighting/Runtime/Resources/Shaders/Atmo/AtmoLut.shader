@@ -254,7 +254,7 @@
                     float3 x_0;
                     X_0(x, v, x_0);
 
-                    float3 res = ScatterTable(x, v, s, _RenderGround) * _SunLuminance;
+                    float3 res = SkyBox(x, v, s) * _SunLuminance;
 
                     uint2 id = i.vertex.xy;
                     int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };

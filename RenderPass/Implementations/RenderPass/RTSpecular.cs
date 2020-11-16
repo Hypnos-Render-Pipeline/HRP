@@ -16,7 +16,7 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In, true)]
         public BufferPin<uint> tiledLights = new BufferPin<uint>(1);
 
-        [NodePin(PinType.InOut)]
+        [NodePin(PinType.In)]
         public LightListPin lights = new LightListPin();
 
         [NodePin(PinType.In)]
@@ -127,7 +127,11 @@ namespace HypnosRenderPipeline.RenderPass
             cb.GetTemporaryRT(tempRef, desc);
 
             var acc = RTRegister.AccStruct();
+#if UNITY_2020_2_OR_NEWER
+            acc.Build();
+#else
             acc.Update();
+#endif
             cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", acc);
             cb.SetRayTracingShaderPass(rtShader, "RTGI");
             cb.SetRayTracingTextureParam(rtShader, "_TempResult", tempRef);

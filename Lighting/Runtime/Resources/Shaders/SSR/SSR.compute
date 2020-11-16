@@ -223,8 +223,8 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
                 else {
                     int2 prevId = ((texID + 0.5) * _WH.zw - _MotionTex[texID]) * _WH.xy;
 
-                    float4 newC = _TempResult[texID];
-                    float4 hisC = _History[prevId];
+                    float4 newC = max(0, _TempResult[texID]);// prevent NaN
+                    float4 hisC = max(0, _History[prevId]); 
                     float3 newN = DecodeNormal(_NormalTex[texID].xyz);
                     float3 hisN = DecodeNormal(_NormalTex[prevId].xyz);
                     if (any(prevId < 0) || any(prevId > int2(_WH.xy))) hisC = 0;
@@ -465,5 +465,8 @@ void FinalSynthesis(uint2 id : SV_DispatchThreadID)
     }
 
     float specAO = CalculateSpecAO(ao, _BaseColorTex[id].w, view, gN);
-    _Result[id] = _SceneColor[id] + specAO * float4(UnToneMap(_Result[id].xyz), 0);
+
+    float4 sceneColor = _SceneColor[id];
+    sceneColor.a = sceneColor.a != 0;
+    _Result[id] = sceneColor + sceneColor.a * specAO * float4(UnToneMap(_Result[id].xyz), 0);
 }
