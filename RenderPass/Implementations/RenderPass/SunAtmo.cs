@@ -42,10 +42,10 @@ namespace HypnosRenderPipeline.RenderPass
 
         public struct SunLight
         {
-            float3 dir;
-            float angle;
-            float3 color;
-            float padding;
+            public float3 dir;
+            public float angle;
+            public float3 color;
+            public float padding;
         }
 
         [NodePin(PinType.Out)]
@@ -59,8 +59,10 @@ namespace HypnosRenderPipeline.RenderPass
         HRPAtmo atmo;
 
         static MaterialWithName lightMat = new MaterialWithName("Hidden/DeferredLighting");
+        static SunLight[] sunLightClear = new SunLight[] { new SunLight() { dir = 0, color = 0, angle = 0 } };
 
         int hash;
+
         public SunAtmo() { hash = GetHashCode(); }
 
         public override void Excute(RenderContext context)
@@ -105,6 +107,11 @@ namespace HypnosRenderPipeline.RenderPass
                 cb.ReleaseTemporaryRT(tempColor);
 
                 //cb.Blit(skyBox, target, skyBoxMat, 0);
+            }
+            else
+            {
+                if (sunBuffer.connected)
+                    cb.SetComputeBufferData(sunBuffer, sunLightClear);
             }
         }
 
