@@ -12,10 +12,12 @@ float4 _WH;
 float4x4 _V, _V_Inv;
 float4x4 _P, _P_Inv;
 float4x4 _VP, _VP_Inv;
+float4x4 _Last_VP_Inv;
 
 Texture2D<float4> _BaseColorTex, _NormalTex, _SceneColor;
 Texture2D<float4> _FilteredColor;
 Texture2D<float2> _MotionTex;
+Texture2D<float> _DepthTex;
 TextureCube<float3> _SkyBox;
 
 SamplerState point_clamp_sampler;
@@ -24,6 +26,9 @@ SamplerState trilinear_clamp_sampler;
 
 RWTexture2D<float4> _TempResult;
 
+float PD2VD(const float d) {
+    return -_P._m23 / (d + _P._m22);
+}
 float Luminance(float3 col) {
     return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
 }
@@ -35,6 +40,7 @@ float3 UnToneMap(float3 color) {
 }
 
 RWTexture2D<float4> _History, _HistoryNormal;
+RWTexture2D<float> _HistoryDepth;
 RWTexture2D<float4> _Result;
 
 groupshared float4 buffer_0[10][10];
@@ -88,36 +94,55 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         minC = min(minC, rc);
         maxC = max(minC, uc);
         minC = min(minC, uc);
-        minC -= 0.3;
-        maxC += 0.3;
 
-        float4 normalData = _NormalTex[id];
-        float2 motion = _MotionTex[id];
-        int2 prevId = ((id + 0.5) * _WH.zw - (motion * 0.9)) * _WH.xy;
+        float2 uv = (id + 0.5) * _WH.zw;
+        float2 prevUV = uv - _MotionTex[id];
+        int2 prevId = prevUV * _WH.xy;
 
-        float3 n = DecodeNormal(normalData.xyz);
-        float3 hn = DecodeNormal(_HistoryNormal[prevId].xyz);
-        float4 hc = _History[prevId];
+        float4 hc = _History[clamp(prevId, 0, _WH.xy - 1)];
+
+        float3 n = DecodeNormal(_NormalTex[id].xyz);
+        float3 hn = DecodeNormal(_HistoryNormal[id].xyz);
+        float d = _DepthTex[id];
+        float hd = _HistoryDepth[prevId];
+
+        float3 wpos;
+        {
+            float4 ndc = float4(uv * 2 - 1, d, 1);
+            float4 worldPos = mul(_VP_Inv, ndc);
+            wpos = worldPos.xyz / worldPos.w;
+        }
+        float3 hwpos;
+        {
+            float4 ndc = float4(prevUV * 2 - 1, hd, 1);
+            float4 worldPos = mul(_Last_VP_Inv, ndc);
+            hwpos = worldPos.xyz / worldPos.w;
+        }
+
+        float distance_weight = max(0, 1 - distance(wpos, hwpos));
+        float normal_weight = max(0, dot(hn, n) + 0.5);
+
         hc = isnan(hc) ? 0 : hc;
 
         float mix_rate = (oc.w * hc.w == 0) ? 0 : 0.95;
-        mix_rate *= max(0, 1 - length(motion) * 10);
-        mix_rate *= (1 + dot(hn, n)) / 2;
-        hc *= mix_rate != 0;
+
+        float weight = distance_weight * normal_weight;
+
+        if (any(prevUV <= 0) || any(prevUV >= 1)) {
+            weight = 0.02;
+        }
+        minC -= 0.2 * weight;
+        maxC += 0.2 * weight;
 
         hc.xyz = clamp(hc.xyz, minC.xyz, maxC.xyz);
         float4 mixed = lerp(oc, hc, mix_rate);
 
-
-        _TempResult[id] = mixed;
         _Result[id] = mixed;
-        _History[id] = mixed;
-        _HistoryNormal[id] = normalData;
     }
 }
 
 
-float2 _SmoothRange;
+float2 _ProcessRange;
 
 #define SPATIAL_RADIUS 3
 #define GROUPSHARED_SIZE (8 + SPATIAL_RADIUS * 2)
@@ -133,7 +158,7 @@ RWStructuredBuffer<uint> _NextBlock;
 void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
     //return;
     float3 diffuse = _BaseColorTex[id].xyz * _SceneColor[id].a;
-    float smooth = 1 - max(diffuse.x, max(diffuse.y, diffuse.z));
+    float smooth = 1 - Luminance(diffuse);
 
     // load current result to shared.
     {
@@ -164,13 +189,13 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
     }
 
     [branch]
-    if (smooth < _SmoothRange.y) {
+    if (smooth < _ProcessRange.y) {
 
         //need lager filter
-        if (smooth < _SmoothRange.x)
+        if (smooth < _ProcessRange.x)
             active = true;
 
-        smooth = (smooth - _SmoothRange.x) / (_SmoothRange.y - _SmoothRange.x);
+        smooth = (smooth - _ProcessRange.x) / (_ProcessRange.y - _ProcessRange.x);
 
         //_Result[id] = _Result[id] + 0.1;
         // spatial filter
@@ -212,6 +237,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
 [numthreads(8, 8, 1)]
 void SFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
 {
+    //return;
     SFilter_(id, groupThreadID, groupID);
 }
 
@@ -219,6 +245,7 @@ void SFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThrea
 [numthreads(8, 8, 1)]
 void SFilterIndirect(uint2 groupThreadID : SV_GroupThreadID, uint groupID : SV_GroupID)
 {
+    //return;
     uint blockData = _Block[groupID];
     uint2 blockID = uint2(blockData >> 16, blockData & 0xFFFF);
     //blockID = uint2(groupID % 1920, groupID / 1920);

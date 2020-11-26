@@ -137,27 +137,23 @@ namespace HypnosRenderPipeline.RenderPass
                 blockBuffer_ = new ComputeBuffer(dispatchSize.x * dispatchSize.y, 4);
             }
 
+            cb.SetGlobalVector("_SmoothRange", new Vector4(0.9f, 1f));
+            cb.SetComputeBufferData(argsBuffer, clearArray);
+            cb.SetComputeTextureParam(ssr, 2, "_Result", tempRef);
+            cb.SetComputeBufferParam(ssr, 2, "_Indirect", argsBuffer);
+            cb.SetComputeBufferParam(ssr, 2, "_NextBlock", blockBuffer);
+            cb.DispatchCompute(ssr, 2, dispatchSize.x, dispatchSize.y, 1);
 
             cb.SetComputeTextureParam(ssr, 1, "_History", his0);
             cb.SetComputeTextureParam(ssr, 1, "_TempResult", tempRef);
             cb.SetComputeTextureParam(ssr, 1, "_Result", result);
             cb.DispatchCompute(ssr, 1, dispatchSize.x, dispatchSize.y, 1);
 
-            cb.SetGlobalVector("_SmoothRange", new Vector4(0.95f, 1f));
-            cb.SetComputeBufferData(argsBuffer, clearArray);
-            cb.SetComputeTextureParam(ssr, 2, "_Result", result);
-            cb.SetComputeBufferParam(ssr, 2, "_Indirect", argsBuffer);
-            cb.SetComputeBufferParam(ssr, 2, "_NextBlock", blockBuffer);
-            cb.DispatchCompute(ssr, 2, dispatchSize.x, dispatchSize.y, 1);
-
-            DispatchSpatialFilter(cb, 0.9f, 0.95f);
-            DispatchSpatialFilter(cb, 0.85f, 0.9f);
-            DispatchSpatialFilter(cb, 0.8f, 0.85f);
-            DispatchSpatialFilter(cb, 0.7f, 0.8f);
-            DispatchSpatialFilter(cb, 0.6f, 0.7f);
+            DispatchSpatialFilter(cb, 0.75f, 0.9f);
+            DispatchSpatialFilter(cb, 0.6f, 0.75f);
             DispatchSpatialFilter(cb, 0.45f, 0.6f);
-            DispatchSpatialFilter(cb, 0.25f, 0.45f);
-            DispatchSpatialFilter(cb, 0, 0.25f);
+            DispatchSpatialFilter(cb, 0.2f, 0.45f);
+            DispatchSpatialFilter(cb, 0, 0.2f);
 
             cb.SetComputeTextureParam(ssr, 4, "_Result", result);
             cb.DispatchCompute(ssr, 4, dispatchSize.x, dispatchSize.y, 1);

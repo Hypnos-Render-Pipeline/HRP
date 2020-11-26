@@ -349,7 +349,9 @@ RWStructuredBuffer<uint> _NextBlock;
 
 void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
     //return;
-    float smooth = 1 - _SpecTex[id].w;
+    float4 data = _SpecTex[id];
+    float l = Luminance(data.xyz);
+    float smooth = 1 - l * data.w;
 
     // load current result to shared.
     {

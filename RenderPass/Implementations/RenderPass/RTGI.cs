@@ -124,7 +124,9 @@ namespace HypnosRenderPipeline.RenderPass
             RenderTexture his0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTDiffuse_History0"), desc);
             desc.colorFormat = RenderTextureFormat.ARGB32;
             RenderTexture hisNormal0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTDiffuse_HistoryNormal0"), desc);
-
+            desc.colorFormat = RenderTextureFormat.RFloat;
+            RenderTexture hisDepth0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTDiffuse__HistoryDepth0"), desc);
+            
             int2 dispatchSize = new int2(wh.x / 8 + (wh.x % 8 != 0 ? 1 : 0), wh.y / 8 + (wh.y % 8 != 0 ? 1 : 0));
             if (blockBuffer.count != dispatchSize.x * dispatchSize.y)
             {
@@ -134,26 +136,27 @@ namespace HypnosRenderPipeline.RenderPass
                 blockBuffer_ = new ComputeBuffer(dispatchSize.x * dispatchSize.y, 4);
             }
 
-
-            cb.SetComputeTextureParam(denoise, 0, "_History", his0);
-            cb.SetComputeTextureParam(denoise, 0, "_HistoryNormal", hisNormal0);
-            cb.SetComputeTextureParam(denoise, 0, "_TempResult", tempRef);
-            cb.SetComputeTextureParam(denoise, 0, "_Result", result);
-            cb.DispatchCompute(denoise, 0, dispatchSize.x, dispatchSize.y, 1);
-
-            cb.SetGlobalVector("_SmoothRange", new Vector4(0.9f, 1f));
+            cb.SetGlobalVector("_ProcessRange", new Vector4(0.9f, 1f));
             cb.SetComputeBufferData(argsBuffer, clearArray);
-            cb.SetComputeTextureParam(denoise, 1, "_Result", result);
+            cb.SetComputeTextureParam(denoise, 1, "_Result", tempRef);
             cb.SetComputeBufferParam(denoise, 1, "_Indirect", argsBuffer);
             cb.SetComputeBufferParam(denoise, 1, "_NextBlock", blockBuffer);
             cb.DispatchCompute(denoise, 1, dispatchSize.x, dispatchSize.y, 1);
 
-            DispatchSpatialFilter(cb, 0.8f, 0.9f);
-            DispatchSpatialFilter(cb, 0.7f, 0.8f);
-            DispatchSpatialFilter(cb, 0.6f, 0.7f);
-            DispatchSpatialFilter(cb, 0.5f, 0.6f);
-            DispatchSpatialFilter(cb, 0.4f, 0.5f);
-            DispatchSpatialFilter(cb, 0.2f, 0.4f);
+            cb.SetComputeTextureParam(denoise, 0, "_History", his0);
+            cb.SetComputeTextureParam(denoise, 0, "_HistoryNormal", hisNormal0);
+            cb.SetComputeTextureParam(denoise, 0, "_HistoryDepth", hisDepth0); 
+            cb.SetComputeTextureParam(denoise, 0, "_TempResult", tempRef);
+            cb.SetComputeTextureParam(denoise, 0, "_Result", result);
+            cb.DispatchCompute(denoise, 0, dispatchSize.x, dispatchSize.y, 1);
+
+            cb.Blit(normal, hisNormal0);
+            cb.Blit(depth, hisDepth0);
+
+            DispatchSpatialFilter(cb, 0.75f, 0.9f);
+            DispatchSpatialFilter(cb, 0.6f, 0.75f);
+            DispatchSpatialFilter(cb, 0.45f, 0.6f);
+            DispatchSpatialFilter(cb, 0.2f, 0.45f);
             DispatchSpatialFilter(cb, 0, 0.2f);
 
             cb.SetComputeTextureParam(denoise, 3, "_History", his0);
@@ -166,7 +169,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         void DispatchSpatialFilter(CommandBuffer cb, float lowSmooth, float highSmooth)
         {
-            cb.SetGlobalVector("_SmoothRange", new Vector4(lowSmooth, highSmooth));
+            cb.SetGlobalVector("_ProcessRange", new Vector4(lowSmooth, highSmooth));
             cb.SetComputeBufferData(argsBuffer_, clearArray);
             cb.SetComputeTextureParam(denoise, 2, "_Result", result);
             cb.SetComputeBufferParam(denoise, 2, "_Block", blockBuffer);

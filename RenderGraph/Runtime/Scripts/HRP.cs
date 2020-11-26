@@ -118,6 +118,7 @@ namespace HypnosRenderPipeline
                     clock[cam] = pcd;
                 }
                 cb.SetGlobalMatrix("_Last_VP", clock[cam].lastVP);
+                cb.SetGlobalMatrix("_Last_VP_Inv", clock[cam].lastVP.inverse);
                 clock[cam].lastVP = vp;
                 RenderGraphResourcesPool pool;
                 if (!resourcesPool.ContainsKey(cam))
