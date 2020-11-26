@@ -27,7 +27,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _EmissionTex, _AOTex;
             SamplerState sampler_point_clamp;
 
             int _DebugTiledLight;
@@ -59,6 +59,7 @@
 
                 SurfaceInfo info = (SurfaceInfo)0;
                 info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _SpecTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _EmissionTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
@@ -106,7 +107,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -144,6 +145,7 @@
                 float3 view = normalize(camPos - pos);
 
                 SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _SpecTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                                     0,
                                                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
@@ -188,7 +190,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -226,6 +228,7 @@
                 float3 view = normalize(camPos - pos);
 
                 SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _SpecTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                                     _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                                     0,
                                                     _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
@@ -271,7 +274,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
 
 
@@ -308,7 +311,7 @@
 
                 float3 view = normalize(camPos - pos);
 
-                float3 baseColor;
+                float3 diffuse;
                 float roughness;
                 float metallic;
                 float3 normal;
@@ -317,15 +320,16 @@
                 float ao;
 
                 SurfaceInfo info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
-                    0,
-                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
+                                                    _SpecTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                                    0,
+                                                    _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
                 float3 res = DiscLight(info, _LightColor, _LightPos, _LightX, _LightY, pos, view);
 
-                int2 id = i.vertex.xy;
+                uint2 id = i.vertex.xy;
                 int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
-                int index = id.x % 4 + id.y % 4 * 4;
+                uint index = id.x % 4 + id.y % 4 * 4;
                 float noise = hash12(id);
 
                 if (noise * 16 > k[index]) {
@@ -364,7 +368,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _AOTex;
             SamplerState sampler_point_clamp;
             sampler2D _MainTex;
 
@@ -408,6 +412,7 @@
 
                 SurfaceInfo info = (SurfaceInfo)0;
                 info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _SpecTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         0,
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
@@ -438,7 +443,7 @@
                     }
                 }
 
-                return float4(res, 1) + sceneColor;
+                return float4(res, 0) + sceneColor;
             }
             ENDCG
         }
@@ -469,7 +474,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
             SamplerState sampler_point_clamp;
 
             cbuffer _TargetLocalLight {
@@ -512,6 +517,7 @@
 
                 SurfaceInfo info = (SurfaceInfo)0;
                 info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _SpecTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         0,
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
@@ -552,7 +558,7 @@
                 float4 vertex : SV_POSITION;
             };
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
             SamplerState sampler_point_clamp;
 
             cbuffer _TargetLocalLight {
@@ -596,6 +602,7 @@
 
                 SurfaceInfo info = (SurfaceInfo)0;
                 info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, uv, 0),
+                                        _SpecTex.SampleLevel(sampler_point_clamp, uv, 0),
                                         _NormalTex.SampleLevel(sampler_point_clamp, uv, 0),
                                         0,
                                         _AOTex.SampleLevel(sampler_point_clamp, uv, 0));

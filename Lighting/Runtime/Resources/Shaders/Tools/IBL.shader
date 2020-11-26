@@ -38,7 +38,7 @@ Shader "Hidden/IBL"
 
             TextureCube _MainTex; SamplerState sampler_linear_clamp;
 
-            Texture2D _DepthTex, _BaseColorTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
+            Texture2D _DepthTex, _BaseColorTex, _SpecTex, _NormalTex, _AOTex, _RayTracedLocalShadowMask;
             SamplerState sampler_point_clamp;
 
             float4 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)
@@ -77,6 +77,7 @@ Shader "Hidden/IBL"
 
                 SurfaceInfo info = (SurfaceInfo)0;
                 info = DecodeGBuffer(_BaseColorTex.SampleLevel(sampler_point_clamp, i.uv, 0),
+                                        _SpecTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         _NormalTex.SampleLevel(sampler_point_clamp, i.uv, 0),
                                         0,
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
@@ -85,7 +86,7 @@ Shader "Hidden/IBL"
 
                 float3 res = PBS(PBS_SS_DIFFUSE, info, info.normal, skyIrradiance, view);
 
-                return float4(res, 1);
+                return float4(res * 2, 1);
             }
             ENDCG
         }

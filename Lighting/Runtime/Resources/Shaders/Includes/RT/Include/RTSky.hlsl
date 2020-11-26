@@ -51,24 +51,6 @@ void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
 		float3 x = mul(_V_Inv, float4(0, 0, 0, 1));
 		x = float3(0, _PlanetRadius + max(95, x.y), 0);
 		rayIntersection.directColor = Atmo(x, WorldRayDirection(), _SunDir);
-
-
-	//	float3 s = normalize(_SunDir);
-	//	float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
-	//	float depth = Linear01Depth(tex2Dlod(_DepthTex, float4(i.uv, 0, 0)));
-
-	//	float3 wpos = GetWorldPositionFromDepthValue(i.uv, depth);
-	//	float3 v = wpos - _WorldSpaceCameraPos;
-	//	bool sky_occ = depth != 1;
-	//	depth = length(v);
-	//	v /= depth;
-
-	//	float3 x_0;
-	//	X_0(x, v, x_0);
-	//	depth = min(depth, distance(x, x_0));
-
-	//	return lerp(ScatterTable(x, v, s) * _SunLuminance, Scatter(i.uv, depth), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
-	//		+ (sky_occ ? tex2Dlod(_MainTex, float4(i.uv, 0, 0)).xyz : 0) * T(x, x + depth * v);
 	}
 	else if (_Procedural == 1) {
 		float2 tc = ToRadialCoords(RotateAroundYInDegrees(WorldRayDirection(), -_Rotation));

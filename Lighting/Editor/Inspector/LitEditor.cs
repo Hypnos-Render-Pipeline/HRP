@@ -24,6 +24,12 @@ namespace HypnosRenderPipeline
         MaterialProperty aoScale = null;
         MaterialProperty aoMap = null;
 
+        MaterialProperty iri = null;
+        MaterialProperty index2 = null;
+        MaterialProperty dincMap = null;
+        MaterialProperty dinc = null;
+
+
         MaterialProperty emissionMap = null;
         MaterialProperty emission = null;
 
@@ -57,6 +63,11 @@ namespace HypnosRenderPipeline
 
             aoScale = FindProperty("_AOScale", props);
             aoMap = FindProperty("_AOMap", props);
+
+            iri = FindProperty("_Iridescence", props);
+            index2 = FindProperty("_Index2", props);
+            dincMap = FindProperty("_DincMap", props);
+            dinc = FindProperty("_Dinc", props);
 
             emission = FindProperty("_EmissionColor", props);
             emissionMap = FindProperty("_EmissionMap", props);
@@ -126,6 +137,17 @@ namespace HypnosRenderPipeline
 
                     EditorGUILayout.Space();
 
+                    m_MaterialEditor.ShaderProperty(iri, Styles.iriText);
+                    bool use_iridescence = iri.floatValue != 0;
+                    if (use_iridescence)
+                    {
+                        m_MaterialEditor.ShaderProperty(index2, Styles.Index2Text);
+                        m_MaterialEditor.TexturePropertySingleLine(Styles.dincText, dincMap, dinc);
+                        EditorGUILayout.Space();
+                    }
+
+                    EditorGUILayout.Space();
+
                     m_MaterialEditor.ShaderProperty(clearCoat, Styles.clearCoatText);
 
                     EditorGUILayout.Space();
@@ -149,18 +171,6 @@ namespace HypnosRenderPipeline
 
         public override void AssignNewShaderToMaterial(Material material, Shader oldShader, Shader newShader)
         {
-            if (oldShader.name == "Autodesk Interactive")
-            {
-                material.SetInt("_AutoDesk", 1);
-                material.SetTexture("_MetallicMap", material.GetTexture("_MetallicGlossMap"));
-                material.SetTexture("_RoughnessMap", material.GetTexture("_SpecGlossMap"));
-                material.SetFloat("_Metallic", material.GetFloat("_Metallic"));
-                material.SetFloat("_Roughness", material.GetFloat("_Glossiness"));
-            }
-            else
-            {
-                material.SetInt("_AutoDesk", 0);
-            }
             // _Emission property is lost after assigning Standard shader to the material
             // thus transfer it before assigning the new shader
             if (material.HasProperty("_Emission"))
@@ -194,7 +204,7 @@ namespace HypnosRenderPipeline
         void DoNormalArea()
         {
             m_MaterialEditor.TexturePropertySingleLine(Styles.normalMapText, bumpMap, bumpMap.textureValue != null ? bumpScale : null);
-            m_MaterialEditor.TexturePropertySingleLine(Styles.aoMapText, aoMap, aoMap.textureValue != null ? aoScale : null);
+            m_MaterialEditor.TexturePropertySingleLine(Styles.aoMapText, aoMap, aoMap.textureValue != null ? aoScale : null);            
         }
 
         void DoEmissionArea(Material material)
@@ -220,6 +230,7 @@ namespace HypnosRenderPipeline
             // (MaterialProperty value might come from renderer material property block)
             SetKeyword(material, "_NORMALMAP", material.GetTexture("_BumpMap"));
             SetKeyword(material, "_AOMAP", material.GetTexture("_AOMap"));
+            SetKeyword(material, "_IRIDESCENCE", material.GetInt("_Iridescence") != 0);
 
             SetKeyword(material, "_METALLICGLOSSMAP", material.GetTexture("_MetallicGlossMap"));
 
@@ -275,7 +286,6 @@ namespace HypnosRenderPipeline
             public static GUIContent alphaCutoffText = EditorGUIUtility.TrTextContent("Alpha Cutoff", "Threshold for alpha cutoff");
             public static GUIContent specularMapText = EditorGUIUtility.TrTextContent("Specular", "Specular (RGB) and Smoothness (A)");
             public static GUIContent metallicsmothnessMapText = EditorGUIUtility.TrTextContent("Metallic", "Metallic (R) and Smoothness (A)");
-            public static GUIContent autodeskText = EditorGUIUtility.TrTextContent("Autodesk format", "Use Autodesk format.");
             public static GUIContent metallicMapText = EditorGUIUtility.TrTextContent("Metallic", "Metallic (R)");
             public static GUIContent roughnessMapText = EditorGUIUtility.TrTextContent("Roughness", "Roughness (R)");
             public static GUIContent smoothnessText = EditorGUIUtility.TrTextContent("Smoothness", "Smoothness value");
@@ -284,7 +294,8 @@ namespace HypnosRenderPipeline
             public static GUIContent highlightsText = EditorGUIUtility.TrTextContent("Specular Highlights", "Specular Highlights");
             public static GUIContent reflectionsText = EditorGUIUtility.TrTextContent("Reflections", "Glossy Reflections");
             public static GUIContent normalMapText = EditorGUIUtility.TrTextContent("Normal Map", "Normal Map");
-            public static GUIContent aoMapText = EditorGUIUtility.TrTextContent("AO Map", "AO Map(R)");
+            public static GUIContent aoMapText = EditorGUIUtility.TrTextContent("AO Map", "AO Map(R)"); 
+            public static GUIContent iridescentText = EditorGUIUtility.TrTextContent("Iridescent Map", "Iridescent Map(RGB)"); 
             public static GUIContent heightMapText = EditorGUIUtility.TrTextContent("Height Map", "Height Map (G)");
             public static GUIContent occlusionText = EditorGUIUtility.TrTextContent("Occlusion", "Occlusion (G)");
             public static GUIContent emissionText = EditorGUIUtility.TrTextContent("Color", "Emission (RGB)");
@@ -293,7 +304,10 @@ namespace HypnosRenderPipeline
             public static GUIContent detailNormalMapText = EditorGUIUtility.TrTextContent("Normal Map", "Normal Map");
 
             public static GUIContent subsurfaceText = EditorGUIUtility.TrTextContent("Subsurface", "Subsurface material");
+            public static GUIContent iriText = EditorGUIUtility.TrTextContent("Iridescence", "Iridescence material");
             public static GUIContent LdText = EditorGUIUtility.TrTextContent("Ld", "Average scatter distance");
+            public static GUIContent Index2Text = EditorGUIUtility.TrTextContent("IOR", "IOR of the iridescence layer");
+            public static GUIContent dincText = EditorGUIUtility.TrTextContent("Thickness(mm)", "Thickness of the iridescence layer (R)");
             public static GUIContent scatterText = EditorGUIUtility.TrTextContent("Scatter profile", "Scatter (RGB)");
 
             public static GUIContent clearCoatText = EditorGUIUtility.TrTextContent("Clear Coat", "Clear coat strength. \nOften used to simulate car paint.");

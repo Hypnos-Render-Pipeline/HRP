@@ -12,7 +12,7 @@ float4x4 _VP_Inv;
 int _Clock;
 
 Texture2D<float> _DepthTex;
-Texture2D<float4> _BaseColorTex, _NormalTex, _EmissionTex, _AOTex;
+Texture2D<float4> _BaseColorTex, _SpecTex, _NormalTex, _EmissionTex, _AOTex;
 
 
 [shader("raygeneration")]
@@ -39,9 +39,12 @@ void LocalLight()
 
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _SpecTex[dispatchIdx],
                             _NormalTex[dispatchIdx],
                             _EmissionTex[dispatchIdx],
                             _AOTex[dispatchIdx]);
+
+    float3 spos = pos + info.gnormal * 0.01;
 
     float3 res = 0;
     
@@ -53,7 +56,7 @@ void LocalLight()
         float3 lres = PBS(PBS_FULLY, info, light.dir, light.radiance, view);
         [branch]
         if (any(lres > 0)) {
-            res += lres * TraceShadow_RTGI(pos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+            res += lres * TraceShadow_RTGI(spos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
         }
     }
     EndLocalLightsLoop;
@@ -82,12 +85,15 @@ void DirecionalLight()
 
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _SpecTex[dispatchIdx],
                             _NormalTex[dispatchIdx],
                             _EmissionTex[dispatchIdx],
                             _AOTex[dispatchIdx]);
 
     float3 res = 0;
     
+    float3 spos = pos + info.gnormal * 0.01;
+
 	int4 sampleState = int4(dispatchIdx, _Clock, 0);
 
     BegineDirectionalLightsLoop(pos);
@@ -96,7 +102,7 @@ void DirecionalLight()
         float3 lres = PBS(PBS_FULLY, info, light.dir, light.radiance, view);
         [branch]
         if (any(lres > 0)) {
-            res += lres * TraceShadow_RTGI(pos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
+            res += lres * TraceShadow_RTGI(spos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
         }
     }
     EndDirectionalLightsLoop;

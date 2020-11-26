@@ -12,12 +12,18 @@ namespace HypnosRenderPipeline.RenderPass
                                                         SizeScale.Full);
 
         [NodePin(PinType.InOut)]
-        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
+        public TexturePin diffuse = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
                                                                     SizeCastMode.Fixed,
                                                                     ColorCastMode.Fixed,
                                                                     SizeScale.Full);
         [NodePin(PinType.InOut)]
-        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
+        public TexturePin specular = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
+                                                            SizeCastMode.Fixed,
+                                                            ColorCastMode.Fixed,
+                                                            SizeScale.Full);
+
+        [NodePin(PinType.InOut)]
+        public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0),
                                                                     SizeCastMode.Fixed,
                                                                     ColorCastMode.Fixed,
                                                                     SizeScale.Full);
@@ -35,14 +41,19 @@ namespace HypnosRenderPipeline.RenderPass
         {
             var cb = context.commandBuffer;
 
-            if (!baseColor_roughness.connected)
+            if (!diffuse.connected)
             {
-                cb.SetRenderTarget(baseColor_roughness);
+                cb.SetRenderTarget(diffuse);
                 cb.ClearRenderTarget(false, true, Color.clear);
             }
-            if (!normal_metallic.connected)
+            if (!specular.connected)
             {
-                cb.SetRenderTarget(normal_metallic);
+                cb.SetRenderTarget(specular);
+                cb.ClearRenderTarget(false, true, Color.clear);
+            }
+            if (!normal.connected)
+            {
+                cb.SetRenderTarget(normal);
                 cb.ClearRenderTarget(false, true, Color.clear);
             }
             if (!microAO.connected)
@@ -51,7 +62,7 @@ namespace HypnosRenderPipeline.RenderPass
                 cb.ClearRenderTarget(false, true, Color.clear);
             }
 
-            cb.SetRenderTarget(new RenderTargetIdentifier[] { baseColor_roughness.handle, normal_metallic, microAO }, depth: depth);
+            cb.SetRenderTarget(new RenderTargetIdentifier[] { diffuse.handle, specular, normal, microAO }, depth: depth);
             cb.ClearRenderTarget(!depth.connected, false, Color.clear);
 
             var cam = gameCameraCull ? Camera.main ?? context.camera : context.camera;

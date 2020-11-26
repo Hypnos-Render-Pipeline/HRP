@@ -138,6 +138,7 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 		end_point = lpos;
 	}
 	
+	att = min(att, 2);
 	return true;
 }
 
@@ -254,6 +255,7 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 		end_point = lpos;
 	}
 
+	att = min(att, 2);
 	return att > 0.0001;
 }
 
@@ -345,4 +347,17 @@ float3 LightLuminanceSpec(float3 pos, float3 dir,
 	}
 	return direct_light * light_count;
 }
+
+Light PickLight(inout int4 sampleState) {
+
+	int light_count = clamp(_LightCount, 0, 100);
+
+	int picked_light = floor(min(SAMPLE, 0.999) * light_count); sampleState.w++;
+
+	Light light = _LightList[picked_light];
+	light.color *= light_count;
+
+	return light;
+}
+
 #endif

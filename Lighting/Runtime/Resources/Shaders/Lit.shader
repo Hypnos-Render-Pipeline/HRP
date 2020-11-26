@@ -6,13 +6,17 @@
 		_Cutoff("Alpha Cutoff",Range(0,1)) = 0
 		_Color("Color", Color) = (1,1,1,1)
 
-		[Toggle]_AutoDesk("Auto desk", int) = 0
-
 		_MetallicGlossMap("Metallic Smoothness", 2D) = "white" {}
 		[Gamma] _Metallic("Metallic", Range(0,1)) = 0.0
 
 		_AOMap("AO （R)", 2D) = "white" {}
 		_AOScale("AO", Range(0,1)) = 1
+
+		[Toggle]_Iridescence("Iridescent", int) = 0
+		_Index2("Iridescent IOR", Range(1, 3)) = 1
+		_Dinc("Iridescent Thickness(mm)", Range(0, 6)) = 1
+		_DincMap("Iridescent Thickness Map(R)", 2D) = "white" {}
+			
 
 		_Smoothness("Smoothness", Range(0,1)) = 0.5
 		_GlossMapScale("SmoothnessMapScale", Range(0,1)) = 1.0
@@ -74,33 +78,29 @@
 
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP _
-			#pragma shader_feature _AOMAP _
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
+			#pragma shader_feature _IRIDESCENCE
 
 
 			CBUFFER_START(UnityPerMaterial)
 				float4			_Color;
 				sampler2D 		_MainTex;
 				float4			_MainTex_ST;
-			#if _NORMALMAP
 				sampler2D		_BumpMap;
 				half			_BumpScale;
-			#endif // _NORMALMAP
-			#if _METALLICGLOSSMAP
 				sampler2D		_MetallicGlossMap;
 				float			_GlossMapScale;
-			#else
 				half			_Metallic;
 				float			_Smoothness;
-			#endif // _METALLICGLOSSMAP
-			#if _EMISSION
 				float4			_EmissionColor;
 				sampler2D		_EmissionMap;
-			#endif // _EMISSION
-			#if _AOMAP
 				sampler2D		_AOMap;
 				float			_AOScale;
-			#endif // _AOMAP
+				float			_Index;
+				float			_Index2;
+				float			_Dinc;
+				sampler2D		_DincMap;
 			CBUFFER_END
 
 			struct a2v {
@@ -114,8 +114,13 @@
 				float4 vertex : SV_POSITION;
 				float3 normal : NORMAL;
 				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;
+				float2 uv : TEXCOORD0;	
+				#if _IRIDESCENCE
+				float3 wpos : TEXCOORD1;
+				#endif
 			};
+
+			float4x4 _V_Inv;
 
 			v2f vert(a2v i) {
 				v2f o;
@@ -123,9 +128,12 @@
 				o.normal = UnityObjectToWorldNormal(i.normal);
 				o.tangent = float4(UnityObjectToWorldDir(i.tangent.xyz), i.tangent.w);
 				o.uv = TRANSFORM_TEX(i.uv, _MainTex);
+				#if _IRIDESCENCE
+				o.wpos = mul(unity_ObjectToWorld, i.vertex);
+				#endif
 				return o;
 			}
-						
+
 			half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
 			{
 				#if defined(UNITY_NO_DXT5nm)
@@ -137,11 +145,11 @@
 					normal.z = sqrt(1.0 - saturate(dot(normal.xy, normal.xy)));
 					return normal;
 				#endif
-			}	
+			}
 
-			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3) {
+			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3, out fixed4 target4 : SV_Target4) {
 
-				fixed3 baseColor = _Color * tex2D(_MainTex, i.uv).rgb;
+				fixed3 diffuse = _Color * tex2D(_MainTex, i.uv).rgb;
 
 				#if _METALLICGLOSSMAP
 					float4 m_s = tex2D(_MetallicGlossMap, i.uv);
@@ -172,8 +180,23 @@
 				#else
 					float ao = 1;
 				#endif // _AOMAP
+					
+				float3 specular;
+				diffuse = DiffuseAndSpecularFromMetallic(diffuse, metallic, specular);				
+				#if _IRIDESCENCE
+					float3 cpos = _V_Inv._m03_m13_m23;
+					float3 v = normalize(cpos - i.wpos);
+					float cosTheta1 = dot(normal, v);
+					float cosTheta2 = sqrt(1.0 - (1 - cosTheta1 * cosTheta1) / (_Index * _Index));
+					float dinc = _Dinc * tex2D(_DincMap, i.uv).r;
+					specular *= IridescenceFresnel(cosTheta1, cosTheta2, _Index, _Index2, metallic, dinc);
+				#endif
 
-				Encode2GBuffer(baseColor, 1 - smoothness, metallic, normal, emission, i.normal, ao, target0, target1, target2, target3);
+				Encode2GBuffer(diffuse, 1 - smoothness, specular, normal, emission, i.normal, ao, target0, target1, target2, target3, target4
+#if _IRIDESCENCE
+					, true
+#endif
+				);
 			}
 
 			ENDCG
@@ -191,33 +214,29 @@
 
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP _
-			#pragma shader_feature _AOMAP _
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
+			#pragma shader_feature _IRIDESCENCE
 
 
 			CBUFFER_START(UnityPerMaterial)
 				float4			_Color;
 				sampler2D 		_MainTex;
 				float4			_MainTex_ST;
-			#if _NORMALMAP
 				sampler2D		_BumpMap;
 				half			_BumpScale;
-			#endif // _NORMALMAP
-			#if _METALLICGLOSSMAP
 				sampler2D		_MetallicGlossMap;
 				float			_GlossMapScale;
-			#else
 				half			_Metallic;
 				float			_Smoothness;
-			#endif // _METALLICGLOSSMAP
-			#if _EMISSION
 				float4			_EmissionColor;
 				sampler2D		_EmissionMap;
-			#endif // _EMISSION
-			#if _AOMAP
 				sampler2D		_AOMap;
 				float			_AOScale;
-			#endif // _AOMAP
+				float			_Index;
+				float			_Index2;
+				float			_Dinc;
+				sampler2D		_DincMap;
 			CBUFFER_END
 
 			struct a2v {
@@ -231,8 +250,13 @@
 				float4 vertex : SV_POSITION;
 				float3 normal : NORMAL;
 				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;
+				float2 uv : TEXCOORD0;	
+				#if _IRIDESCENCE
+				float3 wpos : TEXCOORD1;
+				#endif
 			};
+
+			float4x4 _V_Inv;
 
 			v2f vert(a2v i) {
 				v2f o;
@@ -240,6 +264,9 @@
 				o.normal = UnityObjectToWorldNormal(i.normal);
 				o.tangent = float4(UnityObjectToWorldDir(i.tangent.xyz), i.tangent.w);
 				o.uv = TRANSFORM_TEX(i.uv, _MainTex);
+				#if _IRIDESCENCE
+				o.wpos = mul(unity_ObjectToWorld, i.vertex);
+				#endif
 				return o;
 			}
 
@@ -256,9 +283,9 @@
 				#endif
 			}
 
-			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3) {
+			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3, out fixed4 target4 : SV_Target4) {
 
-				fixed3 baseColor = _Color * tex2D(_MainTex, i.uv).rgb;
+				fixed3 diffuse = _Color * tex2D(_MainTex, i.uv).rgb;
 
 				#if _METALLICGLOSSMAP
 					float4 m_s = tex2D(_MetallicGlossMap, i.uv);
@@ -289,8 +316,23 @@
 				#else
 					float ao = 1;
 				#endif // _AOMAP
+					
+				float3 specular;
+				diffuse = DiffuseAndSpecularFromMetallic(diffuse, metallic, specular);				
+				#if _IRIDESCENCE
+					float3 cpos = _V_Inv._m03_m13_m23;
+					float3 v = normalize(cpos - i.wpos);
+					float cosTheta1 = dot(normal, v);
+					float cosTheta2 = sqrt(1.0 - (1 - cosTheta1 * cosTheta1) / (_Index * _Index));
+					float dinc = _Dinc * tex2D(_DincMap, i.uv).r;
+					specular *= IridescenceFresnel(cosTheta1, cosTheta2, _Index, _Index2, metallic, dinc);
+				#endif
 
-				Encode2GBuffer(baseColor, 1 - smoothness, metallic, normal, emission, i.normal, ao, target0, target1, target2, target3);
+				Encode2GBuffer(diffuse, 1 - smoothness, specular, normal, emission, i.normal, ao, target0, target1, target2, target3, target4
+#if _IRIDESCENCE
+					,true
+#endif
+				);
 			}
 
 			ENDCG
@@ -313,6 +355,7 @@
 			#include "./Includes/Light.hlsl"
 			#include "./Includes/LTCLight.hlsl"
 			#include "./Includes/PBS.hlsl"
+			#include "./Includes/Atmo/Sun.hlsl"
 
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
@@ -323,26 +366,20 @@
 				float4			_Color;
 				sampler2D 		_MainTex;
 				float4			_MainTex_ST;
-			#if _NORMALMAP
 				sampler2D		_BumpMap;
 				half			_BumpScale;
-			#endif // _NORMALMAP
-			#if _METALLICGLOSSMAP
 				sampler2D		_MetallicGlossMap;
 				float			_GlossMapScale;
-			#else
 				half			_Metallic;
 				float			_Smoothness;
-			#endif // _METALLICGLOSSMAP
-			#if _EMISSION
 				float4			_EmissionColor;
 				sampler2D		_EmissionMap;
-			#endif // _EMISSION
-			#if _AOMAP
 				sampler2D		_AOMap;
 				float			_AOScale;
-			#endif // _AOMAP
-				float _Index;
+				float			_Index;
+				float			_Index2;
+				float			_Dinc;
+				sampler2D		_DincMap;
 			CBUFFER_END
 
 			Texture2D _ScreenColor; 
@@ -394,16 +431,16 @@
 
 				SurfaceInfo info = (SurfaceInfo)0;
 
-				fixed4 baseColor = _Color * tex2D(_MainTex, i.uv);
-				info.baseColor = baseColor.rgb;
-				info.transparent = 1 - baseColor.a;
+				fixed4 diffuse = _Color * tex2D(_MainTex, i.uv);
+				info.diffuse = diffuse.rgb;
+				info.transparent = 1 - diffuse.a;
 
 				#if _METALLICGLOSSMAP
 					float4 m_s = tex2D(_MetallicGlossMap, i.uv);
-					info.metallic = m_s.r;
+					float metallic = m_s.r;
 					info.smoothness = m_s.a * _GlossMapScale;
 				#else
-					info.metallic = _Metallic;
+					float metallic = _Metallic;
 					info.smoothness = _Smoothness;
 				#endif //_METALLICGLOSSMAP
 
@@ -426,6 +463,8 @@
 				#else
 					info.diffuseAO_specAO = (1).xx;
 				#endif // _AOMAP
+
+				info.diffuse = DiffuseAndSpecularFromMetallic(info.diffuse, metallic, /*out*/ info.specular);
 				
 				info.gnormal = i.normal;
 
@@ -441,6 +480,9 @@
                     res += PBS(PBS_FULLY, info, light.dir, light.radiance, view);
                 }
                 EndLocalLightsLoop;
+
+				//SunLight sun = _Sun[0];
+				//res += PBS(PBS_FULLY, info, sun.dir, sun.color, hitView);
 
 				for (int i = 0; i < _AreaLightCount; i++)
 				{
@@ -477,10 +519,8 @@
 				res += info.emission;
 
 				float3 result = 0;
-				float3 specColor;
-				float3 trans = DiffuseAndSpecularFromMetallic(info.baseColor, info.metallic, /*out*/ specColor);
-				float3 F = FresnelTerm(specColor, dot(view, info.normal));
-				trans *= info.transparent * (1 - F);
+				float3 F = FresnelTerm(info.specular, dot(view, info.normal));
+				float3 trans = info.diffuse * info.transparent * (1 - F);
 
 				if (_Index != 1) {
 					float3 offset = refract(-view, info.normal, 1 / _Index);
@@ -519,7 +559,8 @@
 			#pragma shader_feature _AOMAP
 			#pragma shader_feature _SUBSURFACE
 			#pragma shader_feature _CLEARCOAT
-			#pragma multi_compile _ENABLEFOG __
+			#pragma shader_feature _IRIDESCENCE
+			#pragma shader_feature _ENABLEFOG
 		
 
 			//If not define Shading, then use LitShading
@@ -565,6 +606,12 @@
 			Texture2D	_AOMap;
 			float		_AOScale;
 			#endif // _AOMAP
+						
+			#if _IRIDESCENCE
+			float _Index2;
+			float _Dinc;
+			Texture2D _DincMap;
+			#endif
 
 			float _Index;
 
@@ -574,7 +621,7 @@
 			float _MipScale;
 
 			//struct SurfaceInfo {
-			//	float3	baseColor;
+			//	float3	diffuse;
 			//	float	transparent;
 			//	float	metallic;
 			//	float	smoothness;
@@ -590,19 +637,21 @@
 				SurfaceInfo IN;
 
 				float2 uv = i.uv0.xy * _MainTex_ST.xy + _MainTex_ST.zw;
-				float4 baseColor = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
-				IN.baseColor = _Color * baseColor.xyz;
+				float4 diffuse = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
+				IN.diffuse = _Color * diffuse.xyz;
 
-				IN.transparent = 1 - baseColor.a * _Color.a;
+				IN.transparent = 1 - diffuse.a * _Color.a;
 								
 				#if _METALLICGLOSSMAP
 					float4 m_s = SampleTex(_MetallicGlossMap, uv, 0);
-					IN.metallic = m_s.r;
+					float metallic = m_s.r;
 					IN.smoothness = m_s.a * _GlossMapScale;
 				#else
-					IN.metallic = _Metallic;
+					float metallic = _Metallic;
 					IN.smoothness = _Smoothness;
 				#endif
+				
+				IN.diffuse = DiffuseAndSpecularFromMetallic(IN.diffuse, metallic, /*out*/ IN.specular);
 				
 				IN.gnormal = i.tangentToWorld[2];
 
@@ -643,8 +692,15 @@
 				#else
 					IN.Ld = 0;
 				#endif
+					
+				#if _IRIDESCENCE
+					IN.iridescence = true;
+					IN.index2 = _Index2;
+					IN.dinc = _Dinc * SampleTex(_DincMap, uv, 0).r;
+				#endif
 
-				IN.discarded = baseColor.a < _Cutoff;
+
+				IN.discarded = diffuse.a < _Cutoff;
 				
 				IN.clearCoat *= 1 - IN.transparent;
 
@@ -682,10 +738,10 @@
 				float3 shadow = TraceShadow(IN.position, end_point,
 					/*inout*/sampleState);
 
-				directColor = surface.baseColor * shadow * direct_light_without_shadow * light_count;
+				directColor = surface.diffuse * shadow * direct_light_without_shadow * light_count;
 
 				nextDir = CosineSampleHemisphere(float2(SAMPLE, SAMPLE), surface.normal);
-				weight.xyz = surface.baseColor / PI;
+				weight.xyz = surface.diffuse / PI;
 				gN = IN.gN;
 			}
 
@@ -771,10 +827,10 @@
 
 			void GetSurfaceInfo(inout FragInputs i, out float3 albedo, out float transparent, out float index, out float index_rate, out float metallic, out float smoothness, out float3 normal, out float3 emission) {
 				float2 uv = i.uv0.xy * _MainTex_ST.xy + _MainTex_ST.zw;
-				float4 baseColor = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
-				albedo = _Color * baseColor.xyz;
+				float4 diffuse = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
+				albedo = _Color * diffuse.xyz;
 
-				transparent = 1 - baseColor.a * _Color.a;
+				transparent = 1 - diffuse.a * _Color.a;
 
 				#if _METALLICGLOSSMAP
 					float4 m_s = SampleTex(_MetallicGlossMap, uv, 0);
@@ -820,10 +876,10 @@
 			[shader("anyhit")]
 			void AnyHit(inout RayIntersection_RTGI rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
 			{
-				CALCULATE_DATA(fragInput, viewDir);
-				if (abs(dot(fragInput.tangentToWorld[2], WorldRayDirection())) < 0.13) {
-					IgnoreHit(); return;
-				}
+				//CALCULATE_DATA(fragInput, viewDir);
+				//if (abs(dot(fragInput.tangentToWorld[2], WorldRayDirection())) < 0.13) {
+				//	IgnoreHit(); return;
+				//}
 				rayIntersection.data1 = 0;
 				AcceptHitAndEndSearch();
 			}

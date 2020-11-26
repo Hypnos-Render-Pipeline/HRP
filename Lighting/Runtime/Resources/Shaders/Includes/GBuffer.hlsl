@@ -34,32 +34,34 @@ float3 DecodeHDR(half4 k) {
 	return k.xyz * exp2(k.w * 10);
 }
 
-void Encode2GBuffer(half3 baseColor, half roughness, half metallic, float3 normal, float3 emission, float3 gnormal, float ao,
-	out half4 target0, out half4 target1, out half4 target2, out half4 target3)
+void Encode2GBuffer(half3 diffuse, half roughness, half3 specular, float3 normal, float3 emission, float3 gnormal, float ao,
+	out half4 target0, out half4 target1, out half4 target2, out half4 target3, out half4 target4, bool specF = false)
 {
-	target0 = half4(baseColor, roughness);
+	target0 = half4(diffuse, 1);
 
-	target1.xyz = EncodeNormal(normal);
-	target1.w = metallic;
+	target1 = half4(specular, roughness);
 
-	target2 = EncodeHDR(emission);
+	target2 = half4(EncodeNormal(normal), specF ? 1 : 0);
 
-	target3.xyz = EncodeNormal(gnormal);
-	target3.w = ao;
+	target3 = EncodeHDR(emission);
+
+	target4.xyz = EncodeNormal(gnormal);
+	target4.w = ao;
 }
 
 
 
-SurfaceInfo DecodeGBuffer(half4 target0, half4 target1, half4 target2, half4 target3)
+SurfaceInfo DecodeGBuffer(half4 target0, half4 target1, half4 target2, half4 target3, half4 target4)
 {
 	SurfaceInfo info = (SurfaceInfo)0;
-	info.baseColor = target0.rgb;
-	info.smoothness = 1 - target0.a;
-	info.metallic = target1.a;
-	info.normal = DecodeNormal(target1.xyz);
-	info.emission = DecodeHDR(target2);
-	info.gnormal = DecodeNormal(target3.xyz);
-	info.diffuseAO_specAO = target3.ww;
+	info.diffuse = target0.rgb;
+	info.specular = target1.xyz;
+	info.smoothness = 1 - target1.a;
+	info.normal = DecodeNormal(target2.xyz);
+	info.specF = target2.w;
+	info.emission = DecodeHDR(target3);
+	info.gnormal = DecodeNormal(target4.xyz);
+	info.diffuseAO_specAO = target4.ww;
 
 	return info;
 }

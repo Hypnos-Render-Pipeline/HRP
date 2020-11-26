@@ -121,7 +121,7 @@ void frag(v2f i, out float4 target0: SV_Target0, out float4 target1 : SV_Target1
 
 	SurfaceDescription res = SurfaceDescriptionFunction(IN);
 
-	float3 baseColor = res.Albedo;
+	float3 diffuse = res.Albedo;
 	float3 normal = res.Normal;
 	float metallic = res.Metallic;
 	float smoothness = res.Smoothness;
@@ -135,7 +135,7 @@ void frag(v2f i, out float4 target0: SV_Target0, out float4 target1 : SV_Target1
 
 	float ao = res.Occlusion;
 
-	Encode2GBuffer(baseColor, 1 - smoothness, metallic, normal, emission, i.normal, ao, target0, target1, target2, target3);
+	Encode2GBuffer(diffuse, 1 - smoothness, metallic, normal, emission, i.normal, ao, target0, target1, target2, target3);
 }
 
 #endif

@@ -148,7 +148,7 @@ namespace HypnosRenderPipeline
                 FrustumCulling.CullPlanes(cb, cullingBuffers.argsBuffer, cullingBuffers.offsetBuffer, cullingBuffers.indexBuffer);
 
                 properties[i].SetBuffer("_TilePos", cullingBuffers.offsetBuffer);
-                properties[i].SetBuffer("_TIleIndex", cullingBuffers.indexBuffer);
+                properties[i].SetBuffer("_TileIndex", cullingBuffers.indexBuffer);
                 cb.DrawMeshInstancedIndirect(lodMeshs[i], 0, mat, i == 0 ? 0 : 1, cullingBuffers.argsBuffer, 0, properties[i]);
             }
         }

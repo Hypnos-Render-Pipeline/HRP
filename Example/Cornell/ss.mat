@@ -28,6 +28,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DincMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -50,10 +54,13 @@ Material:
     - _BumpScale: 1
     - _ClearCoat: 0
     - _Cutoff: 0
+    - _Dinc: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Index: 1.45
+    - _Index2: 1
     - _IndexRate: 0.5
+    - _Iridescence: 0
     - _Ld: 1
     - _Metallic: 0
     - _Mode: 0

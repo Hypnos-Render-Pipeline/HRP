@@ -7,6 +7,10 @@ struct SunLight {
 	float3 color;
 };
 
-StructuredBuffer<SunLight> _Sun;
+cbuffer _Sun {
+	float3 sunDir;
+	float sunAngle;
+	float3 sunColor;
+};
 
 #endif

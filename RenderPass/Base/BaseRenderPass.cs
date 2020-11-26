@@ -89,7 +89,7 @@ namespace HypnosRenderPipeline.RenderPass
     {
         [NodePin(PinType.In, true)]
         [Tooltip("Output to screen")]
-        public TexturePin result = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1,1)));
+        public TexturePin result = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1,1, RenderTextureFormat.DefaultHDR), SizeCastMode.Fixed, ColorCastMode.Fixed, SizeScale.Full));
 
         public override void Excute(RenderContext context) { }
     }

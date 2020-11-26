@@ -53,7 +53,7 @@ float LocalLightShadow_(uint2 id) {
         if (1 - sqrt(1 - dotl * dotl) / dotl / geometry.x < 0) return 0;
     }
 
-    return TraceShadow_RTGI(pos, lpos);
+    return TraceShadow_RTGI(pos + gnormal * 0.1, lpos);
 }
 
 

@@ -8,14 +8,18 @@
 //-----------------------------------------------------------------------------
 
 struct SurfaceInfo {
-	float3	baseColor;
+	float3	diffuse;
+	float3	specular;
 	float	transparent;
-	float	metallic;
 	float	smoothness;
 	float3	normal;
 	float3	gnormal;
 	float3	emission;
 	float2  diffuseAO_specAO;
+	bool	iridescence;
+	bool	specF;
+	float	index2;
+	float	dinc;
 	float	clearCoat;	//清漆
 	float	sheen;		//布料边缘光
 	float	index;		//折射率
@@ -168,57 +172,114 @@ float PhysicsFresnel(float IOR, float3 i, float3 n) {
 	return (r1 * r1 + r2 * r2) / 2;
 }
 
-half4 BRDF1_Unity_PBS(half3 diffColor, half3 specColor, half smoothness,
-	float3 normal, float3 viewDir,
-	float3 lightDir, float3 lightColor)
-{
-	float perceptualRoughness = SmoothnessToPerceptualRoughness(smoothness);
-	float3 halfDir = normalize(float3(lightDir) + viewDir);
+//------------Iridescence Fresnel------------
+float sqr(float x) { return x * x; }
+float2 sqr(float2 x) { return x * x; }
+float depol(float2 polV) { return 0.5 * (polV.x + polV.y); }
+float3 depolColor(float3 colS, float3 colP) { return 0.5 * (colS + colP); }
+void fresnelDielectric(in float ct1, in float n1, in float n2,
+	out float2 R, out float2 phi) {
+	n1 = max(1, n1);
+	n2 = max(1, n2);
+	float st1 = (1 - ct1 * ct1); // Sinus theta1 'squared'
+	float nr = n1 / n2;
 
-	// The amount we shift the normal toward the view vector is defined by the dot product.
-	half shiftAmount = dot(normal, viewDir);
-	normal = shiftAmount < 0.0f ? normal + viewDir * (-shiftAmount + 1e-5f) : normal;
-	// A re-normalization should be applied here but as the shift is small we don't do it to save ALU.
-	//normal = normalize(normal);
+	if (sqr(nr) * st1 > 1) { // Total reflection
+		R = 1;
+		phi = 2.0 * atan(float2(-sqr(nr) * sqrt(st1 - 1.0 / sqr(nr)) / ct1,
+			-sqrt(st1 - 1.0 / sqr(nr)) / ct1));
+	}
+	else {   // Transmission & Reflection
 
-	float nv = saturate(dot(normal, viewDir)); // TODO: this saturate should no be necessary here
-
-	float nl = saturate(dot(normal, lightDir));
-	float nh = saturate(dot(normal, halfDir));
-
-	half lv = saturate(dot(lightDir, viewDir));
-	half lh = saturate(dot(lightDir, halfDir));
-
-	// Diffuse term
-	half diffuseTerm = DisneyDiffuse(nv, nl, lh, 0, perceptualRoughness) * nl;
-
-	// Specular term
-	// HACK: theoretically we should divide diffuseTerm by Pi and not multiply specularTerm!
-	// BUT 1) that will make shader look significantly darker than Legacy ones
-	// and 2) on engine side "Non-important" lights have to be divided by Pi too in cases when they are injected into ambient SH
-	float roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
-
-	// GGX with roughtness to 0 would mean no specular at all, using max(roughness, 0.002) here to match HDrenderloop roughtness remapping.
-	roughness = max(roughness, 0.002);
-	float V = SmithJointGGXVisibilityTerm(nl, nv, roughness);
-	float D = GGXTerm(nh, roughness);
-
-	float specularTerm = V * D * M_PI; // Torrance-Sparrow model, Fresnel is applied later
-
-	// specularTerm * nl can be NaN on Metal in some cases, use max() to make sure it's a sane value
-	specularTerm = max(0, specularTerm * nl);
-
-	// To provide true Lambert lighting, we need to be able to kill specular completely.
-	specularTerm *= any(specColor) ? 1.0 : 0.0;
-
-	half3 color = diffColor * lightColor * diffuseTerm
-					+ specularTerm * lightColor * FresnelTerm(specColor, lh);
-
-	return half4(color, 1);
+		float ct2 = sqrt(1 - sqr(nr) * st1);
+		float2 r = float2((n2 * ct1 - n1 * ct2) / (n2 * ct1 + n1 * ct2),
+			(n1 * ct1 - n2 * ct2) / (n1 * ct1 + n2 * ct2));
+		phi.x = (r.x < 0.0) ? M_PI : 0.0;
+		phi.y = (r.y < 0.0) ? M_PI : 0.0;
+		R = sqr(r);
+	}
 }
+
+void fresnelConductor(in float ct1, in float n1, in float n2, in float k,
+	out float2 R, out float2 phi) {
+
+	if (k == 0) { // use dielectric formula to avoid numerical issues
+		fresnelDielectric(ct1, n1, n2, R, phi);
+	}
+	else {
+		float A = sqr(n2) * (1 - sqr(k)) - sqr(n1) * (1 - sqr(ct1));
+		float B = sqrt(sqr(A) + sqr(2 * sqr(n2) * k));
+		float U = sqrt((A + B) / 2.0);
+		float V = sqrt((B - A) / 2.0);
+
+		R.y = (sqr(n1 * ct1 - U) + sqr(V)) / (sqr(n1 * ct1 + U) + sqr(V));
+		phi.y = atan2(2 * n1 * V * ct1, sqr(U) + sqr(V) - sqr(n1 * ct1)) + M_PI;
+
+		R.x = (sqr(sqr(n2) * (1 - sqr(k)) * ct1 - n1 * U) + sqr(2 * sqr(n2) * k * ct1 - n1 * V))
+			/ (sqr(sqr(n2) * (1 - sqr(k)) * ct1 + n1 * U) + sqr(2 * sqr(n2) * k * ct1 + n1 * V));
+		phi.x = atan2(2 * n1 * sqr(n2) * ct1 * (2 * k * U - (1 - sqr(k)) * V), sqr(sqr(n2) * (1 + sqr(k)) * ct1) - sqr(n1) * (sqr(U) + sqr(V)));
+	}
+}
+
+// Evaluation XYZ sensitivity curves in Fourier space
+float3 evalSensitivity(float opd, float shift) {
+
+	// Use Gaussian fits, given by 3 parameters: val, pos and var
+	float phase = 2 * M_PI * opd * 1.0e-6;
+	float3 val = float3(5.4856e-13, 4.4201e-13, 5.2481e-13);
+	float3 pos = float3(1.6810e+06, 1.7953e+06, 2.2084e+06);
+	float3 var = float3(4.3278e+09, 9.3046e+09, 6.6121e+09);
+	float3 xyz = val * sqrt(2 * M_PI * var) * cos(pos * phase + shift) * exp(-var * phase * phase);
+	xyz.x += 9.7470e-14 * sqrt(2 * M_PI * 4.5282e+09) * cos(2.2399e+06 * phase + shift) * exp(-4.5282e+09 * phase * phase);
+	return xyz / 1.0685e-7;
+}
+
+float3 IridescenceFresnel(float cosTheta1, float cosTheta2, float eta_2, float eta_3, float kappa_3, float d) {
+	// First interface
+	float2 R12, phi12;
+	fresnelDielectric(cosTheta1, 1.0, eta_2, R12, phi12);
+	float2 R21 = R12;
+	float2 T121 = 1.0 - R12;
+	float2 phi21 = M_PI - phi12;
+
+	// Second interface
+	float2 R23, phi23;
+	fresnelConductor(cosTheta2, eta_2, eta_3, kappa_3, R23, phi23);
+
+	// Phase shift
+	float OPD = d * cosTheta2;
+	float2 phi2 = phi21 + phi23;
+
+	// Compound terms
+	float3 I = 0;
+	float2 R123 = R12 * R23;
+	float2 r123 = sqrt(R123);
+	float2 Rs = sqr(T121) * R23 / (1 - R123);
+
+	// Reflectance term for m=0 (DC term amplitude)
+	float2 C0 = R12 + Rs;
+	float3 S0 = evalSensitivity(0.0, 0.0);
+	I += depol(C0) * S0;
+
+	// Reflectance term for m>0 (pairs of diracs)
+	float2 Cm = Rs - T121;
+	for (int m = 1; m <= 3; ++m) {
+		Cm *= r123;
+		float3 SmS = 2.0 * evalSensitivity(m * OPD, m * phi2.x);
+		float3 SmP = 2.0 * evalSensitivity(m * OPD, m * phi2.y);
+		I += depolColor(Cm.x * SmS, Cm.y * SmP);
+	}
+
+	// Convert back to RGB reflectance
+	float3x3 XYZ_TO_RGB = float3x3(3.0799327, -1.537150, -0.542782, -0.921235, 1.875992, 0.0452442, 0.0528909, -0.204043, 1.1511515);
+	I = clamp(mul(XYZ_TO_RGB, I), 0.0, 1.0);
+	return I;
+}
+//#undef sqr
 
 
 float3 BRDF(const int type, const float3 diffColor, const float3 specColor, const float smoothness, const float2 ao, const float clearCoat, const float sheen,
+	const bool iridescence,const float eta_2, const float eta_3, const float kappa_3, const float dinc, const bool specF,
 	float3 normal, const float3 viewDir, const float3 lightDir,
 	const float3 lightSatu) {
 
@@ -243,12 +304,19 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	roughness = max(roughness, 0.008);
 	float G = SmithJointGGXVisibilityTerm(nl, nv, roughness) * M_PI;
 	float D = GGXTerm(nh, roughness);
-	float3 F = FresnelTerm(specColor, lh) * (any(specColor) ? 1.0 : 0.0);
+	
+	float3 F;
+	if (iridescence) {
+		float cosTheta2 = sqrt(1.0 - (1 - lh * lh) / max(0.0000001, eta_2 * eta_2));
+		F = IridescenceFresnel(lh, cosTheta2, eta_2, eta_3, kappa_3, dinc);
+	}
+	else
+		F = specF ? specColor : FresnelTerm(specColor, lh) * (any(specColor) ? 1.0 : 0.0);
 
 	float coatDG = GGXTerm(nh, 0.02) * SmithJointGGXVisibilityTerm(nl, nv, 0.02);
 	float3 DFG = D * G;
 	DFG = F * lerp(DFG, DFG + coatDG, clearCoat);
-	 
+	
 	if (type == 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
 	else if (type == 2) return (G * M_1_PI * F) * lightSatu * ao.y;
 	else if (type == 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
@@ -279,14 +347,15 @@ float3 PBS(const int type, SurfaceInfo IN, const float3 lightDir, const float3 l
 
 	float3 color;
 
-	float oneMinusReflectivity;
-	float3 baseColor, specColor;
-	baseColor = DiffuseAndSpecularFromMetallic(IN.baseColor, IN.metallic, /*ref*/ specColor, /*ref*/ oneMinusReflectivity);
+	float3 diffuse;
+	diffuse = IN.diffuse;
 
 	float3 normal = IN.normal;
 
-	baseColor *= 1 - IN.transparent;
-	color = BRDF(type, baseColor, specColor, IN.smoothness, IN.diffuseAO_specAO, IN.clearCoat, IN.sheen, normal, viewDir, lightDir, lightSatu);
+	diffuse *= 1 - IN.transparent;
+	color = BRDF(type, diffuse, IN.specular, IN.smoothness, IN.diffuseAO_specAO, IN.clearCoat, IN.sheen,
+		IN.iridescence, IN.index, IN.index2, max(IN.specular.x, max(IN.specular.y, IN.specular.z)), IN.dinc, IN.specF,
+		normal, viewDir, lightDir, lightSatu);
 
 	return color;
 }

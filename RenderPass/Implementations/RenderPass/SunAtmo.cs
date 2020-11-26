@@ -23,16 +23,19 @@ namespace HypnosRenderPipeline.RenderPass
         public LightListPin sunLight = new LightListPin();
 
         [NodePin(PinType.InOut, true)]
-        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBFloat), colorCastMode: ColorCastMode.Fixed);
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBHalf));
 
         [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In, true)]
-        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin diffuse = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In, true)]
-        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin specular = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In, true)]
+        public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
@@ -45,7 +48,6 @@ namespace HypnosRenderPipeline.RenderPass
             public float3 dir;
             public float angle;
             public float3 color;
-            public float padding;
         }
 
         [NodePin(PinType.Out)]
@@ -92,14 +94,14 @@ namespace HypnosRenderPipeline.RenderPass
 
                 int tempColor = Shader.PropertyToID("TempColor");
                 cb.GetTemporaryRT(tempColor, target.desc.basicDesc);
-                cb.Blit(target, tempColor, lightMat, 4);
+                cb.Blit(target, tempColor, lightMat, 4); // directional sun light
 
                 atmo.GenerateVolumeSkyTexture(cb, volumeScatter_table, sky_table, VolumeMaxDepth);
 
                 if (sunBuffer.connected)
                     atmo.GenerateSunBuffer(cb, sunBuffer, sun.color * sun.radiance);
 
-                atmo.RenderToRT(cb, tempColor, depth, target);
+                atmo.RenderToRT(cb, tempColor, depth, target); // skybox
 
                 if (skyBox.connected) 
                     atmo.RenderToCubeMap(cb, skyBox);
@@ -110,9 +112,13 @@ namespace HypnosRenderPipeline.RenderPass
             }
             else
             {
+                if (skyBox.connected)
+                    cb.ClearSkybox(skyBox, false, true, Color.clear);
+
                 if (sunBuffer.connected)
                     cb.SetComputeBufferData(sunBuffer, sunLightClear);
             }
+            cb.SetGlobalConstantBuffer(sunBuffer, "_Sun", 0, 28);
         }
 
         bool TestRTChange(ref RenderTexture rt, RenderTextureFormat format, Vector2Int wh)

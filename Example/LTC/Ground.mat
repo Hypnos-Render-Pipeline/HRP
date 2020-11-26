@@ -9,7 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Ground
   m_Shader: {fileID: 4800000, guid: 5c7f5126902e04e4aa6ef1395bbd23cd, type: 3}
-  m_ShaderKeywords: _AOMAP _METALLICGLOSSMAP _NORMALMAP
+  m_ShaderKeywords: _AOMAP _IRIDESCENCE _IRIDESCENCE_ON _IRIMAP _METALLICGLOSSMAP
+    _NORMALMAP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -29,9 +30,21 @@ Material:
         m_Texture: {fileID: 2800000, guid: 9fe7075e4a9319e4f9aeb47ea4bc95f2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DincMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 5, y: 5}
+        m_Offset: {x: 0, y: 0}
+    - _Ir:
+        m_Texture: {fileID: 2800000, guid: b41710b08dbb40447bcc27cb5d87c8c2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Iridescent:
+        m_Texture: {fileID: 2800000, guid: b41710b08dbb40447bcc27cb5d87c8c2, type: 3}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
@@ -52,11 +65,15 @@ Material:
     - _BumpScale: 1
     - _ClearCoat: 0
     - _Cutoff: 0
+    - _Dinc: 1.69
     - _DstBlend: 0
-    - _GlossMapScale: 0.888
-    - _Index: 1.45
+    - _GlossMapScale: 0.836
+    - _Index: 1.25
+    - _Index2: 1
     - _IndexRate: 0.5
-    - _Ld: 0.1
+    - _Iridescence: 1
+    - _IridescentTile: 10
+    - _Ld: 1
     - _Metallic: 1
     - _Mode: 0
     - _Modified: 0

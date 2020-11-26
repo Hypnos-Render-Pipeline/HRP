@@ -439,13 +439,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8243755921fcbc54c8da196476fd9749, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lightType: 5
-  radiance: 20
+  lightType: 1
+  radiance: 2
   IESProfile: {fileID: 0}
   shadow: 1
   areaTexture: {fileID: 0}
   drawLightMesh: 1
   lightMesh: {fileID: 0}
+  atmoPreset: {fileID: 0}
   __m_sunLight__: 0
   m_temperature: 3331
   m_areaSize: {x: 3, y: 3}
@@ -461,7 +462,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.74827963, b: 0.49940526, a: 1}
-  m_Intensity: 20
+  m_Intensity: 2
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -518,7 +519,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 338247541}
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 9.9, z: 0}
+  m_LocalPosition: {x: 0, y: 9.93, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 416388800}
@@ -587,7 +588,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &465100466
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1285,7 +1286,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1998399064
 Transform:
   m_ObjectHideFlags: 0

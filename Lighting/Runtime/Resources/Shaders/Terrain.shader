@@ -15,7 +15,7 @@
                 Texture2D _LodTex;
                 float3 _TileLB_tileSize;
                 Buffer<float2> _TilePos;
-                Buffer<uint> _TIleIndex;
+                Buffer<uint> _TileIndex;
                 float4 _TerrainCenter;
                 float4x4 _V_Inv;
                 float2 _HeightRange;
@@ -61,14 +61,14 @@
                     float inside : SV_InsideTessFactor;
                 };
 
-                void frag(t2f i, out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2)
+                void frag(t2f i, out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3)
                 {
                     float3 wpos = i.wpos;
 
                     float3 normal = Normal(wpos);
 
                     float4 place_holder;
-                    Encode2GBuffer(0.5, 0.6, 0, normal, 0, normal, 0, target0, target1, place_holder, target2);
+                    Encode2GBuffer(0.5, 0.6, 0, normal, 0, normal, 0, target0, target1, target2, place_holder, target3);
                 }
 
             ENDCG
@@ -88,7 +88,7 @@
                 {
                     v2t o;
 
-                    float2 offset = _TilePos[_TIleIndex[v.instanceID]];
+                    float2 offset = _TilePos[_TileIndex[v.instanceID]];
                     float3 wpos = v.vertex + float3(offset.x, 0, offset.y) + _TerrainCenter;
                     int2 id = (wpos.xz - (v.uv - 0.5) * _TileLB_tileSize.z * 0.1 - _TileLB_tileSize.xy) / _TileLB_tileSize.z;
 
@@ -151,7 +151,7 @@
                 {
                     t2f o;
 
-                    float2 offset = _TilePos[_TIleIndex[v.instanceID]];
+                    float2 offset = _TilePos[_TileIndex[v.instanceID]];
                     float3 wpos = v.vertex + float3(offset.x, 0, offset.y) + _TerrainCenter;
                     int2 id = (wpos.xz - (v.uv - 0.5) * _TileLB_tileSize.z * 0.1 - _TileLB_tileSize.xy) / _TileLB_tileSize.z;
 

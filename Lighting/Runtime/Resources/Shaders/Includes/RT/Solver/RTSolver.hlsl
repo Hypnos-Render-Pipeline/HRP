@@ -33,13 +33,12 @@ float3 PathTracer(const int maxDepth,
 		nextWeight = weight;
 		float3 directColor;
 		float3 nextDir;
-		float3 normal;
 		nextWeight.xyz *= cutoff;
 		cutoff *= 0.8;
 		 
 		float4 t = TraceNextWithBackFace(pos, dir,
 											/*inout*/sampleState, nextWeight, roughness,
-											/*out*/directColor, nextDir, normal);
+											/*out*/directColor, nextDir);
 
 
          
@@ -91,13 +90,7 @@ float3 PathTracer(const int maxDepth,
 
 //----------------------------------------------------
 //---------Path tracer with Irr cache-----------------
-//----------------------------------------------------
-struct PosIrr
-{
-    float3 pos;
-    half3 irr;
-    half3 weight;
-};               
+//----------------------------------------------------            
 float3 PathTracer_IrrCache(const int maxDepth,
 	const float3 origin, const float3 direction,
 	inout int4 sampleState, 
@@ -105,7 +98,7 @@ float3 PathTracer_IrrCache(const int maxDepth,
 {
 
     float4 firstHit = 0;
-    int depth = min(max(maxDepth, 1), 16);
+    int depth = min(max(maxDepth, 1), 6);
     float3 res = 0;
 	[branch]
     if (includeDirectional)
@@ -115,7 +108,6 @@ float3 PathTracer_IrrCache(const int maxDepth,
     float3 pos = origin, dir = direction;
     float cutoff = 1;
     
-    PosIrr cache;
     int cacheIndex = 0;
     bool firstFog = false;
 
@@ -125,14 +117,13 @@ float3 PathTracer_IrrCache(const int maxDepth,
         nextWeight = weight;
         float3 directColor;
         float3 nextDir;
-        float3 normal;
         float r = roughness;
         nextWeight.xyz *= cutoff;
         cutoff *= 0.8;
         
         float4 t = TraceNextWithBackFace_ForceTrace(pos, dir,
 											/*inout*/sampleState, nextWeight, roughness,
-											/*out*/directColor, nextDir, normal);
+											/*out*/directColor, nextDir);
         
         if (firstHit.w == 0)
         {
@@ -208,23 +199,11 @@ float3 PathTracer_IrrCache(const int maxDepth,
 #endif
         weight *= decre_weight;
         weight.w = decre_weight.w;
-        if (cacheIndex < 1)
-        {
-            if (!fogWeight.w) firstFog = true;
-            cache.pos = pos;
-            cache.weight = decre_weight;
-            cache.irr = directColor;
-            cacheIndex++;
-        }
-        else
-        {
-            cache.irr += cache.weight * directColor;
-            cache.weight *= decre_weight.w <= 0 ? 0 : decre_weight.xyz;
-        }
+        
         if (use_cache)
             break;
     }
-    if (!firstFog) SetIrr(cache.pos, cache.irr);
+    if (!firstFog) SetIrr(firstHit, res);
 
     if (debug)
         return GetIrr(firstHit.xyz);

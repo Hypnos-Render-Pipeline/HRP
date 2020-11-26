@@ -10,14 +10,17 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In, true)]
         public LightListPin lights = new LightListPin();
 
-        [NodePin(PinType.InOut, true)]
+        [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In, true)]
-        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin diffuse = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In, true)]
-        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin specular = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In, true)]
+        public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
@@ -51,15 +54,6 @@ namespace HypnosRenderPipeline.RenderPass
             var cam = context.camera;
             var cpos = cam.transform.position;
             var cb = context.commandBuffer;
-
-            context.commandBuffer.SetGlobalTexture("_DepthTex", depth);
-            context.commandBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
-            context.commandBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
-
-            if (ao.connected)
-                context.commandBuffer.SetGlobalTexture("_AOTex", ao);
-            else
-                context.commandBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
 
             int shadowRT = Shader.PropertyToID("ShadowRT");
             var desc = target.desc.basicDesc;

@@ -14,8 +14,8 @@ float4x4 _V, _V_Inv;
 float4x4 _P, _P_Inv;
 float4x4 _VP, _VP_Inv;
 
-Texture2D<float> _DepthTex;
-Texture2D<float4> _BaseColorTex, _NormalTex, _AOTex, _SceneColor;
+Texture2D<float> _HiZDepthTex;
+Texture2D<float4> _SpecTex, _NormalTex, _AOTex, _SceneColor;
 Texture2D<float4> _FilteredColor;
 Texture2D<float2> _MotionTex;
 TextureCube<float3> _SkyBox;
@@ -51,7 +51,7 @@ float DeltaDisY(const float3 vpos, const float3 vdir, const float vy) {
 }
 
 float Depth(float2 uv, uint level = 0) {
-    return _DepthTex.SampleLevel(point_clamp_sampler, uv, level);
+    return _HiZDepthTex.SampleLevel(point_clamp_sampler, uv, level);
 }
 
 float Luminance(float3 col) {
@@ -90,13 +90,13 @@ void Trace(uint2 id : SV_DispatchThreadID)
     for (int i = 1; i < 7; i++)
     {
         uint2 wh; int levels;
-        _DepthTex.GetDimensions(i, wh.x, wh.y, levels);
+        _HiZDepthTex.GetDimensions(i, wh.x, wh.y, levels);
         pixel_size[i] = 1.0f / wh;
     }
 
     int4 sampleState = int4(id, _Clock % 8, 0);
 
-    float d = _DepthTex[id];
+    float d = _HiZDepthTex[id];
     if (d == 0) {
         _TempResult[id] = 0;
         return;
@@ -111,7 +111,8 @@ void Trace(uint2 id : SV_DispatchThreadID)
     float3 view = normalize(mul(float4(-vpos, 0), _V).xyz);
 
     SurfaceInfo info = (SurfaceInfo)0;
-    info = DecodeGBuffer(_BaseColorTex[id],
+    info = DecodeGBuffer(0,
+                            _SpecTex[id],
                             _NormalTex[id],
                             0,
                             1);
@@ -202,7 +203,7 @@ groupshared float4 buffer_1[10][10];
 void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
 {
     //_Result[id] = _TempResult[id]; return;
-    float smooth = 1 - _BaseColorTex[id].w; smooth *= smooth * smooth;
+    float smooth = 1 - _SpecTex[id].w; smooth *= smooth * smooth;
 
     // Load current result to shared & perform a inital temporal.
     // This stage is to generate a more accurate buffer for the bbox calculation, which helps reduce flickering.
@@ -347,7 +348,8 @@ StructuredBuffer<uint> _Block;
 RWStructuredBuffer<uint> _NextBlock;
 
 void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
-    float smooth = 1 - _BaseColorTex[id].w;
+    //return;
+    float smooth = 1 - _SpecTex[id].w;
 
     // load current result to shared.
     {
@@ -371,7 +373,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
                     float3 normal = DecodeNormal(n_m.xyz);
                     buffer2_0[offset.x][offset.y] = newC;
                     buffer2_1[offset.x][offset.y] = normal;
-                    buffer2_2[offset.x][offset.y] = _BaseColorTex[texID].xyz * n_m.w;
+                    buffer2_2[offset.x][offset.y] = _SpecTex[texID].xyz;
                 }
             }
         }
@@ -464,7 +466,7 @@ void FinalSynthesis(uint2 id : SV_DispatchThreadID)
         view = normalize(_V_Inv._m03_m13_m23 - viewPos.xyz / viewPos.w);
     }
 
-    float specAO = CalculateSpecAO(ao, _BaseColorTex[id].w, view, gN);
+    float specAO = CalculateSpecAO(ao, _SpecTex[id].w, view, gN);
 
     float4 sceneColor = _SceneColor[id];
     sceneColor.a = sceneColor.a != 0;

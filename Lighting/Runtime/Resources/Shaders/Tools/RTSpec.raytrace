@@ -17,7 +17,7 @@ int _UseRTShadow;
 float4 _WH;
 
 Texture2D<float> _DepthTex;
-Texture2D<float4> _BaseColorTex, _NormalTex, _AOTex, _SceneColor;
+Texture2D<float4> _SpecTex, _NormalTex, _AOTex, _SceneColor;
 Texture2D<float4> _FilteredColor;
 Texture2D<float2> _MotionTex;
 TextureCube<float3> _SkyBox;
@@ -60,7 +60,8 @@ void Specular()
     float3 view = normalize(camPos - pos);
 
     SurfaceInfo info = (SurfaceInfo)0;
-    info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+    info = DecodeGBuffer(0,
+                            _SpecTex[dispatchIdx],
                             _NormalTex[dispatchIdx],
                             0,
                             1);
@@ -87,15 +88,17 @@ void Specular()
         uv = (uv + 1) * 0.5;
         res = _FilteredColor.SampleLevel(trilinear_clamp_sampler, uv, lerp(7, 0, info.smoothness));
         bool offscreen = any(uv < 0) || any(uv > 1);
-        bool illegal = info.smoothness > SAMPLE || offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.1; sampleState.w++;
+        bool illegal = offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.1;
         if (illegal) { // can't find illegal hit in screen, calculate it
             SurfaceInfo hitInfo = (SurfaceInfo)0;
-            hitInfo.baseColor = gbuffer.albedo;
+            hitInfo.diffuse = gbuffer.albedo;
             hitInfo.smoothness = gbuffer.smoothness;
-            hitInfo.metallic = gbuffer.metallic;
+            float3 metallic = gbuffer.metallic;
             hitInfo.gnormal = hitInfo.normal = gbuffer.normal;
             hitInfo.transparent = gbuffer.transparent;
             hitInfo.diffuseAO_specAO = 1;
+            hitInfo.diffuse = DiffuseAndSpecularFromMetallic(hitInfo.diffuse, metallic, /*out*/ hitInfo.specular);
+				
             
             float3 hitView = -dir;
             res = 0;//float3(1,0,1);
@@ -127,15 +130,14 @@ void Specular()
                 EndLocalLightsLoop;
             }
 
-            SunLight sun = _Sun[0];
-            float3 sl = PBS(PBS_FULLY, hitInfo, sun.dir, sun.color, hitView);
+            float3 sl = PBS(PBS_FULLY, hitInfo, sunDir, sunColor, hitView);
              if (_UseRTShadow && any(sl > 0)) {
-                sl *= TraceShadow_RTGI(hitPos, sun.dir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sun.angle));
+                sl *= TraceShadow_RTGI(hitPos, sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
             }
             res += sl;
         }
     }
 
-    float3 spec = ToneMap(PBS(PBS_SPECULAR, info, dir, res, view));
-    _TempResult[dispatchIdx] = float4(spec, 1);
+    float3 spec = PBS(PBS_SPECULAR, info, dir, res, view);
+    _TempResult[dispatchIdx] = float4(ToneMap(spec), 1);
 }

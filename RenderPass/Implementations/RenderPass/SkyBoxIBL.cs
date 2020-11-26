@@ -10,16 +10,19 @@ namespace HypnosRenderPipeline.RenderPass
         public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBHalf) { dimension = TextureDimension.Cube });
 
         [NodePin(PinType.InOut, true)]
-        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBFloat), colorCastMode: ColorCastMode.Fixed);
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBHalf));
 
         [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In, true)]
-        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin diffuse = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In, true)]
-        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin specular = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In, true)]
+        public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
@@ -35,15 +38,6 @@ namespace HypnosRenderPipeline.RenderPass
             var cb = context.commandBuffer;
 
             cb.BlitSkybox(skyBox, irradiance, filterMat, 0);
-
-            cb.SetGlobalTexture("_DepthTex", depth);
-            cb.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
-            cb.SetGlobalTexture("_NormalTex", normal_metallic);
-
-            if (ao.connected)
-                cb.SetGlobalTexture("_AOTex", ao);
-            else
-                cb.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
 
             cb.Blit(irradiance, target, iblMat, 0);
         }

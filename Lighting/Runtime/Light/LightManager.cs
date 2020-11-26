@@ -189,7 +189,7 @@ namespace HypnosRenderPipeline
                     continue;
                 }
                 bounds.center = light.transform.position;
-                bounds.size = Vector3.one * light.range;
+                bounds.size = Vector3.one * light.range * 2;
                 if (GeometryUtility.TestPlanesAABB(m_planes, bounds))
                 {
                     float dis = Vector3.Distance(camera_pos, light.transform.position);

@@ -15,10 +15,13 @@ namespace HypnosRenderPipeline.RenderPass
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In, true)]
-        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin diffuse = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In, true)]
-        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin specular = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In, true)]
+        public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In, true)]
         public TexturePin emission = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
@@ -40,15 +43,6 @@ namespace HypnosRenderPipeline.RenderPass
         public override void Excute(RenderContext context)
         {           
             var cam = context.camera;
-
-            context.commandBuffer.SetGlobalTexture("_DepthTex", depth.handle);
-            context.commandBuffer.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
-            context.commandBuffer.SetGlobalTexture("_NormalTex", normal_metallic);
-            context.commandBuffer.SetGlobalTexture("_EmissionTex", emission);
-            if (ao.connected)
-                context.commandBuffer.SetGlobalTexture("_AOTex", ao);
-            else
-                context.commandBuffer.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
 
 #if UNITY_EDITOR
             context.commandBuffer.SetGlobalInt("_DebugTiledLight", debugTiledLight ? 1 : 0);

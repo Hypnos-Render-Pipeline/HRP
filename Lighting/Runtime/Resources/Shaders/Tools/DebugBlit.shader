@@ -48,7 +48,7 @@
                 if (_Channel) {
                     if (_Channel == 5)
                         return float4(col.xyz, 1);
-                    return float4(col[_Channel - 1].xxx, 1);
+                    return float4(col[_Channel - 1].xxx * _Multiplier, 1);
                 }
 
                 float2 checkboard = i.uv * float2(_Aspect, 1);
@@ -56,7 +56,7 @@
                 checkboard = int2(checkboard / 0.025f);
 
                 float a = (checkboard.x % 2 + checkboard.y + 1) % 2 * 0.5 + 0.5;
-                return float4(lerp(_Checkboard ? a : 0, col.rgb, col.a), 1);
+                return float4(lerp(_Checkboard ? a : 0, col.rgb, saturate(col.a)), 1);
             }
             ENDCG
         }

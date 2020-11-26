@@ -55,7 +55,7 @@ float3 TraceShadow_PreventSelfShadow(const float3 start, const float3 end,
 
 float4 TraceNext(const float3 start, const float3 dir,
 	inout int4 sampleState, inout float4 weight, inout float roughness,
-	out float3 directColor, out float3 nextDir, out float3 normal) {
+	out float3 directColor, out float3 nextDir) {
 	sampleState.w++;
 	float rnd_num = SAMPLE;
 	float importance = min(max(weight.x, max(weight.y, weight.z)), 1);
@@ -79,7 +79,6 @@ float4 TraceNext(const float3 start, const float3 dir,
 		roughness = rayIntersection.roughness;
 		directColor = rayIntersection.directColor / importance;
 		nextDir = rayIntersection.nextDir;
-		normal = rayIntersection.normal;
 		return rayIntersection.t;
 	}
 	directColor = 0;
@@ -89,7 +88,7 @@ float4 TraceNext(const float3 start, const float3 dir,
    
 float4 TraceNextWithBackFace(const float3 start, const float3 dir, 
 								inout int4 sampleState, inout float4 weight, inout float roughness,
-								out float3 directColor, out float3 nextDir, out float3 normal) {
+								out float3 directColor, out float3 nextDir) {
 	sampleState.w++;
 	float rnd_num = SAMPLE;
 	float importance = min(max(weight.x, max(weight.y, weight.z)), 1);
@@ -113,7 +112,6 @@ float4 TraceNextWithBackFace(const float3 start, const float3 dir,
 		roughness = rayIntersection.roughness;
 		directColor = rayIntersection.directColor / importance;
 		nextDir = rayIntersection.nextDir;
-		normal = rayIntersection.normal;
 		return rayIntersection.t;
 	}
 	directColor = 0;
@@ -124,7 +122,7 @@ float4 TraceNextWithBackFace(const float3 start, const float3 dir,
 
 float4 TraceNextWithBackFace_ForceTrace(const float3 start, const float3 dir,
 								inout int4 sampleState, inout float4 weight, inout float roughness,
-								out float3 directColor, out float3 nextDir, out float3 normal)
+								out float3 directColor, out float3 nextDir)
 {
     RayDesc rayDescriptor;
     rayDescriptor.Origin = start;
@@ -145,20 +143,18 @@ float4 TraceNextWithBackFace_ForceTrace(const float3 start, const float3 dir,
     roughness = rayIntersection.roughness;
     directColor = rayIntersection.directColor;
     nextDir = rayIntersection.nextDir;
-    normal = rayIntersection.normal;
     return rayIntersection.t;
 }
 
 struct SubsurfaceHitInfo {
 	float3 albedo;
 	float3 normal;
-	float3 gN;
 	float4 t;
 };
 
 float4 TraceSelf(const float3 start, const float3 dir, const float max_dis,
 					inout int4 sampleState,
-					out int num, out float3 albedo, out float3 normal, out float3 gN) {
+					out int num, out float3 albedo, out float3 normal) {
 	RayDesc rayDescriptor;
 	rayDescriptor.Origin = start;
 	rayDescriptor.Direction = normalize(dir);
@@ -184,7 +180,6 @@ float4 TraceSelf(const float3 start, const float3 dir, const float max_dis,
 		
 		infos[num].albedo = rayIntersection.directColor;
 		infos[num].normal = rayIntersection.normal;
-		infos[num].gN = rayIntersection.nextDir;
 		infos[num].t = rayIntersection.t;
 
 		rayDescriptor.Origin = rayIntersection.t.yzw;
@@ -201,7 +196,6 @@ float4 TraceSelf(const float3 start, const float3 dir, const float max_dis,
 	
 	albedo = infos[pick].albedo;
 	normal = infos[pick].normal;
-	gN = infos[pick].gN;
 	return infos[pick].t;
 }
 

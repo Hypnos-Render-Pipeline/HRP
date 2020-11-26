@@ -13,7 +13,7 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24),
                                                     SizeCastMode.ResizeToInput,
-                                                    ColorCastMode.FitToInput,
+                                                    ColorCastMode.Fixed,
                                                     SizeScale.Full);
 
         [NodePin(PinType.Out)]

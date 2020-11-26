@@ -34,11 +34,14 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In)]
         public TexturePin motion = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RGFloat, 0), colorCastMode: ColorCastMode.Fixed);
 
-        [NodePin(PinType.In, true)]
-        public TexturePin baseColor_roughness = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        //[NodePin(PinType.In, true)]
+        //public TexturePin diffuse = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In, true)]
-        public TexturePin normal_metallic = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+        public TexturePin specular = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In, true)]
+        public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
@@ -59,7 +62,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         static ComputeShaderWithName ssr = new ComputeShaderWithName("Shaders/SSR/SSR");
 
-        static RayTracingShader rtShader = Resources.Load<RayTracingShader>("Shaders/Tools/RTSpec");
+        static RTShaderWithName rtShader = new RTShaderWithName("Shaders/Tools/RTSpec");
 
         static BNSLoader bnsLoader = BNSLoader.instance;
 
@@ -86,28 +89,14 @@ namespace HypnosRenderPipeline.RenderPass
         {
             var cb = context.commandBuffer;
 
-            cb.SetGlobalTexture("_DepthTex", hiZ);
-            cb.SetGlobalTexture("_BaseColorTex", baseColor_roughness);
-            cb.SetGlobalTexture("_NormalTex", normal_metallic);
-            cb.SetGlobalTexture("_SceneColor", sceneColor);
-
-            if (ao.connected)
-                cb.SetGlobalTexture("_AOTex", ao);
-            else
-                cb.SetGlobalTexture("_AOTex", Texture2D.whiteTexture);
-
-            if (motion.connected)
-                cb.SetGlobalTexture("_MotionTex", motion);
-            else
-                cb.SetGlobalTexture("_MotionTex", Texture2D.blackTexture);
-
             if (filteredColor.connected)
                 cb.SetGlobalTexture("_FilteredColor", filteredColor);
             else
                 cb.SetGlobalTexture("_FilteredColor", sceneColor);
 
+            cb.SetGlobalTexture("_SceneColor", sceneColor);
+            cb.SetGlobalTexture("_HiZDepthTex", hiZ);
 
-            cb.SetGlobalBuffer("_Sun", sun);
             cb.SetGlobalTexture("_SkyBox", skybox);
 
             int2 wh = new int2(sceneColor.desc.basicDesc.width, sceneColor.desc.basicDesc.height);

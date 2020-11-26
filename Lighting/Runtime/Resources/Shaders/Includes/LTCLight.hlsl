@@ -483,9 +483,10 @@ float4 LTC_Evaluate(
 
 float3 QuadLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4 lightX, float4 lightY, float3 pos, float3 view) {
 
-	float3 baseColor = surface.baseColor;
+	float3 diffuse = surface.diffuse;
+	diffuse *= 1 - surface.transparent;
+	float3 specColor = surface.specular;
 	float roughness = 1 - surface.smoothness;
-	float metallic = surface.metallic;
 	float3 normal = surface.normal;
 	float3 gnormal = surface.gnormal;
 	float ao = surface.diffuseAO_specAO.x;
@@ -514,12 +515,9 @@ float3 QuadLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 	half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
 
 	float3 result = 0;
-	float3 specColor;
-	baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
-	baseColor *= 1 - surface.transparent;
 
 	half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
-	result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
+	result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * diffuse;
 
 	half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
 	half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
@@ -531,13 +529,13 @@ float3 QuadLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 
 float3 TubeLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4 lightX, float4 lightY, float3 pos, float3 view) {
 
-	float3 baseColor = surface.baseColor;
+	float3 diffuse = surface.diffuse;
+	diffuse *= 1 - surface.transparent;
+	float3 specColor = surface.specular;
 	float roughness = 1 - surface.smoothness;
-	float metallic = surface.metallic;
 	float3 normal = surface.normal;
 	float3 gnormal = surface.gnormal;
 	float ao = surface.diffuseAO_specAO.x;
-
 
 	float3 lp = lightPos;
 	float3 ly = normalize(cross(lightPos - pos, lightX.xyz));
@@ -563,12 +561,9 @@ float3 TubeLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 	half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
 
 	float3 result = 0;
-	float3 specColor;
-	baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
-	baseColor *= 1 - surface.transparent;
 
 	half4 diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
-	result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
+	result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * diffuse;
 
 	half3 specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y, true);
 	half3 fresnelTerm = specColor + (1.0 - specColor) * AmpDiffAmpSpecFresnel.z;
@@ -580,9 +575,11 @@ float3 TubeLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 
 float3 DiscLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4 lightX, float4 lightY, float3 pos, float3 view) {
 	if (distance(pos, lightPos) > 500) return 0; // some weird bug happend in faraway from light pos
-	float3 baseColor = surface.baseColor;
+
+	float3 diffuse = surface.diffuse;
+	diffuse *= 1 - surface.transparent;
+	float3 specColor = surface.specular;
 	float roughness = 1 - surface.smoothness;
-	float metallic = surface.metallic;
 	float3 normal = surface.normal;
 	float3 gnormal = surface.gnormal;
 	float ao = surface.diffuseAO_specAO.x;
@@ -610,9 +607,6 @@ float3 DiscLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 	half3 AmpDiffAmpSpecFresnel = tex2D(_AmpDiffAmpSpecFresnel, uv).rgb;
 
 	float3 result = 0;
-	float3 specColor;
-	baseColor = DiffuseAndSpecularFromMetallic(baseColor, metallic, /*out*/ specColor);
-	baseColor *= 1 - surface.transparent;
 
 	half3x3 Minv = 0;
 	Minv._m22 = 1;
@@ -623,8 +617,8 @@ float3 DiscLight(SurfaceInfo surface, float3 lightColor, float3 lightPos, float4
 		else
 			Minv._m00_m02_m11_m20 = half4(1, 0, 1, 0);
 		half4 diffuseTerm = LTC_Evaluate(normal, view, pos, Minv, points);
-		result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * baseColor;
-		if (any(isnan(result))) result = baseColor;
+		result = lerp(ao, 1, diffuseTerm.a * 0.8 + 0.2) * diffuseTerm.rgb * diffuse;
+		if (any(isnan(result))) result = diffuse;
 	}
 	{
 		Minv._m00_m02_m11_m20 = tex2D(_TransformInv_Specular, uv);

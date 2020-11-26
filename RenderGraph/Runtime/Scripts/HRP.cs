@@ -64,6 +64,8 @@ namespace HypnosRenderPipeline
 
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
+            CommandBufferExtension.SetupContext(context);
+
             var rc = new RenderContext() { context = context };
 
             CommandBuffer cb = new CommandBuffer();
@@ -145,12 +147,12 @@ namespace HypnosRenderPipeline
                         cb.SetRenderTarget(result);
                         cb.ClearRenderTarget(true, true, Color.clear);
                         cb.SetRenderTarget(result);
-                        context.ExecuteCommandBuffer(cb);
-                        cb.Clear();
+
                         var a = new DrawingSettings(new ShaderTagId("PreZ"), new SortingSettings(cam));
                         var b = FilteringSettings.defaultValue;
                         b.renderQueueRange = RenderQueueRange.all;
-                        context.DrawRenderers(rc.defaultCullingResult, ref a, ref b);
+
+                        cb.DrawRenderers(rc.defaultCullingResult, ref a, ref b);
 
                         context.ExecuteCommandBuffer(vrender_cb[0]);
                         cb.Blit(BuiltinRenderTextureType.CameraTarget, result);
@@ -190,7 +192,6 @@ namespace HypnosRenderPipeline
                     }
                 }
 #endif
-
 
 #if UNITY_EDITOR
                 if (cam.cameraType == CameraType.SceneView)

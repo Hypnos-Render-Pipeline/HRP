@@ -1,0 +1,241 @@
+﻿#pragma kernel TTFilter
+#pragma kernel SFilter
+#pragma kernel SFilterIndirect
+#pragma kernel FinalSynthesis
+
+#include "../Includes/GBuffer.hlsl"
+#include "../Includes/PBS.hlsl"
+#include "../Includes/RT/Include/Sampler.hlsl"
+
+uint _Clock;
+float4 _WH;
+float4x4 _V, _V_Inv;
+float4x4 _P, _P_Inv;
+float4x4 _VP, _VP_Inv;
+
+Texture2D<float4> _BaseColorTex, _NormalTex, _SceneColor;
+Texture2D<float4> _FilteredColor;
+Texture2D<float2> _MotionTex;
+TextureCube<float3> _SkyBox;
+
+SamplerState point_clamp_sampler;
+SamplerState linear_clamp_sampler;
+SamplerState trilinear_clamp_sampler;
+
+RWTexture2D<float4> _TempResult;
+
+float Luminance(float3 col) {
+    return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
+}
+float3 ToneMap(float3 color) {
+    return color / (1 + Luminance(color));
+}
+float3 UnToneMap(float3 color) {
+    return color / (1 - Luminance(color));
+}
+
+RWTexture2D<float4> _History, _HistoryNormal;
+RWTexture2D<float4> _Result;
+
+groupshared float4 buffer_0[10][10];
+
+[numthreads(8, 8, 1)]
+void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
+{
+    //_Result[id] = _TempResult[id]; return;
+    // Load current result to shared & perform a inital temporal.
+    // This stage is to generate a more accurate buffer for the bbox calculation, which helps reduce flickering.
+    {
+        uint thread_id = groupThreadID.x + groupThreadID.y * 8;
+        int2 lbID = groupID * 8 - 1;
+        int loop_num = 100 / 64 + (100 % 64 != 0 ? 1 : 0);
+        for (int i = 0; i < loop_num; i++)
+        {
+            uint task_id = thread_id + i * 64;
+            if (task_id < 100) {
+                uint2 offset = uint2(task_id % 10, task_id / 10);
+                uint2 texID = lbID + offset;
+                if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
+                    buffer_0[offset.x][offset.y] = 0;
+                }
+                else {
+                    buffer_0[offset.x][offset.y] = _TempResult[texID];
+                }
+            }
+        }
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    // perform temporal
+    {
+        uint2 bufferID = 1 + groupThreadID;
+
+        float4 oc = buffer_0[bufferID.x][bufferID.y];
+
+        float4 minC = oc, maxC = oc;
+
+        float4 lc = buffer_0[bufferID.x - 1][bufferID.y];
+        float4 dc = buffer_0[bufferID.x][bufferID.y - 1];
+        float4 rc = buffer_0[bufferID.x + 1][bufferID.y];
+        float4 uc = buffer_0[bufferID.x][bufferID.y + 1];
+
+        // bbox
+        maxC = max(minC, lc);
+        minC = min(minC, lc);
+        maxC = max(minC, dc);
+        minC = min(minC, dc);
+        maxC = max(minC, rc);
+        minC = min(minC, rc);
+        maxC = max(minC, uc);
+        minC = min(minC, uc);
+        minC -= 0.3;
+        maxC += 0.3;
+
+        float4 normalData = _NormalTex[id];
+        float2 motion = _MotionTex[id];
+        int2 prevId = ((id + 0.5) * _WH.zw - (motion * 0.9)) * _WH.xy;
+
+        float3 n = DecodeNormal(normalData.xyz);
+        float3 hn = DecodeNormal(_HistoryNormal[prevId].xyz);
+        float4 hc = _History[prevId];
+        hc = isnan(hc) ? 0 : hc;
+
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : 0.95;
+        mix_rate *= max(0, 1 - length(motion) * 10);
+        mix_rate *= (1 + dot(hn, n)) / 2;
+        hc *= mix_rate != 0;
+
+        hc.xyz = clamp(hc.xyz, minC.xyz, maxC.xyz);
+        float4 mixed = lerp(oc, hc, mix_rate);
+
+
+        _TempResult[id] = mixed;
+        _Result[id] = mixed;
+        _History[id] = mixed;
+        _HistoryNormal[id] = normalData;
+    }
+}
+
+
+float2 _SmoothRange;
+
+#define SPATIAL_RADIUS 3
+#define GROUPSHARED_SIZE (8 + SPATIAL_RADIUS * 2)
+#define GROUPSHARED_COUNT (GROUPSHARED_SIZE * GROUPSHARED_SIZE)
+groupshared float4 buffer2_0[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
+groupshared float3 buffer2_1[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
+groupshared bool active;
+
+RWStructuredBuffer<int> _Indirect;
+StructuredBuffer<uint> _Block;
+RWStructuredBuffer<uint> _NextBlock;
+
+void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
+    //return;
+    float3 diffuse = _BaseColorTex[id].xyz * _SceneColor[id].a;
+    float smooth = 1 - max(diffuse.x, max(diffuse.y, diffuse.z));
+
+    // load current result to shared.
+    {
+        uint thread_id = groupThreadID.x + groupThreadID.y * 8;
+        int2 lbID = groupID * 8 - SPATIAL_RADIUS;
+        int loop_num = GROUPSHARED_COUNT / 64 + (GROUPSHARED_COUNT % 64 != 0 ? 1 : 0);
+        for (int i = 0; i < loop_num; i++)
+        {
+            uint task_id = thread_id + i * 64;
+            if (task_id < GROUPSHARED_COUNT) {
+                uint2 offset = uint2(task_id % GROUPSHARED_SIZE, task_id / GROUPSHARED_SIZE);
+                uint2 texID = lbID + offset;
+                if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
+                    buffer2_0[offset.x][offset.y] = 0;
+                    buffer2_1[offset.x][offset.y] = 0;
+                }
+                else {
+                    float4 newC = _Result[texID];
+                    float4 n_m = _NormalTex[texID];
+                    float3 normal = DecodeNormal(n_m.xyz);
+                    buffer2_0[offset.x][offset.y] = newC;
+                    buffer2_1[offset.x][offset.y] = normal;
+                }
+            }
+        }
+        if (all(groupThreadID == 0)) active = false;
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    [branch]
+    if (smooth < _SmoothRange.y) {
+
+        //need lager filter
+        if (smooth < _SmoothRange.x)
+            active = true;
+
+        smooth = (smooth - _SmoothRange.x) / (_SmoothRange.y - _SmoothRange.x);
+
+        //_Result[id] = _Result[id] + 0.1;
+        // spatial filter
+        {
+            float4 res = 0;
+            int2 baseID = groupThreadID + SPATIAL_RADIUS;
+            float3 cn = buffer2_1[baseID.x][baseID.y].xyz;
+            for (int i = -SPATIAL_RADIUS; i <= SPATIAL_RADIUS; i++)
+            {
+                for (int j = -SPATIAL_RADIUS; j <= SPATIAL_RADIUS; j++)
+                {
+                    float weight = exp(-10 * smooth * abs((float)(i * j) / (SPATIAL_RADIUS * SPATIAL_RADIUS)));
+                    int2 id_in_shared = int2(baseID.x + i, baseID.y + j);
+                    float3 normal = buffer2_1[id_in_shared.x][id_in_shared.y].xyz;
+                    float4 l = buffer2_0[id_in_shared.x][id_in_shared.y];
+                    l.w *= 1 * smoothstep(0.995, 1, dot(cn, normal));
+                    res += float4(l.xyz * l.w, l.w);
+                }
+            }
+
+            float4 spec = float4(res.xyz / max(1, res.w), res.w != 0);
+            _Result[id] = spec;
+        }
+    }
+
+    GroupMemoryBarrierWithGroupSync();
+
+    if (all(groupThreadID == 0)) {
+        if (active) {
+            uint index;
+            InterlockedAdd(_Indirect[0], 1, index);
+            _NextBlock[index] = (groupID.x << 16) + groupID.y;
+        }
+    }
+}
+
+
+
+[numthreads(8, 8, 1)]
+void SFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
+{
+    SFilter_(id, groupThreadID, groupID);
+}
+
+
+[numthreads(8, 8, 1)]
+void SFilterIndirect(uint2 groupThreadID : SV_GroupThreadID, uint groupID : SV_GroupID)
+{
+    uint blockData = _Block[groupID];
+    uint2 blockID = uint2(blockData >> 16, blockData & 0xFFFF);
+    //blockID = uint2(groupID % 1920, groupID / 1920);
+    uint2 actual_groupID = blockID;
+    uint2 id = groupThreadID + actual_groupID * 8;
+
+    SFilter_(id, groupThreadID, actual_groupID);
+}
+
+
+[numthreads(8, 8, 1)]
+void FinalSynthesis(uint2 id : SV_DispatchThreadID)
+{
+    //_Result[id] = float4(UnToneMap(_Result[id].xyz), 0); return;
+    float4 res = _Result[id];
+    _History[id] = res;
+    float4 sceneColor = _SceneColor[id];
+    sceneColor.a = sceneColor.a != 0;
+    _Result[id] = sceneColor + sceneColor.a * float4(UnToneMap(res.xyz * _BaseColorTex[id].xyz), 0);
+}
