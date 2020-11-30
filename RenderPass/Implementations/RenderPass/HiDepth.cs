@@ -32,7 +32,9 @@ namespace HypnosRenderPipeline.RenderPass
 
             int tempDepth = Shader.PropertyToID("_TempDepth");
 
-            for (int i = 1; i < 7; i++)
+            int maxLod = (int)(math.log2(math.min(wh.x, wh.y)));
+            maxLod = math.min(maxLod, 7);
+            for (int i = 1; i < maxLod; i++)
             {
                 cb.GetTemporaryRT(tempDepth, wh.x >> i, wh.y >> i, 24, FilterMode.Point, RenderTextureFormat.RFloat);
                 cb.SetGlobalInt("_MipLevel", i - 1);

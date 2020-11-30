@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: SSR
   m_EditorClassIdentifier: 
-  viewPosition: {x: -5208, y: -1180, z: 0}
-  viewScale: {x: 1, y: 1, z: 1}
+  viewPosition: {x: -1714, y: -228, z: 0}
+  viewScale: {x: 0.43232757, y: 0.43232757, z: 1}
   nodes:
   - nodeName: GBuffer
     parameters:
@@ -448,29 +448,6 @@ MonoBehaviour:
       height: 297
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SkyBoxIBL
-  - nodeName: PyramidColor
-    parameters:
-    - name: enabled
-      info: Should this node be excuted.
-      type_str: System.Boolean
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-      obj_ref: {fileID: 0}
-    inputs:
-    - name: filterTarget
-      info: 
-      mustConnect: 1
-    outputs:
-    - name: pyramidColor
-      info: 
-      mustConnect: 0
-    position:
-      serializedVersion: 2
-      x: 3949.0005
-      y: 1523.6871
-      width: 300.00006
-      height: 129
-    info: 
-    nodeType_str: HypnosRenderPipeline.RenderPass.PyramidColor
   - nodeName: HiDepth
     parameters:
     - name: enabled
@@ -616,8 +593,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 6097.0996
-      y: 1233.3599
+      x: 6048.028
+      y: 1276.725
       width: 300
       height: 129
     info: 
@@ -679,6 +656,21 @@ MonoBehaviour:
       type_str: System.Boolean
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
+    - name: maxDepth
+      info: 
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e323c2f696e743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: spp
+      info: 
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e313c2f696e743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: showVariance
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
@@ -697,12 +689,9 @@ MonoBehaviour:
     - name: sun
       info: 
       mustConnect: 0
-    - name: sceneColor
+    - name: target
       info: 
       mustConnect: 1
-    - name: filteredColor
-      info: 
-      mustConnect: 0
     - name: depth
       info: 
       mustConnect: 1
@@ -719,15 +708,15 @@ MonoBehaviour:
       info: 
       mustConnect: 0
     outputs:
-    - name: result
+    - name: target
       info: 
-      mustConnect: 0
+      mustConnect: 1
     position:
       serializedVersion: 2
-      x: 4487.402
-      y: 1650.6512
-      width: 300.00006
-      height: 388.00003
+      x: 4488.645
+      y: 1611.525
+      width: 300
+      height: 434
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.RTGI
   - nodeName: PyramidColor
@@ -834,10 +823,6 @@ MonoBehaviour:
     o: 0
     i_n: ao
     o_n: microAO
-  - i: 6
-    o: 4
-    i_n: target
-    o_n: lightingResult
   - i: 8
     o: 0
     i_n: depth
@@ -895,34 +880,30 @@ MonoBehaviour:
     i_n: ao
     o_n: microAO
   - i: 10
-    o: 9
-    i_n: filterTarget
-    o_n: target
-  - i: 11
     o: 6
     i_n: depth
     o_n: depth
-  - i: 12
-    o: 11
+  - i: 11
+    o: 10
     i_n: hiZ
     o_n: hiZ
-  - i: 12
+  - i: 11
     o: 0
     i_n: motion
     o_n: motion
-  - i: 12
+  - i: 11
     o: 0
     i_n: specular
     o_n: specular
-  - i: 12
+  - i: 11
     o: 0
     i_n: normal
     o_n: normal
-  - i: 12
+  - i: 11
     o: 0
     i_n: ao
     o_n: microAO
-  - i: 12
+  - i: 11
     o: 7
     i_n: skybox
     o_n: skyBox
@@ -946,202 +927,199 @@ MonoBehaviour:
     o: 0
     i_n: diffuse
     o_n: diffuse
-  - i: 13
+  - i: 12
     o: 3
     i_n: lightBuffer
     o_n: lightBuffer
-  - i: 13
+  - i: 12
     o: 3
     i_n: tiledLights
     o_n: tileLights
-  - i: 13
+  - i: 12
     o: 2
     i_n: lights
     o_n: lights
-  - i: 13
+  - i: 12
     o: 7
     i_n: sun
     o_n: sunBuffer
-  - i: 13
-    o: 11
+  - i: 12
+    o: 10
     i_n: hiZ
     o_n: hiZ
-  - i: 13
+  - i: 12
     o: 0
     i_n: motion
     o_n: motion
-  - i: 13
+  - i: 12
     o: 0
     i_n: specular
     o_n: specular
-  - i: 13
+  - i: 12
     o: 0
     i_n: normal
     o_n: normal
-  - i: 13
+  - i: 12
     o: 0
     i_n: ao
     o_n: microAO
-  - i: 13
+  - i: 12
     o: 7
     i_n: skybox
     o_n: skyBox
-  - i: 15
-    o: 14
+  - i: 14
+    o: 13
     i_n: filterdScreenColor
     o_n: pyramidColor
-  - i: 15
+  - i: 14
     o: 3
     i_n: lightBuffer
     o_n: lightBuffer
-  - i: 15
+  - i: 14
     o: 3
     i_n: tiledLights
     o_n: tileLights
-  - i: 15
+  - i: 14
     o: 2
     i_n: lights
     o_n: lights
-  - i: 15
+  - i: 14
     o: 6
     i_n: depth
     o_n: depth
-  - i: 16
+  - i: 15
     o: 3
     i_n: lightBuffer
     o_n: lightBuffer
-  - i: 16
+  - i: 15
     o: 3
     i_n: tiledLights
     o_n: tileLights
-  - i: 16
+  - i: 15
     o: 2
     i_n: lights
     o_n: lights
-  - i: 16
+  - i: 15
     o: 7
     i_n: sun
     o_n: sunBuffer
-  - i: 16
-    o: 10
-    i_n: filteredColor
-    o_n: pyramidColor
-  - i: 16
-    o: 9
-    i_n: sceneColor
-    o_n: target
-  - i: 16
+  - i: 15
     o: 0
     i_n: motion
     o_n: motion
-  - i: 16
+  - i: 15
     o: 0
     i_n: diffuse
     o_n: diffuse
-  - i: 16
+  - i: 15
     o: 0
     i_n: normal
     o_n: normal
-  - i: 16
+  - i: 15
     o: 7
     i_n: skybox
     o_n: skyBox
-  - i: 16
+  - i: 15
     o: 6
     i_n: depth
     o_n: depth
-  - i: 17
-    o: 16
-    i_n: filterTarget
-    o_n: result
-  - i: 13
-    o: 17
-    i_n: filteredColor
-    o_n: pyramidColor
-  - i: 12
-    o: 17
-    i_n: filteredColor
-    o_n: pyramidColor
-  - i: 13
-    o: 16
-    i_n: sceneColor
-    o_n: result
   - i: 12
     o: 16
-    i_n: sceneColor
-    o_n: result
+    i_n: filteredColor
+    o_n: pyramidColor
+  - i: 11
+    o: 16
+    i_n: filteredColor
+    o_n: pyramidColor
   - i: 5
-    o: 15
+    o: 14
     i_n: color
     o_n: target
-  - i: 14
-    o: 13
+  - i: 13
+    o: 12
     i_n: filterTarget
     o_n: result
+  - i: 15
+    o: 9
+    i_n: target
+    o_n: target
+  - i: 16
+    o: 15
+    i_n: filterTarget
+    o_n: target
+  - i: 12
+    o: 15
+    i_n: sceneColor
+    o_n: target
+  - i: 11
+    o: 15
+    i_n: sceneColor
+    o_n: target
+  - i: 6
+    o: 4
+    i_n: target
+    o_n: lightingResult
   - i: 1
     o: 5
     i_n: result
     o_n: combined
-  - i: 15
-    o: 13
+  - i: 14
+    o: 12
     i_n: target
     o_n: result
   node_edgeRecs:
   - node: 2
     in_edges: 
-    out_edge: 00000000010000000a0000000f000000320000003d00000041000000
+    out_edge: 00000000010000000a0000000f000000300000003b0000003f000000
   - node: 3
     in_edges: 00000000
-    out_edge: 0200000003000000160000001700000030000000310000003b0000003c0000003f00000040000000
+    out_edge: 020000000300000015000000160000002e0000002f000000390000003a0000003d0000003e000000
   - node: 4
-    in_edges: 01000000020000000300000004000000050000000600000007000000080000002b000000
-    out_edge: 14000000
+    in_edges: 010000000200000003000000040000000500000006000000070000000800000029000000
+    out_edge: 4e000000
   - node: 0
     in_edges: 
-    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e0000001100000012000000130000001500000018000000190000001a0000001b000000200000002100000022000000260000002700000028000000290000002b0000002c0000002d0000002e0000002f00000035000000360000003700000038000000450000004600000047000000
+    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d00000033000000340000003500000036000000410000004200000043000000
   - node: 5
-    in_edges: 090000004f000000
-    out_edge: 51000000
+    in_edges: 0900000048000000
+    out_edge: 4f000000
   - node: 6
-    in_edges: 0a0000000b0000000c0000000d0000000e000000140000002d000000
-    out_edge: 100000001c0000001f000000240000003e00000049000000
+    in_edges: 0a0000000b0000000c0000000d0000000e0000002b0000004e000000
+    out_edge: 100000001b0000001e000000220000003c00000045000000
   - node: 7
-    in_edges: 0f000000100000001100000012000000130000001c0000002e000000
-    out_edge: 1d0000001e0000002a00000033000000390000004200000048000000
+    in_edges: 0f000000100000001100000012000000130000001b0000002c000000
+    out_edge: 1c0000001d0000002800000031000000370000004000000044000000
   - node: 8
-    in_edges: 15000000160000001700000018000000190000001a0000001b0000002c000000
+    in_edges: 1400000015000000160000001700000018000000190000001a0000002a000000
     out_edge: 
   - node: 9
-    in_edges: 1d0000001e0000001f0000002000000021000000220000002f000000
-    out_edge: 2300000044000000
+    in_edges: 1c0000001d0000001e0000001f00000020000000210000002d000000
+    out_edge: 4a000000
   - node: 10
-    in_edges: 23000000
-    out_edge: 43000000
+    in_edges: 22000000
+    out_edge: 2300000032000000
   - node: 11
-    in_edges: 24000000
-    out_edge: 2500000034000000
-  - node: 12
-    in_edges: 25000000260000002700000028000000290000002a0000004c0000004e000000
+    in_edges: 230000002400000025000000260000002700000028000000470000004d000000
     out_edge: 
+  - node: 12
+    in_edges: 2e0000002f0000003000000031000000320000003300000034000000350000003600000037000000460000004c000000
+    out_edge: 4900000050000000
   - node: 13
-    in_edges: 300000003100000032000000330000003400000035000000360000003700000038000000390000004b0000004d000000
-    out_edge: 5000000052000000
+    in_edges: 49000000
+    out_edge: 38000000
   - node: 14
-    in_edges: 50000000
-    out_edge: 3a000000
+    in_edges: 38000000390000003a0000003b0000003c00000050000000
+    out_edge: 48000000
   - node: 15
-    in_edges: 3a0000003b0000003c0000003d0000003e00000052000000
-    out_edge: 4f000000
+    in_edges: 3d0000003e0000003f0000004000000041000000420000004300000044000000450000004a000000
+    out_edge: 4b0000004c0000004d000000
   - node: 16
-    in_edges: 3f00000040000000410000004200000043000000440000004500000046000000470000004800000049000000
-    out_edge: 4a0000004d0000004e000000
-  - node: 17
-    in_edges: 4a000000
-    out_edge: 4b0000004c000000
+    in_edges: 4b000000
+    out_edge: 4600000047000000
   - node: 1
-    in_edges: 51000000
+    in_edges: 4f000000
     out_edge: 
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
-    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f0000001000000011000000
+    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f00000010000000

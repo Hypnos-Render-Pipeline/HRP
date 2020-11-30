@@ -1,6 +1,8 @@
-﻿#pragma kernel TTFilter
+﻿#pragma kernel DownSampleDepth
+#pragma kernel TTFilter
 #pragma kernel SFilter
 #pragma kernel SFilterIndirect
+#pragma kernel UpSample 
 #pragma kernel FinalSynthesis
 
 #include "../Includes/GBuffer.hlsl"
@@ -14,17 +16,23 @@ float4x4 _P, _P_Inv;
 float4x4 _VP, _VP_Inv;
 float4x4 _Last_VP_Inv;
 
-Texture2D<float4> _BaseColorTex, _NormalTex, _SceneColor;
+Texture2D<float4> _BaseColorTex, _NormalTex, _SceneColor, _HistoryNormal;
 Texture2D<float4> _FilteredColor;
 Texture2D<float2> _MotionTex;
-Texture2D<float> _DepthTex;
+Texture2D<float> _DepthTex, _HistoryDepth;
 TextureCube<float3> _SkyBox;
 
 SamplerState point_clamp_sampler;
 SamplerState linear_clamp_sampler;
 SamplerState trilinear_clamp_sampler;
 
+RWTexture2D<float> _HalfIndexTex;
 RWTexture2D<float4> _TempResult;
+RWTexture2D<float4> _History;
+RWTexture2D<float4> _Result;
+RWTexture2D<float> _Variance;
+
+
 
 float PD2VD(const float d) {
     return -_P._m23 / (d + _P._m22);
@@ -39,9 +47,55 @@ float3 UnToneMap(float3 color) {
     return color / (1 - Luminance(color));
 }
 
-RWTexture2D<float4> _History, _HistoryNormal;
-RWTexture2D<float> _HistoryDepth;
-RWTexture2D<float4> _Result;
+int offset2index(const uint2 offset) {
+    int2x2 offset2index = int2x2(0, 3, 1, 2);
+    return offset2index[offset.x][offset.y];
+}
+int2 index2offset(const uint index) {
+    uint2 index2offset[4] = { uint2(0, 0), uint2(1, 0), uint2(1, 1), uint2(0, 1) };
+    return index2offset[index];
+}
+
+float4 min_max_d_index(const float4 d) {
+    float min_d = min(d.x, min(d.y, min(d.z, d.w)));
+    float max_d = max(d.x, max(d.y, max(d.z, d.w)));
+
+    float4 index_caster = float4(0, 1, 2, 3);
+
+    int4 index_v = d == min_d;
+    int picked_index_min = index_v.x ? 0 : (index_v.y ? 1 : index_v.z ? 2 : 3);
+    index_v = d == max_d;
+    int picked_index_max = index_v.x ? 0 : (index_v.y ? 1 : index_v.z ? 2 : 3);
+
+    return float4(min_d, max_d, picked_index_min, picked_index_max);
+}
+
+uint2 half2FullIndex(uint2 halfIndex) {
+    int index = _HalfIndexTex[halfIndex];
+    uint2 fullResIndex = halfIndex * 2 + index2offset(index);
+    return fullResIndex;
+}
+
+[numthreads(8, 8, 1)]
+void DownSampleDepth(const uint2 id : SV_DispatchThreadID)
+{
+    uint2 wh;
+    _HalfIndexTex.GetDimensions(wh.x, wh.y);
+    if (any(id >= wh)) return;
+
+
+    float2 uv = (id * 2 + 0.5) * _WH.zw;
+
+    float4 d = _DepthTex.GatherRed(point_clamp_sampler, uv);
+
+    int checkboard = (id.x % 2 + id.y/* + _Clock*/) % 2;
+
+    float4 min_d_max_d_index = min_max_d_index(d);
+    _HalfIndexTex[id] = checkboard ? min_d_max_d_index.z : min_d_max_d_index.w;
+}
+
+
+
 
 groupshared float4 buffer_0[10][10];
 
@@ -52,6 +106,9 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
     // Load current result to shared & perform a inital temporal.
     // This stage is to generate a more accurate buffer for the bbox calculation, which helps reduce flickering.
     {
+        uint2 wh;
+        _HalfIndexTex.GetDimensions(wh.x, wh.y);
+
         uint thread_id = groupThreadID.x + groupThreadID.y * 8;
         int2 lbID = groupID * 8 - 1;
         int loop_num = 100 / 64 + (100 % 64 != 0 ? 1 : 0);
@@ -61,7 +118,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
             if (task_id < 100) {
                 uint2 offset = uint2(task_id % 10, task_id / 10);
                 uint2 texID = lbID + offset;
-                if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
+                if (any(texID < 0) || any(texID >= wh)) {
                     buffer_0[offset.x][offset.y] = 0;
                 }
                 else {
@@ -95,15 +152,17 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         maxC = max(minC, uc);
         minC = min(minC, uc);
 
-        float2 uv = (id + 0.5) * _WH.zw;
-        float2 prevUV = uv - _MotionTex[id];
-        int2 prevId = prevUV * _WH.xy;
+        uint2 fullIndex = half2FullIndex(id);
+        float2 uv = (fullIndex + 0.5) * _WH.zw;
+        float2 motion = _MotionTex[fullIndex];
+        float2 prevUV = uv - motion;
+        int2 prevId = saturate(prevUV) * (_WH.xy - 1) + 0.5;
 
-        float4 hc = _History[clamp(prevId, 0, _WH.xy - 1)];
+        float4 hc = _History[prevId];
 
-        float3 n = DecodeNormal(_NormalTex[id].xyz);
-        float3 hn = DecodeNormal(_HistoryNormal[id].xyz);
-        float d = _DepthTex[id];
+        float3 n = DecodeNormal(_NormalTex[fullIndex].xyz);
+        float3 hn = DecodeNormal(_HistoryNormal[fullIndex].xyz);
+        float d = _DepthTex[fullIndex];
         float hd = _HistoryDepth[prevId];
 
         float3 wpos;
@@ -120,11 +179,11 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         }
 
         float distance_weight = max(0, 1 - distance(wpos, hwpos));
-        float normal_weight = max(0, dot(hn, n) + 0.5);
+        float normal_weight = max(0, dot(hn, n) + 0.1);
 
         hc = isnan(hc) ? 0 : hc;
 
-        float mix_rate = (oc.w * hc.w == 0) ? 0 : 0.95;
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.96, 0.98, saturate(1 - 10 * length(motion)));
 
         float weight = distance_weight * normal_weight;
 
@@ -155,10 +214,15 @@ RWStructuredBuffer<int> _Indirect;
 StructuredBuffer<uint> _Block;
 RWStructuredBuffer<uint> _NextBlock;
 
-void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
+
+void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
     //return;
-    float3 diffuse = _BaseColorTex[id].xyz * _SceneColor[id].a;
+    uint2 fullResIndex = half2FullIndex(id);
+    float3 diffuse = _BaseColorTex[fullResIndex].xyz * _SceneColor[fullResIndex].a;
     float smooth = 1 - Luminance(diffuse);
+
+    uint2 wh;
+    _HalfIndexTex.GetDimensions(wh.x, wh.y);
 
     // load current result to shared.
     {
@@ -171,12 +235,13 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
             if (task_id < GROUPSHARED_COUNT) {
                 uint2 offset = uint2(task_id % GROUPSHARED_SIZE, task_id / GROUPSHARED_SIZE);
                 uint2 texID = lbID + offset;
-                if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
+                if (any(texID < 0) || any(texID >= wh)) {
                     buffer2_0[offset.x][offset.y] = 0;
                     buffer2_1[offset.x][offset.y] = 0;
                 }
                 else {
                     float4 newC = _Result[texID];
+                    texID = half2FullIndex(texID);
                     float4 n_m = _NormalTex[texID];
                     float3 normal = DecodeNormal(n_m.xyz);
                     buffer2_0[offset.x][offset.y] = newC;
@@ -200,6 +265,9 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
         //_Result[id] = _Result[id] + 0.1;
         // spatial filter
         {
+            float L = 0;
+            float L2 = 0;
+            int count = 0;
             float4 res = 0;
             int2 baseID = groupThreadID + SPATIAL_RADIUS;
             float3 cn = buffer2_1[baseID.x][baseID.y].xyz;
@@ -211,13 +279,29 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
                     int2 id_in_shared = int2(baseID.x + i, baseID.y + j);
                     float3 normal = buffer2_1[id_in_shared.x][id_in_shared.y].xyz;
                     float4 l = buffer2_0[id_in_shared.x][id_in_shared.y];
-                    l.w *= 1 * smoothstep(0.995, 1, dot(cn, normal));
+                    l.w *= 1 * smoothstep(0.992, 1, dot(cn, normal));
                     res += float4(l.xyz * l.w, l.w);
+                    if (l.w) {
+                        float lum = Luminance(l.xyz);
+                        L += lum;
+                        L2 += lum * lum;
+                        count++;
+                    }
                 }
             }
-
             float4 spec = float4(res.xyz / max(1, res.w), res.w != 0);
-            _Result[id] = spec;
+            if (!var) {
+
+                L2 /= max(1, count);
+                L /= max(1, count);
+                float v = saturate(max(0, L2 - L * L) * 80);
+
+                _Variance[id] = v;
+                _Result[id] = spec;
+            }
+            else {
+                _Result[id] = lerp(_Result[id], spec, _Variance[id]);
+            }
         }
     }
 
@@ -241,18 +325,83 @@ void SFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThrea
     SFilter_(id, groupThreadID, groupID);
 }
 
-
 [numthreads(8, 8, 1)]
 void SFilterIndirect(uint2 groupThreadID : SV_GroupThreadID, uint groupID : SV_GroupID)
 {
     //return;
     uint blockData = _Block[groupID];
     uint2 blockID = uint2(blockData >> 16, blockData & 0xFFFF);
-    //blockID = uint2(groupID % 1920, groupID / 1920);
     uint2 actual_groupID = blockID;
     uint2 id = groupThreadID + actual_groupID * 8;
 
-    SFilter_(id, groupThreadID, actual_groupID);
+    SFilter_(id, groupThreadID, actual_groupID, true);
+}
+
+
+groupshared float4 buffer3_0[6][6];
+groupshared float4 buffer3_1[6][6];
+[numthreads(8, 8, 1)]
+void UpSample(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
+{
+    //_History[id] = _Result[id / 2]; return;
+    // load current result to shared.
+    {
+        uint thread_id = groupThreadID.x + groupThreadID.y * 8;
+        int2 lbID = groupID * 4 - 1;
+
+        if (thread_id < 36) {
+            uint2 wh;
+            _HalfIndexTex.GetDimensions(wh.x, wh.y);
+
+            uint2 offset = uint2(thread_id % 6, thread_id / 6);
+            uint2 texID = lbID + offset;
+            if (any(texID < 0) || any(texID >= wh)) {
+                buffer3_0[offset.x][offset.y] = 0;
+                buffer3_1[offset.x][offset.y] = 0;
+            }
+            else {
+                float4 c = _Result[texID];
+                texID = half2FullIndex(texID);
+                float3 normal = DecodeNormal(_NormalTex[texID].xyz);
+                float d = _DepthTex[texID];
+                buffer3_0[offset.x][offset.y] = c;
+                buffer3_1[offset.x][offset.y] = float4(normal, PD2VD(d));
+            }
+        }
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    float4 res = 0;
+    int2 baseID = floor(groupThreadID - 0.9) / 2 + 1;
+    float3 cn = DecodeNormal(_NormalTex[id].xyz);
+    float cd = PD2VD(_DepthTex[id]);
+    float2 cpos = groupThreadID * 0.125 + 0.0625;
+    for (int i = 0; i <= 1; i++)
+    {
+        for (int j = 0; j <= 1; j++)
+        {
+            int2 texID = baseID + int2(i, j);
+            float2 pos = (texID - 1) * 0.25 + 0.125;
+            float2 dis = abs(cpos - pos);
+            dis /= 0.25;
+            dis = 1 - dis;
+            float bilinear_weight = dis.x * dis.y;
+
+            float4 nd = buffer3_1[texID.x][texID.y];
+
+            float depth_weight = max(0, 0.2 - abs(nd.w - cd)) + 0.1;
+            float normal_weight = smoothstep(0, 1, dot(cn, nd.xyz)) + 0.1;
+
+            float4 c = buffer3_0[texID.x][texID.y];
+
+            c.w = c.w * bilinear_weight * normal_weight * depth_weight;
+            res += float4(c.xyz * c.w, c.w);
+        }
+    }
+
+
+
+    _History[id] = float4(res.w < 0.001 ? 0 : res.xyz / res.w, res.w > 0.001);
 }
 
 
@@ -260,8 +409,7 @@ void SFilterIndirect(uint2 groupThreadID : SV_GroupThreadID, uint groupID : SV_G
 void FinalSynthesis(uint2 id : SV_DispatchThreadID)
 {
     //_Result[id] = float4(UnToneMap(_Result[id].xyz), 0); return;
-    float4 res = _Result[id];
-    _History[id] = res;
+    float4 res = _History[id];
     float4 sceneColor = _SceneColor[id];
     sceneColor.a = sceneColor.a != 0;
     _Result[id] = sceneColor + sceneColor.a * float4(UnToneMap(res.xyz * _BaseColorTex[id].xyz), 0);

@@ -15,7 +15,6 @@ namespace HypnosRenderPipeline
             dif |= a.depthBufferBits != b.depthBufferBits;
             dif |= a.dimension != b.dimension;
             dif |= a.enableRandomWrite != b.enableRandomWrite;
-            dif |= a.flags != b.flags;
             dif |= a.graphicsFormat != b.graphicsFormat;
             dif |= a.height != b.height;
             dif |= a.memoryless != b.memoryless;
@@ -29,7 +28,7 @@ namespace HypnosRenderPipeline
             dif |= a.volumeDepth != b.volumeDepth;
             dif |= a.vrUsage != b.vrUsage;
             dif |= a.width != b.width;
-            return dif;
+            return !dif;
         }
     }
 }

@@ -46,6 +46,17 @@ namespace HypnosRenderPipeline.RenderPass
         static ComputeShaderWithName ssr = new ComputeShaderWithName("Shaders/SSR/SSR");
         static BNSLoader bnsLoader = BNSLoader.instance;
 
+        struct CSPass
+        {
+            public static int Trace = 0;
+            public static int RemoveFlare = 1;
+            public static int TTFilter = 2;
+            public static int SFilter = 3;
+            public static int SFilterIndirect = 4;
+            public static int FinalSynthesis = 5;
+        }
+
+
         public SSR()
         {
             result = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default) { enableRandomWrite = true }, srcPin: sceneColor);
@@ -121,27 +132,34 @@ namespace HypnosRenderPipeline.RenderPass
                 blockBuffer_.Release();
                 blockBuffer_ = new ComputeBuffer(dispatchSize.x * dispatchSize.y, 4);
             }
-
-            cb.SetGlobalVector("_SmoothRange", new Vector4(0.9f, 1f));
-            cb.SetComputeBufferData(argsBuffer, clearArray);
-            cb.SetComputeTextureParam(ssr, 2, "_Result", tempRef);
-            cb.SetComputeBufferParam(ssr, 2, "_Indirect", argsBuffer);
-            cb.SetComputeBufferParam(ssr, 2, "_NextBlock", blockBuffer);
-            cb.DispatchCompute(ssr, 2, dispatchSize.x, dispatchSize.y, 1);
-
-            cb.SetComputeTextureParam(ssr, 1, "_History", his0);
-            cb.SetComputeTextureParam(ssr, 1, "_TempResult", tempRef);
-            cb.SetComputeTextureParam(ssr, 1, "_Result", result);
-            cb.DispatchCompute(ssr, 1, dispatchSize.x, dispatchSize.y, 1);
             
-            DispatchSpatialFilter(cb, 0.75f, 0.9f);
+            cb.SetComputeBufferData(argsBuffer, clearArray);
+            cb.SetComputeTextureParam(ssr, CSPass.RemoveFlare, "_History", his0);
+            cb.SetComputeTextureParam(ssr, CSPass.RemoveFlare, "_TempResult", tempRef);
+            cb.DispatchCompute(ssr, CSPass.RemoveFlare, dispatchSize.x, dispatchSize.y, 1);
+
+            cb.SetGlobalVector("_SmoothRange", new Vector4(0.95f, 1f));
+            cb.SetComputeBufferData(argsBuffer, clearArray);
+            cb.SetComputeTextureParam(ssr, CSPass.SFilter, "_Result", tempRef);
+            cb.SetComputeBufferParam(ssr, CSPass.SFilter, "_Indirect", argsBuffer);
+            cb.SetComputeBufferParam(ssr, CSPass.SFilter, "_NextBlock", blockBuffer);
+            cb.DispatchCompute(ssr, CSPass.SFilter, dispatchSize.x, dispatchSize.y, 1);
+
+            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_History", his0);
+            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_TempResult", tempRef);
+            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_Result", result);
+            cb.DispatchCompute(ssr, CSPass.TTFilter, dispatchSize.x, dispatchSize.y, 1);
+
+            DispatchSpatialFilter(cb, 0.9f, 0.95f);
+            DispatchSpatialFilter(cb, 0.85f, 0.9f);
+            DispatchSpatialFilter(cb, 0.75f, 0.85f);
             DispatchSpatialFilter(cb, 0.6f, 0.75f);
             DispatchSpatialFilter(cb, 0.45f, 0.6f);
             DispatchSpatialFilter(cb, 0.2f, 0.45f);
             DispatchSpatialFilter(cb, 0, 0.2f);
 
-            cb.SetComputeTextureParam(ssr, 4, "_Result", result);
-            cb.DispatchCompute(ssr, 4, dispatchSize.x, dispatchSize.y, 1);
+            cb.SetComputeTextureParam(ssr, CSPass.FinalSynthesis, "_Result", result);
+            cb.DispatchCompute(ssr, CSPass.FinalSynthesis, dispatchSize.x, dispatchSize.y, 1);
 
             cb.ReleaseTemporaryRT(tempRef);
         }

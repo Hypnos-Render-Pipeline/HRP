@@ -1,4 +1,5 @@
 ﻿#pragma kernel Trace
+#pragma kernel RemoveFlare
 #pragma kernel TTFilter
 #pragma kernel SFilter
 #pragma kernel SFilterIndirect
@@ -198,6 +199,79 @@ RWTexture2D<float4> _Result;
 
 groupshared float4 buffer_0[10][10];
 groupshared float4 buffer_1[10][10];
+[numthreads(8, 8, 1)]
+void RemoveFlare(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
+{
+    // return;
+    // Load current result to shared & perform a inital temporal.
+    // This stage is to generate a more accurate buffer for the bbox calculation, which helps reduce flickering.
+    {
+        uint thread_id = groupThreadID.x + groupThreadID.y * 8;
+        int2 lbID = groupID * 8 - 1;
+        int loop_num = 100 / 64 + (100 % 64 != 0 ? 1 : 0);
+        for (int i = 0; i < loop_num; i++)
+        {
+            uint task_id = thread_id + i * 64;
+            if (task_id < 100) {
+                uint2 offset = uint2(task_id % 10, task_id / 10);
+                uint2 texID = lbID + offset;
+                if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
+                    buffer_0[offset.x][offset.y] = 0;
+                    buffer_1[offset.x][offset.y] = 0;
+                }
+                else {
+                    int2 prevId = ((texID + 0.5) * _WH.zw - _MotionTex[texID]) * _WH.xy;
+
+                    float4 newC = max(0, _TempResult[texID]);// prevent NaN
+                    float4 hisC = max(0, _History[prevId]);
+                    float3 newN = DecodeNormal(_NormalTex[texID].xyz);
+                    float3 hisN = DecodeNormal(_NormalTex[prevId].xyz);
+                    if (any(prevId < 0) || any(prevId > int2(_WH.xy))) hisC = 0;
+
+                    float mix_rate = (newC.w * hisC.w == 0) ? 0 : 0.2;
+                    mix_rate *= dot(newN, hisN) > 0.9;
+                    hisC *= mix_rate != 0;
+
+                    buffer_0[offset.x][offset.y] = newC;
+                    buffer_1[offset.x][offset.y] = lerp(newC, hisC, mix_rate);
+                }
+            }
+        }
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    {
+        uint2 bufferID = 1 + groupThreadID;
+
+        float4 oc = buffer_0[bufferID.x][bufferID.y];
+        float4 hc = buffer_1[bufferID.x][bufferID.y];
+        float4 minC = hc, maxC = hc;
+
+        float4 lc = buffer_1[bufferID.x - 1][bufferID.y];
+        float4 dc = buffer_1[bufferID.x][bufferID.y - 1];
+        float4 rc = buffer_1[bufferID.x + 1][bufferID.y];
+        float4 uc = buffer_1[bufferID.x][bufferID.y + 1];
+
+        // bbox
+        maxC = max(minC, lc);
+        minC = min(minC, lc);
+        maxC = max(minC, dc);
+        minC = min(minC, dc);
+        maxC = max(minC, rc);
+        minC = min(minC, rc);
+        maxC = max(minC, uc);
+        minC = min(minC, uc);
+
+        // remove flare
+        float maxL = max(max(Luminance(lc.xyz), Luminance(rc.xyz)), max(Luminance(dc.xyz), Luminance(uc.xyz)));
+        float L = Luminance(oc.xyz);
+        oc.xyz = L > maxL * 1.4 ? (lc.xyz + dc.xyz + rc.xyz + uc.xyz) / 4 : oc.xyz;
+
+        _TempResult[id] = oc;
+    }
+}
+
+
 
 [numthreads(8, 8, 1)]
 void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
@@ -230,12 +304,12 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
                     float3 hisN = DecodeNormal(_NormalTex[prevId].xyz);
                     if (any(prevId < 0) || any(prevId > int2(_WH.xy))) hisC = 0;
 
-                    float mix_rate = (newC.w * hisC.w == 0) ? 0 : lerp(0.3, 0.05, smooth);                    
+                    float mix_rate = (newC.w * hisC.w == 0) ? 0 : lerp(1, 0.4, smooth);
                     mix_rate *= dot(newN, hisN) > 0.9;
                     hisC *= mix_rate != 0;
 
-                    buffer_0[offset.x][offset.y] = lerp(newC, hisC, mix_rate);
-                    buffer_1[offset.x][offset.y] = hisC;
+                    buffer_0[offset.x][offset.y] = newC;
+                    buffer_1[offset.x][offset.y] = lerp(newC, hisC, mix_rate);
                 }
             }
         }
@@ -265,72 +339,13 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         maxC = max(minC, uc);
         minC = min(minC, uc);
 
-        // remove flare
-        float maxL = max(max(Luminance(lc.xyz), Luminance(rc.xyz)), max(Luminance(dc.xyz), Luminance(uc.xyz)));
-        float L = Luminance(oc.xyz);
-        oc = L > maxL * 1.4 ? (lc + dc + rc + uc) / 4 : oc;
-
-        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.98, 0.7, smooth);
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.98, 0.9, smooth);
         mix_rate *= max(0, 1 - length(_MotionTex[id]) * 100);
         hc = clamp(hc, minC / 2, maxC * 3);
         float4 mixed = lerp(oc, hc, mix_rate);
         _Result[id] = mixed;
         _History[id] = mixed;
     }
-
-    //// read normal to shared
-    //{
-    //    int2 lbID = groupID * 8 - SPATIAL_RADIUS;
-    //    int loop_num = GROUPSHARED_USEFUL_COUNT / 64 + (GROUPSHARED_USEFUL_COUNT % 64 != 0 ? 1 : 0);
-    //    for (int i = 0; i < loop_num; i++)
-    //    {
-    //        uint task_id = thread_id + i * 64;
-    //        if (task_id < GROUPSHARED_USEFUL_COUNT) {
-    //            uint2 offset = uint2(task_id % GROUPSHARED_USEFUL_SIZE, task_id / GROUPSHARED_USEFUL_SIZE);
-    //            uint2 texID = lbID + offset;
-    //            if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
-    //                buffer_s0[offset.x][offset.y] = 0;
-    //                buffer_s1[offset.x][offset.y] = -1;
-    //            }
-    //            else {
-    //                buffer_s0[offset.x][offset.y] = float4(DecodeNormal(_NormalTex[texID].xyz), 1);
-    //                buffer_s1[offset.x][offset.y] = _BaseColorTex[texID].xyz;
-    //            }
-    //        }
-    //    }
-    //    GroupMemoryBarrierWithGroupSync();
-    //}
-
-    //if (any(id >= uint2(_WH.xy))) return; // prevent illegal address access
-
-    //// spatial filter
-    //{
-    //    int2 baseID = groupThreadID + SPATIAL_RADIUS;
-    //    //_Result[id] = float4(buffer_l[baseID.x][baseID.y].xyz, 0); return;
-    //    int radius = lerp(SPATIAL_RADIUS, 0, smooth * smooth * smooth * smooth * smooth);
-    //    float4 res = 0;
-    //    int k = 0;
-    //    float3 cn = buffer_s0[baseID.x][baseID.y].xyz;
-    //    for (int i = -radius; i <= radius; i++)
-    //    {
-    //        for (int j = -radius; j <= radius; j++)
-    //        {
-    //            int2 id_in_shared = int2(baseID.x + i, baseID.y + j);
-    //            float3 normal = buffer_s0[id_in_shared.x][id_in_shared.y].xyz;
-    //            float4 l = buffer_l[id_in_shared.x][id_in_shared.y];
-    //            l.w *= smoothstep(0.9, 1, dot(cn, normal));
-    //            float3 cd = albedo - buffer_s1[id_in_shared.x][id_in_shared.y];
-    //            cd *= sqrt(float3(3, 4, 2));
-    //            l.w *= max(0, 1 - dot(cd, cd) * 10);
-    //            res += float4(max(0, l.xyz * l.w), l.w);
-    //        }
-    //    }
-
-        //float4 spec = float4(res.xyz / max(1, res.w), res.w != 0);
-        //_Result[id] = spec;
-        //// save to History0
-        //_History[id] = spec;
-    //}
 }
 
 float2 _SmoothRange;
@@ -386,6 +401,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
     [branch]
     if (smooth < _SmoothRange.y) {
 
+        //_Result[id] = _Result[id] + 0.1;return;
         //need lager filter
         if (smooth < _SmoothRange.x)
             active = true;
