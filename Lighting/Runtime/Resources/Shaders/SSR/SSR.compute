@@ -124,7 +124,7 @@ void Trace(uint2 id : SV_DispatchThreadID)
 
     float dang = lerp(3, 1, info.smoothness < 0.9 ? info.smoothness : 1);
 
-    float3 n = normalize(float3(0, 0, 0.5) + ImportanceSampleGGX(float2(SAMPLE, SAMPLE), 1 - info.smoothness).xyz);
+    float3 n = normalize(float3(0, 0, 0.5) + ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness)).xyz);
 
     n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
 
