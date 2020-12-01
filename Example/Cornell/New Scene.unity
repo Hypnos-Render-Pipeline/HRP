@@ -439,8 +439,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8243755921fcbc54c8da196476fd9749, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lightType: 1
-  radiance: 2
+  lightType: 2
+  radiance: 40
   IESProfile: {fileID: 0}
   shadow: 1
   areaTexture: {fileID: 0}
@@ -459,12 +459,12 @@ Light:
   m_GameObject: {fileID: 338247541}
   m_Enabled: 1
   serializedVersion: 10
-  m_Type: 2
+  m_Type: 0
   m_Shape: 0
   m_Color: {r: 1, g: 0.74827963, b: 0.49940526, a: 1}
-  m_Intensity: 2
+  m_Intensity: 40
   m_Range: 10
-  m_SpotAngle: 30
+  m_SpotAngle: 47.559788
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
@@ -518,13 +518,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 338247541}
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0.43728963, y: -0, z: -0, w: 0.8993207}
   m_LocalPosition: {x: 0, y: 9.93, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 416388800}
   m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 51.862, y: 0, z: 0}
 --- !u!1 &416388799
 GameObject:
   m_ObjectHideFlags: 0

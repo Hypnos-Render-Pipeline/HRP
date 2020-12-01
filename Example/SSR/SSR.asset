@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: SSR
   m_EditorClassIdentifier: 
-  viewPosition: {x: -1714, y: -228, z: 0}
+  viewPosition: {x: -180, y: -147, z: 0}
   viewScale: {x: 0.43232757, y: 0.43232757, z: 1}
   nodes:
   - nodeName: GBuffer
