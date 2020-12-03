@@ -17,7 +17,7 @@ namespace HypnosRenderPipeline.RenderGraph
     {
         VisualElement m_controlsDivider;
         VisualElement m_controlItems;
-        RenderGraphInfo m_renderGraphInfo;
+        HypnosRenderGraph m_renderGraphInfo;
         RenderGraphView m_renderGraphView;
 
         public List<Port> inputs;
@@ -28,7 +28,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
         Label m_timeLabel;
 
-        public RenderGraphNodeView(RenderGraphView renderGraphView, RenderGraphInfo renderGraphInfo)
+        public RenderGraphNodeView(RenderGraphView renderGraphView, HypnosRenderGraph renderGraphInfo)
         {
             StyleLoader.Load(this);
             Node = new RenderGraphNode();
@@ -37,7 +37,7 @@ namespace HypnosRenderPipeline.RenderGraph
             m_renderGraphView = renderGraphView;
         }
 
-        public RenderGraphNodeView(RenderGraphView renderGraphView, RenderGraphNode node, RenderGraphInfo renderGraphInfo)
+        public RenderGraphNodeView(RenderGraphView renderGraphView, RenderGraphNode node, HypnosRenderGraph renderGraphInfo)
         {
             StyleLoader.Load(this);
             Node = node;
@@ -402,17 +402,17 @@ namespace HypnosRenderPipeline.RenderGraph
                             });
                             ele = field;
                         }
-                        else if (ReflectionUtil.IsEngineObject(param.type))
-                        {
-                            var field = new ObjectField(param.name);
-                            field.objectType = param.type;
-                            field.value = (UnityEngine.Object)param.value;
-                            field.allowSceneObjects = false;
-                            field.RegisterValueChangedCallback(e => {
-                                RegisterChange(param, e.newValue);
-                            });
-                            ele = field;
-                        }
+                        //else if (ReflectionUtil.IsEngineObject(param.type))
+                        //{
+                        //    var field = new ObjectField(param.name);
+                        //    field.objectType = param.type;
+                        //    field.value = (UnityEngine.Object)param.value;
+                        //    field.allowSceneObjects = false;
+                        //    field.RegisterValueChangedCallback(e => {
+                        //        RegisterChange(param, e.newValue);
+                        //    });
+                        //    ele = field;
+                        //}
                         var label = ele.Children().ElementAt(0);
                         if (param.type == typeof(Vector4))
                             label.style.maxWidth = label.style.minWidth = 60;

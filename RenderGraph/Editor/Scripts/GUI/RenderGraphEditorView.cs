@@ -10,7 +10,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
     internal class RenderGraphEditorView : VisualElement
     {
-        RenderGraphInfo m_renderGraphInfo;
+        HypnosRenderGraph m_renderGraphInfo;
 
         EditorWindow m_editorWindow;
         RenderGraphView m_graphView;
@@ -23,7 +23,7 @@ namespace HypnosRenderPipeline.RenderGraph
         public RenderGraphEditorView(EditorWindow editorWindow)
         {
             m_editorWindow = editorWindow;
-            m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
+            m_renderGraphInfo = ScriptableObject.CreateInstance<HypnosRenderGraph>();
             Undo.undoRedoPerformed += UndoRedoCallback;
 
             StyleLoader.Load(this);
@@ -53,9 +53,9 @@ namespace HypnosRenderPipeline.RenderGraph
 
                 GUILayout.Space(6);
 
-                if (GUILayout.Button("Test Execute", EditorStyles.toolbarButton))
+                if (GUILayout.Button("Recompile", EditorStyles.toolbarButton))
                 {
-                    m_renderGraphInfo.TestExecute();
+                    HRGCompiler.Compile(m_renderGraphInfo);
                 }
 
                 GUILayout.Space(26);
@@ -102,7 +102,7 @@ namespace HypnosRenderPipeline.RenderGraph
         public void New()
         {
             if (assetName != "unnamed") Save();
-            m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
+            m_renderGraphInfo = ScriptableObject.CreateInstance<HypnosRenderGraph>();
             m_graphView.SetGraphInfo(m_renderGraphInfo);
             assetName = "unnamed";
         }
@@ -115,7 +115,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 m_editorData.lastOpenPath = assetName;
                 EditorUtility.SetDirty(m_editorData);
             }
-            m_renderGraphInfo = ScriptableObject.CreateInstance<RenderGraphInfo>();
+            m_renderGraphInfo = ScriptableObject.CreateInstance<HypnosRenderGraph>();
             m_graphView.SetGraphInfo(m_renderGraphInfo);
             assetName = "unnamed";
         }
@@ -141,10 +141,10 @@ namespace HypnosRenderPipeline.RenderGraph
         public void Load(string path)
         {
             if (assetName != "unnamed") Save();
-            RenderGraphInfo info;
+            HypnosRenderGraph info;
             try
             {
-                info = AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path);
+                info = AssetDatabase.LoadAssetAtPath<HypnosRenderGraph>(path);
                 if (info == null) throw new System.Exception("Null");
             }
             catch
@@ -185,7 +185,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     path += ".asset";
                 }
-                if (AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path) != null)
+                if (AssetDatabase.LoadAssetAtPath<HypnosRenderGraph>(path) != null)
                 {
                     Load(path);
                 }
@@ -223,7 +223,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     {
                         path += ".asset";
                     }
-                    var old_asset = AssetDatabase.LoadAssetAtPath(path, typeof(RenderGraphInfo));
+                    var old_asset = AssetDatabase.LoadAssetAtPath(path, typeof(HypnosRenderGraph));
                     if (old_asset != null)
                     {
                         AssetDatabase.DeleteAsset(path);

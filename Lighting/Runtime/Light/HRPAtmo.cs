@@ -1,7 +1,4 @@
-﻿#if UNITY_EDITOR
-using System.Collections.Generic;
-using UnityEditor;
-#endif
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
@@ -226,7 +223,7 @@ namespace HypnosRenderPipeline
             return HypnosRenderPipeline.FileUtil.SaveAssetInProject<HRPAtmo>();
         }
 
-        [MenuItem("HypnosRenderPipeline/Atmo/Create Atmo Preset")]
+        [UnityEditor.MenuItem("HypnosRenderPipeline/Atmo/Create Atmo Preset")]
         public static void CreateMenu()
         {
             Create();

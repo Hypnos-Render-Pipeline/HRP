@@ -1,6 +1,6 @@
 ﻿namespace HypnosRenderPipeline
 {
-
+#if UNITY_EDITOR
     public class FileUtil {
 
         [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
@@ -54,4 +54,5 @@
             return null;
         }
     }
+#endif
 }

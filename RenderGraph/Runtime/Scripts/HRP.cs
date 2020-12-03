@@ -28,18 +28,29 @@ namespace HypnosRenderPipeline
 
         MaterialWithName m_wireFrame = new MaterialWithName("Hidden/Wireframe");
         MaterialWithName m_iesSphere = new MaterialWithName("Hidden/IESSphere");
-
-        HRGDynamicExecutor m_executor;
-        RenderGraphInfo m_hypnosRenderPipelineGraph = null;
 #endif
+
+        HRGExecutor m_executor;
+        HypnosRenderGraph m_hypnosRenderPipelineGraph = null;
 
         public HypnosRenderPipeline(HypnosRenderPipelineAsset asset)
         {
             m_asset = asset;
-            //m_resourcePool = new RenderGraphResourcePool();
+
 #if UNITY_EDITOR
-            m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
+            if (m_asset.useCompliedCodeInEditor)
+            {
 #endif
+                m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+#if UNITY_EDITOR
+            }
+            else
+            {
+                m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
+            }
+#endif
+            //m_executor = new HRG_SSR();
+            m_executor.Init();
             m_asset.defaultMaterial.hideFlags = HideFlags.NotEditable;
 
             clock = new Dictionary<Camera, PerCameraData>();
@@ -49,7 +60,7 @@ namespace HypnosRenderPipeline
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-#if UNITY_EDITOR
+
             if (disposing)
             {
                 m_executor.Dispose();
@@ -59,7 +70,6 @@ namespace HypnosRenderPipeline
                 }
                 resourcesPool.Clear();
             }
-#endif
         }
 
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
@@ -136,9 +146,8 @@ namespace HypnosRenderPipeline
                 context.ExecuteCommandBuffer(cb);
                 cb.Clear();
 
-#if UNITY_EDITOR
+                int result = -1;
 
-                int result = -1;                
                 {
                     var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
                     if (vrender_cb.Length != 0) {
@@ -163,13 +172,27 @@ namespace HypnosRenderPipeline
                         if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph)
                         {
                             m_hypnosRenderPipelineGraph = m_asset.hypnosRenderPipelineGraph;
+
                             m_executor.Dispose();
-                            m_executor = new HRGDynamicExecutor(m_hypnosRenderPipelineGraph);
+#if UNITY_EDITOR
+                            if (m_asset.useCompliedCodeInEditor)
+                            {
+#endif
+                                m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+#if UNITY_EDITOR
+                            }
+                            else
+                            {
+                                m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
+                            }
+#endif
+                            m_executor.Init();
                         }
                         if (m_hypnosRenderPipelineGraph != null)
                         {
                             // determinate whether debug this camera
                             bool debugCamera = false;
+#if UNITY_EDITOR
                             if (hasGameCamera)
                             {
                                 if (cam.cameraType == CameraType.Game) debugCamera = true;
@@ -180,8 +203,8 @@ namespace HypnosRenderPipeline
                                 if (cam.cameraType == CameraType.SceneView) debugCamera = true;
                             }
                             else if (cam == cameras[0]) debugCamera = true;
-
-                            result = m_executor.Excute(rc, debugCamera);
+#endif
+                            result = m_executor.Execute(rc, debugCamera);
                         }
                         if (result == -1)
                         {
@@ -192,7 +215,6 @@ namespace HypnosRenderPipeline
                         }
                     }
                 }
-#endif
 
 #if UNITY_EDITOR
                 if (cam.cameraType == CameraType.SceneView)

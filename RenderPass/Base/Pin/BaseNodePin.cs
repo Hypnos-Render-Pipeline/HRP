@@ -55,8 +55,8 @@ namespace HypnosRenderPipeline.RenderPass
 
         public virtual void AllocateResourcces(RenderContext renderContext, int id) { handle = Pool.Get(); }
         public virtual void ReleaseResourcces(RenderContext renderContext) { Pool.Release(handle); }
-        public virtual bool Compare(RenderContext renderContext, BaseNodePin<Desc, Handle> pin) { return true; }
-        public virtual bool CanCastFrom(RenderContext renderContext, BaseNodePin<Desc, Handle> pin) { return true; }
+        public virtual bool Compare(BaseNodePin<Desc, Handle> pin) { return true; }
+        public virtual bool CanCastFrom(BaseNodePin<Desc, Handle> pin) { return true; }
         public virtual void CastFrom(RenderContext renderContext, BaseNodePin<Desc, Handle> pin) { connected = pin.connected; desc = pin.desc; handle = pin.handle; }
 
         public static bool CompareType()

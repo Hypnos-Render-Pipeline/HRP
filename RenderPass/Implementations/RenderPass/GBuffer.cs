@@ -4,6 +4,10 @@ using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderPass
 {
+    public enum E
+    {
+        a,b,c,d
+    }
     public class GBuffer : BaseRenderPass
     {
         [NodePin(PinType.InOut)]
@@ -45,6 +49,13 @@ namespace HypnosRenderPipeline.RenderPass
                                                                     SizeCastMode.Fixed,
                                                                     ColorCastMode.Fixed,
                                                                     SizeScale.Full);
+
+        public float a = 1;
+        public bool b = false;
+        public Vector2 c = new Vector2(1.10973f, 2.0f);
+        public E d = E.d;
+        public LayerMask e = 10;
+        public Color f = new Color(1, 2, 3, 0.22334f);
 
         static MaterialWithName motionMat = new MaterialWithName("Hidden/CalculateMotion");
 

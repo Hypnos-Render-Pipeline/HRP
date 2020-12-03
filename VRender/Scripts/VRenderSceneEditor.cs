@@ -114,7 +114,7 @@ class VRenderForScene
         SceneView.lastActiveSceneView.Repaint();
     }
 
-    [MenuItem("Tools/VRender/Enable VRender on scene view %#V")]
+    [MenuItem("HypnosRenderPipeline/VRender/Enable VRender on scene view %#V")]
     static void EnableVRender()
     {
         var apis = PlayerSettings.GetGraphicsAPIs(BuildTarget.StandaloneWindows64);
@@ -248,7 +248,7 @@ class VRenderForScene
         return layer_int;
     }
 
-    [MenuItem("Tools/VRender/Force VRender to repaint &%#V")]
+    [MenuItem("HypnosRenderPipeline/VRender/Force VRender to repaint &%#V")]
     static void RepaintVRender()
     {
         if (instance.vRender != null)

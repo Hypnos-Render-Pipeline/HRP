@@ -124,17 +124,12 @@ namespace HypnosRenderPipeline
         /// </summary>
         public int id { get; internal set; } = -1;
 
-#if UNITY_EDITOR
         /// <summary>
-        /// Editor Only. Whether light texture has been filtered.
+        /// Whether light texture has been filtered.
         /// </summary>
         public bool areaTextureAlreadyFiltered { get { if (areaTexture == null) return true; if (m_lastTex == null || areaTexture != m_lastTex) return false; return true; } }
 
-        /// <summary>
-        /// Editor Only.
-        /// </summary>
         public bool canHasTexture { get { if (lightType == HRPLightType.Quad || lightType == HRPLightType.Disc || lightType == HRPLightType.Mesh) return true; return false; } }
-#endif
 
         public bool isArea { get { if (canHasTexture || lightType == HRPLightType.Tube || lightType == HRPLightType.Sphere || lightType == HRPLightType.Disc) return true; return false; } }
 

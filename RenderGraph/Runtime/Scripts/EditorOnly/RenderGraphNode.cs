@@ -110,14 +110,12 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public List<Slot> inputs, outputs;
 
-#if UNITY_EDITOR
         [SerializeField]
         public Rect position;
 
         public object NodeView;
 
         public string info;
-#endif
 
         #endregion
 
@@ -139,7 +137,6 @@ namespace HypnosRenderPipeline.RenderGraph
 
         #endregion
 
-#if UNITY_EDITOR
         [NonSerialized]
         public RenderTexture debugTex;
         [NonSerialized]
@@ -147,7 +144,6 @@ namespace HypnosRenderPipeline.RenderGraph
 
         [NonSerialized]
         public CustomSampler sampler;
-#endif
 
         public RenderGraphNode() { }
 

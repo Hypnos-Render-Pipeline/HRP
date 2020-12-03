@@ -77,12 +77,12 @@ namespace HypnosRenderPipeline.RenderPass
             }
         }
 
-        public override bool Compare(RenderContext renderContext, BaseNodePin<int, Buffer> pin)
+        public override bool Compare(BaseNodePin<int, Buffer> pin)
         {
             return stride == (pin as BufferPin<T>).stride;
         }
 
-        public override bool CanCastFrom(RenderContext renderContext, BaseNodePin<int, Buffer> pin)
+        public override bool CanCastFrom(BaseNodePin<int, Buffer> pin)
         {
             return false;
         }

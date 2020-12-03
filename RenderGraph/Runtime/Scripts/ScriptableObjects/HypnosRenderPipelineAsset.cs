@@ -10,8 +10,10 @@ namespace HypnosRenderPipeline.RenderGraph
     {
 
 #if UNITY_EDITOR
-        public RenderGraphInfo hypnosRenderPipelineGraph;
+        public bool useCompliedCodeInEditor = false;
 #endif
+
+        public HypnosRenderGraph hypnosRenderPipelineGraph;
 
         public HRPMaterialResources materialResources;
 

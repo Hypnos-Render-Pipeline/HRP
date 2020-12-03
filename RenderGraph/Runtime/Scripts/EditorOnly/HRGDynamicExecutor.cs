@@ -8,17 +8,19 @@ namespace HypnosRenderPipeline.RenderGraph
 {
 #if UNITY_EDITOR
 
-    internal class HRGDynamicExecutor
+    internal class HRGDynamicExecutor : HRGExecutor
     {
-        RenderGraphInfo m_graph;
+        HypnosRenderGraph m_graph;
 
 
-        public HRGDynamicExecutor(RenderGraphInfo graph)
+        public HRGDynamicExecutor(HypnosRenderGraph graph)
         {
             m_graph = graph;
         }
 
-        public int Excute(RenderContext context, bool debug = false)
+        public void Init() { }
+
+        public int Execute(RenderContext context, bool debug = false)
         {
             UnityEngine.Profiling.Profiler.BeginSample("Excute HRG");
 
@@ -101,14 +103,13 @@ namespace HypnosRenderPipeline.RenderGraph
                                 
                 ReleaseNode(context, renderNode);
 
-                if (renderNode.enabled)
                 {
                     var nodeRec = GetNodeInstance(node);
                     foreach (var output_value in nodeRec.outputs)
                     {
                         var output = output_value.Value.first;
                         var nameField = output.FieldType.GetField("name");
-                        output.FieldType.GetField("connected").SetValue(output.GetValue(renderNode), true);
+                        output.FieldType.GetField("connected").SetValue(output.GetValue(renderNode), renderNode.enabled);
                     }
                 }
             }
@@ -219,7 +220,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     connectedField.SetValue(pin, connectedField.GetValue(from_pin));
 
                     var compare_method = input.FieldType.GetMethod("Compare");
-                    bool same = (bool)compare_method.Invoke(pin, new object[] { context, from_pin });
+                    bool same = (bool)compare_method.Invoke(pin, new object[] { from_pin });
                     if (same && (!nodeRec.outputs.ContainsKey(input.Name) || node.nodeType == typeof(TextureDebug) || pinPool[from_pin_name] == 1))
                     {
                         input.FieldType.GetMethod("Move").Invoke(pin, new object[] { from_pin });
@@ -227,7 +228,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     else
                     {
                         var ca_cast_method = input.FieldType.GetMethod("CanCastFrom");
-                        bool can_cast = (bool)ca_cast_method.Invoke(pin, new object[] { context, from_pin });
+                        bool can_cast = (bool)ca_cast_method.Invoke(pin, new object[] { from_pin });
                         if (can_cast)
                         {
                             var init_method = input.FieldType.GetMethod("AllocateResourcces");

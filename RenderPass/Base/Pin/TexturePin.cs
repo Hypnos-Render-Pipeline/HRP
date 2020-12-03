@@ -69,7 +69,7 @@ namespace HypnosRenderPipeline.RenderPass
             context.commandBuffer.ReleaseTemporaryRT(handle);
         }
 
-        public override bool Compare(RenderContext renderContext, BaseNodePin<TexturePinDesc, int> pin)
+        public override bool Compare(BaseNodePin<TexturePinDesc, int> pin)
         {
             var desc2 = pin.desc;
 
@@ -78,7 +78,7 @@ namespace HypnosRenderPipeline.RenderPass
                 Vector2Int descSize;
                 if (desc.sizeScale != SizeScale.Custom)
                 {
-                    descSize = new Vector2Int(renderContext.camera.pixelWidth, renderContext.camera.pixelHeight);
+                    descSize = new Vector2Int(1920, 1080);
                     descSize /= (int)desc.sizeScale;
                 }
                 else descSize = new Vector2Int(desc.basicDesc.width, desc.basicDesc.height);
@@ -106,7 +106,7 @@ namespace HypnosRenderPipeline.RenderPass
             name = pin.name;
         }
 
-        public override bool CanCastFrom(RenderContext renderContext, BaseNodePin<TexturePinDesc, int> pin)
+        public override bool CanCastFrom(BaseNodePin<TexturePinDesc, int> pin)
         {
             var desc2 = pin.desc;
             if (desc.basicDesc.dimension != desc2.basicDesc.dimension

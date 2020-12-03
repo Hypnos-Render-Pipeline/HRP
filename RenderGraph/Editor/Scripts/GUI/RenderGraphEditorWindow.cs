@@ -41,9 +41,9 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     path += ".asset";
                 }
-                if (AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path) != null)
+                if (AssetDatabase.LoadAssetAtPath<HypnosRenderGraph>(path) != null)
                 {
-                    AssetDatabase.LoadAssetAtPath<RenderGraphInfo>(path).TestExecute();
+                    AssetDatabase.LoadAssetAtPath<HypnosRenderGraph>(path).TestExecute();
                 }
             }
         }

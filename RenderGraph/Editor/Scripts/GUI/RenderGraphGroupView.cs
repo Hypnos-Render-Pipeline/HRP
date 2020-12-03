@@ -9,10 +9,10 @@ namespace HypnosRenderPipeline.RenderGraph
 {
     internal class RenderGraphGroupView : Group
     {
-        RenderGraphInfo m_renderGraphInfo;
-        public RenderGraphInfo.Group group;
+        HypnosRenderGraph m_renderGraphInfo;
+        public HypnosRenderGraph.Group group;
         Color color;
-        public RenderGraphGroupView(RenderGraphInfo info, RenderGraphInfo.Group group)
+        public RenderGraphGroupView(HypnosRenderGraph info, HypnosRenderGraph.Group group)
         {
             m_renderGraphInfo = info;
             title = group.name;

@@ -1,0 +1,489 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
+  m_Name: Fully_RTX_pipeline
+  m_EditorClassIdentifier: 
+  viewPosition: {x: -488, y: -797, z: 0}
+  viewScale: {x: 0.65751624, y: 0.65751624, z: 1}
+  nodes:
+  - nodeName: CullLight
+    parameters:
+    - name: cullingType
+      info: 
+      type_str: HypnosRenderPipeline.RenderPass.CullLight+CullingType
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c43756c6c696e67547970653e4672757374756d3c2f43756c6c696e67547970653e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: radius
+      info: When using Sphere culling, radius is culling radius
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e3230303c2f666c6f61743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: faraway
+      info: how much distance should light become faraway light
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e3130303c2f666c6f61743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs: []
+    outputs:
+    - name: lights
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 1817.7666
+      y: 1394.0767
+      width: 0
+      height: 0
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.CullLight
+  - nodeName: ZBin
+    parameters:
+    - name: tileCount
+      info: 'xy: tile count of screen, z: depth split count'
+      type_str: UnityEngine.Vector3Int
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c566563746f7233496e7420786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c783e3132383c2f783e0d0a20203c793e36343c2f793e0d0a20203c7a3e32343c2f7a3e0d0a3c2f566563746f7233496e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: maxLightCountPerTile
+      info: max light number per tile
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e36343c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: includeRTLight
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lights
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: lightBuffer
+      info: 
+      mustConnect: 0
+    - name: tileLights
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2213.9778
+      y: 1394
+      width: 300
+      height: 240
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.ZBin
+  - nodeName: GBuffer
+    parameters:
+    - name: a
+      info: 
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e313c2f666c6f61743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: b
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: c
+      info: 
+      type_str: UnityEngine.Vector2
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c566563746f723220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c783e312e31303937333c2f783e0d0a20203c793e323c2f793e0d0a3c2f566563746f72323e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: d
+      info: 
+      type_str: HypnosRenderPipeline.RenderPass.E
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c453e643c2f453e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: e
+      info: 
+      type_str: UnityEngine.LayerMask
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c4c617965724d61736b20786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c76616c75653e31303c2f76616c75653e0d0a3c2f4c617965724d61736b3e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: f
+      info: 
+      type_str: UnityEngine.Color
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c436f6c6f7220786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c723e313c2f723e0d0a20203c673e323c2f673e0d0a20203c623e333c2f623e0d0a20203c613e302e32323333343c2f613e0d0a3c2f436f6c6f723e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: depth
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: depth
+      info: 
+      mustConnect: 0
+    - name: diffuse
+      info: 
+      mustConnect: 0
+    - name: specular
+      info: 
+      mustConnect: 0
+    - name: normal
+      info: 
+      mustConnect: 0
+    - name: emission
+      info: 
+      mustConnect: 0
+    - name: microAO
+      info: 
+      mustConnect: 0
+    - name: motion
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2214
+      y: 1678.3018
+      width: 300
+      height: 225
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.GBuffer
+  - nodeName: OutputNode
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: result
+      info: Output to screen
+      mustConnect: 1
+    outputs: []
+    position:
+      serializedVersion: 2
+      x: 3220.134
+      y: 1697.1812
+      width: 300
+      height: 105
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
+  - nodeName: RTDI
+    parameters:
+    - name: includeSunlight
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lights
+      info: 
+      mustConnect: 1
+    - name: lightBuffer
+      info: 
+      mustConnect: 1
+    - name: tiledLights
+      info: 
+      mustConnect: 1
+    - name: directionalLightBuffer
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: diffuse
+      info: 
+      mustConnect: 1
+    - name: specular
+      info: 
+      mustConnect: 1
+    - name: normal
+      info: 
+      mustConnect: 1
+    - name: emission
+      info: 
+      mustConnect: 1
+    - name: ao
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: directionalLightBuffer
+      info: 
+      mustConnect: 0
+    - name: lightingResult
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 2876.134
+      y: 1457.1812
+      width: 300
+      height: 388.00006
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.RTDI
+  edgeRecs:
+  - i: 1
+    o: 0
+    i_n: lights
+    o_n: lights
+  - i: 4
+    o: 2
+    i_n: depth
+    o_n: depth
+  - i: 4
+    o: 2
+    i_n: emission
+    o_n: emission
+  - i: 4
+    o: 2
+    i_n: ao
+    o_n: microAO
+  - i: 4
+    o: 1
+    i_n: lightBuffer
+    o_n: lightBuffer
+  - i: 4
+    o: 1
+    i_n: tiledLights
+    o_n: tileLights
+  - i: 4
+    o: 0
+    i_n: lights
+    o_n: lights
+  - i: 3
+    o: 4
+    i_n: result
+    o_n: lightingResult
+  - i: 4
+    o: 2
+    i_n: diffuse
+    o_n: diffuse
+  - i: 4
+    o: 2
+    i_n: specular
+    o_n: specular
+  - i: 4
+    o: 2
+    i_n: normal
+    o_n: normal
+  node_edgeRecs:
+  - node: 0
+    in_edges: 
+    out_edge: 0000000006000000
+  - node: 1
+    in_edges: 00000000
+    out_edge: 0400000005000000
+  - node: 2
+    in_edges: 
+    out_edge: 01000000020000000300000008000000090000000a000000
+  - node: 4
+    in_edges: 01000000020000000300000004000000050000000600000008000000090000000a000000
+    out_edge: 07000000
+  - node: 3
+    in_edges: 07000000
+    out_edge: 
+  groupRecs: []
+  code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\nnamespace
+    HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Fully_RTX_pipeline
+    : HRGExecutor\r\n    {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
+    CullLight CullLight130176146;\r\n        ZBin ZBin961692096;\r\n        GBuffer
+    GBuffer219930995;\r\n        OutputNode OutputNode544614273;\r\n        RTDI
+    RTDI325377859;\r\n        // ----------------------------\r\n        \r\n       
+    // ShaderIDs:\r\n        // ----------------------------\r\n        System.Int32
+    CullLight130176146_lights = Shader.PropertyToID(\"CullLight130176146.lights\");\r\n       
+    System.Int32 ZBin961692096_lights = Shader.PropertyToID(\"ZBin961692096.lights\");\r\n       
+    System.Int32 ZBin961692096_depth = Shader.PropertyToID(\"ZBin961692096.depth\");\r\n       
+    System.Int32 ZBin961692096_lightBuffer = Shader.PropertyToID(\"ZBin961692096.lightBuffer\");\r\n       
+    System.Int32 ZBin961692096_tileLights = Shader.PropertyToID(\"ZBin961692096.tileLights\");\r\n       
+    System.Int32 GBuffer219930995_depth = Shader.PropertyToID(\"GBuffer219930995.depth\");\r\n       
+    System.Int32 GBuffer219930995_diffuse = Shader.PropertyToID(\"GBuffer219930995.diffuse\");\r\n       
+    System.Int32 GBuffer219930995_specular = Shader.PropertyToID(\"GBuffer219930995.specular\");\r\n       
+    System.Int32 GBuffer219930995_normal = Shader.PropertyToID(\"GBuffer219930995.normal\");\r\n       
+    System.Int32 GBuffer219930995_emission = Shader.PropertyToID(\"GBuffer219930995.emission\");\r\n       
+    System.Int32 GBuffer219930995_microAO = Shader.PropertyToID(\"GBuffer219930995.microAO\");\r\n       
+    System.Int32 GBuffer219930995_motion = Shader.PropertyToID(\"GBuffer219930995.motion\");\r\n       
+    System.Int32 OutputNode544614273_result = Shader.PropertyToID(\"OutputNode544614273.result\");\r\n       
+    System.Int32 RTDI325377859_lights = Shader.PropertyToID(\"RTDI325377859.lights\");\r\n       
+    System.Int32 RTDI325377859_lightBuffer = Shader.PropertyToID(\"RTDI325377859.lightBuffer\");\r\n       
+    System.Int32 RTDI325377859_tiledLights = Shader.PropertyToID(\"RTDI325377859.tiledLights\");\r\n       
+    System.Int32 RTDI325377859_directionalLightBuffer = Shader.PropertyToID(\"RTDI325377859.directionalLightBuffer\");\r\n       
+    System.Int32 RTDI325377859_depth = Shader.PropertyToID(\"RTDI325377859.depth\");\r\n       
+    System.Int32 RTDI325377859_diffuse = Shader.PropertyToID(\"RTDI325377859.diffuse\");\r\n       
+    System.Int32 RTDI325377859_specular = Shader.PropertyToID(\"RTDI325377859.specular\");\r\n       
+    System.Int32 RTDI325377859_normal = Shader.PropertyToID(\"RTDI325377859.normal\");\r\n       
+    System.Int32 RTDI325377859_emission = Shader.PropertyToID(\"RTDI325377859.emission\");\r\n       
+    System.Int32 RTDI325377859_ao = Shader.PropertyToID(\"RTDI325377859.ao\");\r\n       
+    System.Int32 RTDI325377859_lightingResult = Shader.PropertyToID(\"RTDI325377859.lightingResult\");\r\n       
+    // ----------------------------\r\n        \r\n        public void Init()\r\n       
+    {\r\n            CullLight130176146 = new CullLight();\r\n            CullLight130176146.cullingType
+    = CullLight.CullingType.Frustum;\r\n            CullLight130176146.radius = 200f;\r\n           
+    CullLight130176146.faraway = 100f;\r\n            CullLight130176146.enabled
+    = true;\r\n            ZBin961692096 = new ZBin();\r\n            ZBin961692096.tileCount
+    = new Vector3Int(128, 64, 24);\r\n            ZBin961692096.maxLightCountPerTile
+    = 64;\r\n            ZBin961692096.includeRTLight = true;\r\n            ZBin961692096.enabled
+    = true;\r\n            GBuffer219930995 = new GBuffer();\r\n            GBuffer219930995.a
+    = 1f;\r\n            GBuffer219930995.b = false;\r\n            GBuffer219930995.c
+    = new Vector2(1.10973f, 2f);\r\n            GBuffer219930995.d = E.d;\r\n           
+    GBuffer219930995.e = 10;\r\n            GBuffer219930995.f = new Color(1f, 2f,
+    3f, 0.22334f);\r\n            GBuffer219930995.enabled = true;\r\n           
+    OutputNode544614273 = new OutputNode();\r\n            OutputNode544614273.enabled
+    = true;\r\n            RTDI325377859 = new RTDI();\r\n            RTDI325377859.includeSunlight
+    = true;\r\n            RTDI325377859.enabled = true;\r\n        }\r\n       
+    \r\n        public int Execute(RenderContext context, bool debug = false)\r\n       
+    {\r\n            System.Int32 result = -1;\r\n            \r\n            //GBuffer219930995\r\n           
+    {\r\n                // preprocess node\r\n                {\r\n                   
+    // inputs\r\n                    GBuffer219930995.depth.AllocateResourcces(context,
+    GBuffer219930995_depth);\r\n                    GBuffer219930995.depth.name =
+    \"GBuffer219930995.depth\";\r\n                    \r\n                    //
+    outputs\r\n                    GBuffer219930995.diffuse.AllocateResourcces(context,
+    GBuffer219930995_diffuse);\r\n                    GBuffer219930995.diffuse.name
+    = \"GBuffer219930995.diffuse\";\r\n                    GBuffer219930995.diffuse.connected
+    = true;\r\n                    GBuffer219930995.specular.AllocateResourcces(context,
+    GBuffer219930995_specular);\r\n                    GBuffer219930995.specular.name
+    = \"GBuffer219930995.specular\";\r\n                    GBuffer219930995.specular.connected
+    = true;\r\n                    GBuffer219930995.normal.AllocateResourcces(context,
+    GBuffer219930995_normal);\r\n                    GBuffer219930995.normal.name
+    = \"GBuffer219930995.normal\";\r\n                    GBuffer219930995.normal.connected
+    = true;\r\n                    GBuffer219930995.emission.AllocateResourcces(context,
+    GBuffer219930995_emission);\r\n                    GBuffer219930995.emission.name
+    = \"GBuffer219930995.emission\";\r\n                    GBuffer219930995.emission.connected
+    = true;\r\n                    GBuffer219930995.microAO.AllocateResourcces(context,
+    GBuffer219930995_microAO);\r\n                    GBuffer219930995.microAO.name
+    = \"GBuffer219930995.microAO\";\r\n                    GBuffer219930995.microAO.connected
+    = true;\r\n                    GBuffer219930995.motion.AllocateResourcces(context,
+    GBuffer219930995_motion);\r\n                    GBuffer219930995.motion.name
+    = \"GBuffer219930995.motion\";\r\n                    GBuffer219930995.motion.connected
+    = false;\r\n                    context.commandBuffer.name = \"GBuffer219930995
+    Pre\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                {\r\n                    context.commandBuffer.name =
+    \"GBuffer219930995\";\r\n                    GBuffer219930995.Excute(context);\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
+    node\r\n                {\r\n                    GBuffer219930995.motion.ReleaseResourcces(context);\r\n                   
+    context.commandBuffer.name = \"GBuffer219930995 Post\";\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n            }\r\n           
+    //CullLight130176146\r\n            {\r\n                // preprocess node\r\n               
+    {\r\n                    // inputs\r\n                    // outputs\r\n                   
+    CullLight130176146.lights.AllocateResourcces(context, CullLight130176146_lights);\r\n                   
+    CullLight130176146.lights.name = \"CullLight130176146.lights\";\r\n                   
+    CullLight130176146.lights.connected = true;\r\n                    context.commandBuffer.name
+    = \"CullLight130176146 Pre\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                {\r\n                    context.commandBuffer.name =
+    \"CullLight130176146\";\r\n                    CullLight130176146.Excute(context);\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
+    node\r\n                {\r\n                }\r\n            }\r\n           
+    //ZBin961692096\r\n            {\r\n                // preprocess node\r\n               
+    {\r\n                    // inputs\r\n                    ZBin961692096.lights.connected
+    = true;\r\n                    ZBin961692096.lights.Move(CullLight130176146.lights);\r\n                   
+    \r\n                    ZBin961692096.depth.AllocateResourcces(context, ZBin961692096_depth);\r\n                   
+    ZBin961692096.depth.name = \"ZBin961692096.depth\";\r\n                    \r\n                   
+    // outputs\r\n                    ZBin961692096.lightBuffer.AllocateResourcces(context,
+    ZBin961692096_lightBuffer);\r\n                    ZBin961692096.lightBuffer.name
+    = \"ZBin961692096.lightBuffer\";\r\n                    ZBin961692096.lightBuffer.connected
+    = true;\r\n                    ZBin961692096.tileLights.AllocateResourcces(context,
+    ZBin961692096_tileLights);\r\n                    ZBin961692096.tileLights.name
+    = \"ZBin961692096.tileLights\";\r\n                    ZBin961692096.tileLights.connected
+    = true;\r\n                    context.commandBuffer.name = \"ZBin961692096 Pre\";\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                {\r\n                    context.commandBuffer.name =
+    \"ZBin961692096\";\r\n                    ZBin961692096.Excute(context);\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
+    node\r\n                {\r\n                    ZBin961692096.depth.ReleaseResourcces(context);\r\n                   
+    context.commandBuffer.name = \"ZBin961692096 Post\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n            }\r\n           
+    //RTDI325377859\r\n            {\r\n                // preprocess node\r\n               
+    {\r\n                    // inputs\r\n                    RTDI325377859.lights.connected
+    = true;\r\n                    RTDI325377859.lights.Move(CullLight130176146.lights);\r\n                   
+    \r\n                    RTDI325377859.lightBuffer.connected = true;\r\n                   
+    RTDI325377859.lightBuffer.Move(ZBin961692096.lightBuffer);\r\n                   
+    \r\n                    RTDI325377859.tiledLights.connected = true;\r\n                   
+    RTDI325377859.tiledLights.Move(ZBin961692096.tileLights);\r\n                   
+    \r\n                    RTDI325377859.directionalLightBuffer.AllocateResourcces(context,
+    RTDI325377859_directionalLightBuffer);\r\n                    RTDI325377859.directionalLightBuffer.name
+    = \"RTDI325377859.directionalLightBuffer\";\r\n                    \r\n                   
+    RTDI325377859.depth.connected = true;\r\n                    RTDI325377859.depth.Move(GBuffer219930995.depth);\r\n                   
+    \r\n                    RTDI325377859.diffuse.connected = true;\r\n                   
+    RTDI325377859.diffuse.Move(GBuffer219930995.diffuse);\r\n                   
+    \r\n                    RTDI325377859.specular.connected = true;\r\n                   
+    RTDI325377859.specular.Move(GBuffer219930995.specular);\r\n                   
+    \r\n                    RTDI325377859.normal.connected = true;\r\n                   
+    RTDI325377859.normal.Move(GBuffer219930995.normal);\r\n                    \r\n                   
+    RTDI325377859.emission.connected = true;\r\n                    RTDI325377859.emission.Move(GBuffer219930995.emission);\r\n                   
+    \r\n                    RTDI325377859.ao.connected = true;\r\n                   
+    RTDI325377859.ao.Move(GBuffer219930995.microAO);\r\n                    \r\n                   
+    // outputs\r\n                    RTDI325377859.lightingResult.AllocateResourcces(context,
+    RTDI325377859_lightingResult);\r\n                    RTDI325377859.lightingResult.name
+    = \"RTDI325377859.lightingResult\";\r\n                    RTDI325377859.lightingResult.connected
+    = true;\r\n                    context.commandBuffer.name = \"RTDI325377859 Pre\";\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                {\r\n                    context.commandBuffer.name =
+    \"RTDI325377859\";\r\n                    RTDI325377859.Excute(context);\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
+    node\r\n                {\r\n                    RTDI325377859.lightBuffer.ReleaseResourcces(context);\r\n                   
+    RTDI325377859.tiledLights.ReleaseResourcces(context);\r\n                   
+    RTDI325377859.directionalLightBuffer.ReleaseResourcces(context);\r\n                   
+    RTDI325377859.depth.ReleaseResourcces(context);\r\n                    RTDI325377859.diffuse.ReleaseResourcces(context);\r\n                   
+    RTDI325377859.specular.ReleaseResourcces(context);\r\n                    RTDI325377859.normal.ReleaseResourcces(context);\r\n                   
+    RTDI325377859.emission.ReleaseResourcces(context);\r\n                    RTDI325377859.ao.ReleaseResourcces(context);\r\n                   
+    context.commandBuffer.name = \"RTDI325377859 Post\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n            }\r\n           
+    //OutputNode544614273\r\n            {\r\n                // preprocess node\r\n               
+    {\r\n                    // inputs\r\n                    OutputNode544614273.result.connected
+    = true;\r\n                    OutputNode544614273.result.AllocateResourcces(context,
+    OutputNode544614273_result);\r\n                    OutputNode544614273.result.name
+    = \"OutputNode544614273.result\";\r\n                    OutputNode544614273.result.CastFrom(context,
+    RTDI325377859.lightingResult);\r\n                    RTDI325377859.lightingResult.ReleaseResourcces(context);\r\n                   
+    \r\n                    // outputs\r\n                    context.commandBuffer.name
+    = \"OutputNode544614273 Pre\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                {\r\n                    result = OutputNode544614273.result.handle;\r\n                   
+    return result;\r\n                }\r\n            }\r\n        }\r\n       
+    \r\n        public void Dispose()\r\n        {\r\n            // CullLight130176146\r\n           
+    {\r\n                CullLight130176146.lights.Dispose();\r\n               
+    CullLight130176146.Dispose();\r\n            }\r\n            // ZBin961692096\r\n           
+    {\r\n                ZBin961692096.lights.Dispose();\r\n                ZBin961692096.depth.Dispose();\r\n               
+    ZBin961692096.lightBuffer.Dispose();\r\n                ZBin961692096.tileLights.Dispose();\r\n               
+    ZBin961692096.Dispose();\r\n            }\r\n            // GBuffer219930995\r\n           
+    {\r\n                GBuffer219930995.depth.Dispose();\r\n                GBuffer219930995.diffuse.Dispose();\r\n               
+    GBuffer219930995.specular.Dispose();\r\n                GBuffer219930995.normal.Dispose();\r\n               
+    GBuffer219930995.emission.Dispose();\r\n                GBuffer219930995.microAO.Dispose();\r\n               
+    GBuffer219930995.motion.Dispose();\r\n                GBuffer219930995.Dispose();\r\n           
+    }\r\n            // OutputNode544614273\r\n            {\r\n                OutputNode544614273.result.Dispose();\r\n               
+    OutputNode544614273.Dispose();\r\n            }\r\n            // RTDI325377859\r\n           
+    {\r\n                RTDI325377859.lights.Dispose();\r\n                RTDI325377859.lightBuffer.Dispose();\r\n               
+    RTDI325377859.tiledLights.Dispose();\r\n                RTDI325377859.directionalLightBuffer.Dispose();\r\n               
+    RTDI325377859.depth.Dispose();\r\n                RTDI325377859.diffuse.Dispose();\r\n               
+    RTDI325377859.specular.Dispose();\r\n                RTDI325377859.normal.Dispose();\r\n               
+    RTDI325377859.emission.Dispose();\r\n                RTDI325377859.ao.Dispose();\r\n               
+    RTDI325377859.lightingResult.Dispose();\r\n                RTDI325377859.Dispose();\r\n           
+    }\r\n        }\r\n    }\r\n}\r\n"

@@ -16,7 +16,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
         RenderGraphNodeSeacher m_searcher;
 
-        RenderGraphInfo m_renderGraphInfo;
+        HypnosRenderGraph m_renderGraphInfo;
 
         public RenderGraphView(RenderGraphEditorView renderGraphEditorView, EditorWindow editorWindow)
         {
@@ -35,7 +35,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     bool custom_dele_flag = false;
                     foreach (var ele in change.elementsToRemove)
                     {
-                        if (ele.userData as RenderGraphNode != null || ele.userData as RenderGraphInfo.Edge != null || ele.userData as RenderGraphInfo.Group != null)
+                        if (ele.userData as RenderGraphNode != null || ele.userData as HypnosRenderGraph.Edge != null || ele.userData as HypnosRenderGraph.Group != null)
                         {
                             custom_dele_flag = true;
                             break;
@@ -79,14 +79,14 @@ namespace HypnosRenderPipeline.RenderGraph
                         }
                         else
                         {
-                            var edge = ele.userData as RenderGraphInfo.Edge;
+                            var edge = ele.userData as HypnosRenderGraph.Edge;
                             if (edge != null)
                             {
                                 m_renderGraphInfo.RemoveEdge(edge);
                             }
                             else
                             {
-                                var group = ele.userData as RenderGraphInfo.Group;
+                                var group = ele.userData as HypnosRenderGraph.Group;
                                 if (group != null)
                                 {
                                     m_renderGraphInfo.RemoveGroup(group);
@@ -179,14 +179,14 @@ namespace HypnosRenderPipeline.RenderGraph
         }
         public void AddEdge(Edge edgeView)
         {
-            RenderGraphInfo.Edge remove_edge = null;
+            HypnosRenderGraph.Edge remove_edge = null;
 
             if (edgeView.input.connected == true)
             {
                 var old_edge_enum = edgeView.input.connections.GetEnumerator();
                 old_edge_enum.MoveNext();
                 var old_edge = old_edge_enum.Current;
-                remove_edge = old_edge.userData as RenderGraphInfo.Edge;
+                remove_edge = old_edge.userData as HypnosRenderGraph.Edge;
                 old_edge.input.Disconnect(old_edge);
                 old_edge.output.Disconnect(old_edge);
                 old_edge.userData = null; // set this to null means delete from code and don't need redo register
@@ -198,10 +198,10 @@ namespace HypnosRenderPipeline.RenderGraph
             var output_node = edgeView.output.node as RenderGraphNodeView;
             var in_name = edgeView.input.portName;
             var out_name = edgeView.output.portName;
-            var edge = new RenderGraphInfo.Edge()
+            var edge = new HypnosRenderGraph.Edge()
             {
-                input = new RenderGraphInfo.Port { node = input_node.Node, name = in_name },
-                output = new RenderGraphInfo.Port { node = output_node.Node, name = out_name }
+                input = new HypnosRenderGraph.Port { node = input_node.Node, name = in_name },
+                output = new HypnosRenderGraph.Port { node = output_node.Node, name = out_name }
             };
 
             RenderGraphEdgeView rgeView = new RenderGraphEdgeView();
@@ -240,7 +240,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
             AddElement(nodeView);
         }
-        void AddSerializedEdge(RenderGraphInfo.Edge edge)
+        void AddSerializedEdge(HypnosRenderGraph.Edge edge)
         {
             var input_node = edge.input.node;
             var output_node = edge.output.node;
@@ -270,14 +270,14 @@ namespace HypnosRenderPipeline.RenderGraph
             }
             AddElement(edgeView);
         }
-        RenderGraphGroupView AddSerializedGroup(RenderGraphInfo.Group group)
+        RenderGraphGroupView AddSerializedGroup(HypnosRenderGraph.Group group)
         {
             RenderGraphGroupView groupView = new RenderGraphGroupView(m_renderGraphInfo, group);
             AddElement(groupView);
             return groupView;
         }
 
-        public void SetGraphInfo(RenderGraphInfo info)
+        public void SetGraphInfo(HypnosRenderGraph info)
         {
             m_renderGraphInfo = info;
             name = AssetDatabase.GetAssetPath(info);
@@ -360,7 +360,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 var nodes = selection.FindAll(element => (element as RenderGraphNodeView) != null);
                 if (nodes.Count != 0)
                 {
-                    RenderGraphInfo.Group group = new RenderGraphInfo.Group();
+                    HypnosRenderGraph.Group group = new HypnosRenderGraph.Group();
                     group.name = "New Graph";
                     group.nodes = new List<RenderGraphNode>();
                     group.color = new Color(0.09803922f, 0.09803922f, 0.09803922f, 0.4f);
