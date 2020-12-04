@@ -68,7 +68,17 @@ namespace HypnosRenderPipeline.RenderGraph
             }
         }
 
-        public abstract void Excute(RenderContext context);
+        /// <summary>
+        /// This will be called when node is enabled.
+        /// </summary>
+        /// <param name="context"></param>
+        public abstract void Execute(RenderContext context);
+
+        /// <summary>
+        /// This will be called when node is disabled.
+        /// </summary>
+        /// <param name="contex"></param>
+        public virtual void DisExecute(RenderContext contex) { }
 
         public virtual void Dispose() { }
     }

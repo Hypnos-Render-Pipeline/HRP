@@ -11,7 +11,7 @@ namespace HypnosRenderPipeline.RenderGraph
         bool node_fold = true;
         Vector2 node_scroll = Vector2.zero;
 
-        bool edge_fold = true;
+        bool edge_fold = false;
         bool code_fold = false;
         Vector2 edge_scroll = Vector2.zero;
         Vector2 code_scroll = Vector2.zero;
@@ -84,14 +84,10 @@ namespace HypnosRenderPipeline.RenderGraph
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
-            if (GUILayout.Button("ReCompile")) {
-                HRGCompiler.Compile(info);
-            }
-
             code_fold = EditorGUILayout.BeginFoldoutHeaderGroup(code_fold, "Generated Code");
             if (code_fold)
             {
-                code_scroll = GUILayout.BeginScrollView(code_scroll, false, false, new GUILayoutOption[] { GUILayout.Height(210) });
+                code_scroll = GUILayout.BeginScrollView(code_scroll, false, false, new GUILayoutOption[] { GUILayout.Height(600) });
                 var rect = EditorGUILayout.BeginVertical();
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.TextArea(info.code);
@@ -99,8 +95,16 @@ namespace HypnosRenderPipeline.RenderGraph
                 EditorGUILayout.EndVertical();
                 EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.1f));
                 GUILayout.EndScrollView();
+                if (GUILayout.Button("Copy to ClipBoard"))
+                    GUIUtility.systemCopyBuffer = info.code;
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
+
+            if (GUILayout.Button("ReCompile"))
+            {
+                HRGCompiler.Compile(info);
+                code_fold = true;
+            }
         }
 
         [OnOpenAsset(0)]

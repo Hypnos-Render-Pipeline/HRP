@@ -40,7 +40,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         static MaterialWithName lightingMat = new MaterialWithName("Hidden/DeferredLighting");
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {           
             var cam = context.camera;
 

@@ -94,7 +94,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 if (node.nodeType != typeof(TextureDebug) || debug)
                 {
                     if (renderNode.enabled)
-                        renderNode.Excute(context);
+                        renderNode.Execute(context);
                 }
                 if (debug)
                     context.commandBuffer.EndSample(node.sampler);

@@ -35,7 +35,7 @@ namespace HypnosRenderPipeline.RenderPass
         public bool includeRTLight = false;
 
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             tileCount = Vector3Int.Min(maxTileCount, Vector3Int.Max(minTileCount, tileCount));
             tileCount = tileCount / 8 * 8;

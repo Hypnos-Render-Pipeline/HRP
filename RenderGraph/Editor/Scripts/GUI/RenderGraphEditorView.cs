@@ -232,6 +232,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     assetName = path;
                 }
             }
+            HRGCompiler.Compile(m_renderGraphInfo);
         }
     }
 }

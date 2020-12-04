@@ -45,7 +45,7 @@ namespace HypnosRenderPipeline.RenderPass
             DiscClip = Resources.Load<Texture2D>("Textures/LTC Lut/DiscClip");
         }
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             bool releaseTemp = false;
             if (filterdScreenColor.connected)

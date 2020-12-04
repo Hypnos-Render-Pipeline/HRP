@@ -59,7 +59,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         static MaterialWithName motionMat = new MaterialWithName("Hidden/CalculateMotion");
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
 

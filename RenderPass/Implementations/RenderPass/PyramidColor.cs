@@ -69,7 +69,7 @@ namespace HypnosRenderPipeline.RenderPass
             }
         }
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             context.context.ExecuteCommandBuffer(context.commandBuffer);
             context.commandBuffer.Clear();

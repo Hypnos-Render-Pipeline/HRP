@@ -16,7 +16,7 @@ namespace HypnosRenderPipeline.RenderPass
         public float faraway = 100;
 
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             if (cullingType == CullingType.Frustum)
             {

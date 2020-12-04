@@ -13,7 +13,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         public LayerMask mask = -1;
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             context.commandBuffer.SetRenderTarget(depth);
             if (!depth.connected)

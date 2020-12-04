@@ -305,185 +305,152 @@ MonoBehaviour:
     in_edges: 07000000
     out_edge: 
   groupRecs: []
-  code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\nnamespace
-    HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Fully_RTX_pipeline
+  recompiled: 1
+  code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
+    HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Fully_RTX_pipeline_Executor
     : HRGExecutor\r\n    {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
-    CullLight CullLight130176146;\r\n        ZBin ZBin961692096;\r\n        GBuffer
-    GBuffer219930995;\r\n        OutputNode OutputNode544614273;\r\n        RTDI
-    RTDI325377859;\r\n        // ----------------------------\r\n        \r\n       
-    // ShaderIDs:\r\n        // ----------------------------\r\n        System.Int32
-    CullLight130176146_lights = Shader.PropertyToID(\"CullLight130176146.lights\");\r\n       
-    System.Int32 ZBin961692096_lights = Shader.PropertyToID(\"ZBin961692096.lights\");\r\n       
-    System.Int32 ZBin961692096_depth = Shader.PropertyToID(\"ZBin961692096.depth\");\r\n       
-    System.Int32 ZBin961692096_lightBuffer = Shader.PropertyToID(\"ZBin961692096.lightBuffer\");\r\n       
-    System.Int32 ZBin961692096_tileLights = Shader.PropertyToID(\"ZBin961692096.tileLights\");\r\n       
-    System.Int32 GBuffer219930995_depth = Shader.PropertyToID(\"GBuffer219930995.depth\");\r\n       
-    System.Int32 GBuffer219930995_diffuse = Shader.PropertyToID(\"GBuffer219930995.diffuse\");\r\n       
-    System.Int32 GBuffer219930995_specular = Shader.PropertyToID(\"GBuffer219930995.specular\");\r\n       
-    System.Int32 GBuffer219930995_normal = Shader.PropertyToID(\"GBuffer219930995.normal\");\r\n       
-    System.Int32 GBuffer219930995_emission = Shader.PropertyToID(\"GBuffer219930995.emission\");\r\n       
-    System.Int32 GBuffer219930995_microAO = Shader.PropertyToID(\"GBuffer219930995.microAO\");\r\n       
-    System.Int32 GBuffer219930995_motion = Shader.PropertyToID(\"GBuffer219930995.motion\");\r\n       
-    System.Int32 OutputNode544614273_result = Shader.PropertyToID(\"OutputNode544614273.result\");\r\n       
-    System.Int32 RTDI325377859_lights = Shader.PropertyToID(\"RTDI325377859.lights\");\r\n       
-    System.Int32 RTDI325377859_lightBuffer = Shader.PropertyToID(\"RTDI325377859.lightBuffer\");\r\n       
-    System.Int32 RTDI325377859_tiledLights = Shader.PropertyToID(\"RTDI325377859.tiledLights\");\r\n       
-    System.Int32 RTDI325377859_directionalLightBuffer = Shader.PropertyToID(\"RTDI325377859.directionalLightBuffer\");\r\n       
-    System.Int32 RTDI325377859_depth = Shader.PropertyToID(\"RTDI325377859.depth\");\r\n       
-    System.Int32 RTDI325377859_diffuse = Shader.PropertyToID(\"RTDI325377859.diffuse\");\r\n       
-    System.Int32 RTDI325377859_specular = Shader.PropertyToID(\"RTDI325377859.specular\");\r\n       
-    System.Int32 RTDI325377859_normal = Shader.PropertyToID(\"RTDI325377859.normal\");\r\n       
-    System.Int32 RTDI325377859_emission = Shader.PropertyToID(\"RTDI325377859.emission\");\r\n       
-    System.Int32 RTDI325377859_ao = Shader.PropertyToID(\"RTDI325377859.ao\");\r\n       
-    System.Int32 RTDI325377859_lightingResult = Shader.PropertyToID(\"RTDI325377859.lightingResult\");\r\n       
-    // ----------------------------\r\n        \r\n        public void Init()\r\n       
-    {\r\n            CullLight130176146 = new CullLight();\r\n            CullLight130176146.cullingType
-    = CullLight.CullingType.Frustum;\r\n            CullLight130176146.radius = 200f;\r\n           
-    CullLight130176146.faraway = 100f;\r\n            CullLight130176146.enabled
-    = true;\r\n            ZBin961692096 = new ZBin();\r\n            ZBin961692096.tileCount
-    = new Vector3Int(128, 64, 24);\r\n            ZBin961692096.maxLightCountPerTile
-    = 64;\r\n            ZBin961692096.includeRTLight = true;\r\n            ZBin961692096.enabled
-    = true;\r\n            GBuffer219930995 = new GBuffer();\r\n            GBuffer219930995.a
-    = 1f;\r\n            GBuffer219930995.b = false;\r\n            GBuffer219930995.c
-    = new Vector2(1.10973f, 2f);\r\n            GBuffer219930995.d = E.d;\r\n           
-    GBuffer219930995.e = 10;\r\n            GBuffer219930995.f = new Color(1f, 2f,
-    3f, 0.22334f);\r\n            GBuffer219930995.enabled = true;\r\n           
-    OutputNode544614273 = new OutputNode();\r\n            OutputNode544614273.enabled
-    = true;\r\n            RTDI325377859 = new RTDI();\r\n            RTDI325377859.includeSunlight
-    = true;\r\n            RTDI325377859.enabled = true;\r\n        }\r\n       
-    \r\n        public int Execute(RenderContext context, bool debug = false)\r\n       
-    {\r\n            System.Int32 result = -1;\r\n            \r\n            //GBuffer219930995\r\n           
-    {\r\n                // preprocess node\r\n                {\r\n                   
-    // inputs\r\n                    GBuffer219930995.depth.AllocateResourcces(context,
-    GBuffer219930995_depth);\r\n                    GBuffer219930995.depth.name =
-    \"GBuffer219930995.depth\";\r\n                    \r\n                    //
-    outputs\r\n                    GBuffer219930995.diffuse.AllocateResourcces(context,
-    GBuffer219930995_diffuse);\r\n                    GBuffer219930995.diffuse.name
-    = \"GBuffer219930995.diffuse\";\r\n                    GBuffer219930995.diffuse.connected
-    = true;\r\n                    GBuffer219930995.specular.AllocateResourcces(context,
-    GBuffer219930995_specular);\r\n                    GBuffer219930995.specular.name
-    = \"GBuffer219930995.specular\";\r\n                    GBuffer219930995.specular.connected
-    = true;\r\n                    GBuffer219930995.normal.AllocateResourcces(context,
-    GBuffer219930995_normal);\r\n                    GBuffer219930995.normal.name
-    = \"GBuffer219930995.normal\";\r\n                    GBuffer219930995.normal.connected
-    = true;\r\n                    GBuffer219930995.emission.AllocateResourcces(context,
-    GBuffer219930995_emission);\r\n                    GBuffer219930995.emission.name
-    = \"GBuffer219930995.emission\";\r\n                    GBuffer219930995.emission.connected
-    = true;\r\n                    GBuffer219930995.microAO.AllocateResourcces(context,
-    GBuffer219930995_microAO);\r\n                    GBuffer219930995.microAO.name
-    = \"GBuffer219930995.microAO\";\r\n                    GBuffer219930995.microAO.connected
-    = true;\r\n                    GBuffer219930995.motion.AllocateResourcces(context,
-    GBuffer219930995_motion);\r\n                    GBuffer219930995.motion.name
-    = \"GBuffer219930995.motion\";\r\n                    GBuffer219930995.motion.connected
-    = false;\r\n                    context.commandBuffer.name = \"GBuffer219930995
-    Pre\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    CullLight CullLight0;\r\n        ZBin ZBin1;\r\n        GBuffer GBuffer2;\r\n       
+    OutputNode OutputNode3;\r\n        RTDI RTDI4;\r\n        // ----------------------------\r\n       
+    \r\n        // ShaderIDs:\r\n        // ----------------------------\r\n       
+    System.Int32 CullLight0_lights = Shader.PropertyToID(\"CullLight0.lights\");\r\n       
+    System.Int32 ZBin1_lights = Shader.PropertyToID(\"ZBin1.lights\");\r\n       
+    System.Int32 ZBin1_depth = Shader.PropertyToID(\"ZBin1.depth\");\r\n        System.Int32
+    ZBin1_lightBuffer = Shader.PropertyToID(\"ZBin1.lightBuffer\");\r\n        System.Int32
+    ZBin1_tileLights = Shader.PropertyToID(\"ZBin1.tileLights\");\r\n        System.Int32
+    GBuffer2_depth = Shader.PropertyToID(\"GBuffer2.depth\");\r\n        System.Int32
+    GBuffer2_diffuse = Shader.PropertyToID(\"GBuffer2.diffuse\");\r\n        System.Int32
+    GBuffer2_specular = Shader.PropertyToID(\"GBuffer2.specular\");\r\n        System.Int32
+    GBuffer2_normal = Shader.PropertyToID(\"GBuffer2.normal\");\r\n        System.Int32
+    GBuffer2_emission = Shader.PropertyToID(\"GBuffer2.emission\");\r\n        System.Int32
+    GBuffer2_microAO = Shader.PropertyToID(\"GBuffer2.microAO\");\r\n        System.Int32
+    GBuffer2_motion = Shader.PropertyToID(\"GBuffer2.motion\");\r\n        System.Int32
+    OutputNode3_result = Shader.PropertyToID(\"OutputNode3.result\");\r\n       
+    System.Int32 RTDI4_lights = Shader.PropertyToID(\"RTDI4.lights\");\r\n       
+    System.Int32 RTDI4_lightBuffer = Shader.PropertyToID(\"RTDI4.lightBuffer\");\r\n       
+    System.Int32 RTDI4_tiledLights = Shader.PropertyToID(\"RTDI4.tiledLights\");\r\n       
+    System.Int32 RTDI4_directionalLightBuffer = Shader.PropertyToID(\"RTDI4.directionalLightBuffer\");\r\n       
+    System.Int32 RTDI4_depth = Shader.PropertyToID(\"RTDI4.depth\");\r\n        System.Int32
+    RTDI4_diffuse = Shader.PropertyToID(\"RTDI4.diffuse\");\r\n        System.Int32
+    RTDI4_specular = Shader.PropertyToID(\"RTDI4.specular\");\r\n        System.Int32
+    RTDI4_normal = Shader.PropertyToID(\"RTDI4.normal\");\r\n        System.Int32
+    RTDI4_emission = Shader.PropertyToID(\"RTDI4.emission\");\r\n        System.Int32
+    RTDI4_ao = Shader.PropertyToID(\"RTDI4.ao\");\r\n        System.Int32 RTDI4_lightingResult
+    = Shader.PropertyToID(\"RTDI4.lightingResult\");\r\n        // ----------------------------\r\n       
+    \r\n        public void Init()\r\n        {\r\n            CullLight0 = new CullLight();\r\n           
+    CullLight0.cullingType = CullLight.CullingType.Frustum;\r\n            CullLight0.radius
+    = 200f;\r\n            CullLight0.faraway = 100f;\r\n            CullLight0.enabled
+    = true;\r\n            ZBin1 = new ZBin();\r\n            ZBin1.tileCount = new
+    Vector3Int(128, 64, 24);\r\n            ZBin1.maxLightCountPerTile = 64;\r\n           
+    ZBin1.includeRTLight = true;\r\n            ZBin1.enabled = true;\r\n           
+    GBuffer2 = new GBuffer();\r\n            GBuffer2.a = 1f;\r\n            GBuffer2.b
+    = false;\r\n            GBuffer2.c = new Vector2(1.10973f, 2f);\r\n           
+    GBuffer2.d = E.d;\r\n            GBuffer2.e = 10;\r\n            GBuffer2.f =
+    new Color(1f, 2f, 3f, 0.22334f);\r\n            GBuffer2.enabled = true;\r\n           
+    OutputNode3 = new OutputNode();\r\n            OutputNode3.enabled = true;\r\n           
+    RTDI4 = new RTDI();\r\n            RTDI4.includeSunlight = true;\r\n           
+    RTDI4.enabled = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
+    context, bool debug = false)\r\n        {\r\n            System.Int32 result
+    = -1;\r\n            \r\n            //GBuffer2\r\n            {\r\n               
+    context.commandBuffer.name = \"GBuffer2\";\r\n                // preprocess node\r\n               
+    {\r\n                    // inputs\r\n                    GBuffer2.depth.AllocateResourcces(context,
+    GBuffer2_depth);\r\n                    GBuffer2.depth.name = \"GBuffer2.depth\";\r\n                   
+    // outputs\r\n                    GBuffer2.diffuse.AllocateResourcces(context,
+    GBuffer2_diffuse);\r\n                    GBuffer2.diffuse.name = \"GBuffer2.diffuse\";\r\n                   
+    GBuffer2.diffuse.connected = true;\r\n                    GBuffer2.specular.AllocateResourcces(context,
+    GBuffer2_specular);\r\n                    GBuffer2.specular.name = \"GBuffer2.specular\";\r\n                   
+    GBuffer2.specular.connected = true;\r\n                    GBuffer2.normal.AllocateResourcces(context,
+    GBuffer2_normal);\r\n                    GBuffer2.normal.name = \"GBuffer2.normal\";\r\n                   
+    GBuffer2.normal.connected = true;\r\n                    GBuffer2.emission.AllocateResourcces(context,
+    GBuffer2_emission);\r\n                    GBuffer2.emission.name = \"GBuffer2.emission\";\r\n                   
+    GBuffer2.emission.connected = true;\r\n                    GBuffer2.microAO.AllocateResourcces(context,
+    GBuffer2_microAO);\r\n                    GBuffer2.microAO.name = \"GBuffer2.microAO\";\r\n                   
+    GBuffer2.microAO.connected = true;\r\n                    GBuffer2.motion.AllocateResourcces(context,
+    GBuffer2_motion);\r\n                    GBuffer2.motion.name = \"GBuffer2.motion\";\r\n                   
+    GBuffer2.motion.connected = false;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                {\r\n                    context.commandBuffer.name =
-    \"GBuffer219930995\";\r\n                    GBuffer219930995.Excute(context);\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
-    node\r\n                {\r\n                    GBuffer219930995.motion.ReleaseResourcces(context);\r\n                   
-    context.commandBuffer.name = \"GBuffer219930995 Post\";\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n            }\r\n           
-    //CullLight130176146\r\n            {\r\n                // preprocess node\r\n               
-    {\r\n                    // inputs\r\n                    // outputs\r\n                   
-    CullLight130176146.lights.AllocateResourcces(context, CullLight130176146_lights);\r\n                   
-    CullLight130176146.lights.name = \"CullLight130176146.lights\";\r\n                   
-    CullLight130176146.lights.connected = true;\r\n                    context.commandBuffer.name
-    = \"CullLight130176146 Pre\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    node\r\n                GBuffer2.Execute(context);\r\n                // postprocess
+    node\r\n                {\r\n                    GBuffer2.motion.ReleaseResourcces(context);\r\n                   
+    GBuffer2.diffuse.connected = true;\r\n                    GBuffer2.specular.connected
+    = true;\r\n                    GBuffer2.normal.connected = true;\r\n                   
+    GBuffer2.emission.connected = true;\r\n                    GBuffer2.microAO.connected
+    = true;\r\n                    GBuffer2.motion.connected = true;\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //CullLight0\r\n           
+    {\r\n                context.commandBuffer.name = \"CullLight0\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    // outputs\r\n                    CullLight0.lights.AllocateResourcces(context,
+    CullLight0_lights);\r\n                    CullLight0.lights.name = \"CullLight0.lights\";\r\n                   
+    CullLight0.lights.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                {\r\n                    context.commandBuffer.name =
-    \"CullLight130176146\";\r\n                    CullLight130176146.Excute(context);\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
-    node\r\n                {\r\n                }\r\n            }\r\n           
-    //ZBin961692096\r\n            {\r\n                // preprocess node\r\n               
-    {\r\n                    // inputs\r\n                    ZBin961692096.lights.connected
-    = true;\r\n                    ZBin961692096.lights.Move(CullLight130176146.lights);\r\n                   
-    \r\n                    ZBin961692096.depth.AllocateResourcces(context, ZBin961692096_depth);\r\n                   
-    ZBin961692096.depth.name = \"ZBin961692096.depth\";\r\n                    \r\n                   
-    // outputs\r\n                    ZBin961692096.lightBuffer.AllocateResourcces(context,
-    ZBin961692096_lightBuffer);\r\n                    ZBin961692096.lightBuffer.name
-    = \"ZBin961692096.lightBuffer\";\r\n                    ZBin961692096.lightBuffer.connected
-    = true;\r\n                    ZBin961692096.tileLights.AllocateResourcces(context,
-    ZBin961692096_tileLights);\r\n                    ZBin961692096.tileLights.name
-    = \"ZBin961692096.tileLights\";\r\n                    ZBin961692096.tileLights.connected
-    = true;\r\n                    context.commandBuffer.name = \"ZBin961692096 Pre\";\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    node\r\n                CullLight0.Execute(context);\r\n                // postprocess
+    node\r\n                {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //ZBin1\r\n           
+    {\r\n                context.commandBuffer.name = \"ZBin1\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    ZBin1.lights.connected = true;\r\n                    ZBin1.lights.Move(CullLight0.lights);\r\n                   
+    ZBin1.depth.AllocateResourcces(context, ZBin1_depth);\r\n                   
+    ZBin1.depth.name = \"ZBin1.depth\";\r\n                    // outputs\r\n                   
+    ZBin1.lightBuffer.AllocateResourcces(context, ZBin1_lightBuffer);\r\n                   
+    ZBin1.lightBuffer.name = \"ZBin1.lightBuffer\";\r\n                    ZBin1.lightBuffer.connected
+    = true;\r\n                    ZBin1.tileLights.AllocateResourcces(context, ZBin1_tileLights);\r\n                   
+    ZBin1.tileLights.name = \"ZBin1.tileLights\";\r\n                    ZBin1.tileLights.connected
+    = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                {\r\n                    context.commandBuffer.name =
-    \"ZBin961692096\";\r\n                    ZBin961692096.Excute(context);\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
-    node\r\n                {\r\n                    ZBin961692096.depth.ReleaseResourcces(context);\r\n                   
-    context.commandBuffer.name = \"ZBin961692096 Post\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n            }\r\n           
-    //RTDI325377859\r\n            {\r\n                // preprocess node\r\n               
-    {\r\n                    // inputs\r\n                    RTDI325377859.lights.connected
-    = true;\r\n                    RTDI325377859.lights.Move(CullLight130176146.lights);\r\n                   
-    \r\n                    RTDI325377859.lightBuffer.connected = true;\r\n                   
-    RTDI325377859.lightBuffer.Move(ZBin961692096.lightBuffer);\r\n                   
-    \r\n                    RTDI325377859.tiledLights.connected = true;\r\n                   
-    RTDI325377859.tiledLights.Move(ZBin961692096.tileLights);\r\n                   
-    \r\n                    RTDI325377859.directionalLightBuffer.AllocateResourcces(context,
-    RTDI325377859_directionalLightBuffer);\r\n                    RTDI325377859.directionalLightBuffer.name
-    = \"RTDI325377859.directionalLightBuffer\";\r\n                    \r\n                   
-    RTDI325377859.depth.connected = true;\r\n                    RTDI325377859.depth.Move(GBuffer219930995.depth);\r\n                   
-    \r\n                    RTDI325377859.diffuse.connected = true;\r\n                   
-    RTDI325377859.diffuse.Move(GBuffer219930995.diffuse);\r\n                   
-    \r\n                    RTDI325377859.specular.connected = true;\r\n                   
-    RTDI325377859.specular.Move(GBuffer219930995.specular);\r\n                   
-    \r\n                    RTDI325377859.normal.connected = true;\r\n                   
-    RTDI325377859.normal.Move(GBuffer219930995.normal);\r\n                    \r\n                   
-    RTDI325377859.emission.connected = true;\r\n                    RTDI325377859.emission.Move(GBuffer219930995.emission);\r\n                   
-    \r\n                    RTDI325377859.ao.connected = true;\r\n                   
-    RTDI325377859.ao.Move(GBuffer219930995.microAO);\r\n                    \r\n                   
-    // outputs\r\n                    RTDI325377859.lightingResult.AllocateResourcces(context,
-    RTDI325377859_lightingResult);\r\n                    RTDI325377859.lightingResult.name
-    = \"RTDI325377859.lightingResult\";\r\n                    RTDI325377859.lightingResult.connected
-    = true;\r\n                    context.commandBuffer.name = \"RTDI325377859 Pre\";\r\n                   
+    node\r\n                ZBin1.Execute(context);\r\n                // postprocess
+    node\r\n                {\r\n                    ZBin1.depth.ReleaseResourcces(context);\r\n                   
+    ZBin1.tileLights.connected = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //RTDI4\r\n           
+    {\r\n                context.commandBuffer.name = \"RTDI4\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    RTDI4.lights.connected = true;\r\n                    RTDI4.lights.Move(CullLight0.lights);\r\n                   
+    RTDI4.lightBuffer.connected = true;\r\n                    RTDI4.lightBuffer.Move(ZBin1.lightBuffer);\r\n                   
+    RTDI4.tiledLights.connected = true;\r\n                    RTDI4.tiledLights.Move(ZBin1.tileLights);\r\n                   
+    RTDI4.directionalLightBuffer.AllocateResourcces(context, RTDI4_directionalLightBuffer);\r\n                   
+    RTDI4.directionalLightBuffer.name = \"RTDI4.directionalLightBuffer\";\r\n                   
+    RTDI4.depth.connected = true;\r\n                    RTDI4.depth.Move(GBuffer2.depth);\r\n                   
+    RTDI4.diffuse.connected = true;\r\n                    RTDI4.diffuse.Move(GBuffer2.diffuse);\r\n                   
+    RTDI4.specular.connected = true;\r\n                    RTDI4.specular.Move(GBuffer2.specular);\r\n                   
+    RTDI4.normal.connected = true;\r\n                    RTDI4.normal.Move(GBuffer2.normal);\r\n                   
+    RTDI4.emission.connected = true;\r\n                    RTDI4.emission.Move(GBuffer2.emission);\r\n                   
+    RTDI4.ao.connected = true;\r\n                    RTDI4.ao.Move(GBuffer2.microAO);\r\n                   
+    // outputs\r\n                    RTDI4.lightingResult.AllocateResourcces(context,
+    RTDI4_lightingResult);\r\n                    RTDI4.lightingResult.name = \"RTDI4.lightingResult\";\r\n                   
+    RTDI4.lightingResult.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                RTDI4.Execute(context);\r\n                // postprocess
+    node\r\n                {\r\n                    RTDI4.lightBuffer.ReleaseResourcces(context);\r\n                   
+    RTDI4.tiledLights.ReleaseResourcces(context);\r\n                    RTDI4.directionalLightBuffer.ReleaseResourcces(context);\r\n                   
+    RTDI4.depth.ReleaseResourcces(context);\r\n                    RTDI4.diffuse.ReleaseResourcces(context);\r\n                   
+    RTDI4.specular.ReleaseResourcces(context);\r\n                    RTDI4.normal.ReleaseResourcces(context);\r\n                   
+    RTDI4.emission.ReleaseResourcces(context);\r\n                    RTDI4.ao.ReleaseResourcces(context);\r\n                   
+    RTDI4.lightingResult.connected = true;\r\n                }\r\n               
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //OutputNode3\r\n           
+    {\r\n                context.commandBuffer.name = \"OutputNode3\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    OutputNode3.result.connected = true;\r\n                    OutputNode3.result.AllocateResourcces(context,
+    OutputNode3_result);\r\n                    OutputNode3.result.name = \"OutputNode3.result\";\r\n                   
+    OutputNode3.result.CastFrom(context, RTDI4.lightingResult);\r\n                   
+    RTDI4.lightingResult.ReleaseResourcces(context);\r\n                    // outputs\r\n                   
     context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                {\r\n                    context.commandBuffer.name =
-    \"RTDI325377859\";\r\n                    RTDI325377859.Excute(context);\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // postprocess
-    node\r\n                {\r\n                    RTDI325377859.lightBuffer.ReleaseResourcces(context);\r\n                   
-    RTDI325377859.tiledLights.ReleaseResourcces(context);\r\n                   
-    RTDI325377859.directionalLightBuffer.ReleaseResourcces(context);\r\n                   
-    RTDI325377859.depth.ReleaseResourcces(context);\r\n                    RTDI325377859.diffuse.ReleaseResourcces(context);\r\n                   
-    RTDI325377859.specular.ReleaseResourcces(context);\r\n                    RTDI325377859.normal.ReleaseResourcces(context);\r\n                   
-    RTDI325377859.emission.ReleaseResourcces(context);\r\n                    RTDI325377859.ao.ReleaseResourcces(context);\r\n                   
-    context.commandBuffer.name = \"RTDI325377859 Post\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n            }\r\n           
-    //OutputNode544614273\r\n            {\r\n                // preprocess node\r\n               
-    {\r\n                    // inputs\r\n                    OutputNode544614273.result.connected
-    = true;\r\n                    OutputNode544614273.result.AllocateResourcces(context,
-    OutputNode544614273_result);\r\n                    OutputNode544614273.result.name
-    = \"OutputNode544614273.result\";\r\n                    OutputNode544614273.result.CastFrom(context,
-    RTDI325377859.lightingResult);\r\n                    RTDI325377859.lightingResult.ReleaseResourcces(context);\r\n                   
-    \r\n                    // outputs\r\n                    context.commandBuffer.name
-    = \"OutputNode544614273 Pre\";\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                {\r\n                    result = OutputNode544614273.result.handle;\r\n                   
-    return result;\r\n                }\r\n            }\r\n        }\r\n       
-    \r\n        public void Dispose()\r\n        {\r\n            // CullLight130176146\r\n           
-    {\r\n                CullLight130176146.lights.Dispose();\r\n               
-    CullLight130176146.Dispose();\r\n            }\r\n            // ZBin961692096\r\n           
-    {\r\n                ZBin961692096.lights.Dispose();\r\n                ZBin961692096.depth.Dispose();\r\n               
-    ZBin961692096.lightBuffer.Dispose();\r\n                ZBin961692096.tileLights.Dispose();\r\n               
-    ZBin961692096.Dispose();\r\n            }\r\n            // GBuffer219930995\r\n           
-    {\r\n                GBuffer219930995.depth.Dispose();\r\n                GBuffer219930995.diffuse.Dispose();\r\n               
-    GBuffer219930995.specular.Dispose();\r\n                GBuffer219930995.normal.Dispose();\r\n               
-    GBuffer219930995.emission.Dispose();\r\n                GBuffer219930995.microAO.Dispose();\r\n               
-    GBuffer219930995.motion.Dispose();\r\n                GBuffer219930995.Dispose();\r\n           
-    }\r\n            // OutputNode544614273\r\n            {\r\n                OutputNode544614273.result.Dispose();\r\n               
-    OutputNode544614273.Dispose();\r\n            }\r\n            // RTDI325377859\r\n           
-    {\r\n                RTDI325377859.lights.Dispose();\r\n                RTDI325377859.lightBuffer.Dispose();\r\n               
-    RTDI325377859.tiledLights.Dispose();\r\n                RTDI325377859.directionalLightBuffer.Dispose();\r\n               
-    RTDI325377859.depth.Dispose();\r\n                RTDI325377859.diffuse.Dispose();\r\n               
-    RTDI325377859.specular.Dispose();\r\n                RTDI325377859.normal.Dispose();\r\n               
-    RTDI325377859.emission.Dispose();\r\n                RTDI325377859.ao.Dispose();\r\n               
-    RTDI325377859.lightingResult.Dispose();\r\n                RTDI325377859.Dispose();\r\n           
-    }\r\n        }\r\n    }\r\n}\r\n"
+    node\r\n                result = OutputNode3.result.handle;\r\n               
+    return result;\r\n            }\r\n        }\r\n        \r\n        public void
+    Dispose()\r\n        {\r\n            // CullLight0\r\n            {\r\n               
+    CullLight0.lights.Dispose();\r\n                CullLight0.Dispose();\r\n           
+    }\r\n            // ZBin1\r\n            {\r\n                ZBin1.lights.Dispose();\r\n               
+    ZBin1.depth.Dispose();\r\n                ZBin1.lightBuffer.Dispose();\r\n               
+    ZBin1.tileLights.Dispose();\r\n                ZBin1.Dispose();\r\n           
+    }\r\n            // GBuffer2\r\n            {\r\n                GBuffer2.depth.Dispose();\r\n               
+    GBuffer2.diffuse.Dispose();\r\n                GBuffer2.specular.Dispose();\r\n               
+    GBuffer2.normal.Dispose();\r\n                GBuffer2.emission.Dispose();\r\n               
+    GBuffer2.microAO.Dispose();\r\n                GBuffer2.motion.Dispose();\r\n               
+    GBuffer2.Dispose();\r\n            }\r\n            // OutputNode3\r\n           
+    {\r\n                OutputNode3.result.Dispose();\r\n                OutputNode3.Dispose();\r\n           
+    }\r\n            // RTDI4\r\n            {\r\n                RTDI4.lights.Dispose();\r\n               
+    RTDI4.lightBuffer.Dispose();\r\n                RTDI4.tiledLights.Dispose();\r\n               
+    RTDI4.directionalLightBuffer.Dispose();\r\n                RTDI4.depth.Dispose();\r\n               
+    RTDI4.diffuse.Dispose();\r\n                RTDI4.specular.Dispose();\r\n               
+    RTDI4.normal.Dispose();\r\n                RTDI4.emission.Dispose();\r\n               
+    RTDI4.ao.Dispose();\r\n                RTDI4.lightingResult.Dispose();\r\n               
+    RTDI4.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"

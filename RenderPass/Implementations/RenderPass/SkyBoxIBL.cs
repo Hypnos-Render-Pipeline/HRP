@@ -33,7 +33,7 @@ namespace HypnosRenderPipeline.RenderPass
         static MaterialWithName filterMat = new MaterialWithName("Hidden/FilterSkybox");
         static MaterialWithName iblMat = new MaterialWithName("Hidden/IBL");
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
 

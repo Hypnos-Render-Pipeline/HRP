@@ -49,7 +49,7 @@ namespace HypnosRenderPipeline.RenderPass
             lightConstBuffer.Dispose();
         }
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             var cam = context.camera;
             var cpos = cam.transform.position;

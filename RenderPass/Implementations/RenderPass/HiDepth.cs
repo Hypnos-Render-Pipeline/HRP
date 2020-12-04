@@ -21,7 +21,7 @@ namespace HypnosRenderPipeline.RenderPass
             hiZ = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RFloat, 24, 7) { autoGenerateMips = false, useMipMap = true }, colorCastMode: ColorCastMode.Fixed, srcPin: depth);
         }
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
             int2 wh = new int2(depth.desc.basicDesc.width, depth.desc.basicDesc.height);

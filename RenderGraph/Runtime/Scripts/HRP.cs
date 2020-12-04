@@ -40,16 +40,24 @@ namespace HypnosRenderPipeline
 #if UNITY_EDITOR
             if (m_asset.useCompliedCodeInEditor)
             {
+                try
+                {
 #endif
-                m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+                    m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
 #if UNITY_EDITOR
+                }
+                catch
+                {
+                    // try totally recompile
+                    HRGCompiler.Compile(m_asset.hypnosRenderPipelineGraph);
+                    m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+                }
             }
             else
             {
                 m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
             }
 #endif
-            //m_executor = new HRG_SSR();
             m_executor.Init();
             m_asset.defaultMaterial.hideFlags = HideFlags.NotEditable;
 
@@ -169,17 +177,32 @@ namespace HypnosRenderPipeline
                     }
                     else
                     {
-                        if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph)
+                        if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph
+#if UNITY_EDITOR
+                            || m_hypnosRenderPipelineGraph.recompiled
+#endif
+                            )
                         {
                             m_hypnosRenderPipelineGraph = m_asset.hypnosRenderPipelineGraph;
-
+#if UNITY_EDITOR
+                            m_hypnosRenderPipelineGraph.recompiled = false;
+#endif
                             m_executor.Dispose();
 #if UNITY_EDITOR
                             if (m_asset.useCompliedCodeInEditor)
                             {
+                                try
+                                {
 #endif
-                                m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+                                    m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
 #if UNITY_EDITOR
+                                }
+                                catch
+                                {
+                                    // try totally recompile
+                                    HRGCompiler.Compile(m_asset.hypnosRenderPipelineGraph);
+                                    m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+                                }
                             }
                             else
                             {

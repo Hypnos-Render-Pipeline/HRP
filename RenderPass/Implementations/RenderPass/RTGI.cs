@@ -90,9 +90,15 @@ namespace HypnosRenderPipeline.RenderPass
         }
 
 
-        public override void Excute(RenderContext context)
+        static SunAtmo.SunLight[] sunLightClear = new SunAtmo.SunLight[] { new SunAtmo.SunLight() { dir = 0, color = 0, angle = 0 } };
+        public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
+
+            if (!sun.connected)
+            {
+                cb.SetComputeBufferData(sun, sunLightClear);
+            }
 
             cb.SetGlobalTexture("_SceneColor", target);
 

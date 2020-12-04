@@ -67,7 +67,13 @@ namespace HypnosRenderPipeline.RenderPass
 
         public SunAtmo() { hash = GetHashCode(); }
 
-        public override void Excute(RenderContext context)
+        public override void DisExecute(RenderContext contex)
+        {
+            if (sunBuffer.connected)
+                contex.commandBuffer.SetComputeBufferData(sunBuffer, sunLightClear);
+        }
+
+        public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
 

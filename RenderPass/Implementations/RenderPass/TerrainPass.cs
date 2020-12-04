@@ -37,7 +37,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         HRPTerrain terrain = null;
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
 

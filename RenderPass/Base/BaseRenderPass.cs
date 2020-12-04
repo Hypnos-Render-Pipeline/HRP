@@ -91,7 +91,7 @@ namespace HypnosRenderPipeline.RenderPass
         [Tooltip("Output to screen")]
         public TexturePin result = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1,1, RenderTextureFormat.DefaultHDR), SizeCastMode.Fixed, ColorCastMode.Fixed, SizeScale.Full));
 
-        public override void Excute(RenderContext context) { }
+        public override void Execute(RenderContext context) { }
     }
 
 
@@ -120,7 +120,7 @@ namespace HypnosRenderPipeline.RenderPass
         [HideInInspector]
         public RenderTexture texture;
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             if (texture != null)
             {
@@ -136,9 +136,9 @@ namespace HypnosRenderPipeline.RenderPass
 
     public class OutputNode : BaseOutputNode
     {
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
-            base.Excute(context);
+            base.Execute(context);
         }
     }
 }

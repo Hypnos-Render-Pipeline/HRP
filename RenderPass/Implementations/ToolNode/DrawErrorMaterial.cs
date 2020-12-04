@@ -31,7 +31,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         static MaterialWithName errorMat = new MaterialWithName("Hidden/InternalErrorShader");
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             context.commandBuffer.SetRenderTarget(color: target, depth: depth);
             context.context.ExecuteCommandBuffer(context.commandBuffer);

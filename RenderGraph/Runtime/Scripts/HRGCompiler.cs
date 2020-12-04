@@ -54,6 +54,12 @@ namespace HypnosRenderPipeline.RenderGraph
                 if (line != null) m_code.AppendLine(line);
                 else m_code.AppendLine("");
             }
+
+            public void Comment(string c)
+            {
+                Line("// " + c);
+            }
+
             public void Brace()
             {
                 Line("{");
@@ -206,25 +212,27 @@ namespace HypnosRenderPipeline.RenderGraph
 
             m_code.Line("using HypnosRenderPipeline.RenderPass;");
             m_code.Line("using UnityEngine;");
-            
-            using(m_code.AutoBrance("namespace HypnosRenderPipeline.RenderGraph"))
+            m_code.Line();
+
+            using (m_code.AutoBrance("namespace HypnosRenderPipeline.RenderGraph"))
             {
-                using (m_code.AutoBrance("public class HRG_" + m_graph.name + " : HRGExecutor"))
+                using (m_code.AutoBrance("public class HRG_" + m_graph.name + "_Executor : HRGExecutor"))
                 {
                     // nodes
-                    m_code.Line("// Nodes:");
-                    m_code.Line("// ----------------------------");
+                    m_code.Comment("Nodes:");
+                    m_code.Comment("----------------------------");
+                    int postfix = 0;
                     foreach (var node in m_graph.nodes)
                     {
-                        var name = node.nodeName + UnityEngine.Random.Range(0, 999999999).ToString();
+                        var name = node.nodeName + (postfix++).ToString();
                         nodeName[node] = name;
                         m_code.Declare(node.nodeType, name);
                     }
-                    m_code.Line("// ----------------------------");
+                    m_code.Comment("----------------------------");
                     m_code.Line();
 
-                    m_code.Line("// ShaderIDs:");
-                    m_code.Line("// ----------------------------");
+                    m_code.Comment("ShaderIDs:");
+                    m_code.Comment("----------------------------");
                     HashSet<string> pinNames = new HashSet<string>();
                     foreach (var node in m_graph.nodes)
                     {
@@ -235,7 +243,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     }
                     foreach (var p in pinNames)
                         m_code.Declare<int>(p, "Shader.PropertyToID(\"" + p.Replace("_", ".") + "\")");
-                    m_code.Line("// ----------------------------");
+                    m_code.Comment("----------------------------");
                     m_code.Line();
 
 
@@ -264,19 +272,21 @@ namespace HypnosRenderPipeline.RenderGraph
                                 using (m_code.AutoBrance("//" + nodeName[node]))
                                 {
                                     bool enabled;
+                                    bool has_disExecute = false;
+                                    bool has_post = false;
+                                    m_code.Line("context.commandBuffer.name = \"" + nodeName[node] + "\";");
                                     using (m_code.AutoBrance("// preprocess node"))
                                     {
                                         bool execute_preprocess;
                                         enabled = PrepareNode(node, out execute_preprocess);
                                         if (execute_preprocess)
                                         {
-                                            m_code.Line("context.commandBuffer.name = \"" + nodeName[node] + " Pre\";");
                                             m_code.Line("context.context.ExecuteCommandBuffer(context.commandBuffer);");
                                             m_code.Line("context.commandBuffer.Clear();");
                                         }
 
                                     }
-                                    using (m_code.AutoBrance("// perform node"))
+                                    m_code.Line("// perform node");
                                     {
                                         var node_type = node.nodeType.GetCustomAttribute<RenderNodeTypeAttribute>().type;
                                         if (node_type == RenderNodeTypeAttribute.Type.OutputNode)
@@ -287,23 +297,32 @@ namespace HypnosRenderPipeline.RenderGraph
                                         }
                                         if (enabled)
                                         {
-                                            m_code.Line("context.commandBuffer.name = \"" + nodeName[node] + "\";");
-                                            m_code.Line(nodeName[node] + ".Excute(context);");
-                                            m_code.Line("context.context.ExecuteCommandBuffer(context.commandBuffer);");
-                                            m_code.Line("context.commandBuffer.Clear();");
+                                            m_code.Line(nodeName[node] + ".Execute(context);");
                                         }
-
+                                        else if (node.nodeType.GetMethod("DisExecute").DeclaringType != typeof(BaseRenderNode))
+                                        {
+                                            has_disExecute = true;
+                                            m_code.Line(nodeName[node] + ".DisExecute(context);");
+                                        }
                                     }
                                     using (m_code.AutoBrance("// postprocess node"))
                                     {
-                                        if (ReleaseNode(node))
+                                        has_post = ReleaseNode(node);
+                                        var node_name = nodeName[node];
+                                        foreach (var pin in pin_map)
                                         {
-                                            m_code.Line("context.commandBuffer.name = \"" + nodeName[node] + " Post\";");
-                                            m_code.Line("context.context.ExecuteCommandBuffer(context.commandBuffer);");
-                                            m_code.Line("context.commandBuffer.Clear();");
+                                            var name = node_name + "." + pin.Key;
+                                            if (node.outputs.FindIndex(e => { return e.name == pin.Key; }) > 0)
+                                            {
+                                                m_code.SetValue<bool>(name + ".connected", enabled);
+                                            }
                                         }
                                     }
+                                    if (enabled || has_disExecute || has_post) {
+                                        m_code.Line("context.context.ExecuteCommandBuffer(context.commandBuffer);");
+                                        m_code.Line("context.commandBuffer.Clear();");
 
+                                    }
                                     {
                                         var nodeRec = GetNodeInstance(node);
                                         foreach (var output_value in nodeRec.outputs)
@@ -393,6 +412,7 @@ namespace HypnosRenderPipeline.RenderGraph
             CompileFromString(m_graph.name, m_code.Result());
 
             m_origin_graph.code = m_code.Result();
+            m_origin_graph.recompiled = true;
             UnityEditor.EditorUtility.SetDirty(m_origin_graph);
 
             return m_code.Result();
@@ -426,7 +446,7 @@ namespace HypnosRenderPipeline.RenderGraph
             var node_name = nodeName[node];
             pin_map.Clear();
 
-            m_code.Line("// inputs");
+            m_code.Comment("inputs");
             foreach (var input_value in nodeInfo.inputs)
             {
                 var input_pin_name = node_name + "." + input_value.Key;
@@ -488,10 +508,9 @@ namespace HypnosRenderPipeline.RenderGraph
                     pinPool[input_pin_name] = 1;
                 }
                 pin_map[input.Name] = connected;
-                m_code.Line();
             }
 
-            m_code.Line("// outputs");
+            m_code.Comment("outputs");
 
             var out_edges = m_graph.SearchNodeInDic(node).Item2;
 
@@ -660,7 +679,7 @@ namespace HypnosRenderPipeline.RenderGraph
 
         public static HRGExecutor CompileFromString(string name, string code)
         {
-            Modified.Mono.CSharp.CSharpCodeCompiler cdp = new Modified.Mono.CSharp.CSharpCodeCompiler();
+            Tools.CSharpCodeCompiler cdp = new Tools.CSharpCodeCompiler();
 
             CompilerParameters cp = new CompilerParameters();
             cp.ReferencedAssemblies.Add(typeof(HRGCompiler).Assembly.Location);
@@ -697,7 +716,7 @@ namespace HypnosRenderPipeline.RenderGraph
             else
             {
                 Assembly ass = cr.CompiledAssembly;
-                Type type = ass.GetType(string.Format("{0}.{1}", "HypnosRenderPipeline.RenderGraph", "HRG_" + name));
+                Type type = ass.GetType(string.Format("{0}.{1}", "HypnosRenderPipeline.RenderGraph", "HRG_" + name + "_Executor"));
                 return Activator.CreateInstance(type) as HRGExecutor;
             }
         }

@@ -29,28 +29,25 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-
-namespace Modified.Mono.CSharp
-{
-
-    using System;
-    using System.CodeDom;
-    using System.CodeDom.Compiler;
-    using System.ComponentModel;
-    using System.IO;
-    using System.Text;
-    using System.Reflection;
-    using System.Collections;
-    using System.Collections.Specialized;
-    using System.Diagnostics;
-    using System.Text.RegularExpressions;
-    using System.Linq;
-    using UnityEngine;
-
+using System;
+using System.CodeDom;
+using System.CodeDom.Compiler;
+using System.ComponentModel;
+using System.IO;
+using System.Text;
+using System.Reflection;
+using System.Collections.Specialized;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Linq;
+using UnityEngine;
 #if NET_2_0
 	using System.Threading;
 	using System.Collections.Generic;
 #endif
+
+namespace HypnosRenderPipeline.Tools
+{
 
 #if UNITY_EDITOR
     internal class MonoPostBuild : UnityEditor.Build.IPostprocessBuildWithReport
@@ -64,9 +61,9 @@ namespace Modified.Mono.CSharp
             var t = report.summary.outputPath;
             string toPath = t.Substring(0, t.LastIndexOf("/")).Replace("/", "\\") + "\\MonoBleedingEdge";
             CopyDic(fromPath + "\\bin", toPath + "\\bin");
-            CopyDic(fromPath + "\\lib\\mono\\4.5", toPath + "\\lib\\mono\\4.5");
+            CopyDic(fromPath + "\\lib\\mono\\4.5", toPath + "\\lib\\mono\\4.5", true);
         }
-        static void CopyDic(string sourceDir, string toDir)
+        static void CopyDic(string sourceDir, string toDir, bool ban = false)
         {
             if (!Directory.Exists(sourceDir))
             {
@@ -77,26 +74,32 @@ namespace Modified.Mono.CSharp
                 Directory.CreateDirectory(toDir);
             }
             DirectoryInfo directInfo = new DirectoryInfo(sourceDir);
-            //copy files
             FileInfo[] filesInfos = directInfo.GetFiles();
             foreach (FileInfo fileinfo in filesInfos)
             {
                 string fileName = fileinfo.Name;
                 string target = toDir + @"/" + fileName;
                 if (!File.Exists(target))
+                {
+                    if (ban)
+                    {
+                        if (fileName != "mcs.exe.dylib" && fileName != "mscorlib.dll" && fileName != "System.Xml.dll"
+                             && fileName != "System.dll" && fileName != "mcs.exe" && fileName != "System.Core.dll")
+                            continue;
+                    }
+                    else
+                    {
+                        if (fileName != "mono.exe" && fileName != "mono-2.0-sgen.dll")
+                            continue;
+                    }
                     File.Copy(fileinfo.FullName, target, false);
-            }
-            //copy directory
-            foreach (DirectoryInfo directoryPath in directInfo.GetDirectories())
-            {
-                string toDirPath = toDir + @"/" + directoryPath.Name;
-                CopyDic(directoryPath.FullName, toDirPath);
+                }
             }
         }
     }
 #endif
 
-        internal class CSharpCodeCompiler : ICodeCompiler
+    public class CSharpCodeCompiler : ICodeCompiler
     {
         static string windowsMcsPath;
         static string windowsMonoPath;

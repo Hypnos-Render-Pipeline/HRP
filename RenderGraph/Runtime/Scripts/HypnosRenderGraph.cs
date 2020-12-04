@@ -355,11 +355,11 @@ namespace HypnosRenderPipeline.RenderGraph
                 GameObject.DestroyImmediate(gameObject);
             }
         }
-#endif
 
+        public bool recompiled = false;
+#endif
         [SerializeField]
         public string code = "";
-
     }
 
 #if UNITY_EDITOR

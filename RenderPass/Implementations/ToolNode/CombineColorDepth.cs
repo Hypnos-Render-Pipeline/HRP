@@ -22,7 +22,7 @@ namespace HypnosRenderPipeline.RenderPass
                                                     ColorCastMode.FitToInput,
                                                     SizeScale.Full);
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             context.commandBuffer.Blit(color, combined);
             context.commandBuffer.Blit(depth, combined, MaterialWithName.depthBlit);

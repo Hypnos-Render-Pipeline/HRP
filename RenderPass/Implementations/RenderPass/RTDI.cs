@@ -53,7 +53,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         List<LightStructGPU> lightBufferCPU = new List<LightStructGPU>();
 
-        public override void Excute(RenderContext context)
+        public override void Execute(RenderContext context)
         {
             var cam = context.camera;
             var cpos = cam.transform.position;
