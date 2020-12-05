@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 335f42c3e16430245bbce9ff5563fe5b, type: 3}
   m_Name: path
   m_EditorClassIdentifier: HypnosRenderPipeline.PathDefine:HypnosRenderPipeline.Tools:PathObject
-  inPackage: 1
+  inPackage: 0

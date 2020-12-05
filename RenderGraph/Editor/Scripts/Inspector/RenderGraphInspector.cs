@@ -104,6 +104,8 @@ namespace HypnosRenderPipeline.RenderGraph
             {
                 HRGCompiler.Compile(info);
                 code_fold = true;
+                edge_fold = false;
+                node_fold = false;
             }
         }
 

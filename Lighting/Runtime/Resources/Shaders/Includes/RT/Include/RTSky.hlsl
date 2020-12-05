@@ -40,7 +40,7 @@ inline float2 ToRadialCoords(float3 coords)
 //---------------------------------------------
 //----------Expensive Version------------------
 //---------------------------------------------
-void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
+void SkyLight(inout RayIntersection rayIntersection, const int distance = 10000) {
 	if(rayIntersection.weight.w < 0){
 		return;
 	}
@@ -71,7 +71,7 @@ void SkyLight(inout RayIntersection rayIntersection, const int distance = 50) {
 //---------------------------------------------
 //-----------Realtime Version------------------
 //---------------------------------------------
-void SkyLight(inout RayIntersection_RTGI rayIntersection, const int distance = 50)
+void SkyLight(inout RayIntersection_RTGI rayIntersection, const int distance = 10000)
 {
 	half3 c;
 	

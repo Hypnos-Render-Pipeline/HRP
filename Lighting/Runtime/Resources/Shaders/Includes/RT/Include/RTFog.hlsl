@@ -263,7 +263,7 @@ float3 LightLuminanceWithFog(float3 pos, float3 dir,
 	{
 		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
-		float attenuation;
+		float3 attenuation;
 		float3 lightDir;
 		float3 end_point;
 
@@ -296,7 +296,7 @@ float3 LightLuminanceCameraWithFog(float3 pos, float3 dir,
 
 		if (light.type <= SPOT) return 0;
 
-		float attenuation;
+		float3 attenuation;
 		float3 lightDir;
 		float3 end_point;
 
@@ -335,7 +335,7 @@ float3 EvaluateLight(float3 pos, float3 dir, float3 sigmaE, float G, inout int4 
 		float2 rand_num_light = SAMPLE;
 		Light light = _LightList[floor(min(rand_num_light.x, 0.99) * light_count)];
 
-		float attenuation;
+		float3 attenuation;
 		float3 lightDir;
 		float3 end_point;
 
