@@ -44,7 +44,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Volume:
-        m_Texture: {fileID: 2800000, guid: e99269e791f68a4449613898e9f11fd2, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
@@ -56,7 +56,7 @@ Material:
     - _ClearCoat: 0
     - _Cutoff: 0
     - _DstBlend: 0
-    - _G: 0.28
+    - _G: 0
     - _GlossMapScale: 1
     - _Index: 1.45
     - _IndexRate: 0.5

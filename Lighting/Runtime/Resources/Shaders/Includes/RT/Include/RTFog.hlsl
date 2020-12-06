@@ -327,7 +327,7 @@ float PhaseFunction(float3 i, float3 o, float g)
     //return 3 / (8 * 3.14159265359) * 0.3758 * (1 + mu * mu) / 2.6241 / pow((1.6241 - 1.58 * mu), 1.5);
 }
 
-float3 EvaluateLight(float3 pos, float3 dir, float3 sigmaE, float G, inout int4 sampleState) {
+float3 EvaluateLight(float3 pos, float3 dir, float3 sigmaS, float G, inout int4 sampleState) {
 	float3 res = 0;
 	int light_count = clamp(_LightCount, 0, 100);
 	if (light_count == 0) return 0;
@@ -354,7 +354,7 @@ float3 EvaluateLight(float3 pos, float3 dir, float3 sigmaE, float G, inout int4 
 			res += shadow * direct_light_without_shadow * light_count;
 		}
 	}
-	return res;
+	return res * PI; // Because we have mul PI for common materials, so we also need to mul PI for fog direct BxDF to get a equal lighting.
 }
 
 
@@ -441,11 +441,11 @@ void DeterminateNextVertex(float3 pos, float3 dir, float dis,
 
 	float3 S = 0;
 	if (any(weight.xyz != 0)) {
-		S = EvaluateLight(nextPos, dir, sigmaE, G,
+		S = EvaluateLight(nextPos, dir, sigmaS, G,
 			/*inout*/sampleState);
 	}
 	directColor = S * weight.xyz;
 #endif
 }
-
+ 
 #endif

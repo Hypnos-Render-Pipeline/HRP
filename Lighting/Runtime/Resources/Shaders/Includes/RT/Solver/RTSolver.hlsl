@@ -24,6 +24,7 @@ float3 PathTracer(const int maxDepth,
 	float4 nextWeight = 1;
 	float3 pos = origin, dir = direction;
 	float cutoff = 1;
+    int fog_depth = 128;
 
     sampleState.w = 0;
 
@@ -65,7 +66,7 @@ float3 PathTracer(const int maxDepth,
 			weight.w = nextWeight.w;
 		}
 		else { // pick fog
-
+            depth += fog_depth-- > 0;
 			pos = fogNextPos;
 			dir = fogNextDir;
 			roughness = 1;
@@ -74,13 +75,6 @@ float3 PathTracer(const int maxDepth,
 
 			weight.xyz *= fogWeight.xyz;
 			weight.w = 1;
-
-			float co = min(1, Average(weight.xyz));
-			if (SAMPLE > co) {
-				break;
-			}
-            sampleState.w++;
-			weight.xyz /= co;
 		}
 	}
 
