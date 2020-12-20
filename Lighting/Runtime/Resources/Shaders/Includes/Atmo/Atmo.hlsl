@@ -450,10 +450,11 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 			x = x + dis.x * v;
 			scatter = Scatter(x, x_0, v, s, 128, includeTu);
 		}
-		else {
-			X_0(x, v, x_0);
-			scatter = Scatter(x, x_0, v, s, 128, includeTu);
-		}
+		// usualy we don't need this
+		//else {
+		//	X_0(x, v, x_0);
+		//	scatter = Scatter(x, x_0, v, s, 128, includeTu);
+		//}
 	}
 	// prevent error
 	scatter = max(0, scatter);

@@ -199,7 +199,7 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 	float3 present_point = p + v * res.z;
 	float3 sunLight = Sunlight(present_point, _SunDir);
 	float3 sky = ScatterTable(p, v, _SunDir) * _SunLuminance;
-	float3 amb = (SkyBox(present_point, v, _SunDir) + Tu_L(p, _SunDir)) * _SunLuminance * 0.5;
+	float3 amb = (SkyBox(present_point, normalize(present_point), _SunDir) * 0.7 + Tu_L(p, _SunDir) * 0.3) * _SunLuminance;
 	_Marching_Result_A[tile_id] = float4(aces_tonemap(res.x * 10 * sunLight + res.y * amb + res.a * sky), 1);
 }
 

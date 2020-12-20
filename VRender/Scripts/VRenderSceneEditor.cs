@@ -1,4 +1,4 @@
-﻿using HypnosRenderPipeline;
+using HypnosRenderPipeline;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,6 +13,7 @@ class VRenderForScene
     public bool enable = false;
     public bool performance = true;
     public bool cacheIrradiance = false;
+    public float IrradianceVolumeScale = 1;
     public int maxBounce = 4;
     public float nearPlane = 0.3f;
     public VRenderParameters.DOF dof;
@@ -76,7 +77,7 @@ class VRenderForScene
         vr.parameters.strength = 0.15f;
         vr.parameters.nearPlane = 0.3f;
     }
-    
+
     private void OnChangeState(PlayModeStateChange state)
     {
         if (state == PlayModeStateChange.ExitingEditMode || state == PlayModeStateChange.ExitingPlayMode)
@@ -87,13 +88,13 @@ class VRenderForScene
             SceneView.duringSceneGui -= OnRepaint;
         }
     }
-    
+
     public static void OnRender()
     {
         if (instance.vRender != null) instance.vRender.ClearCB();
 
         if (!instance.enable) return;
-        
+
         if (instance.vRender == null || instance.vRender.cam != SceneView.lastActiveSceneView.camera)
         {
             CreateVRenderForSceneCamera(SceneView.lastActiveSceneView.camera);
@@ -101,16 +102,17 @@ class VRenderForScene
 
         instance.vRender.parameters.halfResolution = instance.performance;
         instance.vRender.parameters.cacheIrradiance = instance.cacheIrradiance;
+        instance.vRender.parameters.IrradianceVolumeScale = instance.IrradianceVolumeScale;
         instance.vRender.parameters.maxDepth = instance.maxBounce;
         instance.vRender.parameters.DOFConfig = instance.dof;
         instance.vRender.parameters.lightSetting.Set(instance.lightSetting);
-        instance.vRender.parameters.enableFog = instance.enableFog; 
+        instance.vRender.parameters.enableFog = instance.enableFog;
         instance.vRender.parameters.nearPlane = instance.nearPlane;
         instance.vRender.parameters.cullingMask = instance.layer;
         instance.vRender.parameters.debugMode = instance.debug;
-        instance.vRender.parameters.removeFlare = instance.removeFlare; 
+        instance.vRender.parameters.removeFlare = instance.removeFlare;
         instance.vRender.Render();
-        
+
         SceneView.lastActiveSceneView.Repaint();
     }
 
@@ -147,7 +149,7 @@ class VRenderForScene
     {
         Handles.BeginGUI();
         EditorGUI.DrawPreviewTexture(new Rect(0, 1, instance.rtxon.width / 2, instance.rtxon.height / 2), instance.rtxon, instance.mat, ScaleMode.ScaleToFit);
-        GUILayoutUtility.GetRect(instance.rtxon.width / 2, instance.rtxon.height / 2 - 19, new GUILayoutOption[] { GUILayout.ExpandWidth(false) }); 
+        GUILayoutUtility.GetRect(instance.rtxon.width / 2, instance.rtxon.height / 2 - 19, new GUILayoutOption[] { GUILayout.ExpandWidth(false) });
         var rect = EditorGUILayout.BeginVertical(new GUILayoutOption[] { GUILayout.Width(instance.flodout ? 270 : 60), GUILayout.Height(instance.flodout ? 160 : 20) });
 
         GUIStyle fontStyle = new GUIStyle();
@@ -170,6 +172,10 @@ class VRenderForScene
         {
             instance.performance = EditorGUILayout.Toggle("Performance First", instance.performance);
             instance.cacheIrradiance = EditorGUILayout.Toggle("Cache Irradiance", instance.cacheIrradiance);
+            if (instance.cacheIrradiance)
+            {
+                instance.IrradianceVolumeScale = EditorGUILayout.FloatField("Voxel Scale", instance.IrradianceVolumeScale);
+            }
             instance.maxBounce = EditorGUILayout.IntSlider("Max bounce", instance.maxBounce, 1, 16);
             EditorGUI.BeginChangeCheck();
             instance.nearPlane = EditorGUILayout.Slider("Near Clip Dis", instance.nearPlane, 0, 20);

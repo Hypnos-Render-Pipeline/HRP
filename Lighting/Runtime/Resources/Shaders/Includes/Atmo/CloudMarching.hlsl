@@ -39,7 +39,7 @@ float2 Roberts2_(uint n) {
 	return  frac(0.5 + a * n);
 }
 void RandSeed(uint2 seed) {
-	sampleIndex = (uint)_Clock % 16 + hash((seed.x % 8 + seed.y % 8 * 8) / 64.) * 64;
+	sampleIndex = (uint)_Clock % 24 + hash((seed.x % 8 + seed.y % 8 * 8) / 64.) * 64;
 }
 
 float Rand()
@@ -131,33 +131,7 @@ float CloudType(float h, float t) {
 	return remap(h, 0, a, 0, 1) * remap(h, b, b + c * 0.7, 1, 0) * t;
 }
 
-float2 Cloud(float3 p) {
-	float h = Cloud_H(p);
-
-	h /= 1.2f;
-
-	float3 nom_p = normalize(p);
-	float cov = tex2Dlod(_CloudMap, float4(nom_p.xz * 100 + _Time.x * 0.004, 0, 0)).x;
-
-	cov = remap(cov, 1 - _CloudCoverage, 1, 0, 1);
-
-	float ero_value = 1 - CloudType(h, cov);
-
-	float noise0 = dot(tex3Dlod(_WorleyPerlinVolume, float4(p * 0.00057, 0)).xyz, float3(0.625, 0.25, 0.125));
-	//noise0 = lerp(1 - noise0, noise0, saturate(h * 8));
-
-	float noise1 = dot(tex3Dlod(_WorleyVolume, float4(p * 0.006, 0)).xyz, float3(0.625, 0.25, 0.125));
-
-	noise1 = lerp(noise1, 1 - noise1, min(1, h * 3));
-
-	float cloud = remap(noise0, ero_value, 1, 0, 1);
-
-	cloud = cloud - (cloud < 0.4 && cloud > 0 ? remap(noise1, 0.2 + 2 * cloud, 1, 0, 1) : 0);
-
-	return (cloud > 0) ? sqrt(cov) * saturate(h * 2) * 0.01 * _CloudDensity : 0;
-}
-
-float2 Cloud_Simple(float3 p) {
+float2 Cloud_Shape(float3 p) {
 	float h = Cloud_H(p);
 
 	h /= 1.2f;
@@ -171,7 +145,52 @@ float2 Cloud_Simple(float3 p) {
 
 	float cloud = remap(0.784, ero_value, 1, 0, 1);
 
-	return (cloud > 0) ? sqrt(cov) * saturate(h * 3) * 0.01 * _CloudDensity : 0;
+	return (cloud > 0) ? 1 : 0;
+}
+
+float2 Cloud(float3 p) {
+	float h = Cloud_H(p);
+
+	h /= 1.2f;
+
+	float3 nom_p = normalize(p);
+	float cov = tex2Dlod(_CloudMap, float4(nom_p.xz * 100 + _Time.x * 0.004, 0, 0)).x;
+
+	cov = remap(cov, 1 - _CloudCoverage, 1, 0, 1);
+
+	float ero_value = 1 - CloudType(h, cov);
+
+	float noise0 = dot(tex3Dlod(_WorleyPerlinVolume, float4(p * 0.00057, 0)).xyz, float3(0.625, 0.25, 0.125));
+
+	float noise1 = dot(tex3Dlod(_WorleyVolume, float4(p * 0.006, 0)).xyz, float3(0.625, 0.25, 0.125));
+
+	noise1 = lerp(noise1, 1 - noise1, min(1, h));
+
+	float cloud = remap(noise0, ero_value, 1, 0, 1);
+
+	cloud = cloud - (cloud < 0.4 && cloud > 0 ? remap(noise1, 0.2 + 2 * cloud, 1, 0, 1) : 0);
+
+	return (cloud > 0) ? sqrt(cov) * smoothstep(0, 0.6, h) * 0.01 * _CloudDensity : 0;
+}
+
+float2 Cloud_Simple(float3 p) {
+	//return Cloud(p);
+	float h = Cloud_H(p);
+
+	h /= 1.2f;
+
+	float3 nom_p = normalize(p);
+	float cov = tex2Dlod(_CloudMap, float4(nom_p.xz * 100 + _Time.x * 0.004, 0, 0)).x;
+
+	cov = remap(cov, 1 - _CloudCoverage, 1, 0, 1);
+
+	float ero_value = 1 - CloudType(h, cov);
+
+	float noise0 = dot(tex3Dlod(_WorleyPerlinVolume, float4(p * 0.00057, 0)).xyz, float3(0.625, 0.25, 0.125));
+
+	float cloud = remap(noise0, ero_value, 1, 0, 1);
+
+	return (cloud > 0) ? sqrt(cov) * smoothstep(0, 0.6, h) * 0.01 * _CloudDensity : 0;
 }
 
 float GetT(float samples, float3 p, float3 v, float d = 800) {
@@ -194,11 +213,12 @@ float GetT(float samples, float3 p, float3 v, float d = 800) {
 	return trans;
 }
 
-float GetT(float samples, float3 p, float3 v, float3 vt, float3 vbt, float d = 400) {
+float GetT(float samples, float3 p, float3 v, float3 vt, float3 vbt, float k = 0, float d = 800) {
 
-	float sample_num = lerp(3, 6, samples);
+	int sample_num = lerp(2, 8, samples);
 	float bias = Rand();
 	float trans = 1;
+	float trans2 = 1;
 	float last_t = 0;
 	v *= d;
 	vt *= d * 0.3;
@@ -207,7 +227,7 @@ float GetT(float samples, float3 p, float3 v, float3 vt, float3 vbt, float d = 4
 	for (int i = 0; i < sample_num; i++)
 	{
 		float t = (i + bias) / sample_num;
-		//t = -0.333333 * log(1 - 0.9502129 * t);
+		t = -0.333333 * log(1 - 0.9502129 * t);
 		float3 pos = v * t + p;
 
 		float2 rnd = frac(Roberts2_(i) + bias);
@@ -215,17 +235,20 @@ float GetT(float samples, float3 p, float3 v, float3 vt, float3 vbt, float d = 4
 		float2 offset = float2(sin(rnd.x), cos(rnd.x)) * rnd.y * t;
 		pos += vt * offset.x + vbt * offset.y;
 		float scatter = Cloud(pos).x;
-		trans *= GetT(scatter, (t - last_t) * d);
+		float delta = (t - last_t) * d;
+		trans *= GetT(scatter * 0.8, delta);
+		trans2 *= GetT(scatter * 1.6, delta);
 		last_t = t;
 	}
-	return trans;
+	return trans * (1 - trans2 * k);
 }
 
-float GetT_Simple(float3 p, float3 v, float3 vt, float3 vbt, float d = 400) {
+float GetT_Simple(float3 p, float3 v, float3 vt, float3 vbt, float k = 0, float d = 400) {
 
 	float sample_num = 2;
 	float bias = Rand();
 	float trans = 1;
+	float trans2 = 1;
 	float last_t = 0;
 	v *= d;
 	vt *= d * 0.3;
@@ -234,7 +257,7 @@ float GetT_Simple(float3 p, float3 v, float3 vt, float3 vbt, float d = 400) {
 	for (int i = 0; i < sample_num; i++)
 	{
 		float t = (i + bias) / sample_num;
-		//t = -0.333333 * log(1 - 0.9502129 * t);
+		t = -0.333333 * log(1 - 0.9502129 * t);
 		float3 pos = v * t + p;
 
 		float2 rnd = frac(Roberts2_(i) + bias);
@@ -242,15 +265,17 @@ float GetT_Simple(float3 p, float3 v, float3 vt, float3 vbt, float d = 400) {
 		float2 offset = float2(sin(rnd.x), cos(rnd.x)) * rnd.y * t;
 		pos += vt * offset.x + vbt * offset.y;
 		float scatter = Cloud_Simple(pos).x;
-		trans *= GetT(scatter, (t - last_t) * d);
+		float delta = (t - last_t) * d;
+		trans *= GetT(scatter * 0.8, delta);
+		trans2 *= GetT(scatter * 1.6, delta);
 		last_t = t;
 	}
-	return trans;
+	return trans * (1 - trans2 * k);
 }
 
 float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 
-	const float max_dis = 4000;
+	const float max_dis = 6000;
 	const float sample_num = 96;
 
 	float3 st;
@@ -293,8 +318,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 	if (s_t.x < 0) s_t = -s_t;
 	float3 s_bt = cross(s, s_t);
 
-	float fade = max(0, 1 - offset / 6000);
-	float actual_sample_num = sample_num * (0.5 + fade * 0.5);
+	float actual_sample_num = clamp(d / 40, sample_num * 0.7, sample_num);
 
 	float sun = 0;
 	float amb = 0;
@@ -302,10 +326,9 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 	float vDots = dot(v, s);
 	float phase = numericalMieFit(vDots);
 	float multiScatterPhase = phase + numericalMieFitMultiScatter();
-	vDots = (vDots + 1) / 2;
+	vDots = 1 - (vDots + 1) / 3;
 
 	float trans = 1;
-	float trans2 = 1;
 	float2 av_dis = 0;
 
 	float stepLength = d / actual_sample_num;
@@ -315,11 +338,11 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 	int start_index = 0;
 	bool find_hit = false;
 	[loop]
-	for (int i = 0; i < actual_sample_num; i+=6)
+	for (int i = 0; i < actual_sample_num; i+=8)
 	{
 		float3 test = v * i + st;
-		if (Cloud_Simple(test).x != 0) {
-			start_index = max(0, i - 5);
+		if (Cloud_Shape(test).x != 0) {
+			start_index = max(0, i - 7);
 			find_hit = true;
 			break;
 		}
@@ -336,15 +359,14 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 		if (scatter != 0) {
 
 			trans *= GetT(scatter, stepLength);
-			trans2 *= GetT(scatter * 4, stepLength);
-			float l_t = GetT(trans, pos, s, s_t, s_bt);
+			float l_t = GetT(trans, pos, s, s_t, s_bt, vDots);
 
 			scatter = 1 - exp(-scatter * stepLength);
 
 			float msPhase = multiScatterPhase;
-			float response = trans * lerp(1, (1 - trans2), 1-vDots) * scatter * l_t * msPhase;
+			float response = trans * scatter * l_t * msPhase;
 			sun += response;
-			amb += trans * (1 - trans2) * scatter;
+			amb += trans * scatter;
 			av_dis += float2(i * response, response);
 		}
 		if (trans <= 0.3) {
@@ -361,13 +383,12 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 		{
 			float3 pos = v * i + st;
 
-			float2 s_h = Cloud(pos);
+			float2 s_h = Cloud_Simple(pos);
 			float scatter = s_h.x;
 			if (scatter != 0) {
 
 				trans *= GetT(scatter, stepLength);
-				trans2 *= GetT(scatter * 4, stepLength);
-				float l_t = GetT_Simple(pos, s, s_t, s_bt);
+				float l_t = GetT_Simple(pos, s, s_t, s_bt, vDots);
 
 				scatter = 1 - exp(-scatter * stepLength);
 
@@ -380,12 +401,14 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 
 	float4 res = float4(sun, amb, 0, trans);
 	
-	fade = max(0, 1 - offset / 10000);
+	float fade = max(0, 1 - offset / 10000);
 	res.xyz *= fade;
 	res.a = 1 - (1 - res.a) * fade;
 	
 	res.b = av_dis.y != 0 ? start_index + (av_dis.x / max(0.0001, av_dis.y)) * stepLength + offset : 0;
-	
+
+	// Compensate darken caused by undersampling
+	res.xy *= (1 + vDots * 0.2);
 	return res;
 }
 

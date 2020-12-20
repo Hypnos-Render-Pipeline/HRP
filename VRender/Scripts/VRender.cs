@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using static Unity.Mathematics.math;
@@ -33,6 +33,8 @@ public class VRenderParameters
 
     [Tooltip("Recommend to use it when render indoor scene.")]
     public bool cacheIrradiance = false;
+
+    public float IrradianceVolumeScale = 1;
 
     public bool enableFog = false;
 
@@ -333,7 +335,7 @@ public class VRender : IDisposable
         cb.SetGlobalTexture("_RankingTile", bnsLoader.tex_rankingTile);
         cb.SetGlobalTexture("_RdLut", ssLut);
         cb.SetRayTracingIntParam(rtShader, "_CacheIrradiance", parameters.cacheIrradiance ? (parameters.debugMode == VRenderParameters.DebugMode.irradianceCache ? 2 : 1) : 0);
-        cb.SetRayTracingVectorParam(rtShader, "_IVScale", Vector4.one);
+        cb.SetRayTracingVectorParam(rtShader, "_IVScale", Vector4.one * parameters.IrradianceVolumeScale);
         cb.SetRayTracingTextureParam(rtShader, "_IrrVolume", tex3D_iv);
         cb.SetRayTracingTextureParam(rtShader, "Target", frameSamples);
         cb.SetRayTracingTextureParam(rtShader, "History", history);
@@ -593,6 +595,8 @@ public class VRender : IDisposable
     VRenderParameters.DOF _dof;
     bool _cacheIrr;
     Matrix4x4 trans = Matrix4x4.zero;
+    float IrradianceVolumeScale = -1;
+    bool showIrr = false;
     void ParameterChanged()
     {
         parameters.maxDepth = clamp(parameters.maxDepth, 1, 16);
@@ -612,6 +616,18 @@ public class VRender : IDisposable
         if (trans != cam.cameraToWorldMatrix)
         {
             trans = cam.cameraToWorldMatrix;
+            ReRender();
+        }
+
+        if (_cacheIrr && IrradianceVolumeScale != parameters.IrradianceVolumeScale)
+        {
+            IrradianceVolumeScale = parameters.IrradianceVolumeScale;
+            ReRender();
+        }
+
+        if (_cacheIrr && parameters.debugMode == VRenderParameters.DebugMode.irradianceCache != showIrr)
+        {
+            showIrr = parameters.debugMode == VRenderParameters.DebugMode.irradianceCache;
             ReRender();
         }
     }
