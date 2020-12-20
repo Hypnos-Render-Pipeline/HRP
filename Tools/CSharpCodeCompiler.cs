@@ -1,4 +1,4 @@
-﻿//
+//
 // Mono.CSharp CSharpCodeCompiler Class implementation
 //
 // Authors:
@@ -115,6 +115,7 @@ namespace HypnosRenderPipeline.Tools
             {
 #if UNITY_EDITOR
                 var enginePath = Assembly.Load("UnityEditor").Location.Replace("\\Managed\\UnityEditor.dll", "");
+                enginePath = enginePath.Replace("\\Managed\\UnityEngine\\UnityEditor.dll", "");
                 string monoFolderPath = enginePath + "\\MonoBleedingEdge";
 #else
                  string monoFolderPath = Application.dataPath.Replace("/","\\") + "\\..\\MonoBleedingEdge";

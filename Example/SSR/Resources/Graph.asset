@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: Graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -609, y: 8, z: 0}
-  viewScale: {x: 0.25, y: 0.25, z: 1}
+  viewPosition: {x: -1760, y: -336, z: 0}
+  viewScale: {x: 0.43232757, y: 0.43232757, z: 1}
   nodes:
   - nodeName: GBuffer
     parameters:

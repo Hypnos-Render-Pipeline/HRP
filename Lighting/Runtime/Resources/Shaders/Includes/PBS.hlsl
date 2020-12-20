@@ -20,11 +20,11 @@ struct SurfaceInfo {
 	bool	specF;
 	float	index2;
 	float	dinc;
-	float	clearCoat;	//清漆
-	float	sheen;		//布料边缘光
-	float	index;		//折射率
-	float	Ld;			//次表面
-	bool	discarded;	//discard surface
+	float	clearCoat;	
+	float	sheen;		
+	float	index;		
+	float	Ld;			
+	bool	discarded;
 };
 
 //-----------------------------------------------------------------------------

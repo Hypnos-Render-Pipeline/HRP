@@ -1,4 +1,4 @@
-﻿using HypnosRenderPipeline.RenderPass;
+using HypnosRenderPipeline.RenderPass;
 using System;
 using System.Collections.Generic;
 using UnityEditor;

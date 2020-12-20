@@ -1,4 +1,4 @@
-﻿using HypnosRenderPipeline.RenderPass;
+using HypnosRenderPipeline.RenderPass;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -91,6 +91,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 }
                 context.context.ExecuteCommandBuffer(context.commandBuffer);
                 context.commandBuffer.Clear();
+                context.commandBuffer.name = node.nodeName;
                 if (node.nodeType != typeof(TextureDebug) || debug)
                 {
                     if (renderNode.enabled)
@@ -100,7 +101,8 @@ namespace HypnosRenderPipeline.RenderGraph
                     context.commandBuffer.EndSample(node.sampler);
                 context.context.ExecuteCommandBuffer(context.commandBuffer);
                 context.commandBuffer.Clear();
-                                
+                context.commandBuffer.name = "Unnamed";
+
                 ReleaseNode(context, renderNode);
 
                 {

@@ -1,4 +1,4 @@
-﻿#ifndef LitInclude_H_
+#ifndef LitInclude_H_
 #define LitInclude_H_
 
 

@@ -1,4 +1,4 @@
-﻿#pragma kernel CSMain
+#pragma kernel CSMain
 #pragma kernel WriteSunBuffer
 
 #define T T_TAB
@@ -76,8 +76,6 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     _Result[id] = res * _SunLuminance;
 }
-
-float3 _SunColor;
 
 RWStructuredBuffer<SunLight> _Sun_;
 

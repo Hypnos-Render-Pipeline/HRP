@@ -1,4 +1,4 @@
-﻿Shader "Hidden/AtmoLut"
+Shader "Hidden/AtmoLut"
 {
     Properties { _MainTex("Texture", 2D) = "white" {} }
     SubShader
@@ -142,7 +142,7 @@
                         X_0(x, v, x_0);
                     }
 
-                    float3 res = Scatter(x, x_0, v, s, 128, _RenderGround);// *_SunLuminance;
+                    float3 res = Scatter(x, x_0, v, s, 32, _RenderGround);// *_SunLuminance;
                     return res;
                 }
             ENDCG

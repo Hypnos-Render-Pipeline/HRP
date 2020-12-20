@@ -1,4 +1,4 @@
-﻿Shader "Hidden/DeferredLighting"
+Shader "Hidden/DeferredLighting"
 {
     Properties { _MainTex("Texture", 2D) = "white" {} }
     SubShader
@@ -377,8 +377,6 @@
             float4x4 _V, _V_Inv;
             float4x4 _VP_Inv;
 
-            float3 _SunColor;
-
             sampler2D _TerrainHeight;
             float2 _HeightRange;
             float H(float2 xz) {
@@ -417,7 +415,7 @@
                                         0,
                                         _AOTex.SampleLevel(sampler_point_clamp, i.uv, 0));
 
-                float3 sunColor = _SunColor * Sunlight(float3(pos.x - camPos.x, planet_radius + max(pos.y, 95), pos.z - camPos.z), _SunDir);
+                float3 sunColor = Sunlight(float3(pos.x - camPos.x, planet_radius + max(pos.y, 95), pos.z - camPos.z), _SunDir);
 
 #if 1           // trick for the sun disk size
                 float3 halfDir = normalize(view + _SunDir);

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
@@ -26,6 +26,16 @@ namespace HypnosRenderPipeline
         public float MultiScatterStrength = 1f;
 
         public bool RenderGround = false;
+
+        public Texture2D spaceMap;
+
+        [Header("Clouds")]
+        [Range(0, 1)]
+        public float CloudCoverage = 1;
+        [Range(0.01f, 2)]
+        public float CloudDensity = 1;
+
+        public Texture2D cloudMap;
 
         static ComputeShaderWithName volumeScatter = new ComputeShaderWithName("Shaders/Atmo/VolumeScatterLut");
         static MaterialWithName lutMat = new MaterialWithName("Hidden/AtmoLut");
@@ -149,11 +159,12 @@ namespace HypnosRenderPipeline
         /// <param name="cb"></param>
         /// <param name="volume"></param>
         /// <param name="sky"></param>
-        public void GenerateVolumeSkyTexture(CommandBuffer cb, RenderTexture volume, RenderTexture sky, float maxDepth)
+        public void GenerateVolumeSkyTexture(CommandBuffer cb, RenderTexture volume, RenderTexture sky, float maxDepth, int frameIndex = -1)
         {
             cb.SetGlobalFloat("_RenderGround", RenderGround ? 1 : 0);
             cb.SetGlobalVector("_SLutResolution", new Vector4(sky.width, sky.height));
             cb.SetGlobalFloat("_MaxDepth", maxDepth);
+            cb.SetGlobalFloat("_AtmoSlice", frameIndex % 4);
             cb.Blit(null, sky, lutMat, 2);
             cb.SetComputeTextureParam(volumeScatter, 0, "_Result", volume);
             Vector3Int size = new Vector3Int(volume.width, volume.height, volume.volumeDepth);
@@ -180,7 +191,7 @@ namespace HypnosRenderPipeline
         /// Render atmo, will use the preset camera parameters(_ProjectionParams, _ScreenParams, unity_CameraProjection, unity_CameraToWorld, _WorldSpaceCameraPos). 
         /// If these value are not set in your pipeline, please set them before call this function.
         /// </summary>
-        public void RenderToRT(CommandBuffer cb, RenderTargetIdentifier sceneColor, int depth, RenderTargetIdentifier target)
+        public void RenderAtmoToRT(CommandBuffer cb, RenderTargetIdentifier sceneColor, int depth, RenderTargetIdentifier target)
         {
             cb.SetGlobalTexture("_DepthTex", depth);
             cb.Blit(sceneColor, target, lutMat, 3);
@@ -190,7 +201,7 @@ namespace HypnosRenderPipeline
         /// Render atmo, will use the preset camera parameters(_ProjectionParams, _ScreenParams, unity_CameraProjection, unity_CameraToWorld, _WorldSpaceCameraPos). 
         /// If these value are not set in your pipeline, please set them before call this function.
         /// </summary>
-        public void RenderToCubeMap(CommandBuffer cb, int target)
+        public void RenderAtmoToCubeMap(CommandBuffer cb, int target)
         {
             cb.SetRenderTarget(target, 0, CubemapFace.PositiveX); 
             cb.SetGlobalInt("_Slice", 0);

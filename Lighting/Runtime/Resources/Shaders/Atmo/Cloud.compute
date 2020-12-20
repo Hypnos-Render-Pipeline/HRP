@@ -1,0 +1,356 @@
+#pragma kernel DownSampleDepth
+#pragma kernel GetRayIndex
+#pragma kernel MarchRay
+#pragma kernel CheckboardUpsample
+#pragma kernel BlitToHistory
+#pragma kernel FullResolutionUpsample
+#pragma kernel LoadVolumeData
+#pragma kernel WriteCloudShadowMap
+
+#define T T_TAB
+#include "../Includes/Atmo/CloudMarching.hlsl"
+
+
+float4x4 _V, _V_Inv, _VP_Inv;
+Texture2D _MotionTex; SamplerState sampler_MotionTex;
+
+float4 _ZBufferParams;
+inline float LinearEyeDepth(float z)
+{
+	return 1.0 / (_ZBufferParams.z * z + _ZBufferParams.w);
+}
+
+float4 _WH;
+
+SamplerState point_clamp_sampler;
+
+Texture2D<float> _Depth; SamplerState sampler_Depth;
+
+RWTexture2D<float> _DownSampled_MinMax_Depth;
+
+RWTexture2D<float2> _Ray_Index;
+
+RWTexture2D<float4> _Marching_Result_A;
+//RWTexture2D<float4> _Marching_Result_B;
+
+Texture2D<float4> _History; SamplerState sampler_point_clamp;
+
+RWTexture2D<float4> _HalfResResult;
+
+RWTexture2D<float4> _Cloud;
+
+RWTexture2D<float> _CloudSM;
+
+
+int offset2index(const uint2 offset) {
+	int2x2 offset2index = int2x2(0, 3, 1, 2);
+	return offset2index[offset.x][offset.y];
+}
+int2 index2offset(const uint index) {
+	uint2 index2offset[4] = { uint2(0, 0), uint2(1, 0), uint2(1, 1), uint2(0, 1) };
+	return index2offset[index];
+}
+
+
+
+[numthreads(8, 8, 1)]
+void DownSampleDepth(const uint2 id : SV_DispatchThreadID)
+{
+	if (any(id >= uint2(_WH.xy / 2))) return;
+
+	float2 uv = (id * 2 + 0.5) * _WH.zw;
+
+	float4 d = _Depth.GatherRed(sampler_Depth, uv);
+
+	int checkboard = (id.x % 2 + id.y) % 2;
+
+	float min_d = min(d.x, min(d.y, min(d.z, d.w)));
+	float max_d = max(d.x, max(d.y, max(d.z, d.w)));
+
+	_DownSampled_MinMax_Depth[id] = LinearEyeDepth(checkboard ? min_d : max_d);
+}
+
+
+
+groupshared float picked_depth[10][10];
+
+int get_picked_index_of_tile(const uint2 tile_id) {
+	uint tile_checkboard = (tile_id.x % 2 + tile_id.y) % 2;
+	return (tile_checkboard + _Clock) % 4;
+}
+
+float4 read_tile_from_downsampled_depth_tex(uint2 tile_id) {
+	float2 uv = (tile_id * 2 + 0.5) * _WH.zw * 2;
+	uv = saturate(uv);
+	return _Depth.GatherRed(sampler_Depth, uv).wzyx;
+}
+
+float4 min_max_d_index(const float4 d) {
+	float min_d = min(d.x, min(d.y, min(d.z, d.w)));
+	float max_d = max(d.x, max(d.y, max(d.z, d.w)));
+
+	float4 index_caster = float4(0, 1, 2, 3);
+
+	return float4(min_d, max_d, dot(d == min_d, index_caster), dot(d == max_d, index_caster));
+}
+
+[numthreads(8, 8, 1)]
+void GetRayIndex(const uint2 tile_id : SV_DispatchThreadID, const uint2 group_thread_id : SV_GroupThreadID, const uint2 group_id : SV_GroupID)
+{
+	uint flatten_group_thread_id = dot(group_thread_id, uint2(1, 8));
+	int2 base_address = group_id * 8 - 1;
+
+	// read data to shared
+	{
+		[loop]
+		for (int i = 0; i < 2; i++)
+		{
+			flatten_group_thread_id = flatten_group_thread_id + i * 64;
+			if (flatten_group_thread_id < 100) {
+				int2 offset = uint2(flatten_group_thread_id % 10, flatten_group_thread_id / 10);
+				int2 tile = base_address + offset;
+				int index = get_picked_index_of_tile(tile);
+				float4 d = read_tile_from_downsampled_depth_tex(tile);
+				picked_depth[offset.x][offset.y] = d[index];
+			}
+		}
+		GroupMemoryBarrierWithGroupSync();
+	}
+
+	int2 group_thread_id_plus_1 = group_thread_id + 1;
+	float4 c_d = read_tile_from_downsampled_depth_tex(tile_id);
+	float4 c_min_max_d_index = min_max_d_index(c_d);
+
+	// refine index
+	bool2 refine_flag = false;
+	int2 nei[8] = { int2(-1, -1), int2(-1, 0), int2(-1, 1),
+					int2(0, -1), int2(0, 1),
+					int2(1, -1), int2(1, 0), int2(1, 1) };
+	[unroll]
+	for (int i = 0; i < 8; i++)
+	{
+		int2 sm_index = group_thread_id_plus_1 + nei[i];
+		float nei_picked_depth = picked_depth[sm_index.x][sm_index.y];
+
+		float2 normalized_bias = abs(c_min_max_d_index.xy - nei_picked_depth) / nei_picked_depth;
+
+		refine_flag = refine_flag || (normalized_bias < 0.25);
+	}
+	int picked_index = refine_flag.x ? (refine_flag.y ? get_picked_index_of_tile(tile_id) : c_min_max_d_index.w) : c_min_max_d_index.z;
+
+	float picked_d = c_d[picked_index];
+	//if (picked_d > (1.0 / _ZBufferParams.w) - 0.5) picked_d = 1;
+	/*else*/ picked_d /= 10000;
+
+	if (any(tile_id >= uint2(_WH.xy / 4))) return;
+	_Ray_Index[tile_id] = float2(picked_index, picked_d);
+}
+
+float3 aces_tonemap(float3 color) {
+	float3x3 m1 = float3x3(
+		0.59719, 0.35458, 0.04823,
+		0.07600, 0.90834, 0.01566,
+		0.02840, 0.13383, 0.83777
+	);
+	float3x3 m2 = float3x3(
+		1.60475, -0.53108, -0.07367,
+		-0.10208, 1.10813, -0.00605,
+		-0.00327, -0.07276, 1.07602
+	);
+	float3 v = mul(m1, color);
+	float3 a = v * (v + 0.0245786) - 0.000090537;
+	float3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
+	return clamp(mul(m2, (a / b)), 0.0, 1.0);
+}
+
+
+[numthreads(8, 8, 1)]
+void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
+{
+	if (any(tile_id >= uint2(_WH.xy / 4))) return;
+
+	float2 index_depth = _Ray_Index[tile_id];
+	int2 index_in_half_resolution = tile_id * 2 + index2offset(index_depth.x);
+
+	float2 uv_in_half_resolution = (index_in_half_resolution + 0.5) * _WH.zw * 2;
+	
+	float3 wcpos = _V_Inv._m03_m13_m23;
+	float3 p = wcpos;
+	float3 pos;
+	{
+		float4 ndc = float4(uv_in_half_resolution * 2 - 1, 0, 1);
+		float4 worldPos = mul(_VP_Inv, ndc);
+		pos = worldPos.xyz / worldPos.w;
+	}
+	float3 v = normalize(pos - p);
+
+	p.y = max(p.y, 95) + planet_radius;
+
+	RandSeed(tile_id);
+	float depth = index_depth.y * 10000;
+	float dotvc = -dot(normalize(_V_Inv._m02_m12_m22), v);
+	depth /= dotvc;
+	float max_depth = (1.0 / _ZBufferParams.w) * 0.998;
+	float far_clip_fade = smoothstep(0.9, 1, depth / max_depth);
+	depth = lerp(depth, 999999, far_clip_fade);
+
+	float4 res = CloudRender(wcpos, p, v, depth);
+
+	float3 present_point = p + v * res.z;
+	float3 sunLight = Sunlight(present_point, _SunDir);
+	float3 sky = ScatterTable(p, v, _SunDir) * _SunLuminance;
+	float3 amb = (SkyBox(present_point, v, _SunDir) + Tu_L(p, _SunDir)) * _SunLuminance * 0.5;
+	_Marching_Result_A[tile_id] = float4(aces_tonemap(res.x * 10 * sunLight + res.y * amb + res.a * sky), 1);
+}
+
+groupshared float4 marching_Result[6][6];
+groupshared float marching_Depth[6][6];
+
+[numthreads(8, 8, 1)]
+void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_thread_id : SV_GroupThreadID, const uint2 group_id : SV_GroupID)
+{
+	if (all(group_thread_id < 6)) {
+		int2 responsed_tile_id = group_id * 4 - 1 + group_thread_id;
+		responsed_tile_id = clamp(responsed_tile_id, 0, _WH.xy / 4 - 0.5);
+		marching_Result[group_thread_id.x][group_thread_id.y] = _Marching_Result_A[responsed_tile_id];
+		marching_Depth[group_thread_id.x][group_thread_id.y] = _Ray_Index[responsed_tile_id].y * 10000;
+	}
+	GroupMemoryBarrierWithGroupSync();
+
+	uint2 tile_id = id / 2;
+	uint2 groupshared_id = group_thread_id / 2 + 1;
+
+	int2 index_in_half_resolution = id;
+	float2 uv_in_half_resolution = (index_in_half_resolution + 0.5) * _WH.zw * 2;
+
+	float d = _DownSampled_MinMax_Depth[id];
+
+	float2 reproj_offset = _MotionTex.SampleLevel(sampler_MotionTex, uv_in_half_resolution, 0).rg;
+	float move_speed = length(reproj_offset);
+
+	float4 history = _History.SampleLevel(sampler_point_clamp, uv_in_half_resolution, 0);
+
+	int2 nei[9] = { int2(-1, -1), int2(-1, 0), int2(-1, 1),
+					int2(0, -1), int2(0, 1),
+					int2(1, -1), int2(1, 0), int2(1, 1) , int2(0,0) };
+	float4 average_result = 0;
+	float4 aabb_low = 100000, aabb_high = 0;
+	float weight = 0;
+	[unroll]
+	for (int i = 0; i < 9; i++)
+	{
+		int2 nei_id = groupshared_id + nei[i];
+		float depth = marching_Depth[nei_id.x][nei_id.y];
+		if (abs(d - depth) / depth > 0.25) // if the depth difference is greater than 0.25, discard it
+			continue;
+		float4 result = marching_Result[nei_id.x][nei_id.y];
+		aabb_low = min(aabb_low, result);
+		aabb_high = max(aabb_high, result);
+		average_result += result;
+		weight += 1;
+	}
+	average_result /= weight;
+
+	if (any(id >= uint2(_WH.xy / 2))) return;
+	if (offset2index(id % 2) == int(_Ray_Index[id / 2].x)) {
+		_HalfResResult[id] = lerp(history, marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.2, 0.95, saturate(move_speed)));
+		return;
+	}
+
+	if (weight < 1) { // sometime sill lost sample, prevent NAN by this
+		_HalfResResult[id] = lerp(history, marching_Result[groupshared_id.x][groupshared_id.y], 0.5);
+	}
+	else {
+		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), average_result, lerp(0.01, 0.95, saturate(move_speed)));
+	}
+}
+
+[numthreads(8, 8, 1)]
+void BlitToHistory(const uint2 id : SV_DispatchThreadID)
+{
+	if (any(id >= uint2(_WH.xy / 2))) return;
+	_HalfResResult[id] = _History[id];
+}
+
+
+groupshared float4 half_Result[6][6];
+groupshared float half_Depth[6][6];
+
+[numthreads(8, 8, 1)]
+void FullResolutionUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_thread_id : SV_GroupThreadID, const uint2 group_id : SV_GroupID)
+{
+	if (all(group_thread_id < 6)) {
+		int2 responsed_tile_id = group_id * 4 - 1 + group_thread_id;
+		responsed_tile_id = clamp(responsed_tile_id, 0, _WH.xy / 2 - 0.5);
+		half_Result[group_thread_id.x][group_thread_id.y] = _History[responsed_tile_id];
+		half_Depth[group_thread_id.x][group_thread_id.y] = _DownSampled_MinMax_Depth[responsed_tile_id];
+	}
+	GroupMemoryBarrierWithGroupSync();
+
+	uint2 groupshared_id = group_thread_id / 2 + 1;
+	float2 groupshared_uv = (group_thread_id + Roberts2_(id.x % 2 + id.y)) / 8.0f * 4.0f / 6.0f + 1.0f / 6.0f; // convert index to uv in group memory space
+
+	float d = LinearEyeDepth(_Depth[id]);
+
+	int2 lb_id = (id % 2) - 1 + groupshared_id;
+
+	int2 offsets[4] = { int2(0,0), int2(0, 1),
+						int2(1, 0), int2(1, 1),
+		/*int2(-1, -1), int2(-1, 0), int2(-1, 1),
+		int2(0, -1), int2(1, -1) */ };
+	float4 res = 0;
+	float wei = 0;
+
+	[unroll]
+	for (int i = 0; i < 4; i++)
+	{
+		int2 nei = lb_id + offsets[i];
+
+		float4 value = half_Result[nei.x][nei.y];
+		float nei_d = half_Depth[nei.x][nei.y];
+
+		if (abs(nei_d - d) / d > 0.25)
+			continue;
+
+		float2 uv_dis = (1.0f / 6.0f) - ((nei + 0.5) / 6.0f - groupshared_uv);
+		float binlinear_weight = uv_dis.x * uv_dis.y;
+
+		res += value * binlinear_weight;
+		wei += binlinear_weight;
+	}
+
+	if (any(id >= uint2(_WH.xy))) return;
+	_Cloud[id] = res / max(0.000000001, wei); // avoid / 0
+}
+
+
+float4 _Size_XAtlas_Y_Atlas;
+Texture2D<float3> _Volume2D;
+RWTexture3D<float3> _Volume3D;
+
+
+[numthreads(4, 4, 4)]
+void LoadVolumeData(const uint3 id : SV_DispatchThreadID)
+{
+	uint size = _Size_XAtlas_Y_Atlas.x;
+	uint2 atlas_xy = _Size_XAtlas_Y_Atlas.yz;
+	uint2 id_2D = id.xy + uint2(id.z % atlas_xy.x, id.z / atlas_xy.x) * size;
+	id_2D.y = size * atlas_xy.y - 1 - id_2D.y;
+
+	_Volume3D[id] = _Volume2D[id_2D];
+}
+
+[numthreads(8, 8, 1)]
+void WriteCloudShadowMap(const uint2 id : SV_DispatchThreadID)
+{
+	float2 uv = (id + 0.5) / 1024;
+
+	float3 cloud_space_pos = mul(_CloudMat_Inv, float4(uv, 0, 1)).xyz;
+
+	float3 s = _SunDir;
+	s = s.y < -0.05 ? -s : s;
+	cloud_space_pos += s * 1000000;
+	cloud_space_pos += -s * IntersectSphere(cloud_space_pos, -s, float3(0, 0, 0), planet_radius + cloud_radi.x);
+
+	_CloudSM[id] = GetT(0.1, cloud_space_pos, s);
+}

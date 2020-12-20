@@ -1,4 +1,4 @@
-﻿#ifndef ATMO_INCLUDE_
+#ifndef ATMO_INCLUDE_
 #define ATMO_INCLUDE_
 
 #include "./TextureSampler.hlsl"
@@ -34,6 +34,7 @@ float _OZone;
 float _SunAngle;
 float3 _SunDir;
 float3 _SunLuminance;
+float3 _SunColor;
 
 float _MultiScatterStrength;
 
@@ -526,9 +527,9 @@ const float3 SkyBox(float3 x, const float3 v, const float3 s) {
 	return scatter;
 }
 
-const float3 Scatter(const float3 x, const float3 v, const float depth, const float3 dir) {
+const float3 Scatter(const float3 x, const float3 v, const float depth, const float3 s) {
 
-	float phi = pow(acos(dot(normalize(v.xz), normalize(dir.xz))) / pi, 0.33333);
+	float phi = pow(acos(dot(normalize(v.xz), normalize(s.xz))) / pi, 0.33333);
 
 	float rho;
 	float horiz = length(x);
@@ -553,7 +554,7 @@ const float3 Scatter(const float3 x, const float3 v, const float depth, const fl
 }
 
 const float3 Sunlight(const float3 x, const float3 s) {
-	return T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810 * (s.y > 0);
+	return _SunColor * T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810 * smoothstep(-0.015, 0, dot(normalize(x), s));
 }
 
 #endif

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: Fully_RTX_pipeline
   m_EditorClassIdentifier: 
-  viewPosition: {x: -488, y: -797, z: 0}
-  viewScale: {x: 0.65751624, y: 0.65751624, z: 1}
+  viewPosition: {x: -760, y: -491, z: 0}
+  viewScale: {x: 0.43478265, y: 0.43478265, z: 1}
   nodes:
   - nodeName: CullLight
     parameters:
