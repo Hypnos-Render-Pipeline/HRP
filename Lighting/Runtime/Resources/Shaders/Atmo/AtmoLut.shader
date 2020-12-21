@@ -92,6 +92,7 @@ Shader "Hidden/AtmoLut"
 
                 #define T T_TAB
                 #include "../Includes/Atmo/Atmo.hlsl"
+                float _Multiplier;
 
                 int _RenderGround;
 
@@ -143,7 +144,7 @@ Shader "Hidden/AtmoLut"
                     }
 
                     float3 res = Scatter(x, x_0, v, s, 32, _RenderGround);// *_SunLuminance;
-                    return res;
+                    return res * _Multiplier;
                 }
             ENDCG
         }
@@ -161,7 +162,7 @@ Shader "Hidden/AtmoLut"
                 sampler2D _DepthTex;
                 sampler2D _MainTex;
 
-                int _RenderGround;    
+                int _RenderGround;
                 float4x4 _P_Inv, _V_Inv;
 
                 float4 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)

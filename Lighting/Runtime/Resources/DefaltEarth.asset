@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   planetRadius: 6371000
   AtmosphereThickness: 8000
+  brightness: 1
   GroundAlbedo: {r: 0.25, g: 0.25, b: 0.25, a: 1}
   RayleighScatter: {r: 0.1752, g: 0.40785, b: 1, a: 1}
   RayleighScatterStrength: 1
@@ -23,6 +24,8 @@ MonoBehaviour:
   MultiScatterStrength: 1
   RenderGround: 1
   spaceMap: {fileID: 2800000, guid: 5ab476261f15e3146b16190c59046c8f, type: 3}
+  quality: 0
   CloudCoverage: 0.5
-  CloudDensity: 1
+  CloudDensity: 0.5
   cloudMap: {fileID: 2800000, guid: 3b5516d199dc3284a89155b3fc0e9d92, type: 3}
+  highCloudMap: {fileID: 2800000, guid: 2bb34223801b18f489f976d5f574fcf5, type: 3}

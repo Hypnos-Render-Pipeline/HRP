@@ -12,6 +12,9 @@ namespace HypnosRenderPipeline
         [Min(100)]
         public float AtmosphereThickness = 8e3f;
 
+        [Range(0.01f, 100f)]
+        public float brightness = 1;
+
         public Color GroundAlbedo = new Color(0.25f, 0.25f, 0.25f);
         public Color RayleighScatter = new Color(0.1752f, 0.40785f, 1f);
         [Min(0)]
@@ -29,13 +32,19 @@ namespace HypnosRenderPipeline
 
         public Texture2D spaceMap;
 
+        public enum Quality { none, low, medium, high, utra }
+
         [Header("Clouds")]
+        public Quality quality = Quality.none;
+
         [Range(0, 1)]
-        public float CloudCoverage = 1;
-        [Range(0.01f, 2)]
-        public float CloudDensity = 1;
+        public float CloudCoverage = 0.5f;
+        [Range(0.01f, 1)]
+        public float CloudDensity = 0.5f;
 
         public Texture2D cloudMap;
+
+        public Texture2D highCloudMap;
 
         static ComputeShaderWithName volumeScatter = new ComputeShaderWithName("Shaders/Atmo/VolumeScatterLut");
         static MaterialWithName lutMat = new MaterialWithName("Hidden/AtmoLut");
@@ -136,6 +145,8 @@ namespace HypnosRenderPipeline
             cb.SetGlobalFloat("_MultiScatterStrength", MultiScatterStrength);
 
             cb.SetGlobalVector("_TLutResolution", new Vector4(T.width, T.height));
+
+            cb.SetGlobalFloat("_Multiplier", brightness);
 
             bool regenerated = false;
             if (forceRegenerate || !rendererIDs.Contains(rendererID))

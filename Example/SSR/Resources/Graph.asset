@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: Graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -1760, y: -336, z: 0}
-  viewScale: {x: 0.43232757, y: 0.43232757, z: 1}
+  viewPosition: {x: -669, y: -398, z: 0}
+  viewScale: {x: 0.32690176, y: 0.32690176, z: 1}
   nodes:
   - nodeName: GBuffer
     parameters:
@@ -351,7 +351,7 @@ MonoBehaviour:
       mustConnect: 0
     - name: target
       info: 
-      mustConnect: 1
+      mustConnect: 0
     - name: depth
       info: 
       mustConnect: 1
@@ -367,10 +367,13 @@ MonoBehaviour:
     - name: ao
       info: 
       mustConnect: 0
+    - name: motion
+      info: 
+      mustConnect: 0
     outputs:
     - name: target
       info: 
-      mustConnect: 1
+      mustConnect: 0
     - name: skyBox
       info: 
       mustConnect: 0
@@ -1205,6 +1208,7 @@ MonoBehaviour:
     System.Int32 SunAtmo7_specular = Shader.PropertyToID(\"SunAtmo7.specular\");\r\n       
     System.Int32 SunAtmo7_normal = Shader.PropertyToID(\"SunAtmo7.normal\");\r\n       
     System.Int32 SunAtmo7_ao = Shader.PropertyToID(\"SunAtmo7.ao\");\r\n        System.Int32
+    SunAtmo7_motion = Shader.PropertyToID(\"SunAtmo7.motion\");\r\n        System.Int32
     SunAtmo7_skyBox = Shader.PropertyToID(\"SunAtmo7.skyBox\");\r\n        System.Int32
     SunAtmo7_sunBuffer = Shader.PropertyToID(\"SunAtmo7.sunBuffer\");\r\n       
     System.Int32 SkyBoxIBL8_skyBox = Shader.PropertyToID(\"SkyBoxIBL8.skyBox\");\r\n       
@@ -1390,16 +1394,18 @@ MonoBehaviour:
     SunAtmo7.specular.connected = true;\r\n                    SunAtmo7.specular.Move(GBuffer0.specular);\r\n                   
     SunAtmo7.normal.connected = true;\r\n                    SunAtmo7.normal.Move(GBuffer0.normal);\r\n                   
     SunAtmo7.ao.connected = true;\r\n                    SunAtmo7.ao.Move(GBuffer0.microAO);\r\n                   
-    // outputs\r\n                    SunAtmo7.skyBox.AllocateResourcces(context,
-    SunAtmo7_skyBox);\r\n                    SunAtmo7.skyBox.name = \"SunAtmo7.skyBox\";\r\n                   
-    SunAtmo7.skyBox.connected = true;\r\n                    SunAtmo7.sunBuffer.AllocateResourcces(context,
+    SunAtmo7.motion.AllocateResourcces(context, SunAtmo7_motion);\r\n                   
+    SunAtmo7.motion.name = \"SunAtmo7.motion\";\r\n                    // outputs\r\n                   
+    SunAtmo7.skyBox.AllocateResourcces(context, SunAtmo7_skyBox);\r\n                   
+    SunAtmo7.skyBox.name = \"SunAtmo7.skyBox\";\r\n                    SunAtmo7.skyBox.connected
+    = true;\r\n                    SunAtmo7.sunBuffer.AllocateResourcces(context,
     SunAtmo7_sunBuffer);\r\n                    SunAtmo7.sunBuffer.name = \"SunAtmo7.sunBuffer\";\r\n                   
     SunAtmo7.sunBuffer.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                SunAtmo7.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                    SunAtmo7.skyBox.connected =
-    true;\r\n                    SunAtmo7.sunBuffer.connected = true;\r\n               
-    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                {\r\n                    SunAtmo7.motion.ReleaseResourcces(context);\r\n                   
+    SunAtmo7.skyBox.connected = true;\r\n                    SunAtmo7.sunBuffer.connected
+    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //SkyBoxIBL8\r\n           
     {\r\n                context.commandBuffer.name = \"SkyBoxIBL8\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1552,24 +1558,24 @@ MonoBehaviour:
     {\r\n                SunAtmo7.sunLight.Dispose();\r\n                SunAtmo7.target.Dispose();\r\n               
     SunAtmo7.depth.Dispose();\r\n                SunAtmo7.diffuse.Dispose();\r\n               
     SunAtmo7.specular.Dispose();\r\n                SunAtmo7.normal.Dispose();\r\n               
-    SunAtmo7.ao.Dispose();\r\n                SunAtmo7.skyBox.Dispose();\r\n               
-    SunAtmo7.sunBuffer.Dispose();\r\n                SunAtmo7.Dispose();\r\n           
-    }\r\n            // SkyBoxIBL8\r\n            {\r\n                SkyBoxIBL8.skyBox.Dispose();\r\n               
-    SkyBoxIBL8.target.Dispose();\r\n                SkyBoxIBL8.depth.Dispose();\r\n               
-    SkyBoxIBL8.diffuse.Dispose();\r\n                SkyBoxIBL8.specular.Dispose();\r\n               
-    SkyBoxIBL8.normal.Dispose();\r\n                SkyBoxIBL8.ao.Dispose();\r\n               
-    SkyBoxIBL8.irradiance.Dispose();\r\n                SkyBoxIBL8.Dispose();\r\n           
-    }\r\n            // HiDepth9\r\n            {\r\n                HiDepth9.depth.Dispose();\r\n               
-    HiDepth9.hiZ.Dispose();\r\n                HiDepth9.Dispose();\r\n           
-    }\r\n            // RTSpecular10\r\n            {\r\n                RTSpecular10.lightBuffer.Dispose();\r\n               
-    RTSpecular10.tiledLights.Dispose();\r\n                RTSpecular10.lights.Dispose();\r\n               
-    RTSpecular10.sun.Dispose();\r\n                RTSpecular10.sceneColor.Dispose();\r\n               
-    RTSpecular10.filteredColor.Dispose();\r\n                RTSpecular10.hiZ.Dispose();\r\n               
-    RTSpecular10.motion.Dispose();\r\n                RTSpecular10.specular.Dispose();\r\n               
-    RTSpecular10.normal.Dispose();\r\n                RTSpecular10.ao.Dispose();\r\n               
-    RTSpecular10.skybox.Dispose();\r\n                RTSpecular10.result.Dispose();\r\n               
-    RTSpecular10.Dispose();\r\n            }\r\n            // PyramidColor11\r\n           
-    {\r\n                PyramidColor11.filterTarget.Dispose();\r\n               
+    SunAtmo7.ao.Dispose();\r\n                SunAtmo7.motion.Dispose();\r\n               
+    SunAtmo7.skyBox.Dispose();\r\n                SunAtmo7.sunBuffer.Dispose();\r\n               
+    SunAtmo7.Dispose();\r\n            }\r\n            // SkyBoxIBL8\r\n           
+    {\r\n                SkyBoxIBL8.skyBox.Dispose();\r\n                SkyBoxIBL8.target.Dispose();\r\n               
+    SkyBoxIBL8.depth.Dispose();\r\n                SkyBoxIBL8.diffuse.Dispose();\r\n               
+    SkyBoxIBL8.specular.Dispose();\r\n                SkyBoxIBL8.normal.Dispose();\r\n               
+    SkyBoxIBL8.ao.Dispose();\r\n                SkyBoxIBL8.irradiance.Dispose();\r\n               
+    SkyBoxIBL8.Dispose();\r\n            }\r\n            // HiDepth9\r\n           
+    {\r\n                HiDepth9.depth.Dispose();\r\n                HiDepth9.hiZ.Dispose();\r\n               
+    HiDepth9.Dispose();\r\n            }\r\n            // RTSpecular10\r\n           
+    {\r\n                RTSpecular10.lightBuffer.Dispose();\r\n                RTSpecular10.tiledLights.Dispose();\r\n               
+    RTSpecular10.lights.Dispose();\r\n                RTSpecular10.sun.Dispose();\r\n               
+    RTSpecular10.sceneColor.Dispose();\r\n                RTSpecular10.filteredColor.Dispose();\r\n               
+    RTSpecular10.hiZ.Dispose();\r\n                RTSpecular10.motion.Dispose();\r\n               
+    RTSpecular10.specular.Dispose();\r\n                RTSpecular10.normal.Dispose();\r\n               
+    RTSpecular10.ao.Dispose();\r\n                RTSpecular10.skybox.Dispose();\r\n               
+    RTSpecular10.result.Dispose();\r\n                RTSpecular10.Dispose();\r\n           
+    }\r\n            // PyramidColor11\r\n            {\r\n                PyramidColor11.filterTarget.Dispose();\r\n               
     PyramidColor11.pyramidColor.Dispose();\r\n                PyramidColor11.Dispose();\r\n           
     }\r\n            // RTGI12\r\n            {\r\n                RTGI12.lightBuffer.Dispose();\r\n               
     RTGI12.tiledLights.Dispose();\r\n                RTGI12.lights.Dispose();\r\n               

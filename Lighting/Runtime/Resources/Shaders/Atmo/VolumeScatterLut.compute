@@ -10,6 +10,8 @@ float3 _Size;
 
 float4 _WorldSpaceCameraPos;
 
+float _Multiplier;
+
 [numthreads(4, 4, 4)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
@@ -74,7 +76,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     }
     res = Scatter(x, x_0, v, s, 16, false);
 
-    _Result[id] = res * _SunLuminance;
+    _Result[id] = res * _SunLuminance * _Multiplier;
 }
 
 RWStructuredBuffer<SunLight> _Sun_;
