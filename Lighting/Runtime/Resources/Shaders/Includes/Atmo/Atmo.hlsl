@@ -38,7 +38,9 @@ float3 _SunColor;
 
 float _MultiScatterStrength;
 
-float _MaxDepth;
+float _MaxDepth;                
+
+float _Multiplier;
 
 #define pi (3.14159265359)
 #define float_max (1e100f)
@@ -439,7 +441,7 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 	if (rho > coef) {
 		float3 x_0;
 		X_0(x, v, x_0);
-		scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, includeTu), (rho - coef) / (1 - coef));
+		scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, includeTu) * _Multiplier, (rho - coef) / (1 - coef));
 	}
 	else if (rho < 1 - coef) {
 		float3 x_0;
@@ -448,12 +450,12 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 			X_Up(x, v, dis);
 			x_0 = x + dis.y * v;
 			x = x + dis.x * v;
-			scatter = Scatter(x, x_0, v, s, 128, includeTu);
+			scatter = Scatter(x, x_0, v, s, 128, includeTu) * _Multiplier;
 		}
 		// usualy we don't need this
 		//else {
 		//	X_0(x, v, x_0);
-		//	scatter = Scatter(x, x_0, v, s, 128, includeTu);
+		//	scatter = Scatter(x, x_0, v, s, 128, includeTu) *_Multiplier;
 		//}
 	}
 	// prevent error
@@ -506,7 +508,7 @@ const float3 SkyBox(float3 x, const float3 v, const float3 s) {
 	if (rho > coef) {
 		float3 x_0;
 		X_0(x, v, x_0);
-		scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, false), (rho - coef) / (1 - coef));
+		scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, false) * _Multiplier, (rho - coef) / (1 - coef));
 	}
 	else if (rho < 1 - coef) {
 		float3 x_0;
@@ -515,12 +517,12 @@ const float3 SkyBox(float3 x, const float3 v, const float3 s) {
 			X_Up(x, v, dis);
 			x_0 = x + dis.y * v;
 			x = x + dis.x * v;
-			scatter = Scatter(x, x_0, v, s, 128, true);
+			scatter = Scatter(x, x_0, v, s, 128, true) * _Multiplier;
 		}
-		else {
-			X_0(x, v, x_0);
-			scatter = Scatter(x, x_0, v, s, 128, true);
-		}
+		//else {
+		//	X_0(x, v, x_0);
+		//	scatter = Scatter(x, x_0, v, s, 128, true) * _Multiplier;
+		//}
 	}
 	// prevent error
 	scatter = max(0, scatter);
@@ -555,7 +557,7 @@ const float3 Scatter(const float3 x, const float3 v, const float depth, const fl
 }
 
 const float3 Sunlight(const float3 x, const float3 s) {
-	return _SunColor * T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810 * smoothstep(-0.015, 0, dot(normalize(x), s));
+	return _SunColor * T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810 * smoothstep(-0.006, -0.005, dot(normalize(x), s));
 }
 
 #endif

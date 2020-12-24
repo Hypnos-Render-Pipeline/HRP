@@ -1,4 +1,4 @@
-﻿Shader "Hidden/CalculateMotion"
+Shader "Hidden/CalculateMotion"
 {
     SubShader
     {
@@ -31,6 +31,7 @@
             Texture2D _DepthTex;
             SamplerState sampler_point_clamp;
 
+            float4x4 _V_Inv;
             float4x4 _VP_Inv;
             float4x4 _Last_VP;
 
@@ -40,7 +41,6 @@
                 float3 speed = 0;
 
                 float4 vpoint = float4(i.uv * 2 - 1, depth, 1);
-
 
                 float4 wpoint;
                 wpoint = mul(_VP_Inv, vpoint); wpoint /= wpoint.w;

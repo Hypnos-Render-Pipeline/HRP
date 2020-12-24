@@ -30,7 +30,7 @@ RWTexture2D<float2> _Ray_Index;
 RWTexture2D<float4> _Marching_Result_A;
 //RWTexture2D<float4> _Marching_Result_B;
 
-Texture2D<float4> _History; SamplerState sampler_point_clamp;
+Texture2D<float4> _History; SamplerState sampler_bilinear_clamp;
 
 RWTexture2D<float4> _HalfResResult;
 
@@ -177,13 +177,17 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 	float far_clip_fade = smoothstep(0.9, 1, depth / max_depth);
 	depth = lerp(depth, 999999, far_clip_fade);
 
-	float4 res = CloudRender(wcpos, p, v, depth);
+	float cloud_dis;
+	float4 res = CloudRender(wcpos, p, v, cloud_dis, depth);
 
-	float3 present_point = p + v * res.z;
+	float3 present_point = p + v * cloud_dis;
 	float3 sunLight = Sunlight(present_point, _SunDir);
-	float3 amb = (SkyBox(present_point, normalize(present_point), _SunDir) * 0.9 + Tu_L(p, _SunDir) * 0.1) * _SunLuminance;
+	float3 ambd = Tu_L(p, _SunDir) * _SunLuminance * 0.5;
+	float3 ambu = sunLight * .5 + SkyBox(present_point, normalize(p), _SunDir) * 0.1 * _SunLuminance;
+	float3 amb = lerp(ambd, ambu, clamp(res.z, 0.1, 0.9)) * 2;
+	sunLight *= 7;
 
-	_Marching_Result_A[tile_id] = float4((res.x * 20 * sunLight + res.y * amb) * _Brightness, res.a);
+	_Marching_Result_A[tile_id] = float4((res.x * sunLight + res.y * lerp(0.5, 1, res.z) * amb) * _Brightness, res.a);
 }
 
 groupshared float4 marching_Result[6][6];
@@ -211,7 +215,7 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 	float2 reproj_offset = _MotionTex.SampleLevel(sampler_MotionTex, uv_in_half_resolution, 0).rg;
 	float move_speed = length(reproj_offset);
 
-	float4 history = _History.SampleLevel(sampler_point_clamp, uv_in_half_resolution, 0);
+	float4 history = _History.SampleLevel(sampler_bilinear_clamp, uv_in_half_resolution - reproj_offset, 0);
 
 	int2 nei[9] = { int2(-1, -1), int2(-1, 0), int2(-1, 1),
 					int2(0, -1), int2(0, 1),
@@ -233,10 +237,10 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 		weight += 1;
 	}
 	average_result /= weight;
-
+	//_HalfResResult[id] = history; return;
 	if (any(id >= uint2(_WH.xy / 2))) return;
 	if (offset2index(id % 2) == int(_Ray_Index[id / 2].x)) {
-		_HalfResResult[id] = lerp(history, marching_Result[groupshared_id.x][groupshared_id.y], lerp(lerp(0.1, 0.4, _Quality.w), 0.95, saturate(move_speed)));
+		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.05, 0.3, _Quality.w));
 		return;
 	}
 
@@ -244,7 +248,7 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 		_HalfResResult[id] = lerp(history, marching_Result[groupshared_id.x][groupshared_id.y], 0.5);
 	}
 	else {
-		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), average_result, lerp(0.01, 0.95, saturate(move_speed)));
+		_HalfResResult[id] = clamp(history, aabb_low, aabb_high);
 	}
 }
 
@@ -322,6 +326,7 @@ void FullResolutionUpsample(const uint2 id : SV_DispatchThreadID, const uint2 gr
 
 	float3 sky = 0;
 	float4 sc = _SceneColorTex[id];
+
 	if (raw_d == 0) {
 		sky = ScatterTable(p, v, _SunDir) * _SunLuminance;
 
@@ -330,15 +335,43 @@ void FullResolutionUpsample(const uint2 id : SV_DispatchThreadID, const uint2 gr
 		float4 highCloud = 0;
 		if (!hitGround) {
 			highCloud = HighCloud(p, v);
-			sky += highCloud.x * Sunlight(highCloud.yzw, _SunDir) * T_tab_fetch(p, v) * 0.5 * res.a * res.a * smoothstep(0.05, 0.1, dot(normalize(p), v)) * _Brightness;
-			sky += T_tab_fetch(p, v) * (1 - smoothstep(-0.05, 0, dot(normalize(p), _SunDir))) * Space(v) * res.a * res.a * _Brightness;
+			sc.xyz += highCloud.x * (numericalMieFit(dot(_SunDir, v)) + numericalMieFitMultiScatter()) * Sunlight(highCloud.yzw, _SunDir) * T_tab_fetch(p, v) * 0.5 * res.a * res.a * smoothstep(0.05, 0.1, dot(normalize(p), v)) * _Brightness;
+			sc.xyz += T_tab_fetch(p, v) * (1 - smoothstep(-0.05, 0, dot(normalize(p), _SunDir))) * Space(v) * res.a * res.a * _Brightness;
 		}
-		_Cloud[id] = float4(/*aces_tonemap*/((res.xyz + res.a * sky)), 0);
-	}
-	else {
-		_Cloud[id] = float4(/*aces_tonemap*/(sc.xyz + sc.a * Scatter(p, v, d, _SunDir)), sc.a);
 	}
 
+	_Cloud[id] = float4(aces_tonemap((res.xyz + res.a * sc.xyz)), sc.a);
+	//tex3Dlod(_WorleyPerlinVolume, float4(uv, 0, 0)).xyzw;
+	//RandSeed(id);
+
+	//float raw_d = _Depth[id];
+	//float d = LinearEyeDepth(raw_d);
+	//float max_depth = (1.0 / _ZBufferParams.w) * 0.998;
+	//float far_clip_fade = smoothstep(0.9, 1, d / max_depth);
+	//d = lerp(d, 999999, far_clip_fade);
+
+	//float2 uv = (id + 0.5) * _WH.zw;
+
+	//float3 wcpos = _V_Inv._m03_m13_m23;
+	//float3 p = wcpos;
+	//float3 pos;
+	//{
+	//	float4 ndc = float4(uv * 2 - 1, 0, 1);
+	//	float4 worldPos = mul(_VP_Inv, ndc);
+	//	pos = worldPos.xyz / worldPos.w;
+	//}
+	//float3 v = normalize(pos - p);
+
+	//p.y = max(p.y, 95) + planet_radius;
+
+	//float3 sky = 0;
+	//float4 sc = _SceneColorTex[id];
+	//if (raw_d == 0) {
+	//	_Cloud[id] = float4(aces_tonemap(CloudRender(wcpos, p, v, d).xxx * 10), 1);
+	//}
+	//else {
+	//	_Cloud[id] = float4(aces_tonemap(sc.xyz + sc.a * Scatter(p, v, d, _SunDir)), sc.a);
+	//}
 }
 
 
@@ -353,7 +386,7 @@ void LoadVolumeData(const uint3 id : SV_DispatchThreadID)
 	uint size = _Size_XAtlas_Y_Atlas.x;
 	uint2 atlas_xy = _Size_XAtlas_Y_Atlas.yz;
 	uint2 id_2D = id.xy + uint2(id.z % atlas_xy.x, id.z / atlas_xy.x) * size;
-	id_2D.y = size * atlas_xy.y - 1 - id_2D.y;
+	//id_2D.y = size * atlas_xy.y - 1 - id_2D.y;
 
 	_Volume3D[id] = _Volume2D[id_2D];
 }
@@ -370,5 +403,5 @@ void WriteCloudShadowMap(const uint2 id : SV_DispatchThreadID)
 	cloud_space_pos += s * 1000000;
 	cloud_space_pos += -s * IntersectSphere(cloud_space_pos, -s, float3(0, 0, 0), planet_radius + cloud_radi.x);
 
-	_CloudSM[id] = GetT(0.1, cloud_space_pos, s);
+	//_CloudSM[id] = GetT(0.1, cloud_space_pos, s);
 }

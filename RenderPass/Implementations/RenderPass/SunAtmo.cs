@@ -63,6 +63,8 @@ namespace HypnosRenderPipeline.RenderPass
 
         RenderTexture worleyVolume3D;
         RenderTexture worleyPerlinVolume3D;
+        Texture2D curlNoise2D;
+
 
         struct TextureIDs
         {
@@ -86,6 +88,7 @@ namespace HypnosRenderPipeline.RenderPass
             public static int _Volume3D = Shader.PropertyToID(nameof(_Volume3D));
             public static int _WorleyVolume = Shader.PropertyToID(nameof(_WorleyVolume));
             public static int _WorleyPerlinVolume = Shader.PropertyToID(nameof(_WorleyPerlinVolume));
+            public static int _CurlNoise = Shader.PropertyToID(nameof(_CurlNoise));            
             public static int _SpaceMap = Shader.PropertyToID(nameof(_SpaceMap));
 
             public static int _CloudShadowMap = Shader.PropertyToID(nameof(_CloudShadowMap));
@@ -98,6 +101,8 @@ namespace HypnosRenderPipeline.RenderPass
 
             public static int _CloudMat = Shader.PropertyToID(nameof(_CloudMat));
             public static int _CloudMat_Inv = Shader.PropertyToID(nameof(_CloudMat_Inv));
+
+            public static int _CloudMapScale = Shader.PropertyToID(nameof(_CloudMapScale));
 
             public static int _Quality = Shader.PropertyToID(nameof(_Quality));
 
@@ -142,6 +147,8 @@ namespace HypnosRenderPipeline.RenderPass
             worleyVolume3D.volumeDepth = 32;
             worleyVolume3D.wrapMode = TextureWrapMode.Repeat;
             worleyVolume3D.filterMode = FilterMode.Trilinear;
+            worleyVolume3D.useMipMap = true;
+            worleyVolume3D.autoGenerateMips = false;
             worleyVolume3D.Create();
             worleyPerlinVolume3D = new RenderTexture(128, 128, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
             worleyPerlinVolume3D.enableRandomWrite = true;
@@ -149,10 +156,12 @@ namespace HypnosRenderPipeline.RenderPass
             worleyPerlinVolume3D.volumeDepth = 128;
             worleyPerlinVolume3D.wrapMode = TextureWrapMode.Repeat;
             worleyPerlinVolume3D.filterMode = FilterMode.Trilinear;
+            worleyPerlinVolume3D.useMipMap = true;
+            worleyPerlinVolume3D.autoGenerateMips = false;
             worleyPerlinVolume3D.Create();
 
             var _WorleyPerlinVolume2D = Resources.Load<Texture2D>("Textures/Cloud Noise/WorleyPerlinVolume");
-            var _WorleyVolume2D = Resources.Load<Texture2D>("Textures/Cloud Noise/WorleyVolume");
+            var _WorleyVolume2D = Resources.Load<Texture2D>("Textures/Cloud Noise/NoiseErosion");
             CommandBuffer writeVolumecb = new CommandBuffer();
             writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume2D, _WorleyPerlinVolume2D);
             writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume3D, worleyPerlinVolume3D);
@@ -163,6 +172,10 @@ namespace HypnosRenderPipeline.RenderPass
             writeVolumecb.SetComputeVectorParam(cloudCS, PropertyIDs._Size_XAtlas_Y_Atlas, new Vector4(32, 32, 1));
             writeVolumecb.DispatchCompute(cloudCS, (int)CloudPass.LoadVolumeData, 8, 8, 8);
             Graphics.ExecuteCommandBuffer(writeVolumecb);
+            worleyVolume3D.GenerateMips();
+            worleyPerlinVolume3D.GenerateMips();
+
+            curlNoise2D = Resources.Load<Texture2D>("Textures/Cloud Noise/Curl");
         }
 
         public override void Dispose()
@@ -222,13 +235,10 @@ namespace HypnosRenderPipeline.RenderPass
                 cb.GetTemporaryRT(tempColor, target.desc.basicDesc);
                 cb.Blit(target, tempColor, lightMat, 4); // directional sun light
 
-                if (atmo.quality == HRPAtmo.Quality.none)
-                {
-                    atmo.RenderAtmoToRT(cb, tempColor, depth, target);
-                }
-                else
-                {
+                atmo.RenderAtmoToRT(cb, tempColor, depth, target);
 
+                if (atmo.quality != HRPAtmo.Quality.none)
+                {
                     int2 target_WH = new int2(target.desc.basicDesc.width, target.desc.basicDesc.height);
                     Vector4 _WH = new Vector4(target_WH.x, target_WH.y, 1.0f / target_WH.x, 1.0f / target_WH.y);
                     Vector2Int depth_wh = new Vector2Int((int)(_WH.x / 2), (int)(_WH.y / 2));
@@ -244,14 +254,14 @@ namespace HypnosRenderPipeline.RenderPass
                     var rayIndexDesc = downSampledMinMaxDepthDesc;
                     rayIndexDesc.colorFormat = RenderTextureFormat.RGFloat;
                     var rgba16Desc = rayIndexDesc;
-                    rgba16Desc.colorFormat = RenderTextureFormat.ARGBFloat;
+                    rgba16Desc.colorFormat = target.desc.basicDesc.colorFormat;
                     var r16Desc = new RenderTextureDescriptor(1024, 1024, RenderTextureFormat.RHalf);
                     r16Desc.enableRandomWrite = true;
                     r16Desc.autoGenerateMips = false;
                     r16Desc.depthBufferBits = 0;
                     r16Desc.msaaSamples = 1;
                     r16Desc.dimension = TextureDimension.Tex2D;
-                    var hisDesc = new RenderTextureDescriptor(depth_wh.x, depth_wh.y, RenderTextureFormat.ARGBFloat) { enableRandomWrite = true };
+                    var hisDesc = new RenderTextureDescriptor(depth_wh.x, depth_wh.y, rgba16Desc.colorFormat) { enableRandomWrite = true };
 
                     var his = context.resourcesPool.GetTexture(TextureIDs._History, hisDesc);
                     his.filterMode = FilterMode.Point;
@@ -262,19 +272,19 @@ namespace HypnosRenderPipeline.RenderPass
 
                     if (atmo.quality == HRPAtmo.Quality.low)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(80, 6, 96, 0));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(80, 5, 96, 0));
                     }
                     else if (atmo.quality == HRPAtmo.Quality.medium)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(50, 8, 128, 0.33f));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(50, 5, 128, 0.33f));
                     }
                     else if (atmo.quality == HRPAtmo.Quality.high)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(40, 16, 256, 0.66f));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(40, 10, 256, 0.66f));
                     }
                     else
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(20, 32, 512, 1));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(20, 20, 512, 1));
                     }
 
 #if UNITY_EDITOR
@@ -286,6 +296,8 @@ namespace HypnosRenderPipeline.RenderPass
                         worleyVolume3D.volumeDepth = 32;
                         worleyVolume3D.wrapMode = TextureWrapMode.Repeat;
                         worleyVolume3D.filterMode = FilterMode.Trilinear;
+                        worleyVolume3D.useMipMap = true;
+                        worleyVolume3D.autoGenerateMips = false;
                         worleyVolume3D.Create();
                         worleyPerlinVolume3D = new RenderTexture(128, 128, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
                         worleyPerlinVolume3D.enableRandomWrite = true;
@@ -293,23 +305,30 @@ namespace HypnosRenderPipeline.RenderPass
                         worleyPerlinVolume3D.volumeDepth = 128;
                         worleyPerlinVolume3D.wrapMode = TextureWrapMode.Repeat;
                         worleyPerlinVolume3D.filterMode = FilterMode.Trilinear;
+                        worleyPerlinVolume3D.useMipMap = true;
+                        worleyPerlinVolume3D.autoGenerateMips = false;
                         worleyPerlinVolume3D.Create();
 
                         var _WorleyPerlinVolume2D = Resources.Load<Texture2D>("Textures/Cloud Noise/WorleyPerlinVolume");
-                        var _WorleyVolume2D = Resources.Load<Texture2D>("Textures/Cloud Noise/WorleyVolume");
-                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume2D, _WorleyPerlinVolume2D);
-                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume3D, worleyPerlinVolume3D);
-                        cb.SetComputeVectorParam(cloudCS, PropertyIDs._Size_XAtlas_Y_Atlas, new Vector4(128, 16, 8));
-                        cb.DispatchCompute(cloudCS, (int)CloudPass.LoadVolumeData, 32, 32, 32);
-                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume2D, _WorleyVolume2D);
-                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume3D, worleyVolume3D);
-                        cb.SetComputeVectorParam(cloudCS, PropertyIDs._Size_XAtlas_Y_Atlas, new Vector4(32, 32, 1));
-                        cb.DispatchCompute(cloudCS, (int)CloudPass.LoadVolumeData, 8, 8, 8);
+                        var _WorleyVolume2D = Resources.Load<Texture2D>("TestNoise/noiseErosion");
+                        CommandBuffer writeVolumecb = new CommandBuffer();
+                        writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume2D, _WorleyPerlinVolume2D);
+                        writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume3D, worleyPerlinVolume3D);
+                        writeVolumecb.SetComputeVectorParam(cloudCS, PropertyIDs._Size_XAtlas_Y_Atlas, new Vector4(128, 16, 8));
+                        writeVolumecb.DispatchCompute(cloudCS, (int)CloudPass.LoadVolumeData, 32, 32, 32);
+                        writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume2D, _WorleyVolume2D);
+                        writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume3D, worleyVolume3D);
+                        writeVolumecb.SetComputeVectorParam(cloudCS, PropertyIDs._Size_XAtlas_Y_Atlas, new Vector4(32, 32, 1));
+                        writeVolumecb.DispatchCompute(cloudCS, (int)CloudPass.LoadVolumeData, 8, 8, 8);
+                        Graphics.ExecuteCommandBuffer(writeVolumecb);
+                        worleyVolume3D.GenerateMips();
+                        worleyPerlinVolume3D.GenerateMips();
                     }
 #endif
 
                     cb.SetGlobalTexture(TextureIDs._WorleyVolume, worleyVolume3D);
                     cb.SetGlobalTexture(TextureIDs._WorleyPerlinVolume, worleyPerlinVolume3D);
+                    cb.SetGlobalTexture(TextureIDs._CurlNoise, curlNoise2D);
                     if (atmo.spaceMap != null)
                         cb.SetGlobalTexture(TextureIDs._SpaceMap, atmo.spaceMap);
                     else
@@ -319,6 +338,7 @@ namespace HypnosRenderPipeline.RenderPass
                     //cb.SetGlobalFloat(Properties._GapLightIntensity, settings.gapLight);
                     cb.SetGlobalFloat(PropertyIDs._CloudCoverage, atmo.CloudCoverage);
                     cb.SetGlobalFloat(PropertyIDs._CloudDensity, atmo.CloudDensity);
+                    cb.SetGlobalFloat(PropertyIDs._CloudMapScale, atmo.cloudMapScale);
                     cb.SetGlobalMatrix(PropertyIDs._LightTransform, sun.transform.worldToLocalMatrix);
                     //cb.SetGlobalInt(PropertyIDs._EnableAurora, settings.enableAurora ? 1 : 0);
 
@@ -390,7 +410,7 @@ namespace HypnosRenderPipeline.RenderPass
                         //cb.DispatchCompute(cloudCS, (int)CloudPass.BlitToHistory, dispatch_size_half.x, dispatch_size_half.y, 1);
 
 
-
+                        cb.CopyTexture(target, tempColor);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._Depth, depth);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._DownSampled_MinMax_Depth, TextureIDs._DownSampled_MinMax_Depth);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._History, his);
@@ -398,20 +418,22 @@ namespace HypnosRenderPipeline.RenderPass
                         cb.SetComputeFloatParam(cloudCS, PropertyIDs._Brightness, atmo.brightness);
                         rgba16Desc.width = target_WH.x;
                         rgba16Desc.height = target_WH.y;
-                        cb.GetTemporaryRT(TextureIDs._Cloud, rgba16Desc, FilterMode.Point);
+                        cb.GetTemporaryRT(TextureIDs._Cloud, rgba16Desc);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._Cloud, TextureIDs._Cloud);
                         cb.DispatchCompute(cloudCS, (int)CloudPass.FullResolutionUpsample, dispatch_size_full.x, dispatch_size_full.y, 1);
 
 
 
                         cb.SetGlobalTexture(TextureIDs._Cloud, TextureIDs._Cloud);
-                        cb.Blit(TextureIDs._Cloud, target);
+                        cb.CopyTexture(TextureIDs._Cloud, target);
 
 
                         cb.ReleaseTemporaryRT(TextureIDs._HalfResResult);
                         cb.ReleaseTemporaryRT(TextureIDs._Marching_Result_A);
                         cb.ReleaseTemporaryRT(TextureIDs._Ray_Index);
                         cb.ReleaseTemporaryRT(TextureIDs._DownSampled_MinMax_Depth);
+                        cb.ReleaseTemporaryRT(TextureIDs._Cloud);
+                        cb.ReleaseTemporaryRT(TextureIDs._CloudShadowMap);
                     }
                 }
 

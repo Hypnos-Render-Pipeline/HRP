@@ -92,7 +92,6 @@ Shader "Hidden/AtmoLut"
 
                 #define T T_TAB
                 #include "../Includes/Atmo/Atmo.hlsl"
-                float _Multiplier;
 
                 int _RenderGround;
 

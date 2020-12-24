@@ -43,6 +43,8 @@ namespace HypnosRenderPipeline
         public float CloudDensity = 0.5f;
 
         public Texture2D cloudMap;
+        [Range(0.1f, 100)]
+        public float cloudMapScale;
 
         public Texture2D highCloudMap;
 

@@ -13,12 +13,14 @@ float4x4 _CloudMat;
 float4x4 _CloudMat_Inv;
 float4x4 _LightTransform;
 
+float	  _CloudMapScale;
 sampler2D _CloudShadowMap;
-sampler2D _CloudMap;
+Texture2D _CloudMap;		SamplerState Bilinear_Mirror_Sampler;
 sampler2D _HighCloudMap;
 sampler2D _SpaceMap;
 sampler3D _WorleyPerlinVolume;
 sampler3D _WorleyVolume;
+sampler2D _CurlNoise;
 
 int _Clock;
 float4 _Time;
@@ -26,7 +28,7 @@ float4 _Time;
 #ifndef planet_radius
 #define planet_radius 6371e3
 #endif
-static float2 cloud_radi = float2(1500, 2700);
+static float2 cloud_radi = float2(1500, 4000);
 
 float3 aces_tonemap(float3 color) {
 	float3x3 m1 = float3x3(
@@ -61,7 +63,7 @@ float2 Roberts2_(uint n) {
 	return  frac(0.5 + a * n);
 }
 void RandSeed(uint2 seed) {
-	sampleIndex = (uint)_Clock % 24 + hash((seed.x % 8 + seed.y % 8 * 8) / 64.) * 64;
+	sampleIndex = (uint)_Clock % 1024 + hash((seed.x % 8 + seed.y % 8 * 8) / 64.) * 64;
 }
 
 float Rand()
@@ -154,11 +156,11 @@ float Cloud_H(float3 p) {
 }
 
 float CloudType(float h, float t) {
-	float a = lerp(0.01, 0.2, t);
-	float b = lerp(0.15, 0.4, t);
-	float c = lerp(0.1, 1, t);
+	float a = (0.5 - abs(t - 0.5)) * 0.2 + 0.1;
+	float b = lerp(0.2, 0.6, t);
+	float c = lerp(0.3, 1, t);
 
-	return rescale01(h, 0, a) * rescale10(h, b, b + c * 0.7) * t;
+	return rescale01(h, 0, a) * rescale10(h, b, c);
 }
 
 float3 Space(float3 v) {
@@ -171,171 +173,160 @@ float3 Space(float3 v) {
 }
 
 inline float4 HighCloud(const float3 p, const float3 v) {
-	float dis = IntersectSphere(p, v, float3(0, 0, 0), planet_radius + cloud_radi.y + 1000);
+	float dis = IntersectSphere(p, v, float3(0, 0, 0), planet_radius + cloud_radi.y + 2000);
 
 	float3 hitP = p + dis * v;
 	float3 nom_p = normalize(hitP);
-	
-	float data1 = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 300 + _Time.x * 0.005, 0, 0)).x;
 
-	float data2 = saturate(dis / 4500 - 1) * tex2Dlod(_HighCloudMap, float4(nom_p.xz * 400 + float2(-1, 1) * _Time.x * 0.01, 0, 0)).y;
+	float data1 = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 200 + _Time.x * 0.02, 0, 0)).x;
 
-	float control = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 100 - _Time.x * 0.01, 0, 0)).z;
+	float data2 = saturate(dis / 4000 - 1) * tex2Dlod(_HighCloudMap, float4(nom_p.xz * 100 + float2(-1, 1) * _Time.x * 0.01, 0, 0)).y;
+
+	float control = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 300 - _Time.x * 0.02, 0, 0)).z;
 
 	return float4(max(data1 * control, data2), hitP);
 }
 
-inline float Cloud_Shape(const float3 p, const float fade = 1) {
-	float h = Cloud_H(p);
+inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
 
-	h *= 0.833;
+	// get height fraction  (be sure to create a cloud_min_max variable)
+	float height_fraction = Cloud_H(p);
+	float oh = height_fraction;
 
-	float3 nom_p = normalize(p);
-	float cov = tex2Dlod(_CloudMap, float4(nom_p.xz * 100 + _Time.x * 0.004, 0, 0)).x;
+	height_fraction *= 0.8;
 
-	cov = rescale01(cov, 1 - _CloudCoverage, 1);
-	cov = lerp(1, cov, fade);
+	// wind settings
+	float3 wind_direction = float3(1.0, 0.0, 0.0);
+	float cloud_speed = 600.0;
 
-	float ero_value = 1 - CloudType(h, cov);
+	// cloud_top offset - push the tops of the clouds along this wind direction by this many units.
+	float cloud_top_offset = 500.0;
 
-	float cloud = rescale01(0.67, ero_value, 1);
+	// skew in wind direction
+	p += height_fraction * wind_direction * cloud_top_offset;
 
-	return (cloud > 0) ? 1 : 0;
-}
+	//animate clouds in wind direction and add a small upward bias to the wind direction
+	p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
 
-inline float Cloud(const float3 p, const float fade = 1) {
-	float h = Cloud_H(p);
+	// read the low frequency Perlin-Worley and Worley noises
+	float4 low_frequency_noises = tex3Dlod(_WorleyPerlinVolume, float4(p * .00018333, lod));
 
-	h *= 0.833;
+	// build an fBm out of  the low frequency Worley noises that can be used to add detail to the Low frequency Perlin-Worley noise
+	float low_freq_fBm = dot(low_frequency_noises.gba, float3(0.625, 0.25, 0.125));
 
-	float3 nom_p = normalize(p);
-	float cov = tex2Dlod(_CloudMap, float4(nom_p.xz * 100 + _Time.x * 0.004, 0, 0)).x;
-
-	cov = rescale01(cov, 1 - _CloudCoverage, 1);
-	cov = lerp(1, cov, fade);
-
-	float ero_value = 1 - CloudType(h, cov);
-
-	float noise0 = dot(tex3Dlod(_WorleyPerlinVolume, float4(p * 0.00057, 0)).xyz, float3(0.625, 0.25, 0.125));
-
-	float noise1 = dot(tex3Dlod(_WorleyVolume, float4(p * 0.006, 0)).xyz, float3(0.625, 0.25, 0.125));
-
-	noise1 = lerp(noise1, 1 - noise1, min(1, h * 3));
-
-	float cloud = rescale01(noise0, ero_value, 1);
-
-	cloud = cloud - (cloud < 0.4 && cloud > 0 ? rescale01(noise1, 0.2 + 2 * cloud, 1) : 0);
-
-	return (cloud > 0) ? sqrt(cov) * smoothstep(0, 0.6, h) * 0.02 * _CloudDensity : 0;
-}
-
-inline float Cloud_Simple(const float3 p, const float fade = 1) {
-	//return Cloud(p);
-	float h = Cloud_H(p);
-
-	h *= 0.833;
+	// define the base cloud shape by dilating it with the low frequency fBm made of Worley noise.
+	float base_cloud = rescale01(low_frequency_noises.r, low_freq_fBm, 1.0);
 
 	float3 nom_p = normalize(p);
-	float cov = tex2Dlod(_CloudMap, float4(nom_p.xz * 100 + _Time.x * 0.004, 0, 0)).x;
-	cov = lerp(1, cov, fade);
+	float2 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, lod).rg;
+	base_cloud = lerp(1, base_cloud, fade);
+	weather_data = lerp(1, weather_data, fade);
 
-	cov = remap(cov, 1 - _CloudCoverage, 1, 0, 1);
+	// Get the density-height gradient using the density-height function (not included)
+	float density_height_gradient = CloudType(height_fraction, weather_data.y);
 
-	float ero_value = 1 - CloudType(h, cov);
+	// apply the height function to the base cloud shape
+	base_cloud *= density_height_gradient;
 
-	float noise0 = dot(tex3Dlod(_WorleyPerlinVolume, float4(p * 0.00057, 0)).xyz, float3(0.625, 0.25, 0.125));
+	// cloud coverage is stored in the weather_data’s red channel.
+	float cloud_coverage = weather_data.r;
+	cloud_coverage = rescale01(cloud_coverage, 1 - _CloudCoverage, 1);
 
-	float cloud = rescale01(noise0, ero_value, 1);
+	// apply anvil deformations
+	cloud_coverage = pow(cloud_coverage, lerp(1, 0.2, min(1, height_fraction * 5) * weather_data.x));
 
-	return (cloud > 0) ? sqrt(cov) * smoothstep(0, 0.6, h) * 0.02 * _CloudDensity : 0;
+	//Use remapper to apply cloud coverage attribute
+	float base_cloud_with_coverage = rescale01(base_cloud, 1 - cloud_coverage, 1.0) * cloud_coverage;
+
+	return base_cloud_with_coverage > 0.01;
 }
 
-inline float GetT(const float samples, const float3 p, const float3 v, const float d = 800) {
+inline float2 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false) {
 
-	float sample_num = max(4, floor(8 * samples));
-	float bias = Rand();
-	float trans = 1;
-	float last_t = 0;
-	float3 v_ = v * d;
-	[loop]
-	for (int i = 0; i < sample_num; i++)
+	// get height fraction  (be sure to create a cloud_min_max variable)
+	float height_fraction = Cloud_H(p);
+	float oh = height_fraction;
+
+	height_fraction *= 0.8;
+
+	// wind settings
+	float3 wind_direction = float3(1.0, 0.0, 0.0);
+	float cloud_speed = 600.0;
+
+	// cloud_top offset - push the tops of the clouds along this wind direction by this many units.
+	float cloud_top_offset = 500.0;
+
+	// skew in wind direction
+	p += height_fraction * wind_direction * cloud_top_offset;
+
+	//animate clouds in wind direction and add a small upward bias to the wind direction
+	p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
+
+	// read the low frequency Perlin-Worley and Worley noises
+	float4 low_frequency_noises = tex3Dlod(_WorleyPerlinVolume, float4(p * .00018333, lod));
+
+	// build an fBm out of  the low frequency Worley noises that can be used to add detail to the Low frequency Perlin-Worley noise
+	float low_freq_fBm = dot(low_frequency_noises.gba, float3(0.625, 0.25, 0.125));
+
+	// define the base cloud shape by dilating it with the low frequency fBm made of Worley noise.
+	float base_cloud = rescale01(low_frequency_noises.r, low_freq_fBm, 1.0);
+
+	float3 nom_p = normalize(p);
+	float2 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, lod).rg;
+	base_cloud = lerp(1, base_cloud, fade);
+	weather_data = lerp(1, weather_data, fade);
+	
+	//return weather_data.r * weather_data.g * 0.001;
+
+	// Get the density-height gradient using the density-height function (not included)
+	float density_height_gradient = CloudType(height_fraction, weather_data.y);
+
+	// apply the height function to the base cloud shape
+	base_cloud *= density_height_gradient;
+
+	// cloud coverage is stored in the weather_data’s red channel.
+	float cloud_coverage = weather_data.r;
+	cloud_coverage = rescale01(cloud_coverage, 1 - _CloudCoverage, 1);
+
+	// apply anvil deformations
+	cloud_coverage = pow(cloud_coverage, lerp(1, 0.2, min(1, height_fraction * 5) * weather_data.x));
+
+	//Use remapper to apply cloud coverage attribute
+	float base_cloud_with_coverage = rescale01(base_cloud, 1 - cloud_coverage, 1.0);
+
+	//Multiply result by cloud coverage so that smaller clouds are lighter and more aesthetically pleasing.
+	base_cloud_with_coverage *= cloud_coverage;
+
+	//define final cloud value
+	float final_cloud = base_cloud_with_coverage;
+
+	// only do detail work if we are taking expensive samples!
+	if (!simple)
 	{
-		float t = (i + bias) / sample_num;
-		t = -0.333333 * log(1 - 0.9502129 * t);
-		float3 pos = v_ * t + p;
-		float scatter = Cloud(pos).x;
-		trans *= GetT(scatter, (t - last_t) * d);
-		last_t = t;
+
+		// add some turbulence to bottoms of clouds using curl noise.  Ramp the effect down over height and scale it by some value (200 in this example)
+		float2 curl_noise = tex2Dlod(_CurlNoise, float4(p.xz * 0.000528, 0, 0)).rg;
+		p.xz += curl_noise * (1.0 - height_fraction) * 240;
+
+		// sample high-frequency noises
+		float3 high_frequency_noises = tex3Dlod(_WorleyVolume, float4 (p * 0.002, lod)).rgb;
+
+		// build High frequency Worley noise fBm
+		float high_freq_fBm = dot(high_frequency_noises, float3(0.625, 0.25, 0.125));
+
+		// transition from wispy shapes to billowy shapes over height
+		float high_freq_noise_modifier = lerp(high_freq_fBm, 1.0 - high_freq_fBm, saturate(height_fraction * 10.0));
+
+		// erode the base cloud shape with the distorted high frequency Worley noises.
+		final_cloud = rescale01(base_cloud_with_coverage, high_freq_noise_modifier * 0.5, 1.0);
+
 	}
-	return trans;
+	return float2(final_cloud * smoothstep(0, 0.5, height_fraction) * 0.05 * _CloudDensity * lerp(0.1, 1, weather_data.y), oh);
 }
 
-inline float GetT(const float samples, const float3 p, const float3 v, const float3 vt, const float3 vbt, const float vs, const float fade = 1, const float d = 1600) {
+float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d = 9999999) {
 
-	int sample_num = lerp(_Quality.y / 4, _Quality.y, samples);
-	float bias = Rand();
-	float trans = 1;
-	float trans2 = 1;
-	float last_t = 0;
-	float3 v_ = v * d;
-	float3 vt_ = vt * d * 0.3;
-	float3 vbt_ = vbt * d * 0.3;
-	float inv_sample_num = 1.0 / sample_num;
-	bias *= inv_sample_num;
-	//[loop]
-	for (int i = 0; i < sample_num; i++)
-	{
-		float t = i * inv_sample_num + bias;
-		t = -0.333333 * log(-0.9502129 * t + 1);
-		float3 pos = v_ * t + p;
-
-		float2 rnd = frac(Roberts2_(i) + bias);
-		rnd.x *= (2 * 3.14159265359);
-		float2 offset; sincos(rnd.x, offset.x, offset.y);
-		offset *= rnd.y * t;
-		pos += vt_ * offset.x + vbt_ * offset.y;
-		float scatter = Cloud(pos, fade);
-		float delta = (t - last_t) * d;
-		trans *= GetT(scatter * 0.8, delta);
-		trans2 *= GetT(scatter * 1.6, delta);
-		last_t = t;
-	}
-	return trans * (1 - trans2 * vs);
-}
-
-inline float GetT_Simple(const float3 p, const float3 v, const float3 vt, const float3 vbt, const float vs, const float fade = 0, const float d = 400) {
-
-	float sample_num = 2;
-	float bias = Rand();
-	float trans = 1;
-	float trans2 = 1;
-	float last_t = 0;
-	float3 v_ = v * d;
-	float3 vt_ = vt * d * 0.3;
-	float3 vbt_ = vbt * d * 0.3;
-	[loop]
-	for (int i = 0; i < sample_num; i++)
-	{
-		float t = (i + bias) / sample_num;
-		t = -0.333333 * log(1 - 0.9502129 * t);
-		float3 pos = v_ * t + p;
-
-		float2 rnd = frac(Roberts2_(i) + bias);
-		rnd.x *= 2 * 3.14159265359;
-		float2 offset = float2(sin(rnd.x), cos(rnd.x)) * rnd.y * t;
-		pos += vt_ * offset.x + vbt_ * offset.y;
-		float scatter = Cloud_Simple(pos, fade).x;
-		float delta = (t - last_t) * d;
-		trans *= GetT(scatter * 0.8, delta);
-		trans2 *= GetT(scatter * 1.6, delta);
-		last_t = t;
-	}
-	return trans * (1 - trans2 * vs);
-}
-
-float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
-
-	const float max_dis = 6000;
+	const float max_dis = lerp(8000, 24000, _Quality.w);
 	const float sample_num = _Quality.z;
 
 	float3 st;
@@ -381,28 +372,33 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 	float actual_sample_num = clamp(d / _Quality.x, sample_num * 0.2, sample_num);
 	actual_sample_num *= max(0.15, saturate(1 - (offset - 8000) / 28000));
 
-	float fade = saturate(1 - offset / 25000);
+	float fade = saturate(1 - (offset - 8000) / 14000);
 
+	float lod = (offset - 8000) / 14000 * 4;
+	//if (offset > 8000) return 1;
 	float sun = 0;
 	float amb = 0;
-	float bias = Rand();
-	float vDots = dot(v, s);
-	float phase = numericalMieFit(vDots);
-	float multiScatterPhase = phase + numericalMieFitMultiScatter();
-	vDots = 1 - (vDots + 1) / 4;
-
-	float alphaFallback = lerp(0.5, 0.1, _Quality.w);
-
 	float trans = 1;
 	float2 av_dis = 0;
+	bool first_hit = true;
+	float2 hit_h = 0;
+	
+	float VdotS = dot(v, s);
+	float phase = numericalMieFit(VdotS);
+	float multiScatterPhase = phase + numericalMieFitMultiScatter();
+	float InvVDotS01 = 1 - (VdotS + 1) / 2;
+
+	float alphaFallback = lerp(0.3, 0.05, _Quality.w);
+
 
 	float stepLength = d / actual_sample_num;
 	v *= stepLength;
-	st += bias * v;
+	st += Rand() * v;
 	float maxScatter = 1 - exp(-0.01 * _CloudDensity * stepLength);
 
 	int start_index = 0;
 	bool find_hit = false;
+	bool debug = false;
 	{
 		[loop]
 		for (int i = 0; i < actual_sample_num; i += 8)
@@ -415,33 +411,69 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 			}
 		}
 		if (!find_hit) return float4(0, 0, 0, 1);
+		//cloud_dis = 0;
+		//return 1;
+		//float extra_dis = start_index * stepLength;
+
+		//st += v * start_index;
+		//offset += extra_dis;
+		//float scale = (d - extra_dis) / d;
+		//v *= scale;
+		//stepLength *= scale;
 	}
 	{
+		int shadow_sample_num = _Quality.y;
 		find_hit = false;
-		float l_t_cache = 1;
 		[loop]
 		for (int i = start_index; i < actual_sample_num; i++)
 		{
-			float3 pos = v * i + st;
+			float3 pos = v * (i + Rand()) + st;
 
-			float scatter = Cloud(pos, fade);
+			float2 sh = Cloud(pos, fade, lod);
+			float scatter = sh.x;
 			if (scatter != 0) {
 
-				scatter = GetT(scatter, stepLength);
+				scatter = exp(-scatter * stepLength);
 				trans *= scatter;
 				scatter = 1 - scatter;
 
-				float l_t = GetT(min(scatter / maxScatter, trans), pos, s, s_t, s_bt, vDots, fade);
-				l_t = lerp(l_t_cache, l_t, lerp(0.75, 0.99, _Quality.w));
-				l_t_cache = l_t;
+				float depth_probability = pow(sh.x * 150, remap(sh.y, 0.3, 0.85, 0.3, 2));
+				float vertical_probability = pow(remap(sh.y, 0.07, 0.14, 0.1, 1.0), 0.8);
+				float in_scatter_probability = depth_probability * vertical_probability;
 
+				float energy;
+				{
+					float shadowLength = 1200;
+					float shadowScatter = 0;
+					float inv_sample_num = 1.0 / shadow_sample_num;
+					shadowLength *= inv_sample_num;
+					float3 v_ = s * shadowLength;
+					float3 vt_ = s_t * shadowLength * 0.5;
+					float3 vbt_ = s_bt * shadowLength * 0.5;
+					for (int j = 0; j < shadow_sample_num; j++)
+					{
+						float3 lpos_ = v_ * (j + Rand()) + pos;
+
+						float2 rnd = frac(Roberts2_(j) + Rand());
+						rnd.x *= (2 * 3.14159265359);
+						float2 offset; sincos(rnd.x, offset.x, offset.y);
+						offset *= rnd.y * j;
+						lpos_ += vt_ * offset.x + vbt_ * offset.y;
+						shadowScatter += Cloud(lpos_, fade, max(lod, j / shadow_sample_num * 4));
+					}
+					float forward_scatter = exp(-shadowScatter * shadowLength);					
+					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(InvVDotS01 * exp(- 0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
+				}
+
+				float light = energy;
 				float msPhase = multiScatterPhase;
-				float response = trans * scatter * l_t * msPhase;
-				sun += response;
-				amb += trans * scatter;
+				float response = trans * scatter * in_scatter_probability;
+				
+				sun += response * msPhase * light;
+				amb += (0.6 + 0.4 * smoothstep(0.2, 0.7, sh.y)) * response;
+				hit_h += float2(sh.y * response, response);				
 				av_dis += float2(i * response, response);
 			}
-			else l_t_cache = 1;
 
 			if (trans <= alphaFallback) {
 				find_hit = true;
@@ -450,36 +482,86 @@ float4 CloudRender(float3 camP, float3 p, float3 v, float d = 9999999) {
 			}
 		}
 	}
-	[branch]
-	if (find_hit) {
+	if (find_hit)
+	{
+		int shadow_sample_num = _Quality.y / 2;
 		[loop]
 		for (int i = start_index; i < actual_sample_num; i++)
 		{
-			float3 pos = v * i + st;
+			float3 pos = v * (i + Rand()) + st;
 
-			float scatter = Cloud_Simple(pos, fade);
+			float2 sh = Cloud(pos, fade, lod, true);
+			float scatter = sh.x;
 			if (scatter != 0) {
 
-				scatter = GetT(scatter, stepLength);
+				scatter = exp(-scatter * stepLength);
 				trans *= scatter;
 				scatter = 1 - scatter;
 
-				float l_t = GetT_Simple(pos, s, s_t, s_bt, vDots, fade);
+				float depth_probability = pow(sh.x * 150, remap(sh.y, 0.3, 0.85, 0.3, 2));
+				float vertical_probability = pow(remap(sh.y, 0.07, 0.14, 0.1, 1.0), 0.8);
+				float in_scatter_probability = depth_probability * vertical_probability;
 
+				float energy;
+				{
+					float shadowLength = 1200;
+					float shadowScatter = 0;
+					float inv_sample_num = 1.0 / shadow_sample_num;
+					shadowLength *= inv_sample_num;
+					float3 v_ = s * shadowLength;
+					float3 vt_ = s_t * shadowLength * 0.5;
+					float3 vbt_ = s_bt * shadowLength * 0.5;
+					for (int j = 0; j < shadow_sample_num; j++)
+					{
+						float3 lpos_ = v_ * (j + Rand()) + pos;
+
+						float2 rnd = frac(Roberts2_(j) + Rand());
+						rnd.x *= (2 * 3.14159265359);
+						float2 offset; sincos(rnd.x, offset.x, offset.y);
+						offset *= rnd.y * j;
+						lpos_ += vt_ * offset.x + vbt_ * offset.y;
+						shadowScatter += Cloud(lpos_, fade, max(lod, j / shadow_sample_num * 4), true);
+					}
+					float forward_scatter = exp(-shadowScatter * shadowLength);
+					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.85 + 0.15, 1, smoothstep(0, 0.7, InvVDotS01)) * max(InvVDotS01 * exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
+				}
+
+				float light = energy;
 				float msPhase = multiScatterPhase;
-				sun += trans * scatter * l_t * msPhase;
+				float response = trans * scatter * in_scatter_probability;
+
+				sun += response * msPhase * light;
+				amb += (0.5 + 0.5 * smoothstep(0.2, 0.7, sh.y)) * response;
+				hit_h += float2(sh.y * response, response);
+				av_dis += float2(i * response, response);
 			}
-			if (trans <= 0.05) break;
+			if (trans <= alphaFallback / 2) break;
+		}
+		//alpha need more accurate than color
+		for (int i = start_index; i < actual_sample_num; i++) 
+		{
+			float3 pos = v * (i + Rand()) + st;
+
+			float2 sh = Cloud(pos, fade, lod, true);
+			float scatter = sh.x;
+			scatter = exp(-scatter * stepLength);
+			trans *= scatter;
+			if (trans <= 0.01) break;
 		}
 	}
 
-	float4 res = float4(sun, amb, 0, trans);
-	
-	res.z = av_dis.y != 0 ? start_index + (av_dis.x / max(0.0001, av_dis.y)) * stepLength + offset : 0;
 
-	fade = max(0, 1 - res.z / 50000);
+	float4 res = float4(sun, amb, 0, trans);
+
+	cloud_dis = av_dis.y != 0 ? start_index + (av_dis.x / max(0.0001, av_dis.y)) * stepLength + offset : 0;
+
+	fade = saturate(1 - (cloud_dis - 10000) / 40000);
 	res.xy *= fade;
 	res.a = 1 - (1 - res.a) * fade;
+	res.z = hit_h.y != 0 ? hit_h.x / hit_h.y : 0;
+
+	if (hit_h.y != 0 && debug) return 111;
+
 	return res;
 }
 

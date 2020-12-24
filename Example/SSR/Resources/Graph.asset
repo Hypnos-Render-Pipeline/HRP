@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: Graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -669, y: -398, z: 0}
-  viewScale: {x: 0.32690176, y: 0.32690176, z: 1}
+  viewPosition: {x: -1422, y: -813, z: 0}
+  viewScale: {x: 0.674567, y: 0.674567, z: 1}
   nodes:
   - nodeName: GBuffer
     parameters:
@@ -1100,6 +1100,10 @@ MonoBehaviour:
     o: 16
     i_n: color
     o_n: target
+  - i: 7
+    o: 0
+    i_n: motion
+    o_n: motion
   node_edgeRecs:
   - node: 2
     in_edges: 
@@ -1112,7 +1116,7 @@ MonoBehaviour:
     out_edge: 49000000
   - node: 0
     in_edges: 
-    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d000000330000003400000035000000360000003c0000003d0000003e000000
+    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d000000330000003400000035000000360000003c0000003d0000003e00000051000000
   - node: 5
     in_edges: 0900000050000000
     out_edge: 47000000
@@ -1120,7 +1124,7 @@ MonoBehaviour:
     in_edges: 0a0000000b0000000c0000000d0000000e0000002b00000049000000
     out_edge: 100000001b0000001e00000022000000400000004f000000
   - node: 7
-    in_edges: 0f000000100000001100000012000000130000001b0000002c000000
+    in_edges: 0f000000100000001100000012000000130000001b0000002c00000051000000
     out_edge: 1c0000001d0000002800000031000000370000003b0000003f000000
   - node: 8
     in_edges: 1400000015000000160000001700000018000000190000001a0000002a000000
@@ -1394,18 +1398,17 @@ MonoBehaviour:
     SunAtmo7.specular.connected = true;\r\n                    SunAtmo7.specular.Move(GBuffer0.specular);\r\n                   
     SunAtmo7.normal.connected = true;\r\n                    SunAtmo7.normal.Move(GBuffer0.normal);\r\n                   
     SunAtmo7.ao.connected = true;\r\n                    SunAtmo7.ao.Move(GBuffer0.microAO);\r\n                   
-    SunAtmo7.motion.AllocateResourcces(context, SunAtmo7_motion);\r\n                   
-    SunAtmo7.motion.name = \"SunAtmo7.motion\";\r\n                    // outputs\r\n                   
-    SunAtmo7.skyBox.AllocateResourcces(context, SunAtmo7_skyBox);\r\n                   
-    SunAtmo7.skyBox.name = \"SunAtmo7.skyBox\";\r\n                    SunAtmo7.skyBox.connected
-    = true;\r\n                    SunAtmo7.sunBuffer.AllocateResourcces(context,
+    SunAtmo7.motion.connected = true;\r\n                    SunAtmo7.motion.Move(GBuffer0.motion);\r\n                   
+    // outputs\r\n                    SunAtmo7.skyBox.AllocateResourcces(context,
+    SunAtmo7_skyBox);\r\n                    SunAtmo7.skyBox.name = \"SunAtmo7.skyBox\";\r\n                   
+    SunAtmo7.skyBox.connected = true;\r\n                    SunAtmo7.sunBuffer.AllocateResourcces(context,
     SunAtmo7_sunBuffer);\r\n                    SunAtmo7.sunBuffer.name = \"SunAtmo7.sunBuffer\";\r\n                   
     SunAtmo7.sunBuffer.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                SunAtmo7.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                    SunAtmo7.motion.ReleaseResourcces(context);\r\n                   
-    SunAtmo7.skyBox.connected = true;\r\n                    SunAtmo7.sunBuffer.connected
-    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                {\r\n                    SunAtmo7.skyBox.connected =
+    true;\r\n                    SunAtmo7.sunBuffer.connected = true;\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //SkyBoxIBL8\r\n           
     {\r\n                context.commandBuffer.name = \"SkyBoxIBL8\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   

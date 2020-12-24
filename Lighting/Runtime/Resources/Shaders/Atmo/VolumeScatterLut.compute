@@ -10,8 +10,6 @@ float3 _Size;
 
 float4 _WorldSpaceCameraPos;
 
-float _Multiplier;
-
 [numthreads(4, 4, 4)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {

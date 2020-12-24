@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -17,10 +17,10 @@ namespace HypnosRenderPipeline.RenderGraph
 #if UNITY_EDITOR
         #region Parameters
 
-        [SerializeField]
-        public Vector3 viewPosition;
-        [SerializeField]
-        public Vector3 viewScale;
+        //[SerializeField]
+        //public Vector3 viewPosition;
+        //[SerializeField]
+        //public Vector3 viewScale;
 
         [SerializeField]
         public List<RenderGraphNode> nodes;
