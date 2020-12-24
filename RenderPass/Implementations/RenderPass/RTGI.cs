@@ -1,4 +1,4 @@
-﻿using HypnosRenderPipeline.Tools;
+using HypnosRenderPipeline.Tools;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -135,7 +135,7 @@ namespace HypnosRenderPipeline.RenderPass
             desc.colorFormat = RenderTextureFormat.ARGBHalf;
             cb.GetTemporaryRT(tempRef, desc);
             cb.GetTemporaryRT(tempRef2, desc);
-            desc.colorFormat = RenderTextureFormat.RHalf; cb.GetTemporaryRT(tempRef2, desc);
+            desc.colorFormat = RenderTextureFormat.RGHalf; cb.GetTemporaryRT(tempRef2, desc);
             cb.GetTemporaryRT(var0, desc);
 
             var acc = RTRegister.AccStruct();
@@ -170,15 +170,16 @@ namespace HypnosRenderPipeline.RenderPass
                 blockBuffer_ = new ComputeBuffer(halfDispatchSize.x * halfDispatchSize.y, 4);
             }
 
-            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Variance", var0);
             cb.SetGlobalVector("_ProcessRange", new Vector4(0.9f, 1f));
             cb.SetComputeBufferData(argsBuffer, clearArray);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Result", tempRef);
             cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_Indirect", argsBuffer);
             cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_NextBlock", blockBuffer);
             cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_HalfIndexTex", halfIndex);
             cb.DispatchCompute(denoise, CSPass.SFilter, halfDispatchSize.x, halfDispatchSize.y, 1);
 
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_History", his0);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HistoryNormal", hisNormal0);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HistoryDepth", hisDepth0);
@@ -187,12 +188,16 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HalfIndexTex", halfIndex);
             cb.DispatchCompute(denoise, CSPass.TTFilter, halfDispatchSize.x, halfDispatchSize.y, 1);
 
-            cb.Blit(normal, hisNormal0);
+            cb.CopyTexture(normal, hisNormal0);
             cb.Blit(depth, hisDepth0);
 
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Variance", var0);
             DispatchSpatialFilter(cb, tempRef2, 0.75f, 0.9f);
-            DispatchSpatialFilter(cb, tempRef2, 0.5f, 0.75f);
+            DispatchSpatialFilter(cb, tempRef2, 0.6f, 0.75f);
+            DispatchSpatialFilter(cb, tempRef2, 0.5f, 0.6f);
+            DispatchSpatialFilter(cb, tempRef2, 0.35f, 0.5f);
+            DispatchSpatialFilter(cb, tempRef2, 0.2f, 0.35f);
+            DispatchSpatialFilter(cb, tempRef2, 0, 0.2f);
             //DispatchSpatialFilter(cb, tempRef2, 0.25f, 0.5f);
             //DispatchSpatialFilter(cb, tempRef2, 0, 0.25f);
             //DispatchSpatialFilter(cb, tempRef2, 0.45f, 0.6f);
@@ -201,7 +206,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             int2 dispatchSize = new int2(wh.x / 8 + (wh.x % 8 != 0 ? 1 : 0), wh.y / 8 + (wh.y % 8 != 0 ? 1 : 0));
             cb.SetComputeTextureParam(denoise, CSPass.UpSample, "_Result", tempRef2);
-            cb.SetComputeTextureParam(denoise, CSPass.UpSample, "_History", his0);
+            cb.SetComputeTextureParam(denoise, CSPass.UpSample, "_FullSizeResult", his0);
             cb.SetComputeTextureParam(denoise, CSPass.UpSample, "_HalfIndexTex", halfIndex);
             cb.DispatchCompute(denoise, CSPass.UpSample, dispatchSize.x, dispatchSize.y, 1);
 

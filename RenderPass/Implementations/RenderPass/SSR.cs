@@ -1,4 +1,4 @@
-﻿using HypnosRenderPipeline.Tools;
+using HypnosRenderPipeline.Tools;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -149,6 +149,8 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_TempResult", tempRef);
             cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_Result", result);
             cb.DispatchCompute(ssr, CSPass.TTFilter, dispatchSize.x, dispatchSize.y, 1);
+
+            cb.CopyTexture(result, his0);
 
             DispatchSpatialFilter(cb, 0.9f, 0.95f);
             DispatchSpatialFilter(cb, 0.85f, 0.9f);

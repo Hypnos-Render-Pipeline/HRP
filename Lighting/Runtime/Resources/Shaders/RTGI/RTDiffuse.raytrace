@@ -131,7 +131,7 @@ void Diffuse()
     float2 uv = (fullResIndex + 0.5) * _WH.zw;
 
     if (-PD2VD(d) > 1024  || _SceneColor[fullResIndex].a == 0) {
-        _TempResult[dispatchIdx] = float4(1,0,1,0);
+        _TempResult[dispatchIdx] = float4(0,0,0,0);
         return;
     }
     float3 camPos = _V_Inv._m03_m13_m23;

@@ -1,4 +1,4 @@
-﻿#pragma kernel Trace
+#pragma kernel Trace
 #pragma kernel RemoveFlare
 #pragma kernel TTFilter
 #pragma kernel SFilter
@@ -193,7 +193,7 @@ void Trace(uint2 id : SV_DispatchThreadID)
     _TempResult[id] = float4(ToneMap(res), 1);
 }
 
-RWTexture2D<float4> _History;
+Texture2D<float4> _History;
 RWTexture2D<float4> _Result;
 
 
@@ -220,13 +220,13 @@ void RemoveFlare(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupT
                     buffer_1[offset.x][offset.y] = 0;
                 }
                 else {
-                    int2 prevId = ((texID + 0.5) * _WH.zw - _MotionTex[texID]) * _WH.xy;
+                    float2 prevUV = ((texID + 0.5) * _WH.zw - _MotionTex[texID]);
 
                     float4 newC = max(0, _TempResult[texID]);// prevent NaN
-                    float4 hisC = max(0, _History[prevId]);
-                    float3 newN = DecodeNormal(_NormalTex[texID].xyz);
-                    float3 hisN = DecodeNormal(_NormalTex[prevId].xyz);
-                    if (any(prevId < 0) || any(prevId > int2(_WH.xy))) hisC = 0;
+                    float4 hisC = max(0, _History.SampleLevel(linear_clamp_sampler, prevUV, 0));
+                    float3 newN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0));
+                    float3 hisN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0));
+                    if (any(prevUV < 0) || any(prevUV > 1)) hisC = 0;
 
                     float mix_rate = (newC.w * hisC.w == 0) ? 0 : 0.2;
                     mix_rate *= dot(newN, hisN) > 0.9;
@@ -296,13 +296,13 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
                     buffer_1[offset.x][offset.y] = 0;
                 }
                 else {
-                    int2 prevId = ((texID + 0.5) * _WH.zw - _MotionTex[texID]) * _WH.xy;
+                    float2 prevUV = ((texID + 0.5) * _WH.zw - _MotionTex[texID]);
 
                     float4 newC = max(0, _TempResult[texID]);// prevent NaN
-                    float4 hisC = max(0, _History[prevId]); 
-                    float3 newN = DecodeNormal(_NormalTex[texID].xyz);
-                    float3 hisN = DecodeNormal(_NormalTex[prevId].xyz);
-                    if (any(prevId < 0) || any(prevId > int2(_WH.xy))) hisC = 0;
+                    float4 hisC = max(0, _History.SampleLevel(linear_clamp_sampler, prevUV, 0));
+                    float3 newN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0));
+                    float3 hisN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0));
+                    if (any(prevUV < 0) || any(prevUV > 1)) hisC = 0;
 
                     float mix_rate = (newC.w * hisC.w == 0) ? 0 : lerp(1, 0.4, smooth);
                     mix_rate *= dot(newN, hisN) > 0.9;
@@ -344,7 +344,6 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         hc = clamp(hc, minC / 2, maxC * 3);
         float4 mixed = lerp(oc, hc, mix_rate);
         _Result[id] = mixed;
-        _History[id] = mixed;
     }
 }
 

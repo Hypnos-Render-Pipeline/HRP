@@ -266,7 +266,7 @@ namespace HypnosRenderPipeline.RenderPass
                     var his = context.resourcesPool.GetTexture(TextureIDs._History, hisDesc);
                     his.filterMode = FilterMode.Point;
 
-                    cb.SetGlobalTexture(TextureIDs._CloudMap, atmo.cloudMap);
+                    cb.SetGlobalTexture(TextureIDs._CloudMap, atmo.cloudMap == null ? Texture2D.whiteTexture : atmo.cloudMap);
                     cb.SetGlobalTexture(TextureIDs._HighCloudMap, atmo.highCloudMap);
                     cb.SetGlobalTexture(TextureIDs._SpaceMap, atmo.spaceMap);
 

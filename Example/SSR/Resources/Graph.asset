@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: Graph
   m_EditorClassIdentifier: 
-  viewPosition: {x: -1422, y: -813, z: 0}
-  viewScale: {x: 0.674567, y: 0.674567, z: 1}
   nodes:
   - nodeName: GBuffer
     parameters:
@@ -1096,14 +1094,14 @@ MonoBehaviour:
     o: 6
     i_n: depth
     o_n: depth
-  - i: 5
-    o: 16
-    i_n: color
-    o_n: target
   - i: 7
     o: 0
     i_n: motion
     o_n: motion
+  - i: 5
+    o: 16
+    i_n: color
+    o_n: target
   node_edgeRecs:
   - node: 2
     in_edges: 
@@ -1116,15 +1114,15 @@ MonoBehaviour:
     out_edge: 49000000
   - node: 0
     in_edges: 
-    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d000000330000003400000035000000360000003c0000003d0000003e00000051000000
+    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d000000330000003400000035000000360000003c0000003d0000003e00000050000000
   - node: 5
-    in_edges: 0900000050000000
+    in_edges: 0900000051000000
     out_edge: 47000000
   - node: 6
     in_edges: 0a0000000b0000000c0000000d0000000e0000002b00000049000000
     out_edge: 100000001b0000001e00000022000000400000004f000000
   - node: 7
-    in_edges: 0f000000100000001100000012000000130000001b0000002c00000051000000
+    in_edges: 0f000000100000001100000012000000130000001b0000002c00000050000000
     out_edge: 1c0000001d0000002800000031000000370000003b0000003f000000
   - node: 8
     in_edges: 1400000015000000160000001700000018000000190000001a0000002a000000
@@ -1155,7 +1153,7 @@ MonoBehaviour:
     out_edge: 4d000000
   - node: 16
     in_edges: 4a0000004b0000004c0000004d0000004e0000004f000000
-    out_edge: 50000000
+    out_edge: 51000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
@@ -1167,18 +1165,16 @@ MonoBehaviour:
     GBuffer GBuffer0;\r\n        OutputNode OutputNode1;\r\n        CullLight CullLight2;\r\n       
     ZBin ZBin3;\r\n        RTDI RTDI4;\r\n        CombineColorDepth CombineColorDepth5;\r\n       
     AreaLight AreaLight6;\r\n        SunAtmo SunAtmo7;\r\n        SkyBoxIBL SkyBoxIBL8;\r\n       
-    HiDepth HiDepth9;\r\n        RTSpecular RTSpecular10;\r\n        PyramidColor
-    PyramidColor11;\r\n        RTGI RTGI12;\r\n        PyramidColor PyramidColor13;\r\n       
-    Transparent Transparent14;\r\n        // ----------------------------\r\n       
-    \r\n        // ShaderIDs:\r\n        // ----------------------------\r\n       
-    System.Int32 GBuffer0_depth = Shader.PropertyToID(\"GBuffer0.depth\");\r\n       
-    System.Int32 GBuffer0_diffuse = Shader.PropertyToID(\"GBuffer0.diffuse\");\r\n       
-    System.Int32 GBuffer0_specular = Shader.PropertyToID(\"GBuffer0.specular\");\r\n       
-    System.Int32 GBuffer0_normal = Shader.PropertyToID(\"GBuffer0.normal\");\r\n       
-    System.Int32 GBuffer0_emission = Shader.PropertyToID(\"GBuffer0.emission\");\r\n       
-    System.Int32 GBuffer0_microAO = Shader.PropertyToID(\"GBuffer0.microAO\");\r\n       
-    System.Int32 GBuffer0_motion = Shader.PropertyToID(\"GBuffer0.motion\");\r\n       
-    System.Int32 OutputNode1_result = Shader.PropertyToID(\"OutputNode1.result\");\r\n       
+    RTGI RTGI9;\r\n        // ----------------------------\r\n        \r\n       
+    // ShaderIDs:\r\n        // ----------------------------\r\n        System.Int32
+    GBuffer0_depth = Shader.PropertyToID(\"GBuffer0.depth\");\r\n        System.Int32
+    GBuffer0_diffuse = Shader.PropertyToID(\"GBuffer0.diffuse\");\r\n        System.Int32
+    GBuffer0_specular = Shader.PropertyToID(\"GBuffer0.specular\");\r\n        System.Int32
+    GBuffer0_normal = Shader.PropertyToID(\"GBuffer0.normal\");\r\n        System.Int32
+    GBuffer0_emission = Shader.PropertyToID(\"GBuffer0.emission\");\r\n        System.Int32
+    GBuffer0_microAO = Shader.PropertyToID(\"GBuffer0.microAO\");\r\n        System.Int32
+    GBuffer0_motion = Shader.PropertyToID(\"GBuffer0.motion\");\r\n        System.Int32
+    OutputNode1_result = Shader.PropertyToID(\"OutputNode1.result\");\r\n       
     System.Int32 CullLight2_lights = Shader.PropertyToID(\"CullLight2.lights\");\r\n       
     System.Int32 ZBin3_lights = Shader.PropertyToID(\"ZBin3.lights\");\r\n       
     System.Int32 ZBin3_depth = Shader.PropertyToID(\"ZBin3.depth\");\r\n        System.Int32
@@ -1223,81 +1219,47 @@ MonoBehaviour:
     System.Int32 SkyBoxIBL8_normal = Shader.PropertyToID(\"SkyBoxIBL8.normal\");\r\n       
     System.Int32 SkyBoxIBL8_ao = Shader.PropertyToID(\"SkyBoxIBL8.ao\");\r\n       
     System.Int32 SkyBoxIBL8_irradiance = Shader.PropertyToID(\"SkyBoxIBL8.irradiance\");\r\n       
-    System.Int32 HiDepth9_depth = Shader.PropertyToID(\"HiDepth9.depth\");\r\n       
-    System.Int32 HiDepth9_hiZ = Shader.PropertyToID(\"HiDepth9.hiZ\");\r\n       
-    System.Int32 RTSpecular10_lightBuffer = Shader.PropertyToID(\"RTSpecular10.lightBuffer\");\r\n       
-    System.Int32 RTSpecular10_tiledLights = Shader.PropertyToID(\"RTSpecular10.tiledLights\");\r\n       
-    System.Int32 RTSpecular10_lights = Shader.PropertyToID(\"RTSpecular10.lights\");\r\n       
-    System.Int32 RTSpecular10_sun = Shader.PropertyToID(\"RTSpecular10.sun\");\r\n       
-    System.Int32 RTSpecular10_sceneColor = Shader.PropertyToID(\"RTSpecular10.sceneColor\");\r\n       
-    System.Int32 RTSpecular10_filteredColor = Shader.PropertyToID(\"RTSpecular10.filteredColor\");\r\n       
-    System.Int32 RTSpecular10_hiZ = Shader.PropertyToID(\"RTSpecular10.hiZ\");\r\n       
-    System.Int32 RTSpecular10_motion = Shader.PropertyToID(\"RTSpecular10.motion\");\r\n       
-    System.Int32 RTSpecular10_specular = Shader.PropertyToID(\"RTSpecular10.specular\");\r\n       
-    System.Int32 RTSpecular10_normal = Shader.PropertyToID(\"RTSpecular10.normal\");\r\n       
-    System.Int32 RTSpecular10_ao = Shader.PropertyToID(\"RTSpecular10.ao\");\r\n       
-    System.Int32 RTSpecular10_skybox = Shader.PropertyToID(\"RTSpecular10.skybox\");\r\n       
-    System.Int32 RTSpecular10_result = Shader.PropertyToID(\"RTSpecular10.result\");\r\n       
-    System.Int32 PyramidColor11_filterTarget = Shader.PropertyToID(\"PyramidColor11.filterTarget\");\r\n       
-    System.Int32 PyramidColor11_pyramidColor = Shader.PropertyToID(\"PyramidColor11.pyramidColor\");\r\n       
-    System.Int32 RTGI12_lightBuffer = Shader.PropertyToID(\"RTGI12.lightBuffer\");\r\n       
-    System.Int32 RTGI12_tiledLights = Shader.PropertyToID(\"RTGI12.tiledLights\");\r\n       
-    System.Int32 RTGI12_lights = Shader.PropertyToID(\"RTGI12.lights\");\r\n       
-    System.Int32 RTGI12_sun = Shader.PropertyToID(\"RTGI12.sun\");\r\n        System.Int32
-    RTGI12_target = Shader.PropertyToID(\"RTGI12.target\");\r\n        System.Int32
-    RTGI12_depth = Shader.PropertyToID(\"RTGI12.depth\");\r\n        System.Int32
-    RTGI12_motion = Shader.PropertyToID(\"RTGI12.motion\");\r\n        System.Int32
-    RTGI12_diffuse = Shader.PropertyToID(\"RTGI12.diffuse\");\r\n        System.Int32
-    RTGI12_normal = Shader.PropertyToID(\"RTGI12.normal\");\r\n        System.Int32
-    RTGI12_skybox = Shader.PropertyToID(\"RTGI12.skybox\");\r\n        System.Int32
-    PyramidColor13_filterTarget = Shader.PropertyToID(\"PyramidColor13.filterTarget\");\r\n       
-    System.Int32 PyramidColor13_pyramidColor = Shader.PropertyToID(\"PyramidColor13.pyramidColor\");\r\n       
-    System.Int32 Transparent14_lightBuffer = Shader.PropertyToID(\"Transparent14.lightBuffer\");\r\n       
-    System.Int32 Transparent14_tiledLights = Shader.PropertyToID(\"Transparent14.tiledLights\");\r\n       
-    System.Int32 Transparent14_lights = Shader.PropertyToID(\"Transparent14.lights\");\r\n       
-    System.Int32 Transparent14_areaLightBuffer = Shader.PropertyToID(\"Transparent14.areaLightBuffer\");\r\n       
-    System.Int32 Transparent14_filterdScreenColor = Shader.PropertyToID(\"Transparent14.filterdScreenColor\");\r\n       
-    System.Int32 Transparent14_target = Shader.PropertyToID(\"Transparent14.target\");\r\n       
-    System.Int32 Transparent14_depth = Shader.PropertyToID(\"Transparent14.depth\");\r\n       
-    // ----------------------------\r\n        \r\n        public void Init()\r\n       
-    {\r\n            GBuffer0 = new GBuffer();\r\n            GBuffer0.a = 1f;\r\n           
-    GBuffer0.b = false;\r\n            GBuffer0.c = new Vector2(1.10973f, 2f);\r\n           
-    GBuffer0.d = E.d;\r\n            GBuffer0.e = 10;\r\n            GBuffer0.f =
-    new Color(1f, 2f, 3f, 0.22334f);\r\n            GBuffer0.enabled = true;\r\n           
-    OutputNode1 = new OutputNode();\r\n            OutputNode1.enabled = true;\r\n           
-    CullLight2 = new CullLight();\r\n            CullLight2.cullingType = CullLight.CullingType.Frustum;\r\n           
-    CullLight2.radius = 200f;\r\n            CullLight2.faraway = 100f;\r\n           
-    CullLight2.enabled = true;\r\n            ZBin3 = new ZBin();\r\n           
-    ZBin3.tileCount = new Vector3Int(128, 64, 24);\r\n            ZBin3.maxLightCountPerTile
-    = 64;\r\n            ZBin3.includeRTLight = true;\r\n            ZBin3.enabled
-    = true;\r\n            RTDI4 = new RTDI();\r\n            RTDI4.includeSunlight
-    = false;\r\n            RTDI4.enabled = true;\r\n            CombineColorDepth5
-    = new CombineColorDepth();\r\n            CombineColorDepth5.enabled = true;\r\n           
-    AreaLight6 = new AreaLight();\r\n            AreaLight6.enabled = true;\r\n           
-    SunAtmo7 = new SunAtmo();\r\n            SunAtmo7.TLutResolution = new Vector2Int(128,
-    128);\r\n            SunAtmo7.SkyLutResolution = new Vector2Int(64, 224);\r\n           
-    SunAtmo7.MSLutResolution = new Vector2Int(32, 32);\r\n            SunAtmo7.VolumeResolution
-    = new Vector3Int(32, 32, 32);\r\n            SunAtmo7.VolumeMaxDepth = 32000f;\r\n           
-    SunAtmo7.enabled = true;\r\n            SkyBoxIBL8 = new SkyBoxIBL();\r\n           
-    SkyBoxIBL8.enabled = false;\r\n            HiDepth9 = new HiDepth();\r\n           
-    HiDepth9.enabled = true;\r\n            RTSpecular10 = new RTSpecular();\r\n           
-    RTSpecular10.useRTShadow = true;\r\n            RTSpecular10.enabled = true;\r\n           
-    PyramidColor11 = new PyramidColor();\r\n            PyramidColor11.enabled =
-    true;\r\n            RTGI12 = new RTGI();\r\n            RTGI12.useRTShadow =
-    true;\r\n            RTGI12.maxDepth = 2;\r\n            RTGI12.spp = 1;\r\n           
-    RTGI12.showVariance = false;\r\n            RTGI12.enabled = true;\r\n           
-    PyramidColor13 = new PyramidColor();\r\n            PyramidColor13.enabled =
-    true;\r\n            Transparent14 = new Transparent();\r\n            Transparent14.renderAreaLight
-    = true;\r\n            Transparent14.enabled = true;\r\n        }\r\n       
-    \r\n        public int Execute(RenderContext context, bool debug = false)\r\n       
-    {\r\n            System.Int32 result = -1;\r\n            \r\n            //GBuffer0\r\n           
-    {\r\n                context.commandBuffer.name = \"GBuffer0\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    GBuffer0.depth.AllocateResourcces(context, GBuffer0_depth);\r\n                   
-    GBuffer0.depth.name = \"GBuffer0.depth\";\r\n                    // outputs\r\n                   
-    GBuffer0.diffuse.AllocateResourcces(context, GBuffer0_diffuse);\r\n                   
-    GBuffer0.diffuse.name = \"GBuffer0.diffuse\";\r\n                    GBuffer0.diffuse.connected
-    = true;\r\n                    GBuffer0.specular.AllocateResourcces(context,
+    System.Int32 RTGI9_lightBuffer = Shader.PropertyToID(\"RTGI9.lightBuffer\");\r\n       
+    System.Int32 RTGI9_tiledLights = Shader.PropertyToID(\"RTGI9.tiledLights\");\r\n       
+    System.Int32 RTGI9_lights = Shader.PropertyToID(\"RTGI9.lights\");\r\n       
+    System.Int32 RTGI9_sun = Shader.PropertyToID(\"RTGI9.sun\");\r\n        System.Int32
+    RTGI9_target = Shader.PropertyToID(\"RTGI9.target\");\r\n        System.Int32
+    RTGI9_depth = Shader.PropertyToID(\"RTGI9.depth\");\r\n        System.Int32 RTGI9_motion
+    = Shader.PropertyToID(\"RTGI9.motion\");\r\n        System.Int32 RTGI9_diffuse
+    = Shader.PropertyToID(\"RTGI9.diffuse\");\r\n        System.Int32 RTGI9_normal
+    = Shader.PropertyToID(\"RTGI9.normal\");\r\n        System.Int32 RTGI9_skybox
+    = Shader.PropertyToID(\"RTGI9.skybox\");\r\n        // ----------------------------\r\n       
+    \r\n        public void Init()\r\n        {\r\n            GBuffer0 = new GBuffer();\r\n           
+    GBuffer0.a = 1f;\r\n            GBuffer0.b = false;\r\n            GBuffer0.c
+    = new Vector2(1.10973f, 2f);\r\n            GBuffer0.d = E.d;\r\n           
+    GBuffer0.e = 10;\r\n            GBuffer0.f = new Color(1f, 2f, 3f, 0.22334f);\r\n           
+    GBuffer0.enabled = true;\r\n            OutputNode1 = new OutputNode();\r\n           
+    OutputNode1.enabled = true;\r\n            CullLight2 = new CullLight();\r\n           
+    CullLight2.cullingType = CullLight.CullingType.Frustum;\r\n            CullLight2.radius
+    = 200f;\r\n            CullLight2.faraway = 100f;\r\n            CullLight2.enabled
+    = true;\r\n            ZBin3 = new ZBin();\r\n            ZBin3.tileCount = new
+    Vector3Int(128, 64, 24);\r\n            ZBin3.maxLightCountPerTile = 64;\r\n           
+    ZBin3.includeRTLight = true;\r\n            ZBin3.enabled = true;\r\n           
+    RTDI4 = new RTDI();\r\n            RTDI4.includeSunlight = false;\r\n           
+    RTDI4.enabled = true;\r\n            CombineColorDepth5 = new CombineColorDepth();\r\n           
+    CombineColorDepth5.enabled = true;\r\n            AreaLight6 = new AreaLight();\r\n           
+    AreaLight6.enabled = true;\r\n            SunAtmo7 = new SunAtmo();\r\n           
+    SunAtmo7.TLutResolution = new Vector2Int(128, 128);\r\n            SunAtmo7.SkyLutResolution
+    = new Vector2Int(64, 224);\r\n            SunAtmo7.MSLutResolution = new Vector2Int(32,
+    32);\r\n            SunAtmo7.VolumeResolution = new Vector3Int(32, 32, 32);\r\n           
+    SunAtmo7.VolumeMaxDepth = 32000f;\r\n            SunAtmo7.enabled = true;\r\n           
+    SkyBoxIBL8 = new SkyBoxIBL();\r\n            SkyBoxIBL8.enabled = false;\r\n           
+    RTGI9 = new RTGI();\r\n            RTGI9.useRTShadow = true;\r\n            RTGI9.maxDepth
+    = 2;\r\n            RTGI9.spp = 1;\r\n            RTGI9.showVariance = false;\r\n           
+    RTGI9.enabled = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
+    context, bool debug = false)\r\n        {\r\n            System.Int32 result
+    = -1;\r\n            \r\n            //GBuffer0\r\n            {\r\n               
+    context.commandBuffer.name = \"GBuffer0\";\r\n                // preprocess node\r\n               
+    {\r\n                    // inputs\r\n                    GBuffer0.depth.AllocateResourcces(context,
+    GBuffer0_depth);\r\n                    GBuffer0.depth.name = \"GBuffer0.depth\";\r\n                   
+    // outputs\r\n                    GBuffer0.diffuse.AllocateResourcces(context,
+    GBuffer0_diffuse);\r\n                    GBuffer0.diffuse.name = \"GBuffer0.diffuse\";\r\n                   
+    GBuffer0.diffuse.connected = true;\r\n                    GBuffer0.specular.AllocateResourcces(context,
     GBuffer0_specular);\r\n                    GBuffer0.specular.name = \"GBuffer0.specular\";\r\n                   
     GBuffer0.specular.connected = true;\r\n                    GBuffer0.normal.AllocateResourcces(context,
     GBuffer0_normal);\r\n                    GBuffer0.normal.name = \"GBuffer0.normal\";\r\n                   
@@ -1378,16 +1340,6 @@ MonoBehaviour:
     node\r\n                AreaLight6.Execute(context);\r\n                // postprocess
     node\r\n                {\r\n                    AreaLight6.depth.connected =
     true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
-    context.commandBuffer.Clear();\r\n            }\r\n            //HiDepth9\r\n           
-    {\r\n                context.commandBuffer.name = \"HiDepth9\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    HiDepth9.depth.connected = true;\r\n                    HiDepth9.depth.Move(AreaLight6.depth);\r\n                   
-    // outputs\r\n                    HiDepth9.hiZ.AllocateResourcces(context, HiDepth9_hiZ);\r\n                   
-    HiDepth9.hiZ.name = \"HiDepth9.hiZ\";\r\n                    HiDepth9.hiZ.connected
-    = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                HiDepth9.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //SunAtmo7\r\n           
     {\r\n                context.commandBuffer.name = \"SunAtmo7\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1426,93 +1378,27 @@ MonoBehaviour:
     node\r\n                // postprocess node\r\n                {\r\n                   
     SkyBoxIBL8.irradiance.ReleaseResourcces(context);\r\n                    SkyBoxIBL8.irradiance.connected
     = false;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
-    context.commandBuffer.Clear();\r\n            }\r\n            //RTGI12\r\n           
-    {\r\n                context.commandBuffer.name = \"RTGI12\";\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //RTGI9\r\n           
+    {\r\n                context.commandBuffer.name = \"RTGI9\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    RTGI12.lightBuffer.connected = true;\r\n                    RTGI12.lightBuffer.Move(ZBin3.lightBuffer);\r\n                   
-    RTGI12.tiledLights.connected = true;\r\n                    RTGI12.tiledLights.Move(ZBin3.tileLights);\r\n                   
-    RTGI12.lights.connected = true;\r\n                    RTGI12.lights.Move(CullLight2.lights);\r\n                   
-    RTGI12.sun.connected = true;\r\n                    RTGI12.sun.Move(SunAtmo7.sunBuffer);\r\n                   
-    RTGI12.target.connected = false;\r\n                    RTGI12.target.Move(SkyBoxIBL8.target);\r\n                   
-    RTGI12.depth.connected = true;\r\n                    RTGI12.depth.Move(AreaLight6.depth);\r\n                   
-    RTGI12.motion.connected = true;\r\n                    RTGI12.motion.Move(GBuffer0.motion);\r\n                   
-    RTGI12.diffuse.connected = true;\r\n                    RTGI12.diffuse.Move(GBuffer0.diffuse);\r\n                   
-    RTGI12.normal.connected = true;\r\n                    RTGI12.normal.Move(GBuffer0.normal);\r\n                   
-    RTGI12.skybox.connected = true;\r\n                    RTGI12.skybox.Move(SunAtmo7.skyBox);\r\n                   
+    RTGI9.lightBuffer.connected = true;\r\n                    RTGI9.lightBuffer.Move(ZBin3.lightBuffer);\r\n                   
+    RTGI9.tiledLights.connected = true;\r\n                    RTGI9.tiledLights.Move(ZBin3.tileLights);\r\n                   
+    RTGI9.lights.connected = true;\r\n                    RTGI9.lights.Move(CullLight2.lights);\r\n                   
+    RTGI9.sun.connected = true;\r\n                    RTGI9.sun.Move(SunAtmo7.sunBuffer);\r\n                   
+    RTGI9.target.connected = false;\r\n                    RTGI9.target.Move(SkyBoxIBL8.target);\r\n                   
+    RTGI9.depth.connected = true;\r\n                    RTGI9.depth.Move(AreaLight6.depth);\r\n                   
+    RTGI9.motion.connected = true;\r\n                    RTGI9.motion.Move(GBuffer0.motion);\r\n                   
+    RTGI9.diffuse.connected = true;\r\n                    RTGI9.diffuse.Move(GBuffer0.diffuse);\r\n                   
+    RTGI9.normal.connected = true;\r\n                    RTGI9.normal.Move(GBuffer0.normal);\r\n                   
+    RTGI9.skybox.connected = true;\r\n                    RTGI9.skybox.Move(SunAtmo7.skyBox);\r\n                   
     // outputs\r\n                }\r\n                // perform node\r\n               
-    RTGI12.Execute(context);\r\n                // postprocess node\r\n               
-    {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
-    context.commandBuffer.Clear();\r\n            }\r\n            //PyramidColor13\r\n           
-    {\r\n                context.commandBuffer.name = \"PyramidColor13\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    PyramidColor13.filterTarget.connected = true;\r\n                    PyramidColor13.filterTarget.Move(RTGI12.target);\r\n                   
-    // outputs\r\n                    PyramidColor13.pyramidColor.AllocateResourcces(context,
-    PyramidColor13_pyramidColor);\r\n                    PyramidColor13.pyramidColor.name
-    = \"PyramidColor13.pyramidColor\";\r\n                    PyramidColor13.pyramidColor.connected
-    = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                PyramidColor13.Execute(context);\r\n                //
-    postprocess node\r\n                {\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
-    context.commandBuffer.Clear();\r\n            }\r\n            //RTSpecular10\r\n           
-    {\r\n                context.commandBuffer.name = \"RTSpecular10\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    RTSpecular10.lightBuffer.connected = true;\r\n                    RTSpecular10.lightBuffer.Move(ZBin3.lightBuffer);\r\n                   
-    RTSpecular10.tiledLights.connected = true;\r\n                    RTSpecular10.tiledLights.Move(ZBin3.tileLights);\r\n                   
-    RTSpecular10.lights.connected = true;\r\n                    RTSpecular10.lights.Move(CullLight2.lights);\r\n                   
-    RTSpecular10.sun.connected = true;\r\n                    RTSpecular10.sun.Move(SunAtmo7.sunBuffer);\r\n                   
-    RTSpecular10.sceneColor.connected = true;\r\n                    RTSpecular10.sceneColor.Move(RTGI12.target);\r\n                   
-    RTSpecular10.filteredColor.connected = true;\r\n                    RTSpecular10.filteredColor.Move(PyramidColor13.pyramidColor);\r\n                   
-    RTSpecular10.hiZ.connected = true;\r\n                    RTSpecular10.hiZ.Move(HiDepth9.hiZ);\r\n                   
-    RTSpecular10.motion.connected = true;\r\n                    RTSpecular10.motion.Move(GBuffer0.motion);\r\n                   
-    RTSpecular10.specular.connected = true;\r\n                    RTSpecular10.specular.Move(GBuffer0.specular);\r\n                   
-    RTSpecular10.normal.connected = true;\r\n                    RTSpecular10.normal.Move(GBuffer0.normal);\r\n                   
-    RTSpecular10.ao.connected = true;\r\n                    RTSpecular10.ao.Move(GBuffer0.microAO);\r\n                   
-    RTSpecular10.skybox.connected = true;\r\n                    RTSpecular10.skybox.Move(SunAtmo7.skyBox);\r\n                   
-    // outputs\r\n                    RTSpecular10.result.AllocateResourcces(context,
-    RTSpecular10_result);\r\n                    RTSpecular10.result.name = \"RTSpecular10.result\";\r\n                   
-    RTSpecular10.result.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                RTSpecular10.Execute(context);\r\n                //
-    postprocess node\r\n                {\r\n                    RTSpecular10.filteredColor.ReleaseResourcces(context);\r\n                   
-    RTSpecular10.hiZ.ReleaseResourcces(context);\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
-    context.commandBuffer.Clear();\r\n            }\r\n            //PyramidColor11\r\n           
-    {\r\n                context.commandBuffer.name = \"PyramidColor11\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    PyramidColor11.filterTarget.connected = true;\r\n                    PyramidColor11.filterTarget.Move(RTSpecular10.result);\r\n                   
-    // outputs\r\n                    PyramidColor11.pyramidColor.AllocateResourcces(context,
-    PyramidColor11_pyramidColor);\r\n                    PyramidColor11.pyramidColor.name
-    = \"PyramidColor11.pyramidColor\";\r\n                    PyramidColor11.pyramidColor.connected
-    = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                PyramidColor11.Execute(context);\r\n                //
-    postprocess node\r\n                {\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
-    context.commandBuffer.Clear();\r\n            }\r\n            //Transparent14\r\n           
-    {\r\n                context.commandBuffer.name = \"Transparent14\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    Transparent14.lightBuffer.connected = true;\r\n                    Transparent14.lightBuffer.Move(ZBin3.lightBuffer);\r\n                   
-    Transparent14.tiledLights.connected = true;\r\n                    Transparent14.tiledLights.Move(ZBin3.tileLights);\r\n                   
-    Transparent14.lights.connected = true;\r\n                    Transparent14.lights.Move(CullLight2.lights);\r\n                   
-    Transparent14.areaLightBuffer.AllocateResourcces(context, Transparent14_areaLightBuffer);\r\n                   
-    Transparent14.areaLightBuffer.name = \"Transparent14.areaLightBuffer\";\r\n                   
-    Transparent14.filterdScreenColor.connected = true;\r\n                    Transparent14.filterdScreenColor.Move(PyramidColor11.pyramidColor);\r\n                   
-    Transparent14.target.connected = true;\r\n                    Transparent14.target.AllocateResourcces(context,
-    Transparent14_target);\r\n                    Transparent14.target.name = \"Transparent14.target\";\r\n                   
-    Transparent14.target.CastFrom(context, RTSpecular10.result);\r\n                   
-    Transparent14.depth.connected = true;\r\n                    Transparent14.depth.Move(AreaLight6.depth);\r\n                   
-    // outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                Transparent14.Execute(context);\r\n                //
-    postprocess node\r\n                {\r\n                    Transparent14.areaLightBuffer.ReleaseResourcces(context);\r\n                   
-    Transparent14.filterdScreenColor.ReleaseResourcces(context);\r\n                   
-    Transparent14.target.connected = true;\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    RTGI9.Execute(context);\r\n                // postprocess node\r\n               
+    {\r\n                    RTGI9.sun.ReleaseResourcces(context);\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //CombineColorDepth5\r\n           
     {\r\n                context.commandBuffer.name = \"CombineColorDepth5\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    CombineColorDepth5.color.connected = true;\r\n                    CombineColorDepth5.color.Move(Transparent14.target);\r\n                   
+    CombineColorDepth5.color.connected = true;\r\n                    CombineColorDepth5.color.Move(RTGI9.target);\r\n                   
     CombineColorDepth5.depth.connected = true;\r\n                    CombineColorDepth5.depth.Move(GBuffer0.depth);\r\n                   
     // outputs\r\n                    CombineColorDepth5.combined.AllocateResourcces(context,
     CombineColorDepth5_combined);\r\n                    CombineColorDepth5.combined.name
@@ -1568,28 +1454,10 @@ MonoBehaviour:
     SkyBoxIBL8.depth.Dispose();\r\n                SkyBoxIBL8.diffuse.Dispose();\r\n               
     SkyBoxIBL8.specular.Dispose();\r\n                SkyBoxIBL8.normal.Dispose();\r\n               
     SkyBoxIBL8.ao.Dispose();\r\n                SkyBoxIBL8.irradiance.Dispose();\r\n               
-    SkyBoxIBL8.Dispose();\r\n            }\r\n            // HiDepth9\r\n           
-    {\r\n                HiDepth9.depth.Dispose();\r\n                HiDepth9.hiZ.Dispose();\r\n               
-    HiDepth9.Dispose();\r\n            }\r\n            // RTSpecular10\r\n           
-    {\r\n                RTSpecular10.lightBuffer.Dispose();\r\n                RTSpecular10.tiledLights.Dispose();\r\n               
-    RTSpecular10.lights.Dispose();\r\n                RTSpecular10.sun.Dispose();\r\n               
-    RTSpecular10.sceneColor.Dispose();\r\n                RTSpecular10.filteredColor.Dispose();\r\n               
-    RTSpecular10.hiZ.Dispose();\r\n                RTSpecular10.motion.Dispose();\r\n               
-    RTSpecular10.specular.Dispose();\r\n                RTSpecular10.normal.Dispose();\r\n               
-    RTSpecular10.ao.Dispose();\r\n                RTSpecular10.skybox.Dispose();\r\n               
-    RTSpecular10.result.Dispose();\r\n                RTSpecular10.Dispose();\r\n           
-    }\r\n            // PyramidColor11\r\n            {\r\n                PyramidColor11.filterTarget.Dispose();\r\n               
-    PyramidColor11.pyramidColor.Dispose();\r\n                PyramidColor11.Dispose();\r\n           
-    }\r\n            // RTGI12\r\n            {\r\n                RTGI12.lightBuffer.Dispose();\r\n               
-    RTGI12.tiledLights.Dispose();\r\n                RTGI12.lights.Dispose();\r\n               
-    RTGI12.sun.Dispose();\r\n                RTGI12.target.Dispose();\r\n               
-    RTGI12.depth.Dispose();\r\n                RTGI12.motion.Dispose();\r\n               
-    RTGI12.diffuse.Dispose();\r\n                RTGI12.normal.Dispose();\r\n               
-    RTGI12.skybox.Dispose();\r\n                RTGI12.Dispose();\r\n           
-    }\r\n            // PyramidColor13\r\n            {\r\n                PyramidColor13.filterTarget.Dispose();\r\n               
-    PyramidColor13.pyramidColor.Dispose();\r\n                PyramidColor13.Dispose();\r\n           
-    }\r\n            // Transparent14\r\n            {\r\n                Transparent14.lightBuffer.Dispose();\r\n               
-    Transparent14.tiledLights.Dispose();\r\n                Transparent14.lights.Dispose();\r\n               
-    Transparent14.areaLightBuffer.Dispose();\r\n                Transparent14.filterdScreenColor.Dispose();\r\n               
-    Transparent14.target.Dispose();\r\n                Transparent14.depth.Dispose();\r\n               
-    Transparent14.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"
+    SkyBoxIBL8.Dispose();\r\n            }\r\n            // RTGI9\r\n           
+    {\r\n                RTGI9.lightBuffer.Dispose();\r\n                RTGI9.tiledLights.Dispose();\r\n               
+    RTGI9.lights.Dispose();\r\n                RTGI9.sun.Dispose();\r\n               
+    RTGI9.target.Dispose();\r\n                RTGI9.depth.Dispose();\r\n               
+    RTGI9.motion.Dispose();\r\n                RTGI9.diffuse.Dispose();\r\n               
+    RTGI9.normal.Dispose();\r\n                RTGI9.skybox.Dispose();\r\n               
+    RTGI9.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"

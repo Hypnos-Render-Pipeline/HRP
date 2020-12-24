@@ -1,4 +1,4 @@
-﻿using HypnosRenderPipeline.RenderGraph;
+using HypnosRenderPipeline.RenderGraph;
 using System;
 using UnityEngine;
 using UnityEngine.Rendering;
