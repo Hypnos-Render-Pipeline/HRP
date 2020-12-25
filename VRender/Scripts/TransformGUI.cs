@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
@@ -24,11 +24,11 @@ public class TransformGUI : Editor
     public override void OnInspectorGUI()
     {
         if (m_cacheEditor == null)
-            m_cacheEditor = CreateEditor(target, Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.TransformInspector", true));
+            m_cacheEditor = CreateEditor(target, Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.TransformInspector"));
         m_cacheEditor.OnInspectorGUI();
 
         EditorGUI.BeginDisabledGroup(true);
-        EditorGUILayout.HelpBox("This Inspector has been overrided", MessageType.Info);
+        EditorGUILayout.HelpBox("This Inspector has been override", MessageType.Info);
         EditorGUI.EndDisabledGroup();
 
         Transform trans = target as Transform;

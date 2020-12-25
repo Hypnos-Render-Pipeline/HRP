@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
 using Unity.Mathematics;
@@ -78,7 +78,7 @@ namespace HypnosRenderPipeline.RenderPass
                 Vector2Int descSize;
                 if (desc.sizeScale != SizeScale.Custom)
                 {
-                    descSize = new Vector2Int(1920, 1080);
+                    descSize = new Vector2Int(1920, 1080);  // we just need a vector,no mater what its value is.
                     descSize /= (int)desc.sizeScale;
                 }
                 else descSize = new Vector2Int(desc.basicDesc.width, desc.basicDesc.height);

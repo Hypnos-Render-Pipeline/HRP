@@ -310,7 +310,7 @@ namespace HypnosRenderPipeline.RenderPass
                         worleyPerlinVolume3D.Create();
 
                         var _WorleyPerlinVolume2D = Resources.Load<Texture2D>("Textures/Cloud Noise/WorleyPerlinVolume");
-                        var _WorleyVolume2D = Resources.Load<Texture2D>("TestNoise/noiseErosion");
+                        var _WorleyVolume2D = Resources.Load<Texture2D>("Textures/Cloud Noise/NoiseErosion");
                         CommandBuffer writeVolumecb = new CommandBuffer();
                         writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume2D, _WorleyPerlinVolume2D);
                         writeVolumecb.SetComputeTextureParam(cloudCS, (int)CloudPass.LoadVolumeData, TextureIDs._Volume3D, worleyPerlinVolume3D);
@@ -323,6 +323,8 @@ namespace HypnosRenderPipeline.RenderPass
                         Graphics.ExecuteCommandBuffer(writeVolumecb);
                         worleyVolume3D.GenerateMips();
                         worleyPerlinVolume3D.GenerateMips();
+
+                        curlNoise2D = Resources.Load<Texture2D>("Textures/Cloud Noise/Curl");
                     }
 #endif
 

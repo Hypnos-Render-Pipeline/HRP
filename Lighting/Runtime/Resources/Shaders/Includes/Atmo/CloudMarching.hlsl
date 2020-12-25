@@ -387,6 +387,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 	float phase = numericalMieFit(VdotS);
 	float multiScatterPhase = phase + numericalMieFitMultiScatter();
 	float InvVDotS01 = 1 - (VdotS + 1) / 2;
+	float rescaledPdotS01 = rescale01(dot(normalize(p), s), 0, 0.3);
 
 	float alphaFallback = lerp(0.3, 0.05, _Quality.w);
 
@@ -467,10 +468,10 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 
 				float light = energy;
 				float msPhase = multiScatterPhase;
-				float response = trans * scatter * in_scatter_probability;
+				float response = trans * scatter;
 				
-				sun += response * msPhase * light;
-				amb += (0.6 + 0.4 * smoothstep(0.2, 0.7, sh.y)) * response;
+				sun += response * msPhase * light * in_scatter_probability;
+				amb += (0.3 + 0.7 * smoothstep(0.2, 0.7, sh.y)) * response * lerp(1, in_scatter_probability, rescaledPdotS01);
 				hit_h += float2(sh.y * response, response);				
 				av_dis += float2(i * response, response);
 			}
@@ -528,10 +529,10 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 
 				float light = energy;
 				float msPhase = multiScatterPhase;
-				float response = trans * scatter * in_scatter_probability;
+				float response = trans * scatter;
 
-				sun += response * msPhase * light;
-				amb += (0.5 + 0.5 * smoothstep(0.2, 0.7, sh.y)) * response;
+				sun += response * msPhase * light * in_scatter_probability;
+				amb += (0.3 + 0.7 * smoothstep(0.2, 0.7, sh.y)) * response * lerp(1, in_scatter_probability, rescaledPdotS01);
 				hit_h += float2(sh.y * response, response);
 				av_dis += float2(i * response, response);
 			}

@@ -47,7 +47,7 @@ void Specular()
 
     float d = _DepthTex[dispatchIdx];
     if (-PD2VD(d) > 1024) {
-        _TempResult[dispatchIdx] = 0;
+        _TempResult[dispatchIdx] = -1;
         return;
     }
     float3 camPos = _V_Inv._m03_m13_m23;
@@ -58,6 +58,7 @@ void Specular()
         pos = worldPos.xyz / worldPos.w;
     }
     float3 view = normalize(camPos - pos);
+    pos += view * 0.01;
 
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(0,
@@ -66,7 +67,7 @@ void Specular()
                             0,
                             1);
 
-	int4 sampleState = int4(dispatchIdx, _Clock % 4, 0);
+	int4 sampleState = int4(dispatchIdx, _Clock % 16, 0);
 
     
     float3 n = normalize(float3(0, 0, 0.5) + ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness)).xyz);
@@ -86,9 +87,10 @@ void Specular()
         float4 ppos = mul(_VP, float4(hitPos, 1));
         float2 uv = ppos.xy / ppos.w;
         uv = (uv + 1) * 0.5;
-        res = _FilteredColor.SampleLevel(trilinear_clamp_sampler, uv, lerp(7, 0, info.smoothness));
+        res = _FilteredColor.SampleLevel(trilinear_clamp_sampler, uv, lerp(7, 0, max(1 - gbuffer.dis / 10, info.smoothness)));
         bool offscreen = any(uv < 0) || any(uv > 1);
         bool illegal = offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.1;
+        //illegal=true;
         if (illegal) { // can't find illegal hit in screen, calculate it
             SurfaceInfo hitInfo = (SurfaceInfo)0;
             hitInfo.diffuse = gbuffer.albedo;
@@ -139,5 +141,5 @@ void Specular()
     }
 
     float3 spec = PBS(PBS_SPECULAR, info, dir, res, view);
-    _TempResult[dispatchIdx] = float4(ToneMap(spec), 1);
+    _TempResult[dispatchIdx] = float4(ToneMap(spec), min(gbuffer.dis, 10));
 }

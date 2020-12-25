@@ -1,4 +1,4 @@
-﻿using HypnosRenderPipeline.RenderGraph;
+using HypnosRenderPipeline.RenderGraph;
 using HypnosRenderPipeline.RenderPass;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,8 +19,8 @@ namespace HypnosRenderPipeline
             public int clock;
         }
 
-        Dictionary<Camera, PerCameraData> clock;
-        Dictionary<Camera, RenderGraphResourcesPool> resourcesPool;
+        Dictionary<int, PerCameraData> clock;
+        Dictionary<int, RenderGraphResourcesPool> resourcesPool;
 
         ScriptableCullingParameters defaultCullingParams;
 
@@ -61,8 +61,8 @@ namespace HypnosRenderPipeline
             m_executor.Init();
             m_asset.defaultMaterial.hideFlags = HideFlags.NotEditable;
 
-            clock = new Dictionary<Camera, PerCameraData>();
-            resourcesPool = new Dictionary<Camera, RenderGraphResourcesPool>();
+            clock = new Dictionary<int, PerCameraData>();
+            resourcesPool = new Dictionary<int, RenderGraphResourcesPool>();
         }
 
         protected override void Dispose(bool disposing)
@@ -108,197 +108,225 @@ namespace HypnosRenderPipeline
 
             foreach (var cam in cameras)
             {
-                BeginCameraRendering(context, cam);
-
-                context.SetupCameraProperties(cam);
-
-                rc.camera = cam;
-                rc.commandBuffer = cb;
-                cam.TryGetCullingParameters(out defaultCullingParams);
-                rc.defaultCullingResult = context.Cull(ref defaultCullingParams);
-
-                Matrix4x4 v = cam.worldToCameraMatrix, p = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false);
-                cb.SetGlobalMatrix("_V", v);
-                cb.SetGlobalMatrix("_P", p);
-                cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
-                cb.SetGlobalMatrix("_P_Inv", p.inverse);
-                var vp = p * v;
-                cb.SetGlobalMatrix("_VP", vp);
-                cb.SetGlobalMatrix("_VP_Inv", vp.inverse);
-                if (clock.ContainsKey(cam)) {
-                    cb.SetGlobalInt("_Clock", clock[cam].clock++);
-                }
-                else {
-                    cb.SetGlobalInt("_Clock", 0);
-                    var pcd = new PerCameraData();
-                    pcd.clock = 0;
-                    pcd.lastVP = vp;
-                    clock[cam] = pcd;
-                }
-                cb.SetGlobalMatrix("_Last_VP", clock[cam].lastVP);
-                cb.SetGlobalMatrix("_Last_VP_Inv", clock[cam].lastVP.inverse);
-                clock[cam].lastVP = vp;
-                RenderGraphResourcesPool pool;
-                if (!resourcesPool.ContainsKey(cam))
+                int cameraId = cam.GetHashCode();
+#if UNITY_EDITOR
+                if (cam.cameraType == CameraType.Preview)
                 {
-                    pool = new RenderGraphResourcesPool();
-                    resourcesPool.Add(cam, pool);
+                    if (cam.pixelHeight == 64) cameraId += 1;
+                    // Unity will use one PreviewCamera to draw Material icon and Material Preview together, this will cause resources identity be confused.
+                    // We found that the Material preview can not be less than 70 pixel, and the icon is always 64, so we use this to distinguish them.
                 }
-                else
+                int renderNum = 1;
+                if (cam.cameraType == CameraType.Preview)
                 {
-                    pool = resourcesPool[cam];
+                    renderNum = 2;
                 }
-                rc.frameIndex = clock[cam].clock;
-                rc.resourcesPool = pool;
-
-                context.ExecuteCommandBuffer(cb);
-                cb.Clear();
-
-                int result = -1;
-
+                for (int renderIndex = 0; renderIndex < renderNum; renderIndex++)
                 {
-                    var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
-                    if (vrender_cb.Length != 0) {
+#endif
 
-                        result = Shader.PropertyToID("_TempResult");
-                        cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 24, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
-                        cb.SetRenderTarget(result);
-                        cb.ClearRenderTarget(true, true, Color.clear);
-                        cb.SetRenderTarget(result);
+                    BeginCameraRendering(context, cam);
 
-                        var a = new DrawingSettings(new ShaderTagId("PreZ"), new SortingSettings(cam));
-                        var b = FilteringSettings.defaultValue;
-                        b.renderQueueRange = RenderQueueRange.all;
+                    context.SetupCameraProperties(cam);
 
-                        cb.DrawRenderers(rc.defaultCullingResult, ref a, ref b);
+                    rc.camera = cam;
+                    rc.commandBuffer = cb;
+                    cam.TryGetCullingParameters(out defaultCullingParams);
+                    rc.defaultCullingResult = context.Cull(ref defaultCullingParams);
 
-                        context.ExecuteCommandBuffer(vrender_cb[0]);
-                        cb.Blit(BuiltinRenderTextureType.CameraTarget, result);
+                    Matrix4x4 v = cam.worldToCameraMatrix, p = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false);
+                    cb.SetGlobalMatrix("_V", v);
+                    cb.SetGlobalMatrix("_P", p);
+                    cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
+                    cb.SetGlobalMatrix("_P_Inv", p.inverse);
+                    var vp = p * v;
+                    cb.SetGlobalMatrix("_VP", vp);
+                    cb.SetGlobalMatrix("_VP_Inv", vp.inverse);
+                    if (clock.ContainsKey(cameraId))
+                    {
+                        cb.SetGlobalInt("_Clock", clock[cameraId].clock++);
                     }
                     else
                     {
-                        if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph
+                        cb.SetGlobalInt("_Clock", 0);
+                        var pcd = new PerCameraData();
+                        pcd.clock = 0;
+                        pcd.lastVP = vp;
+                        clock[cameraId] = pcd;
+                    }
+                    cb.SetGlobalMatrix("_Last_VP", clock[cameraId].lastVP);
+                    cb.SetGlobalMatrix("_Last_VP_Inv", clock[cameraId].lastVP.inverse);
+                    clock[cameraId].lastVP = vp;
+                    RenderGraphResourcesPool pool;
+                    if (!resourcesPool.ContainsKey(cameraId))
+                    {
+                        pool = new RenderGraphResourcesPool();
+                        resourcesPool.Add(cameraId, pool);
+                    }
+                    else
+                    {
+                        pool = resourcesPool[cameraId];
+                    }
+                    rc.frameIndex = clock[cameraId].clock;
+                    rc.resourcesPool = pool;
+
+                    context.ExecuteCommandBuffer(cb);
+                    cb.Clear();
+
+                    int result = -1;
+
+                    {
+                        var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
+                        if (vrender_cb.Length != 0)
+                        {
+
+                            result = Shader.PropertyToID("_TempResult");
+                            cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 24, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
+                            cb.SetRenderTarget(result);
+                            cb.ClearRenderTarget(true, true, Color.clear);
+                            cb.SetRenderTarget(result);
+
+                            var a = new DrawingSettings(new ShaderTagId("PreZ"), new SortingSettings(cam));
+                            var b = FilteringSettings.defaultValue;
+                            b.renderQueueRange = RenderQueueRange.all;
+
+                            cb.DrawRenderers(rc.defaultCullingResult, ref a, ref b);
+
+                            context.ExecuteCommandBuffer(vrender_cb[0]);
+                            cb.Blit(BuiltinRenderTextureType.CameraTarget, result);
+                        }
+                        else
+                        {
+                            if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph
 #if UNITY_EDITOR
                             || m_hypnosRenderPipelineGraph.recompiled
 #endif
                             )
-                        {
-                            m_hypnosRenderPipelineGraph = m_asset.hypnosRenderPipelineGraph;
-#if UNITY_EDITOR
-                            m_hypnosRenderPipelineGraph.recompiled = false;
-#endif
-                            m_executor.Dispose();
-#if UNITY_EDITOR
-                            if (m_asset.useCompliedCodeInEditor)
                             {
-                                try
-                                {
-#endif
-                                    m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+                                m_hypnosRenderPipelineGraph = m_asset.hypnosRenderPipelineGraph;
 #if UNITY_EDITOR
-                                }
-                                catch
+                                m_hypnosRenderPipelineGraph.recompiled = false;
+#endif
+                                m_executor.Dispose();
+#if UNITY_EDITOR
+                                if (m_asset.useCompliedCodeInEditor)
                                 {
-                                    // try totally recompile
-                                    HRGCompiler.Compile(m_asset.hypnosRenderPipelineGraph);
-                                    m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+                                    try
+                                    {
+#endif
+                                        m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+#if UNITY_EDITOR
+                                    }
+                                    catch
+                                    {
+                                        // try totally recompile
+                                        HRGCompiler.Compile(m_asset.hypnosRenderPipelineGraph);
+                                        m_executor = HRGCompiler.CompileFromString(m_asset.hypnosRenderPipelineGraph.name, m_asset.hypnosRenderPipelineGraph.code);
+                                    }
+                                }
+                                else
+                                {
+                                    m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
+                                }
+#endif
+                                m_executor.Init();
+                            }
+                            if (m_hypnosRenderPipelineGraph != null)
+                            {
+                                // determinate whether debug this camera
+                                bool debugCamera = false;
+#if UNITY_EDITOR
+                                if (hasGameCamera)
+                                {
+                                    if (cam.cameraType == CameraType.Game) debugCamera = true;
+                                }
+
+                                else if (hasSceneCamera)
+                                {
+                                    if (cam.cameraType == CameraType.SceneView) debugCamera = true;
+                                }
+                                else if (cam == cameras[0]) debugCamera = true;
+#endif
+                                result = m_executor.Execute(rc, debugCamera);
+                            }
+                            if (result == -1)
+                            {
+                                result = Shader.PropertyToID("_TempResult");
+                                cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
+                                cb.SetRenderTarget(result);
+                                cb.ClearRenderTarget(true, true, Color.clear);
+                            }
+                        }
+                    }
+
+#if UNITY_EDITOR
+                    if (cam.cameraType == CameraType.SceneView)
+                    {
+                        ScriptableRenderContext.EmitWorldGeometryForSceneView(cam);
+                        // this culling is to trigger sceneview gizmos culling
+                        ScriptableCullingParameters cullingParams;
+                        cam.TryGetCullingParameters(out cullingParams);
+                        cullingParams.cullingMask = 0;
+                        var cullingResults = context.Cull(ref cullingParams);
+
+                        cb.SetRenderTarget(result);
+                        var selected_lights = UnityEditor.Selection.GetFiltered<HRPLight>(UnityEditor.SelectionMode.Unfiltered);
+                        var llist = new LightList();
+                        LightManager.GetVisibleLights(llist, cam);
+                        foreach (var light in llist.areas)
+                        {
+                            if (selected_lights.Contains(light))
+                            {
+                                if (light.lightType == HRPLightType.Mesh && light.lightMesh != null)
+                                {
+                                    cb.DrawMesh(light.lightMesh, light.transform.localToWorldMatrix, m_wireFrame);
                                 }
                             }
+                        }
+                        foreach (var light in llist.locals)
+                        {
+                            if (selected_lights.Contains(light))
+                            {
+                                if (light.supportIES && light.IESProfile != null)
+                                {
+                                    cb.SetGlobalTexture("_IESCube", light.IESProfile);
+                                    cb.DrawMesh(MeshWithType.sphere, Matrix4x4.TRS(light.transform.position, light.transform.rotation, Vector3.one * 0.6f), m_iesSphere);
+                                }
+                            }
+                        }
+
+                        context.ExecuteCommandBuffer(cb);
+                        cb.Clear();
+                    }
+
+                    if (Handles.ShouldRenderGizmos() && (cam.cameraType == CameraType.SceneView || cam.cameraType == CameraType.Game))
+                    {
+                        context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
+                        context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
+                        context.DrawUIOverlay(cam);
+                    }
+#endif
+
+#if UNITY_EDITOR
+                    if (cam.cameraType == CameraType.SceneView)
+                    {
+                        var drawMode = SceneView.lastActiveSceneView.cameraMode.drawMode;
+                        if (drawMode == DrawCameraMode.Wireframe)
+                        {
+                            cb.SetGlobalFloat("_Multiplier", 1);
+                            cb.SetGlobalInt("_Channel", 4);
+                            if (cam.targetTexture != null)
+                                cb.Blit(result, cam.targetTexture, MaterialWithName.debugBlit);
                             else
-                            {
-                                m_executor = new HRGDynamicExecutor(m_asset.hypnosRenderPipelineGraph);
-                            }
-#endif
-                            m_executor.Init();
+                                cb.Blit(result, BuiltinRenderTextureType.CameraTarget, MaterialWithName.debugBlit);
                         }
-                        if (m_hypnosRenderPipelineGraph != null)
-                        {
-                            // determinate whether debug this camera
-                            bool debugCamera = false;
-#if UNITY_EDITOR
-                            if (hasGameCamera)
-                            {
-                                if (cam.cameraType == CameraType.Game) debugCamera = true;
-                            }
-
-                            else if (hasSceneCamera)
-                            {
-                                if (cam.cameraType == CameraType.SceneView) debugCamera = true;
-                            }
-                            else if (cam == cameras[0]) debugCamera = true;
-#endif
-                            result = m_executor.Execute(rc, debugCamera);
-                        }
-                        if (result == -1)
-                        {
-                            result = Shader.PropertyToID("_TempResult");
-                            cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
-                            cb.SetRenderTarget(result);
-                            cb.ClearRenderTarget(true, true, Color.clear);
-                        }
-                    }
-                }
-
-#if UNITY_EDITOR
-                if (cam.cameraType == CameraType.SceneView)
-                {
-                    ScriptableRenderContext.EmitWorldGeometryForSceneView(cam);
-                    // this culling is to trigger sceneview gizmos culling
-                    ScriptableCullingParameters cullingParams;
-                    cam.TryGetCullingParameters(out cullingParams);
-                    cullingParams.cullingMask = 0;
-                    var cullingResults = context.Cull(ref cullingParams);
-
-                    cb.SetRenderTarget(result);
-                    var selected_lights = UnityEditor.Selection.GetFiltered<HRPLight>(UnityEditor.SelectionMode.Unfiltered);
-                    var llist = new LightList();
-                    LightManager.GetVisibleLights(llist, cam);
-                    foreach (var light in llist.areas)
-                    {
-                        if (selected_lights.Contains(light))
-                        {
-                            if (light.lightType == HRPLightType.Mesh && light.lightMesh != null)
-                            {
-                                cb.DrawMesh(light.lightMesh, light.transform.localToWorldMatrix, m_wireFrame);
-                            }
-                        }
-                    }
-                    foreach (var light in llist.locals)
-                    {
-                        if (selected_lights.Contains(light))
-                        {
-                            if (light.supportIES && light.IESProfile != null)
-                            {
-                                cb.SetGlobalTexture("_IESCube", light.IESProfile);
-                                cb.DrawMesh(MeshWithType.sphere, Matrix4x4.TRS(light.transform.position, light.transform.rotation, Vector3.one * 0.6f), m_iesSphere);
-                            }
-                        }
-                    }
-
-                    context.ExecuteCommandBuffer(cb);
-                    cb.Clear();
-                }
-
-                if (Handles.ShouldRenderGizmos() && (cam.cameraType == CameraType.SceneView || cam.cameraType == CameraType.Game))
-                {
-                    context.DrawGizmos(cam, GizmoSubset.PreImageEffects);
-                    context.DrawGizmos(cam, GizmoSubset.PostImageEffects);
-                    context.DrawUIOverlay(cam);
-                }
-#endif
-
-#if UNITY_EDITOR
-                if (cam.cameraType == CameraType.SceneView)
-                {
-                    var drawMode = SceneView.lastActiveSceneView.cameraMode.drawMode;
-                    if (drawMode == DrawCameraMode.Wireframe)
-                    {
-                        cb.SetGlobalFloat("_Multiplier", 1);
-                        cb.SetGlobalInt("_Channel", 4);
-                        if (cam.targetTexture != null)
-                            cb.Blit(result, cam.targetTexture, MaterialWithName.debugBlit);
                         else
-                            cb.Blit(result, BuiltinRenderTextureType.CameraTarget, MaterialWithName.debugBlit);
+                        {
+                            if (cam.targetTexture != null)
+                                cb.Blit(result, cam.targetTexture);
+                            else
+                                cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
+                        }
                     }
                     else
                     {
@@ -307,14 +335,6 @@ namespace HypnosRenderPipeline
                         else
                             cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
                     }
-                }
-                else
-                {
-                    if (cam.targetTexture != null)
-                        cb.Blit(result, cam.targetTexture);
-                    else
-                        cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
-                }
 #else
                 if (cam.targetTexture != null)
                     cb.Blit(result, cam.targetTexture);
@@ -322,11 +342,14 @@ namespace HypnosRenderPipeline
                     cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
 #endif
 
-                cb.ReleaseTemporaryRT(result);
-                context.ExecuteCommandBuffer(cb);
-                cb.Clear();
+                    cb.ReleaseTemporaryRT(result);
+                    context.ExecuteCommandBuffer(cb);
+                    cb.Clear();
 
-                EndCameraRendering(context, cam);
+                    EndCameraRendering(context, cam);
+#if UNITY_EDITOR
+                }
+#endif
             }
 
             EndFrameRendering(context, cameras);

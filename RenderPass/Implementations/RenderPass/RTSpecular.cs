@@ -22,8 +22,8 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In)]
         public BufferPin<SunAtmo.SunLight> sun = new BufferPin<SunAtmo.SunLight>(1);
 
-        [NodePin(PinType.In, true)]
-        public TexturePin sceneColor = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default));
+        [NodePin(PinType.InOut, true)]
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBHalf));
 
         [NodePin(PinType.In)]
         public TexturePin filteredColor = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default));
@@ -48,9 +48,6 @@ namespace HypnosRenderPipeline.RenderPass
 
         [NodePin(PinType.In)]
         public TexturePin skybox = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default) { dimension = TextureDimension.Cube }, sizeScale: SizeScale.Custom);
-
-        [NodePin(PinType.Out)]
-        public TexturePin result;
 
         public bool useRTShadow = false;
 
@@ -80,7 +77,6 @@ namespace HypnosRenderPipeline.RenderPass
 
         public RTSpecular()
         {
-            result = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default) { enableRandomWrite = true }, srcPin: sceneColor);
             argsBuffer = new ComputeBuffer(3, sizeof(int), ComputeBufferType.IndirectArguments);
             argsBuffer_ = new ComputeBuffer(3, sizeof(int), ComputeBufferType.IndirectArguments);
             blockBuffer = new ComputeBuffer(1, sizeof(int));
@@ -94,7 +90,6 @@ namespace HypnosRenderPipeline.RenderPass
             blockBuffer_.Release();
         }
 
-
         public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
@@ -102,14 +97,19 @@ namespace HypnosRenderPipeline.RenderPass
             if (filteredColor.connected)
                 cb.SetGlobalTexture("_FilteredColor", filteredColor);
             else
-                cb.SetGlobalTexture("_FilteredColor", sceneColor);
+                cb.SetGlobalTexture("_FilteredColor", target);
 
-            cb.SetGlobalTexture("_SceneColor", sceneColor);
+            cb.SetGlobalTexture("_SceneColor", target);
             cb.SetGlobalTexture("_HiZDepthTex", hiZ);
 
             cb.SetGlobalTexture("_SkyBox", skybox);
 
-            int2 wh = new int2(sceneColor.desc.basicDesc.width, sceneColor.desc.basicDesc.height);
+            var desc = target.desc.basicDesc;
+            desc.enableRandomWrite = true;
+            int result = Shader.PropertyToID("_SSRResult");
+            cb.GetTemporaryRT(result, desc);
+
+            int2 wh = new int2(desc.width, desc.height);
 
             cb.SetGlobalVector("_WH", new Vector4(wh.x, wh.y, 1.0f / wh.x, 1.0f / wh.y));
             cb.SetGlobalInt("_UseRTShadow", useRTShadow ? 1 : 0);
@@ -120,9 +120,6 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetGlobalTexture("_RankingTile", bnsLoader.tex_rankingTile);
 
             int tempRef = Shader.PropertyToID("_TempReflection");
-            var desc = result.desc.basicDesc;
-            desc.enableRandomWrite = true;
-            desc.colorFormat = RenderTextureFormat.ARGBHalf;
             cb.GetTemporaryRT(tempRef, desc);
 
             var acc = RTRegister.AccStruct();
@@ -165,23 +162,25 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_Result", result);
             cb.DispatchCompute(ssr, CSPass.TTFilter, dispatchSize.x, dispatchSize.y, 1);
 
-            cb.CopyTexture(result, his0);
+            DispatchSpatialFilter(cb, result, 0.9f, 0.95f);
+            DispatchSpatialFilter(cb, result, 0.85f, 0.9f);
+            DispatchSpatialFilter(cb, result, 0.75f, 0.85f);
+            DispatchSpatialFilter(cb, result, 0.6f, 0.75f);
+            DispatchSpatialFilter(cb, result, 0.45f, 0.6f);
+            DispatchSpatialFilter(cb, result, 0.2f, 0.45f);
+            DispatchSpatialFilter(cb, result, 0, 0.2f);
 
-            DispatchSpatialFilter(cb, 0.9f, 0.95f);
-            DispatchSpatialFilter(cb, 0.85f, 0.9f);
-            DispatchSpatialFilter(cb, 0.75f, 0.85f);
-            DispatchSpatialFilter(cb, 0.6f, 0.75f);
-            DispatchSpatialFilter(cb, 0.45f, 0.6f);
-            DispatchSpatialFilter(cb, 0.2f, 0.45f);
-            DispatchSpatialFilter(cb, 0, 0.2f);
+            cb.CopyTexture(result, his0);
 
             cb.SetComputeTextureParam(ssr, CSPass.FinalSynthesis, "_Result", result);
             cb.DispatchCompute(ssr, CSPass.FinalSynthesis, dispatchSize.x, dispatchSize.y, 1);
 
+            cb.CopyTexture(result, target);
+
             cb.ReleaseTemporaryRT(tempRef);
         }
 
-        void DispatchSpatialFilter(CommandBuffer cb, float lowSmooth, float highSmooth)
+        void DispatchSpatialFilter(CommandBuffer cb, int result, float lowSmooth, float highSmooth)
         {
             cb.SetGlobalVector("_SmoothRange", new Vector4(lowSmooth, highSmooth));
             cb.SetComputeBufferData(argsBuffer_, clearArray);

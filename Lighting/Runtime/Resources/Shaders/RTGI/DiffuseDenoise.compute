@@ -187,7 +187,11 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
         float weight = saturate(distance_weight * normal_weight);
 
-        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.95, 0.98, speed);
+        if (any(prevUV > 1) || any(prevUV < 0)) {
+            weight = 0.02;
+        }
+
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.95, 0.99, speed);
 
         minC -= lerp(0.05, 0.7, speed) * weight;
         maxC += lerp(0.05, 0.7, speed) * weight;
@@ -198,7 +202,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         float sampleNum = hc.w * weight + oc.w;
         _Result[id] = float4(mixed.xyz, sampleNum);
 
-        if (sampleNum < 60) {
+        if (sampleNum < 30) {
             _Variance[id] = float2(1, _Variance[id].y);
         }
     }
@@ -222,7 +226,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
     //return;
     uint2 fullResIndex = half2FullIndex(id);
     float3 diffuse = _BaseColorTex[fullResIndex].xyz * _SceneColor[fullResIndex].a;
-    float blur = _Result[id].w <= 60 ? 0 : (0.9 - max(diffuse) * 0.4);
+    float blur = _Result[id].w <= 30 ? 0 : (0.9 - max(diffuse) * 0.2);
     blur = _SceneColor[fullResIndex].a == 0 ? 1 : blur;
 
     uint2 wh;

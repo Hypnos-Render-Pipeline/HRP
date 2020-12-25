@@ -150,7 +150,7 @@ void Diffuse()
                             0,
                             1);
 
-	int4 sampleState = int4(dispatchIdx, _Clock % 32, 0);
+	int4 sampleState = int4(dispatchIdx, _Clock % 16, 0);
     
     float3 res = 0;
 

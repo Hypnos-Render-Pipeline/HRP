@@ -44,7 +44,7 @@ namespace HypnosRenderPipeline
 
         public Texture2D cloudMap;
         [Range(0.1f, 100)]
-        public float cloudMapScale;
+        public float cloudMapScale = 1;
 
         public Texture2D highCloudMap;
 

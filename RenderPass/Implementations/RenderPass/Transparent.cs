@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -23,7 +23,7 @@ namespace HypnosRenderPipeline.RenderPass
         public TexturePin filterdScreenColor = new TexturePin(new RenderTextureDescriptor(1, 1));
 
         [NodePin(PinType.InOut)]
-        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1));
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBHalf));
 
         [NodePin(PinType.In)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);

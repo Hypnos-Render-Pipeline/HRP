@@ -96,6 +96,8 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     if (renderNode.enabled)
                         renderNode.Execute(context);
+                    else
+                        renderNode.DisExecute(context);
                 }
                 if (debug)
                     context.commandBuffer.EndSample(node.sampler);
@@ -110,8 +112,8 @@ namespace HypnosRenderPipeline.RenderGraph
                     foreach (var output_value in nodeRec.outputs)
                     {
                         var output = output_value.Value.first;
-                        var nameField = output.FieldType.GetField("name");
-                        output.FieldType.GetField("connected").SetValue(output.GetValue(renderNode), renderNode.enabled);
+                        if (!pin_map.ContainsKey(output.Name))
+                            output.FieldType.GetField("connected").SetValue(output.GetValue(renderNode), renderNode.enabled);
                     }
                 }
             }

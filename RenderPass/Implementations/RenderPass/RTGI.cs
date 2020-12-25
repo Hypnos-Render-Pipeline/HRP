@@ -24,7 +24,7 @@ namespace HypnosRenderPipeline.RenderPass
         public BufferPin<SunAtmo.SunLight> sun = new BufferPin<SunAtmo.SunLight>(1);
 
         [NodePin(PinType.InOut, true)]
-        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default));
+        public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBHalf));
 
         [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
