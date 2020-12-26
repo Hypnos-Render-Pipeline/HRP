@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace HypnosRenderPipeline.RenderPass
@@ -85,6 +85,12 @@ namespace HypnosRenderPipeline.RenderPass
             {
                 terrain = GameObject.FindObjectOfType<HRPTerrain>();
             }
+
+            cb.SetGlobalTexture("_DepthTex", depth);
+            cb.SetGlobalTexture("_BaseColorTex", diffuse);
+            cb.SetGlobalTexture("_SpecTex", specular);
+            cb.SetGlobalTexture("_NormalTex", normal);
+            cb.SetGlobalTexture("_AOTex", microAO);
         }
     }
 

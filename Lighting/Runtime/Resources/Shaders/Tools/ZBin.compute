@@ -1,4 +1,4 @@
-﻿#pragma kernel TileCulling
+#pragma kernel TileCulling
 #pragma kernel BinCulling
 
 #define ZIBIN_COMPUTE
@@ -104,8 +104,8 @@ inline bool ConeConeTest(float3 p, float3 v, float t, float3 p1, float3 v1, floa
     dis = dot(p1 - p, n) / dot(v, n);
     dis *= t / dot(n, v);
     p1 -= dis * v1;
-    float3 p2 = p1 + (v1 + ta * t1) * (d1 + dis * 2) + ta * dis;
-    float3 p3 = p1 + (v1 - ta * t1) * (d1 + dis * 2) - ta * dis;
+    float3 p2 = p1 + (v1 + ta * t1 * 2) * (d1 + dis * 2) + ta * dis;
+    float3 p3 = p1 + (v1 - ta * t1 * 2) * (d1 + dis * 2) - ta * dis;
 
     if (IntersectTriangle(p, v, p1, p2, p3)) return true;
 

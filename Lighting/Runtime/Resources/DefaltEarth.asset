@@ -16,7 +16,7 @@ MonoBehaviour:
   AtmosphereThickness: 8000
   brightness: 1
   GroundAlbedo: {r: 0.25, g: 0.25, b: 0.25, a: 1}
-  RayleighScatter: {r: 0.1752, g: 0.40785, b: 1, a: 1}
+  RayleighScatter: {r: 0.17647058, g: 0.46666667, b: 1, a: 1}
   RayleighScatterStrength: 1
   MieScatterStrength: 1
   OzoneStrength: 1

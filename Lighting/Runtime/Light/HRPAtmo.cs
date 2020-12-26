@@ -16,7 +16,7 @@ namespace HypnosRenderPipeline
         public float brightness = 1;
 
         public Color GroundAlbedo = new Color(0.25f, 0.25f, 0.25f);
-        public Color RayleighScatter = new Color(0.1752f, 0.40785f, 1f);
+        public Color RayleighScatter = new Color(0.1752f, 0.466f, 1f);
         [Min(0)]
         public float RayleighScatterStrength = 1;
         [Min(0)]

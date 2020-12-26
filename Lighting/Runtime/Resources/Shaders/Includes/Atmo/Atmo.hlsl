@@ -557,7 +557,11 @@ const float3 Scatter(const float3 x, const float3 v, const float depth, const fl
 }
 
 const float3 Sunlight(const float3 x, const float3 s) {
-	return _SunColor * T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810 * smoothstep(-0.006, -0.005, dot(normalize(x), s));
+
+	float lx = length(x);
+	float horiz = -saturate(sqrt(lx * lx - planet_radius * planet_radius) / lx);
+
+	return _SunColor * T_tab_fetch(x, s) * (1 - cos(sun_angle)) * 39810 * smoothstep(horiz, horiz + 0.015, dot(x, s) / lx);
 }
 
 #endif

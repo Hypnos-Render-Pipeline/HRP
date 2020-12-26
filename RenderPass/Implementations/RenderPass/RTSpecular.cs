@@ -29,7 +29,7 @@ namespace HypnosRenderPipeline.RenderPass
         public TexturePin filteredColor = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default));
 
         [NodePin(PinType.In, true)]
-        public TexturePin hiZ = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RFloat, 24), colorCastMode: ColorCastMode.Fixed);
+        public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
         [NodePin(PinType.In)]
         public TexturePin motion = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RGFloat, 0), colorCastMode: ColorCastMode.Fixed);
@@ -100,7 +100,7 @@ namespace HypnosRenderPipeline.RenderPass
                 cb.SetGlobalTexture("_FilteredColor", target);
 
             cb.SetGlobalTexture("_SceneColor", target);
-            cb.SetGlobalTexture("_HiZDepthTex", hiZ);
+            cb.SetGlobalTexture("_HiZDepthTex", depth);
 
             cb.SetGlobalTexture("_SkyBox", skybox);
 
@@ -134,6 +134,8 @@ namespace HypnosRenderPipeline.RenderPass
             cb.DispatchRays(rtShader, "Specular", (uint)desc.width, (uint)desc.height, 1, context.camera);
 
             RenderTexture his0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec_History0"), desc);
+            desc.colorFormat = RenderTextureFormat.RFloat;
+            RenderTexture hisDepth0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec_HistoryDepth0"), desc);
 
             int2 dispatchSize = new int2(wh.x / 8 + (wh.x % 8 != 0 ? 1 : 0), wh.y / 8 + (wh.y % 8 != 0 ? 1 : 0));
             if (blockBuffer.count != dispatchSize.x * dispatchSize.y)
@@ -158,6 +160,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.DispatchCompute(ssr, CSPass.SFilter, dispatchSize.x, dispatchSize.y, 1);
 
             cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_History", his0);
+            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_HistoryDepth", hisDepth0);
             cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_TempResult", tempRef);
             cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_Result", result);
             cb.DispatchCompute(ssr, CSPass.TTFilter, dispatchSize.x, dispatchSize.y, 1);
@@ -176,6 +179,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.DispatchCompute(ssr, CSPass.FinalSynthesis, dispatchSize.x, dispatchSize.y, 1);
 
             cb.CopyTexture(result, target);
+            cb.Blit(depth, hisDepth0); // from Depth24 to R32
 
             cb.ReleaseTemporaryRT(tempRef);
         }

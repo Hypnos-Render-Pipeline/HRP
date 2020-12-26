@@ -1,4 +1,4 @@
-﻿Shader "HRP/Terrain"
+Shader "HRP/Terrain"
 {
     Properties
     {

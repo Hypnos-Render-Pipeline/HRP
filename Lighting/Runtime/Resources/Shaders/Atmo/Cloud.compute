@@ -240,7 +240,7 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 	//_HalfResResult[id] = history; return;
 	if (any(id >= uint2(_WH.xy / 2))) return;
 	if (offset2index(id % 2) == int(_Ray_Index[id / 2].x)) {
-		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.05, 0.3, _Quality.w));
+		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.05, 0.6, _Quality.w));
 		return;
 	}
 
@@ -340,7 +340,7 @@ void FullResolutionUpsample(const uint2 id : SV_DispatchThreadID, const uint2 gr
 		}
 	}
 
-	_Cloud[id] = float4(aces_tonemap((res.xyz + res.a * sc.xyz)), sc.a);
+	_Cloud[id] = float4(/*aces_tonemap*/((res.xyz + res.a * sc.xyz)), sc.a);
 	//tex3Dlod(_WorleyPerlinVolume, float4(uv, 0, 0)).xyzw;
 	//RandSeed(id);
 

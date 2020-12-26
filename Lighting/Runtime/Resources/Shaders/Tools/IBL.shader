@@ -84,9 +84,7 @@ Shader "Hidden/IBL"
 
                 float3 skyIrradiance = _MainTex.SampleLevel(sampler_linear_clamp, info.normal, 0);
 
-                float3 res = PBS(PBS_SS_DIFFUSE, info, info.normal, skyIrradiance, view);
-
-                return float4(res * 2, 1);
+                return float4(skyIrradiance * info.diffuse, 1);
             }
             ENDCG
         }

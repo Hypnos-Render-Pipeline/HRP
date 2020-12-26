@@ -75,15 +75,11 @@ namespace HypnosRenderPipeline.RenderPass
 
             if (desc.sizeMode == SizeCastMode.Fixed)
             {
-                Vector2Int descSize;
                 if (desc.sizeScale != SizeScale.Custom)
                 {
-                    descSize = new Vector2Int(1920, 1080);  // we just need a vector,no mater what its value is.
-                    descSize /= (int)desc.sizeScale;
+                    if (desc.sizeScale != desc2.sizeScale) return false;
                 }
-                else descSize = new Vector2Int(desc.basicDesc.width, desc.basicDesc.height);
-
-                if (descSize != new Vector2Int(desc2.basicDesc.width, desc2.basicDesc.height)) return false;
+                else if (desc.basicDesc.width != desc2.basicDesc.width || desc.basicDesc.height != desc2.basicDesc.height) return false;
             }
 
             if (desc.colorMode != ColorCastMode.FitToInput)

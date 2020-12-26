@@ -114,6 +114,10 @@ namespace HypnosRenderPipeline.RenderGraph
                         var output = output_value.Value.first;
                         if (!pin_map.ContainsKey(output.Name))
                             output.FieldType.GetField("connected").SetValue(output.GetValue(renderNode), renderNode.enabled);
+                        else if (renderNode.enabled)
+                        {
+                            output.FieldType.GetField("connected").SetValue(output.GetValue(renderNode), true);
+                        }
                     }
                 }
             }

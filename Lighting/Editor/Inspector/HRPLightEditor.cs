@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor;
 using UnityEngine;
 using Expression = System.Linq.Expressions.Expression;
@@ -12,8 +12,6 @@ namespace HypnosRenderPipeline
     {
         public Light m_light;
         public HRPLight m_lightData;
-
-        Editor m_cacheEditor;
 
         SerializedObject m_lighdDataObject;
 
@@ -140,9 +138,7 @@ namespace HypnosRenderPipeline
                 EditorGUILayout.EndHorizontal();
                 if (m_lightData.atmoPreset != null)
                 {
-                    if (m_cacheEditor == null)
-                        m_cacheEditor = Editor.CreateEditor(m_lightData.atmoPreset);
-
+                    Editor m_cacheEditor = Editor.CreateEditor(m_lightData.atmoPreset);
                     Rect rect = EditorGUILayout.BeginVertical();
                     EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.3f));
                     m_cacheEditor.OnInspectorGUI();

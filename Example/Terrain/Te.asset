@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f160e23783a4f634f84fde12acb29a71, type: 3}
   m_Name: Te
   m_EditorClassIdentifier: 
-  viewPosition: {x: 103, y: -219, z: 0}
-  viewScale: {x: 0.375937, y: 0.375937, z: 1}
   nodes:
   - nodeName: TerrainPass
     parameters:
@@ -61,10 +59,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1816
-      y: 1648.0504
+      x: 1804.5004
+      y: 1659.0002
       width: 300
-      height: 292
+      height: 340
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.TerrainPass
   - nodeName: SunAtmo
@@ -105,7 +103,7 @@ MonoBehaviour:
       mustConnect: 0
     - name: target
       info: 
-      mustConnect: 1
+      mustConnect: 0
     - name: depth
       info: 
       mustConnect: 1
@@ -121,10 +119,13 @@ MonoBehaviour:
     - name: ao
       info: 
       mustConnect: 0
+    - name: motion
+      info: 
+      mustConnect: 0
     outputs:
     - name: target
       info: 
-      mustConnect: 1
+      mustConnect: 0
     - name: skyBox
       info: 
       mustConnect: 0
@@ -352,8 +353,8 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 4330.7197
-      y: 1681.3956
+      x: 4708.785
+      y: 1749
       width: 300
       height: 105
     info: 
@@ -422,8 +423,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3985.7197
-      y: 1633.3956
+      x: 4363.785
+      y: 1701
       width: 300
       height: 153
     info: 
@@ -466,10 +467,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3611
-      y: 1633
+      x: 3548.2388
+      y: 1681
       width: 300
-      height: 273
+      height: 297
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SkyBoxIBL
   - nodeName: PreZ
@@ -500,6 +501,67 @@ MonoBehaviour:
       height: 150
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.PreZ
+  - nodeName: RTSpecular
+    parameters:
+    - name: useRTShadow
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: lightBuffer
+      info: 
+      mustConnect: 1
+    - name: tiledLights
+      info: 
+      mustConnect: 1
+    - name: lights
+      info: 
+      mustConnect: 0
+    - name: sun
+      info: 
+      mustConnect: 0
+    - name: target
+      info: 
+      mustConnect: 1
+    - name: filteredColor
+      info: 
+      mustConnect: 0
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: motion
+      info: 
+      mustConnect: 0
+    - name: specular
+      info: 
+      mustConnect: 1
+    - name: normal
+      info: 
+      mustConnect: 1
+    - name: ao
+      info: 
+      mustConnect: 0
+    - name: skybox
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 1
+    position:
+      serializedVersion: 2
+      x: 3986
+      y: 1828.9999
+      width: 300
+      height: 412
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.RTSpecular
   edgeRecs:
   - i: 1
     o: 2
@@ -525,10 +587,6 @@ MonoBehaviour:
     o: 0
     i_n: ao
     o_n: microAO
-  - i: 0
-    o: 5
-    i_n: depth
-    o_n: depth
   - i: 0
     o: 5
     i_n: microAO
@@ -593,96 +651,163 @@ MonoBehaviour:
     o: 10
     i_n: depth
     o_n: depth
-  - i: 8
+  - i: 3
+    o: 0
+    i_n: normal
+    o_n: normal
+  - i: 3
+    o: 0
+    i_n: specular
+    o_n: specular
+  - i: 3
+    o: 0
+    i_n: diffuse
+    o_n: diffuse
+  - i: 7
+    o: 0
+    i_n: diffuse
+    o_n: diffuse
+  - i: 7
+    o: 0
+    i_n: specular
+    o_n: specular
+  - i: 7
+    o: 0
+    i_n: normal
+    o_n: normal
+  - i: 1
+    o: 0
+    i_n: normal
+    o_n: normal
+  - i: 1
+    o: 0
+    i_n: specular
+    o_n: specular
+  - i: 1
+    o: 0
+    i_n: diffuse
+    o_n: diffuse
+  - i: 9
+    o: 0
+    i_n: diffuse
+    o_n: diffuse
+  - i: 9
+    o: 0
+    i_n: specular
+    o_n: specular
+  - i: 9
+    o: 0
+    i_n: normal
+    o_n: normal
+  - i: 0
+    o: 5
+    i_n: diffuse
+    o_n: diffuse
+  - i: 0
+    o: 5
+    i_n: specular
+    o_n: specular
+  - i: 0
+    o: 5
+    i_n: normal
+    o_n: normal
+  - i: 0
+    o: 5
+    i_n: depth
+    o_n: depth
+  - i: 1
+    o: 5
+    i_n: motion
+    o_n: motion
+  - i: 11
+    o: 4
+    i_n: lightBuffer
+    o_n: lightBuffer
+  - i: 11
+    o: 4
+    i_n: tiledLights
+    o_n: tileLights
+  - i: 11
+    o: 2
+    i_n: lights
+    o_n: lights
+  - i: 11
+    o: 1
+    i_n: sun
+    o_n: sunBuffer
+  - i: 11
     o: 9
+    i_n: target
+    o_n: target
+  - i: 11
+    o: 7
+    i_n: depth
+    o_n: depth
+  - i: 11
+    o: 0
+    i_n: specular
+    o_n: specular
+  - i: 11
+    o: 0
+    i_n: normal
+    o_n: normal
+  - i: 11
+    o: 0
+    i_n: ao
+    o_n: microAO
+  - i: 11
+    o: 1
+    i_n: skybox
+    o_n: skyBox
+  - i: 8
+    o: 11
     i_n: color
     o_n: target
-  - i: 3
-    o: 0
-    i_n: normal
-    o_n: normal
-  - i: 3
-    o: 0
-    i_n: specular
-    o_n: specular
-  - i: 3
-    o: 0
-    i_n: diffuse
-    o_n: diffuse
-  - i: 7
-    o: 0
-    i_n: diffuse
-    o_n: diffuse
-  - i: 7
-    o: 0
-    i_n: specular
-    o_n: specular
-  - i: 7
-    o: 0
-    i_n: normal
-    o_n: normal
-  - i: 1
-    o: 0
-    i_n: normal
-    o_n: normal
-  - i: 1
-    o: 0
-    i_n: specular
-    o_n: specular
-  - i: 1
-    o: 0
-    i_n: diffuse
-    o_n: diffuse
-  - i: 9
-    o: 0
-    i_n: diffuse
-    o_n: diffuse
-  - i: 9
-    o: 0
-    i_n: specular
-    o_n: specular
-  - i: 9
-    o: 0
-    i_n: normal
-    o_n: normal
+  - i: 11
+    o: 5
+    i_n: motion
+    o_n: motion
   node_edgeRecs:
   - node: 2
     in_edges: 
-    out_edge: 00000000010000000a000000
+    out_edge: 00000000010000000900000029000000
   - node: 1
-    in_edges: 00000000090000000e0000000f0000001e0000001f00000020000000
-    out_edge: 1200000015000000
+    in_edges: 00000000080000000d0000000e0000001c0000001d0000001e00000026000000
+    out_edge: 11000000140000002a00000030000000
   - node: 4
     in_edges: 01000000
-    out_edge: 0200000003000000
+    out_edge: 02000000030000002700000028000000
   - node: 3
-    in_edges: 020000000300000004000000050000000800000018000000190000001a000000
-    out_edge: 0b000000
+    in_edges: 0200000003000000040000000500000007000000160000001700000018000000
+    out_edge: 0a000000
   - node: 0
-    in_edges: 0600000007000000
-    out_edge: 0400000005000000090000000c0000000d0000001400000018000000190000001a0000001b0000001c0000001d0000001e0000001f00000020000000210000002200000023000000
+    in_edges: 0600000022000000230000002400000025000000
+    out_edge: 0400000005000000080000000b0000000c00000013000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f00000020000000210000002d0000002e0000002f000000
   - node: 5
-    in_edges: 16000000
-    out_edge: 060000000700000008000000
+    in_edges: 15000000
+    out_edge: 0600000007000000220000002300000024000000250000002600000032000000
   - node: 7
-    in_edges: 0a0000000b0000000c0000000d0000001b0000001c0000001d000000
-    out_edge: 0e0000000f0000001000000013000000
+    in_edges: 090000000a0000000b0000000c000000190000001a0000001b000000
+    out_edge: 0d0000000e0000000f000000120000002c000000
   - node: 8
-    in_edges: 1000000017000000
-    out_edge: 11000000
+    in_edges: 0f00000031000000
+    out_edge: 10000000
   - node: 6
-    in_edges: 11000000
+    in_edges: 10000000
     out_edge: 
   - node: 9
-    in_edges: 12000000130000001400000015000000210000002200000023000000
-    out_edge: 17000000
+    in_edges: 110000001200000013000000140000001f0000002000000021000000
+    out_edge: 2b000000
   - node: 10
     in_edges: 
-    out_edge: 16000000
+    out_edge: 15000000
+  - node: 11
+    in_edges: 2700000028000000290000002a0000002b0000002c0000002d0000002e0000002f0000003000000032000000
+    out_edge: 31000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
-    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a000000
+    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b000000
   recompiled: 1
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Te_Executor : HRGExecutor\r\n   
@@ -691,25 +816,26 @@ MonoBehaviour:
     LocalLighting LocalLighting3;\r\n        ZBin ZBin4;\r\n        GBuffer GBuffer5;\r\n       
     OutputNode OutputNode6;\r\n        AreaLight AreaLight7;\r\n        CombineColorDepth
     CombineColorDepth8;\r\n        SkyBoxIBL SkyBoxIBL9;\r\n        PreZ PreZ10;\r\n       
-    // ----------------------------\r\n        \r\n        // ShaderIDs:\r\n       
-    // ----------------------------\r\n        System.Int32 TerrainPass0_depth =
-    Shader.PropertyToID(\"TerrainPass0.depth\");\r\n        System.Int32 TerrainPass0_diffuse
-    = Shader.PropertyToID(\"TerrainPass0.diffuse\");\r\n        System.Int32 TerrainPass0_specular
-    = Shader.PropertyToID(\"TerrainPass0.specular\");\r\n        System.Int32 TerrainPass0_normal
-    = Shader.PropertyToID(\"TerrainPass0.normal\");\r\n        System.Int32 TerrainPass0_microAO
-    = Shader.PropertyToID(\"TerrainPass0.microAO\");\r\n        System.Int32 SunAtmo1_sunLight
-    = Shader.PropertyToID(\"SunAtmo1.sunLight\");\r\n        System.Int32 SunAtmo1_target
-    = Shader.PropertyToID(\"SunAtmo1.target\");\r\n        System.Int32 SunAtmo1_depth
-    = Shader.PropertyToID(\"SunAtmo1.depth\");\r\n        System.Int32 SunAtmo1_diffuse
-    = Shader.PropertyToID(\"SunAtmo1.diffuse\");\r\n        System.Int32 SunAtmo1_specular
-    = Shader.PropertyToID(\"SunAtmo1.specular\");\r\n        System.Int32 SunAtmo1_normal
-    = Shader.PropertyToID(\"SunAtmo1.normal\");\r\n        System.Int32 SunAtmo1_ao
-    = Shader.PropertyToID(\"SunAtmo1.ao\");\r\n        System.Int32 SunAtmo1_skyBox
-    = Shader.PropertyToID(\"SunAtmo1.skyBox\");\r\n        System.Int32 SunAtmo1_sunBuffer
-    = Shader.PropertyToID(\"SunAtmo1.sunBuffer\");\r\n        System.Int32 CullLight2_lights
-    = Shader.PropertyToID(\"CullLight2.lights\");\r\n        System.Int32 LocalLighting3_lightBuffer
-    = Shader.PropertyToID(\"LocalLighting3.lightBuffer\");\r\n        System.Int32
-    LocalLighting3_tiledLights = Shader.PropertyToID(\"LocalLighting3.tiledLights\");\r\n       
+    RTSpecular RTSpecular11;\r\n        // ----------------------------\r\n       
+    \r\n        // ShaderIDs:\r\n        // ----------------------------\r\n       
+    System.Int32 TerrainPass0_depth = Shader.PropertyToID(\"TerrainPass0.depth\");\r\n       
+    System.Int32 TerrainPass0_diffuse = Shader.PropertyToID(\"TerrainPass0.diffuse\");\r\n       
+    System.Int32 TerrainPass0_specular = Shader.PropertyToID(\"TerrainPass0.specular\");\r\n       
+    System.Int32 TerrainPass0_normal = Shader.PropertyToID(\"TerrainPass0.normal\");\r\n       
+    System.Int32 TerrainPass0_microAO = Shader.PropertyToID(\"TerrainPass0.microAO\");\r\n       
+    System.Int32 SunAtmo1_sunLight = Shader.PropertyToID(\"SunAtmo1.sunLight\");\r\n       
+    System.Int32 SunAtmo1_target = Shader.PropertyToID(\"SunAtmo1.target\");\r\n       
+    System.Int32 SunAtmo1_depth = Shader.PropertyToID(\"SunAtmo1.depth\");\r\n       
+    System.Int32 SunAtmo1_diffuse = Shader.PropertyToID(\"SunAtmo1.diffuse\");\r\n       
+    System.Int32 SunAtmo1_specular = Shader.PropertyToID(\"SunAtmo1.specular\");\r\n       
+    System.Int32 SunAtmo1_normal = Shader.PropertyToID(\"SunAtmo1.normal\");\r\n       
+    System.Int32 SunAtmo1_ao = Shader.PropertyToID(\"SunAtmo1.ao\");\r\n        System.Int32
+    SunAtmo1_motion = Shader.PropertyToID(\"SunAtmo1.motion\");\r\n        System.Int32
+    SunAtmo1_skyBox = Shader.PropertyToID(\"SunAtmo1.skyBox\");\r\n        System.Int32
+    SunAtmo1_sunBuffer = Shader.PropertyToID(\"SunAtmo1.sunBuffer\");\r\n       
+    System.Int32 CullLight2_lights = Shader.PropertyToID(\"CullLight2.lights\");\r\n       
+    System.Int32 LocalLighting3_lightBuffer = Shader.PropertyToID(\"LocalLighting3.lightBuffer\");\r\n       
+    System.Int32 LocalLighting3_tiledLights = Shader.PropertyToID(\"LocalLighting3.tiledLights\");\r\n       
     System.Int32 LocalLighting3_depth = Shader.PropertyToID(\"LocalLighting3.depth\");\r\n       
     System.Int32 LocalLighting3_diffuse = Shader.PropertyToID(\"LocalLighting3.diffuse\");\r\n       
     System.Int32 LocalLighting3_specular = Shader.PropertyToID(\"LocalLighting3.specular\");\r\n       
@@ -748,6 +874,18 @@ MonoBehaviour:
     System.Int32 SkyBoxIBL9_ao = Shader.PropertyToID(\"SkyBoxIBL9.ao\");\r\n       
     System.Int32 SkyBoxIBL9_irradiance = Shader.PropertyToID(\"SkyBoxIBL9.irradiance\");\r\n       
     System.Int32 PreZ10_depth = Shader.PropertyToID(\"PreZ10.depth\");\r\n       
+    System.Int32 RTSpecular11_lightBuffer = Shader.PropertyToID(\"RTSpecular11.lightBuffer\");\r\n       
+    System.Int32 RTSpecular11_tiledLights = Shader.PropertyToID(\"RTSpecular11.tiledLights\");\r\n       
+    System.Int32 RTSpecular11_lights = Shader.PropertyToID(\"RTSpecular11.lights\");\r\n       
+    System.Int32 RTSpecular11_sun = Shader.PropertyToID(\"RTSpecular11.sun\");\r\n       
+    System.Int32 RTSpecular11_target = Shader.PropertyToID(\"RTSpecular11.target\");\r\n       
+    System.Int32 RTSpecular11_filteredColor = Shader.PropertyToID(\"RTSpecular11.filteredColor\");\r\n       
+    System.Int32 RTSpecular11_depth = Shader.PropertyToID(\"RTSpecular11.depth\");\r\n       
+    System.Int32 RTSpecular11_motion = Shader.PropertyToID(\"RTSpecular11.motion\");\r\n       
+    System.Int32 RTSpecular11_specular = Shader.PropertyToID(\"RTSpecular11.specular\");\r\n       
+    System.Int32 RTSpecular11_normal = Shader.PropertyToID(\"RTSpecular11.normal\");\r\n       
+    System.Int32 RTSpecular11_ao = Shader.PropertyToID(\"RTSpecular11.ao\");\r\n       
+    System.Int32 RTSpecular11_skybox = Shader.PropertyToID(\"RTSpecular11.skybox\");\r\n       
     // ----------------------------\r\n        \r\n        public void Init()\r\n       
     {\r\n            TerrainPass0 = new TerrainPass();\r\n            TerrainPass0.gameCameraCull
     = true;\r\n            TerrainPass0.enabled = true;\r\n            SunAtmo1 =
@@ -771,14 +909,15 @@ MonoBehaviour:
     AreaLight7.enabled = true;\r\n            CombineColorDepth8 = new CombineColorDepth();\r\n           
     CombineColorDepth8.enabled = true;\r\n            SkyBoxIBL9 = new SkyBoxIBL();\r\n           
     SkyBoxIBL9.enabled = true;\r\n            PreZ10 = new PreZ();\r\n           
-    PreZ10.mask = -1;\r\n            PreZ10.enabled = true;\r\n        }\r\n       
-    \r\n        public int Execute(RenderContext context, bool debug = false)\r\n       
-    {\r\n            System.Int32 result = -1;\r\n            \r\n            //PreZ10\r\n           
-    {\r\n                context.commandBuffer.name = \"PreZ10\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    PreZ10.depth.AllocateResourcces(context, PreZ10_depth);\r\n                   
-    PreZ10.depth.name = \"PreZ10.depth\";\r\n                    // outputs\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    PreZ10.mask = -1;\r\n            PreZ10.enabled = true;\r\n            RTSpecular11
+    = new RTSpecular();\r\n            RTSpecular11.useRTShadow = false;\r\n           
+    RTSpecular11.enabled = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
+    context, bool debug = false)\r\n        {\r\n            System.Int32 result
+    = -1;\r\n            \r\n            //PreZ10\r\n            {\r\n               
+    context.commandBuffer.name = \"PreZ10\";\r\n                // preprocess node\r\n               
+    {\r\n                    // inputs\r\n                    PreZ10.depth.AllocateResourcces(context,
+    PreZ10_depth);\r\n                    PreZ10.depth.name = \"PreZ10.depth\";\r\n                   
+    // outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                PreZ10.Execute(context);\r\n                // postprocess
     node\r\n                {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
@@ -788,23 +927,21 @@ MonoBehaviour:
     GBuffer5.depth.connected = true;\r\n                    GBuffer5.depth.Move(PreZ10.depth);\r\n                   
     // outputs\r\n                    GBuffer5.diffuse.AllocateResourcces(context,
     GBuffer5_diffuse);\r\n                    GBuffer5.diffuse.name = \"GBuffer5.diffuse\";\r\n                   
-    GBuffer5.diffuse.connected = false;\r\n                    GBuffer5.specular.AllocateResourcces(context,
+    GBuffer5.diffuse.connected = true;\r\n                    GBuffer5.specular.AllocateResourcces(context,
     GBuffer5_specular);\r\n                    GBuffer5.specular.name = \"GBuffer5.specular\";\r\n                   
-    GBuffer5.specular.connected = false;\r\n                    GBuffer5.normal.AllocateResourcces(context,
+    GBuffer5.specular.connected = true;\r\n                    GBuffer5.normal.AllocateResourcces(context,
     GBuffer5_normal);\r\n                    GBuffer5.normal.name = \"GBuffer5.normal\";\r\n                   
-    GBuffer5.normal.connected = false;\r\n                    GBuffer5.emission.AllocateResourcces(context,
+    GBuffer5.normal.connected = true;\r\n                    GBuffer5.emission.AllocateResourcces(context,
     GBuffer5_emission);\r\n                    GBuffer5.emission.name = \"GBuffer5.emission\";\r\n                   
     GBuffer5.emission.connected = true;\r\n                    GBuffer5.microAO.AllocateResourcces(context,
     GBuffer5_microAO);\r\n                    GBuffer5.microAO.name = \"GBuffer5.microAO\";\r\n                   
     GBuffer5.microAO.connected = true;\r\n                    GBuffer5.motion.AllocateResourcces(context,
     GBuffer5_motion);\r\n                    GBuffer5.motion.name = \"GBuffer5.motion\";\r\n                   
-    GBuffer5.motion.connected = false;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    GBuffer5.motion.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                GBuffer5.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                    GBuffer5.diffuse.ReleaseResourcces(context);\r\n                   
-    GBuffer5.specular.ReleaseResourcces(context);\r\n                    GBuffer5.normal.ReleaseResourcces(context);\r\n                   
-    GBuffer5.motion.ReleaseResourcces(context);\r\n                    GBuffer5.diffuse.connected
-    = true;\r\n                    GBuffer5.specular.connected = true;\r\n                   
+    node\r\n                {\r\n                    GBuffer5.diffuse.connected =
+    true;\r\n                    GBuffer5.specular.connected = true;\r\n                   
     GBuffer5.normal.connected = true;\r\n                    GBuffer5.emission.connected
     = true;\r\n                    GBuffer5.microAO.connected = true;\r\n                   
     GBuffer5.motion.connected = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
@@ -812,23 +949,16 @@ MonoBehaviour:
     {\r\n                context.commandBuffer.name = \"TerrainPass0\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
     TerrainPass0.depth.connected = true;\r\n                    TerrainPass0.depth.Move(GBuffer5.depth);\r\n                   
-    TerrainPass0.diffuse.AllocateResourcces(context, TerrainPass0_diffuse);\r\n                   
-    TerrainPass0.diffuse.name = \"TerrainPass0.diffuse\";\r\n                   
-    TerrainPass0.specular.AllocateResourcces(context, TerrainPass0_specular);\r\n                   
-    TerrainPass0.specular.name = \"TerrainPass0.specular\";\r\n                   
-    TerrainPass0.normal.AllocateResourcces(context, TerrainPass0_normal);\r\n                   
-    TerrainPass0.normal.name = \"TerrainPass0.normal\";\r\n                    TerrainPass0.microAO.connected
-    = true;\r\n                    TerrainPass0.microAO.AllocateResourcces(context,
-    TerrainPass0_microAO);\r\n                    TerrainPass0.microAO.name = \"TerrainPass0.microAO\";\r\n                   
-    TerrainPass0.microAO.CastFrom(context, GBuffer5.microAO);\r\n                   
-    GBuffer5.microAO.ReleaseResourcces(context);\r\n                    // outputs\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                TerrainPass0.Execute(context);\r\n                //
-    postprocess node\r\n                {\r\n                    TerrainPass0.diffuse.connected
-    = true;\r\n                    TerrainPass0.specular.connected = true;\r\n                   
-    TerrainPass0.normal.connected = true;\r\n                    TerrainPass0.microAO.connected
-    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    TerrainPass0.diffuse.connected = true;\r\n                    TerrainPass0.diffuse.Move(GBuffer5.diffuse);\r\n                   
+    TerrainPass0.specular.connected = true;\r\n                    TerrainPass0.specular.Move(GBuffer5.specular);\r\n                   
+    TerrainPass0.normal.connected = true;\r\n                    TerrainPass0.normal.Move(GBuffer5.normal);\r\n                   
+    TerrainPass0.microAO.connected = true;\r\n                    TerrainPass0.microAO.Move(GBuffer5.microAO);\r\n                   
+    // outputs\r\n                }\r\n                // perform node\r\n               
+    TerrainPass0.Execute(context);\r\n                // postprocess node\r\n               
+    {\r\n                    TerrainPass0.diffuse.connected = true;\r\n                   
+    TerrainPass0.specular.connected = true;\r\n                    TerrainPass0.normal.connected
+    = true;\r\n                    TerrainPass0.microAO.connected = true;\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //CullLight2\r\n           
     {\r\n                context.commandBuffer.name = \"CullLight2\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -870,10 +1000,8 @@ MonoBehaviour:
     = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                LocalLighting3.Execute(context);\r\n                //
-    postprocess node\r\n                {\r\n                    LocalLighting3.lightBuffer.ReleaseResourcces(context);\r\n                   
-    LocalLighting3.tiledLights.ReleaseResourcces(context);\r\n                   
-    LocalLighting3.emission.ReleaseResourcces(context);\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    postprocess node\r\n                {\r\n                    LocalLighting3.emission.ReleaseResourcces(context);\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //AreaLight7\r\n           
     {\r\n                context.commandBuffer.name = \"AreaLight7\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -901,16 +1029,17 @@ MonoBehaviour:
     SunAtmo1.specular.connected = true;\r\n                    SunAtmo1.specular.Move(TerrainPass0.specular);\r\n                   
     SunAtmo1.normal.connected = true;\r\n                    SunAtmo1.normal.Move(TerrainPass0.normal);\r\n                   
     SunAtmo1.ao.connected = true;\r\n                    SunAtmo1.ao.Move(TerrainPass0.microAO);\r\n                   
+    SunAtmo1.motion.connected = true;\r\n                    SunAtmo1.motion.Move(GBuffer5.motion);\r\n                   
     // outputs\r\n                    SunAtmo1.skyBox.AllocateResourcces(context,
     SunAtmo1_skyBox);\r\n                    SunAtmo1.skyBox.name = \"SunAtmo1.skyBox\";\r\n                   
     SunAtmo1.skyBox.connected = true;\r\n                    SunAtmo1.sunBuffer.AllocateResourcces(context,
     SunAtmo1_sunBuffer);\r\n                    SunAtmo1.sunBuffer.name = \"SunAtmo1.sunBuffer\";\r\n                   
-    SunAtmo1.sunBuffer.connected = false;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    SunAtmo1.sunBuffer.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                SunAtmo1.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                    SunAtmo1.sunBuffer.ReleaseResourcces(context);\r\n                   
-    SunAtmo1.skyBox.connected = true;\r\n                    SunAtmo1.sunBuffer.connected
-    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                {\r\n                    SunAtmo1.skyBox.connected =
+    true;\r\n                    SunAtmo1.sunBuffer.connected = true;\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //SkyBoxIBL9\r\n           
     {\r\n                context.commandBuffer.name = \"SkyBoxIBL9\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -926,13 +1055,35 @@ MonoBehaviour:
     SkyBoxIBL9.irradiance.connected = false;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                SkyBoxIBL9.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                    SkyBoxIBL9.skyBox.ReleaseResourcces(context);\r\n                   
-    SkyBoxIBL9.irradiance.ReleaseResourcces(context);\r\n                    SkyBoxIBL9.irradiance.connected
-    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                {\r\n                    SkyBoxIBL9.irradiance.ReleaseResourcces(context);\r\n                   
+    SkyBoxIBL9.irradiance.connected = true;\r\n                }\r\n               
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //RTSpecular11\r\n           
+    {\r\n                context.commandBuffer.name = \"RTSpecular11\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    RTSpecular11.lightBuffer.connected = true;\r\n                    RTSpecular11.lightBuffer.Move(ZBin4.lightBuffer);\r\n                   
+    RTSpecular11.tiledLights.connected = true;\r\n                    RTSpecular11.tiledLights.Move(ZBin4.tileLights);\r\n                   
+    RTSpecular11.lights.connected = true;\r\n                    RTSpecular11.lights.Move(CullLight2.lights);\r\n                   
+    RTSpecular11.sun.connected = true;\r\n                    RTSpecular11.sun.Move(SunAtmo1.sunBuffer);\r\n                   
+    RTSpecular11.target.connected = true;\r\n                    RTSpecular11.target.Move(SkyBoxIBL9.target);\r\n                   
+    RTSpecular11.filteredColor.AllocateResourcces(context, RTSpecular11_filteredColor);\r\n                   
+    RTSpecular11.filteredColor.name = \"RTSpecular11.filteredColor\";\r\n                   
+    RTSpecular11.depth.connected = true;\r\n                    RTSpecular11.depth.Move(AreaLight7.depth);\r\n                   
+    RTSpecular11.motion.connected = true;\r\n                    RTSpecular11.motion.Move(GBuffer5.motion);\r\n                   
+    RTSpecular11.specular.connected = true;\r\n                    RTSpecular11.specular.Move(TerrainPass0.specular);\r\n                   
+    RTSpecular11.normal.connected = true;\r\n                    RTSpecular11.normal.Move(TerrainPass0.normal);\r\n                   
+    RTSpecular11.ao.connected = true;\r\n                    RTSpecular11.ao.Move(TerrainPass0.microAO);\r\n                   
+    RTSpecular11.skybox.connected = true;\r\n                    RTSpecular11.skybox.Move(SunAtmo1.skyBox);\r\n                   
+    // outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                RTSpecular11.Execute(context);\r\n                //
+    postprocess node\r\n                {\r\n                    RTSpecular11.sun.ReleaseResourcces(context);\r\n                   
+    RTSpecular11.filteredColor.ReleaseResourcces(context);\r\n                }\r\n               
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //CombineColorDepth8\r\n           
     {\r\n                context.commandBuffer.name = \"CombineColorDepth8\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    CombineColorDepth8.color.connected = true;\r\n                    CombineColorDepth8.color.Move(SkyBoxIBL9.target);\r\n                   
+    CombineColorDepth8.color.connected = true;\r\n                    CombineColorDepth8.color.Move(RTSpecular11.target);\r\n                   
     CombineColorDepth8.depth.connected = true;\r\n                    CombineColorDepth8.depth.Move(AreaLight7.depth);\r\n                   
     // outputs\r\n                    CombineColorDepth8.combined.AllocateResourcces(context,
     CombineColorDepth8_combined);\r\n                    CombineColorDepth8.combined.name
@@ -945,22 +1096,18 @@ MonoBehaviour:
     context.commandBuffer.Clear();\r\n            }\r\n            //OutputNode6\r\n           
     {\r\n                context.commandBuffer.name = \"OutputNode6\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    OutputNode6.result.connected = true;\r\n                    OutputNode6.result.AllocateResourcces(context,
-    OutputNode6_result);\r\n                    OutputNode6.result.name = \"OutputNode6.result\";\r\n                   
-    OutputNode6.result.CastFrom(context, CombineColorDepth8.combined);\r\n                   
-    CombineColorDepth8.combined.ReleaseResourcces(context);\r\n                   
-    // outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                result = OutputNode6.result.handle;\r\n               
-    return result;\r\n            }\r\n        }\r\n        \r\n        public void
-    Dispose()\r\n        {\r\n            // TerrainPass0\r\n            {\r\n               
-    TerrainPass0.depth.Dispose();\r\n                TerrainPass0.diffuse.Dispose();\r\n               
-    TerrainPass0.specular.Dispose();\r\n                TerrainPass0.normal.Dispose();\r\n               
-    TerrainPass0.microAO.Dispose();\r\n                TerrainPass0.Dispose();\r\n           
-    }\r\n            // SunAtmo1\r\n            {\r\n                SunAtmo1.sunLight.Dispose();\r\n               
-    SunAtmo1.target.Dispose();\r\n                SunAtmo1.depth.Dispose();\r\n               
-    SunAtmo1.diffuse.Dispose();\r\n                SunAtmo1.specular.Dispose();\r\n               
-    SunAtmo1.normal.Dispose();\r\n                SunAtmo1.ao.Dispose();\r\n               
+    OutputNode6.result.connected = true;\r\n                    OutputNode6.result.Move(CombineColorDepth8.combined);\r\n                   
+    // outputs\r\n                }\r\n                // perform node\r\n               
+    result = OutputNode6.result.handle;\r\n                return result;\r\n           
+    }\r\n        }\r\n        \r\n        public void Dispose()\r\n        {\r\n           
+    // TerrainPass0\r\n            {\r\n                TerrainPass0.depth.Dispose();\r\n               
+    TerrainPass0.diffuse.Dispose();\r\n                TerrainPass0.specular.Dispose();\r\n               
+    TerrainPass0.normal.Dispose();\r\n                TerrainPass0.microAO.Dispose();\r\n               
+    TerrainPass0.Dispose();\r\n            }\r\n            // SunAtmo1\r\n           
+    {\r\n                SunAtmo1.sunLight.Dispose();\r\n                SunAtmo1.target.Dispose();\r\n               
+    SunAtmo1.depth.Dispose();\r\n                SunAtmo1.diffuse.Dispose();\r\n               
+    SunAtmo1.specular.Dispose();\r\n                SunAtmo1.normal.Dispose();\r\n               
+    SunAtmo1.ao.Dispose();\r\n                SunAtmo1.motion.Dispose();\r\n               
     SunAtmo1.skyBox.Dispose();\r\n                SunAtmo1.sunBuffer.Dispose();\r\n               
     SunAtmo1.Dispose();\r\n            }\r\n            // CullLight2\r\n           
     {\r\n                CullLight2.lights.Dispose();\r\n                CullLight2.Dispose();\r\n           
@@ -992,4 +1139,11 @@ MonoBehaviour:
     SkyBoxIBL9.ao.Dispose();\r\n                SkyBoxIBL9.irradiance.Dispose();\r\n               
     SkyBoxIBL9.Dispose();\r\n            }\r\n            // PreZ10\r\n           
     {\r\n                PreZ10.depth.Dispose();\r\n                PreZ10.Dispose();\r\n           
+    }\r\n            // RTSpecular11\r\n            {\r\n                RTSpecular11.lightBuffer.Dispose();\r\n               
+    RTSpecular11.tiledLights.Dispose();\r\n                RTSpecular11.lights.Dispose();\r\n               
+    RTSpecular11.sun.Dispose();\r\n                RTSpecular11.target.Dispose();\r\n               
+    RTSpecular11.filteredColor.Dispose();\r\n                RTSpecular11.depth.Dispose();\r\n               
+    RTSpecular11.motion.Dispose();\r\n                RTSpecular11.specular.Dispose();\r\n               
+    RTSpecular11.normal.Dispose();\r\n                RTSpecular11.ao.Dispose();\r\n               
+    RTSpecular11.skybox.Dispose();\r\n                RTSpecular11.Dispose();\r\n           
     }\r\n        }\r\n    }\r\n}\r\n"
