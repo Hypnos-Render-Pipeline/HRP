@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using HypnosRenderPipeline.Tools;
 
 namespace HypnosRenderPipeline.RenderPass
@@ -22,9 +22,16 @@ namespace HypnosRenderPipeline.RenderPass
                                                     ColorCastMode.FitToInput,
                                                     SizeScale.Full);
 
+        public bool ToneMap = false;
+
+        static MaterialWithName toneMat = new MaterialWithName("Hidden/ACES");
+
         public override void Execute(RenderContext context)
         {
-            context.commandBuffer.Blit(color, combined);
+            if (ToneMap)
+                context.commandBuffer.Blit(color, combined, toneMat);
+            else
+                context.commandBuffer.Blit(color, combined);
             context.commandBuffer.Blit(depth, combined, MaterialWithName.depthBlit);
             context.context.ExecuteCommandBuffer(context.commandBuffer);
             context.commandBuffer.Clear();

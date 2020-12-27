@@ -68,7 +68,7 @@ Shader "HRP/Terrain"
                     float3 normal = Normal(wpos);
 
                     float4 place_holder;
-                    Encode2GBuffer(0.5, 0.6, 0, normal, 0, normal, 0, target0, target1, target2, place_holder, target3);
+                    Encode2GBuffer(0.25, 0.6, 0, normal, 0, normal, 0, target0, target1, target2, place_holder, target3);
                 }
 
             ENDCG

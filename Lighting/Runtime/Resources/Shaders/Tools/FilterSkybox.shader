@@ -85,7 +85,7 @@ Shader "Hidden/FilterSkybox"
                             }
                         }
                     }
-                    return res / w / 3.14159265359;
+                    return res / w;
                 }
             ENDCG
         }

@@ -92,6 +92,11 @@ MonoBehaviour:
       type_str: System.Single
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e33323030303c2f666c6f61743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
+    - name: applyAtmoFog
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
@@ -405,6 +410,11 @@ MonoBehaviour:
     nodeType_str: HypnosRenderPipeline.RenderPass.AreaLight
   - nodeName: CombineColorDepth
     parameters:
+    - name: ToneMap
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
@@ -467,8 +477,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3548.2388
-      y: 1681
+      x: 3523.3518
+      y: 1930
       width: 300
       height: 297
     info: 
@@ -755,10 +765,6 @@ MonoBehaviour:
     o: 0
     i_n: ao
     o_n: microAO
-  - i: 11
-    o: 1
-    i_n: skybox
-    o_n: skyBox
   - i: 8
     o: 11
     i_n: color
@@ -767,13 +773,17 @@ MonoBehaviour:
     o: 5
     i_n: motion
     o_n: motion
+  - i: 11
+    o: 1
+    i_n: skybox
+    o_n: skyBox
   node_edgeRecs:
   - node: 2
     in_edges: 
     out_edge: 00000000010000000900000029000000
   - node: 1
     in_edges: 00000000080000000d0000000e0000001c0000001d0000001e00000026000000
-    out_edge: 11000000140000002a00000030000000
+    out_edge: 11000000140000002a00000032000000
   - node: 4
     in_edges: 01000000
     out_edge: 02000000030000002700000028000000
@@ -785,12 +795,12 @@ MonoBehaviour:
     out_edge: 0400000005000000080000000b0000000c00000013000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f00000020000000210000002d0000002e0000002f000000
   - node: 5
     in_edges: 15000000
-    out_edge: 0600000007000000220000002300000024000000250000002600000032000000
+    out_edge: 0600000007000000220000002300000024000000250000002600000031000000
   - node: 7
     in_edges: 090000000a0000000b0000000c000000190000001a0000001b000000
     out_edge: 0d0000000e0000000f000000120000002c000000
   - node: 8
-    in_edges: 0f00000031000000
+    in_edges: 0f00000030000000
     out_edge: 10000000
   - node: 6
     in_edges: 10000000
@@ -802,13 +812,13 @@ MonoBehaviour:
     in_edges: 
     out_edge: 15000000
   - node: 11
-    in_edges: 2700000028000000290000002a0000002b0000002c0000002d0000002e0000002f0000003000000032000000
-    out_edge: 31000000
+    in_edges: 2700000028000000290000002a0000002b0000002c0000002d0000002e0000002f0000003100000032000000
+    out_edge: 30000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
     nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b000000
-  recompiled: 1
+  recompiled: 0
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Te_Executor : HRGExecutor\r\n   
     {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
@@ -892,32 +902,34 @@ MonoBehaviour:
     new SunAtmo();\r\n            SunAtmo1.TLutResolution = new Vector2Int(128, 128);\r\n           
     SunAtmo1.SkyLutResolution = new Vector2Int(64, 224);\r\n            SunAtmo1.MSLutResolution
     = new Vector2Int(32, 32);\r\n            SunAtmo1.VolumeResolution = new Vector3Int(32,
-    32, 32);\r\n            SunAtmo1.VolumeMaxDepth = 32000f;\r\n            SunAtmo1.enabled
-    = true;\r\n            CullLight2 = new CullLight();\r\n            CullLight2.cullingType
-    = CullLight.CullingType.Frustum;\r\n            CullLight2.radius = 4000f;\r\n           
-    CullLight2.faraway = 2000f;\r\n            CullLight2.enabled = true;\r\n           
-    LocalLighting3 = new LocalLighting();\r\n            LocalLighting3.debugTiledLight
-    = false;\r\n            LocalLighting3.enabled = true;\r\n            ZBin4 =
-    new ZBin();\r\n            ZBin4.tileCount = new Vector3Int(128, 64, 24);\r\n           
-    ZBin4.maxLightCountPerTile = 64;\r\n            ZBin4.includeRTLight = false;\r\n           
-    ZBin4.enabled = true;\r\n            GBuffer5 = new GBuffer();\r\n           
-    GBuffer5.a = 1f;\r\n            GBuffer5.b = false;\r\n            GBuffer5.c
-    = new Vector2(1.10973f, 2f);\r\n            GBuffer5.d = E.d;\r\n           
-    GBuffer5.e = 10;\r\n            GBuffer5.f = new Color(1f, 2f, 3f, 0.22334f);\r\n           
-    GBuffer5.enabled = true;\r\n            OutputNode6 = new OutputNode();\r\n           
-    OutputNode6.enabled = true;\r\n            AreaLight7 = new AreaLight();\r\n           
-    AreaLight7.enabled = true;\r\n            CombineColorDepth8 = new CombineColorDepth();\r\n           
-    CombineColorDepth8.enabled = true;\r\n            SkyBoxIBL9 = new SkyBoxIBL();\r\n           
-    SkyBoxIBL9.enabled = true;\r\n            PreZ10 = new PreZ();\r\n           
-    PreZ10.mask = -1;\r\n            PreZ10.enabled = true;\r\n            RTSpecular11
-    = new RTSpecular();\r\n            RTSpecular11.useRTShadow = false;\r\n           
-    RTSpecular11.enabled = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
-    context, bool debug = false)\r\n        {\r\n            System.Int32 result
-    = -1;\r\n            \r\n            //PreZ10\r\n            {\r\n               
-    context.commandBuffer.name = \"PreZ10\";\r\n                // preprocess node\r\n               
-    {\r\n                    // inputs\r\n                    PreZ10.depth.AllocateResourcces(context,
-    PreZ10_depth);\r\n                    PreZ10.depth.name = \"PreZ10.depth\";\r\n                   
-    // outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    32, 32);\r\n            SunAtmo1.VolumeMaxDepth = 32000f;\r\n            SunAtmo1.applyAtmoFog
+    = true;\r\n            SunAtmo1.enabled = true;\r\n            CullLight2 = new
+    CullLight();\r\n            CullLight2.cullingType = CullLight.CullingType.Frustum;\r\n           
+    CullLight2.radius = 4000f;\r\n            CullLight2.faraway = 2000f;\r\n           
+    CullLight2.enabled = true;\r\n            LocalLighting3 = new LocalLighting();\r\n           
+    LocalLighting3.debugTiledLight = false;\r\n            LocalLighting3.enabled
+    = true;\r\n            ZBin4 = new ZBin();\r\n            ZBin4.tileCount = new
+    Vector3Int(128, 64, 24);\r\n            ZBin4.maxLightCountPerTile = 64;\r\n           
+    ZBin4.includeRTLight = false;\r\n            ZBin4.enabled = true;\r\n           
+    GBuffer5 = new GBuffer();\r\n            GBuffer5.a = 1f;\r\n            GBuffer5.b
+    = false;\r\n            GBuffer5.c = new Vector2(1.10973f, 2f);\r\n           
+    GBuffer5.d = E.d;\r\n            GBuffer5.e = 10;\r\n            GBuffer5.f =
+    new Color(1f, 2f, 3f, 0.22334f);\r\n            GBuffer5.enabled = true;\r\n           
+    OutputNode6 = new OutputNode();\r\n            OutputNode6.enabled = true;\r\n           
+    AreaLight7 = new AreaLight();\r\n            AreaLight7.enabled = true;\r\n           
+    CombineColorDepth8 = new CombineColorDepth();\r\n            CombineColorDepth8.ToneMap
+    = true;\r\n            CombineColorDepth8.enabled = true;\r\n            SkyBoxIBL9
+    = new SkyBoxIBL();\r\n            SkyBoxIBL9.enabled = true;\r\n            PreZ10
+    = new PreZ();\r\n            PreZ10.mask = -1;\r\n            PreZ10.enabled
+    = true;\r\n            RTSpecular11 = new RTSpecular();\r\n            RTSpecular11.useRTShadow
+    = false;\r\n            RTSpecular11.enabled = true;\r\n        }\r\n       
+    \r\n        public int Execute(RenderContext context, bool debug = false)\r\n       
+    {\r\n            System.Int32 result = -1;\r\n            \r\n            //PreZ10\r\n           
+    {\r\n                context.commandBuffer.name = \"PreZ10\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    PreZ10.depth.AllocateResourcces(context, PreZ10_depth);\r\n                   
+    PreZ10.depth.name = \"PreZ10.depth\";\r\n                    // outputs\r\n                   
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                PreZ10.Execute(context);\r\n                // postprocess
     node\r\n                {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               

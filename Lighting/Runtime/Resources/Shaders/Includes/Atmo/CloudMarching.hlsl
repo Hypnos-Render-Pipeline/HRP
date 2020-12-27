@@ -30,23 +30,6 @@ float4 _Time;
 #endif
 static float2 cloud_radi = float2(1500, 4000);
 
-float3 aces_tonemap(float3 color) {
-	float3x3 m1 = float3x3(
-		0.59719, 0.35458, 0.04823,
-		0.07600, 0.90834, 0.01566,
-		0.02840, 0.13383, 0.83777
-		);
-	float3x3 m2 = float3x3(
-		1.60475, -0.53108, -0.07367,
-		-0.10208, 1.10813, -0.00605,
-		-0.00327, -0.07276, 1.07602
-		);
-	float3 v = mul(m1, color);
-	float3 a = v * (v + 0.0245786) - 0.000090537;
-	float3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
-	return clamp(mul(m2, (a / b)), 0.0, 1.0);
-}
-
 uint sampleIndex = 0;
 float hash(float n)
 {
@@ -321,6 +304,7 @@ inline float2 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 		final_cloud = rescale01(base_cloud_with_coverage, high_freq_noise_modifier * 0.5, 1.0);
 
 	}
+
 	return float2(final_cloud * smoothstep(0, 0.5, height_fraction) * 0.05 * _CloudDensity * lerp(0.1, 1, weather_data.y), oh);
 }
 
@@ -399,7 +383,6 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 
 	int start_index = 0;
 	bool find_hit = false;
-	bool debug = false;
 	{
 		[loop]
 		for (int i = 0; i < actual_sample_num; i += 8)
@@ -463,7 +446,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 						shadowScatter += Cloud(lpos_, fade, max(lod, j / shadow_sample_num * 4));
 					}
 					float forward_scatter = exp(-shadowScatter * shadowLength);					
-					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(InvVDotS01 * exp(- 0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
+					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(- 0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
 				}
 
 				float light = energy;
@@ -524,7 +507,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 						shadowScatter += Cloud(lpos_, fade, max(lod, j / shadow_sample_num * 4), true);
 					}
 					float forward_scatter = exp(-shadowScatter * shadowLength);
-					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.85 + 0.15, 1, smoothstep(0, 0.7, InvVDotS01)) * max(InvVDotS01 * exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
+					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.85 + 0.15, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
 				}
 
 				float light = energy;
@@ -547,7 +530,10 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 			float scatter = sh.x;
 			scatter = exp(-scatter * stepLength);
 			trans *= scatter;
-			if (trans <= 0.01) break;
+			if (trans <= 0.01) {
+				trans = 0;
+				break;
+			}
 		}
 	}
 
@@ -560,8 +546,6 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 	res.xy *= fade;
 	res.a = 1 - (1 - res.a) * fade;
 	res.z = hit_h.y != 0 ? hit_h.x / hit_h.y : 0;
-
-	if (hit_h.y != 0 && debug) return 111;
 
 	return res;
 }

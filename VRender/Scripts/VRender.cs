@@ -498,7 +498,7 @@ public class VRender : IDisposable
             var sun = LightManager.sunLight;
             var atmo = sun.atmoPreset;
             atmo = sun.atmoPreset;
-            lum = sun.color * sun.radiance * math.pow(10, 5f);
+            lum = sun.color * sun.radiance * math.pow(10, 5.7f);
             dir = -sun.direction;
 
             if (atmo.GenerateLut(hash, cb, TLut, MSLut, lum, dir)) ReRender();

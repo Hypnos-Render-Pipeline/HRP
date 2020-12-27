@@ -61,7 +61,7 @@ Material:
     - _IndexRate: 0.5
     - _Iridescence: 0
     - _Ld: 0.1
-    - _Metallic: 0.5
+    - _Metallic: 1
     - _Mode: 0
     - _Modified: 0
     - _Sheen: 0

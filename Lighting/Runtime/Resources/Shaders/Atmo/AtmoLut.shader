@@ -162,6 +162,7 @@ Shader "Hidden/AtmoLut"
                 sampler2D _MainTex;
 
                 int _RenderGround;
+                int _ApplyAtmoFog;
                 float4x4 _P_Inv, _V_Inv;
 
                 float4 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)
@@ -197,8 +198,14 @@ Shader "Hidden/AtmoLut"
 
                     float4 sceneColor = tex2Dlod(_MainTex, float4(i.uv, 0, 0));
 
-                    float4 output = float4(lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(x, v, depth, s), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
-                                    +(sky_occ ? sceneColor.xyz : 0) * T(x, x + depth * v), sceneColor.a);
+                    float4 output;
+                    if (_ApplyAtmoFog) {
+                        output = float4(lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(x, v, depth, s), sky_occ ? 1 - smoothstep(0.9, 1, depth / _MaxDepth) : 0)
+                                + (sky_occ ? sceneColor.xyz : 0) * T(x, x + depth * v), sceneColor.a);
+                    }
+                    else {
+                        output = float4(sky_occ ? sceneColor.xyz : ScatterTable(x, v, s, _RenderGround) * _SunLuminance, sceneColor.a);
+                    }
 //output = float4(Scatter(x, v, _MaxDepth, s),0);
 //output = float4(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, 0);
                     uint2 id = i.vertex.xy;

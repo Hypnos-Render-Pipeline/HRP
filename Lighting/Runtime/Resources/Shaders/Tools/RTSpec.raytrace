@@ -58,7 +58,6 @@ void Specular()
         pos = worldPos.xyz / worldPos.w;
     }
     float3 view = normalize(camPos - pos);
-    pos += view * 0.01;
 
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(0,
@@ -75,6 +74,7 @@ void Specular()
     n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
 
     float3 dir = reflect(-view, n);
+    pos += (view + info.normal + dir) * saturate(1 - dot(dir, info.normal)) * 0.18;
 
     GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
 

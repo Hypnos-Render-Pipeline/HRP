@@ -204,9 +204,10 @@ namespace HypnosRenderPipeline
         /// Render atmo, will use the preset camera parameters(_ProjectionParams, _ScreenParams, unity_CameraProjection, unity_CameraToWorld, _WorldSpaceCameraPos). 
         /// If these value are not set in your pipeline, please set them before call this function.
         /// </summary>
-        public void RenderAtmoToRT(CommandBuffer cb, RenderTargetIdentifier sceneColor, int depth, RenderTargetIdentifier target)
+        public void RenderAtmoToRT(CommandBuffer cb, RenderTargetIdentifier sceneColor, int depth, RenderTargetIdentifier target, bool applyAtmoFog = false)
         {
             cb.SetGlobalTexture("_DepthTex", depth);
+            lutMat.material.SetInt("_ApplyAtmoFog", applyAtmoFog ? 1 : 0);
             cb.Blit(sceneColor, target, lutMat, 3);
         }
 

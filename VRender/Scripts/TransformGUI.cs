@@ -19,13 +19,12 @@ public class TransformGUI : Editor
     Quaternion r;
     Vector3 s;
 
-    Editor m_cacheEditor;
 
     public override void OnInspectorGUI()
     {
-        if (m_cacheEditor == null)
-            m_cacheEditor = CreateEditor(target, Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.TransformInspector"));
-        m_cacheEditor.OnInspectorGUI();
+        Editor editor = CreateEditor(target, Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.TransformInspector"));
+        editor.OnInspectorGUI();
+        DestroyImmediate(editor);
 
         EditorGUI.BeginDisabledGroup(true);
         EditorGUILayout.HelpBox("This Inspector has been override", MessageType.Info);

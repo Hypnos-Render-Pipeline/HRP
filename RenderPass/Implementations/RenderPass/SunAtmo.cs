@@ -18,6 +18,8 @@ namespace HypnosRenderPipeline.RenderPass
 
         public float VolumeMaxDepth = 32000;
 
+        public bool applyAtmoFog = true;
+
         // pins
         [NodePin(PinType.In)]
         public LightListPin sunLight = new LightListPin();
@@ -209,13 +211,13 @@ namespace HypnosRenderPipeline.RenderPass
             if (sun == null)
             {
                 atmo = null;
-                lum = Color.white * math.pow(10, 5f);
+                lum = Color.white * math.pow(10, 5.7f);
                 dir = Vector3.up;
             }
             else
             {
                 atmo = sun.atmoPreset;
-                lum = sun.color * sun.radiance * math.pow(10, 5f);
+                lum = sun.color * sun.radiance * math.pow(10, 5.7f);
                 dir = -sun.direction;
             }
             if (atmo != null)
@@ -235,7 +237,7 @@ namespace HypnosRenderPipeline.RenderPass
                 cb.GetTemporaryRT(tempColor, target.desc.basicDesc);
                 cb.Blit(target, tempColor, lightMat, 4); // directional sun light
 
-                atmo.RenderAtmoToRT(cb, tempColor, depth, target);
+                atmo.RenderAtmoToRT(cb, tempColor, depth, target, applyAtmoFog);
 
                 if (atmo.quality != HRPAtmo.Quality.none)
                 {
@@ -280,11 +282,11 @@ namespace HypnosRenderPipeline.RenderPass
                     }
                     else if (atmo.quality == HRPAtmo.Quality.high)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(40, 10, 256, 0.66f));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(40, 9, 256, 0.66f));
                     }
                     else
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(20, 20, 512, 1));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(20, 12, 512, 1));
                     }
 
 #if UNITY_EDITOR

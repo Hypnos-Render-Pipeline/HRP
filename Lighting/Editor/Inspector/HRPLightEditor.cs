@@ -138,11 +138,12 @@ namespace HypnosRenderPipeline
                 EditorGUILayout.EndHorizontal();
                 if (m_lightData.atmoPreset != null)
                 {
-                    Editor m_cacheEditor = Editor.CreateEditor(m_lightData.atmoPreset);
+                    Editor editor = Editor.CreateEditor(m_lightData.atmoPreset);
                     Rect rect = EditorGUILayout.BeginVertical();
                     EditorGUI.DrawRect(rect, new Color(0f, 0f, 0f, 0.3f));
-                    m_cacheEditor.OnInspectorGUI();
+                    editor.OnInspectorGUI();
                     EditorGUILayout.EndVertical();
+                    DestroyImmediate(editor);
                 }
             }
 
