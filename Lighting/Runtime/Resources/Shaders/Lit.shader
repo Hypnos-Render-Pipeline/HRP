@@ -1,4 +1,4 @@
-﻿Shader "HRP/Lit"
+Shader "HRP/Lit"
 {
     Properties
     {
@@ -50,39 +50,13 @@
     // Rasterization Shader
     SubShader
     {
-		Tags { "Queue" = "Geometry" }
-		Pass
-		{
-			ColorMask 0
-			Tags { "LightMode" = "PreZ" }
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			float4 vert(float4 vertex : POSITION) : SV_POSITION { return UnityObjectToClipPos(vertex); }
-			void frag() {}
-			ENDCG
-		}
-		Pass
-		{
-			Tags { "LightMode" = "GBuffer_Equal" }
+		HLSLINCLUDE
 
-			ZWrite off
-			ZTest Equal
+			#include "./Includes/LitInclude.hlsl"
 
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-
-			#include "UnityCG.cginc"
-			#include "./Includes/GBuffer.hlsl"
-
-			#pragma shader_feature _NORMALMAP
-			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP
-			#pragma shader_feature _AOMAP
-			#pragma shader_feature _IRIDESCENCE
-
-
+			//-------------------------------------------------
+			//---------  Material Define ----------------------
+			//-------------------------------------------------
 			CBUFFER_START(UnityPerMaterial)
 				float4			_Color;
 				sampler2D 		_MainTex;
@@ -103,340 +77,25 @@
 				sampler2D		_DincMap;
 			CBUFFER_END
 
-			struct a2v {
-				float4 vertex : POSITION;
-				float3 normal : NORMAL;
-				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;
-			};
+			VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent) {
+				VertexInfo info;
+				info.uv = TRANSFORM_TEX(uv, _MainTex);
+				info.oOffset = 0;
+				info.oNormal = oNormal;
+				info.oTangent = oTangent;
 
-			struct v2f {
-				float4 vertex : SV_POSITION;
-				float3 normal : NORMAL;
-				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;	
-				#if _IRIDESCENCE
-				float3 wpos : TEXCOORD1;
-				#endif
-			};
-
-			float4x4 _V_Inv;
-
-			v2f vert(a2v i) {
-				v2f o;
-				o.vertex = UnityObjectToClipPos(i.vertex);
-				o.normal = UnityObjectToWorldNormal(i.normal);
-				o.tangent = float4(UnityObjectToWorldDir(i.tangent.xyz), i.tangent.w);
-				o.uv = TRANSFORM_TEX(i.uv, _MainTex);
-				#if _IRIDESCENCE
-				o.wpos = mul(unity_ObjectToWorld, i.vertex);
-				#endif
-				return o;
+				return info;
 			}
 
-			half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
-			{
-				#if defined(UNITY_NO_DXT5nm)
-					return packednormal.xyz * 2 - 1;
-				#else
-					half3 normal;
-					normal.xy = (packednormal.wy * 2 - 1);
-					normal.xy *= bumpScale;
-					normal.z = sqrt(1.0 - saturate(dot(normal.xy, normal.xy)));
-					return normal;
-				#endif
-			}
-
-			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3, out fixed4 target4 : SV_Target4) {
-
-				fixed3 diffuse = _Color * tex2D(_MainTex, i.uv).rgb;
-
-				#if _METALLICGLOSSMAP
-					float4 m_s = tex2D(_MetallicGlossMap, i.uv);
-					fixed metallic = m_s.r;
-					fixed smoothness = m_s.a * _GlossMapScale;
-				#else
-					fixed metallic = _Metallic;
-					fixed smoothness = _Smoothness;
-				#endif //_METALLICGLOSSMAP
-
-				#if _NORMALMAP
-					float4 ndata = tex2D(_BumpMap, i.uv);
-					float3 normal = UnpackScaleNormal(ndata, _BumpScale);
-					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
-					float3 binormal = cross(n, t) * i.tangent.w;
-					float3x3 rotation = float3x3(t, binormal, n);
-					normal = mul(normal, rotation);
-				#else
-					float3 normal = normalize(i.normal);
-				#endif // _NORMALMAP
-				#if _EMISSION
-					float3 emission = _EmissionColor * tex2D(_EmissionMap, i.uv);
-				#else
-					float3 emission = 0;
-				#endif // _EMISSION
-				#if _AOMAP
-					float ao = 1 - (_AOScale * (1 - tex2D(_AOMap, i.uv).r));
-				#else
-					float ao = 1;
-				#endif // _AOMAP
-					
-				float3 specular;
-				diffuse = DiffuseAndSpecularFromMetallic(diffuse, metallic, specular);				
-				#if _IRIDESCENCE
-					float3 cpos = _V_Inv._m03_m13_m23;
-					float3 v = normalize(cpos - i.wpos);
-					float cosTheta1 = dot(normal, v);
-					float cosTheta2 = sqrt(1.0 - (1 - cosTheta1 * cosTheta1) / (_Index * _Index));
-					float dinc = _Dinc * tex2D(_DincMap, i.uv).r;
-					specular *= IridescenceFresnel(cosTheta1, cosTheta2, _Index, _Index2, metallic, dinc);
-				#endif
-
-				Encode2GBuffer(diffuse, 1 - smoothness, specular, normal, emission, i.normal, ao, target0, target1, target2, target3, target4
-#if _IRIDESCENCE
-					, true
-#endif
-				);
-			}
-
-			ENDCG
-		}
-		Pass
-		{
-			Tags { "LightMode" = "GBuffer_LEqual" }
-
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-
-			#include "UnityCG.cginc"
-			#include "./Includes/GBuffer.hlsl"
-
-			#pragma shader_feature _NORMALMAP
-			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP
-			#pragma shader_feature _AOMAP
-			#pragma shader_feature _IRIDESCENCE
-
-
-			CBUFFER_START(UnityPerMaterial)
-				float4			_Color;
-				sampler2D 		_MainTex;
-				float4			_MainTex_ST;
-				sampler2D		_BumpMap;
-				half			_BumpScale;
-				sampler2D		_MetallicGlossMap;
-				float			_GlossMapScale;
-				half			_Metallic;
-				float			_Smoothness;
-				float4			_EmissionColor;
-				sampler2D		_EmissionMap;
-				sampler2D		_AOMap;
-				float			_AOScale;
-				float			_Index;
-				float			_Index2;
-				float			_Dinc;
-				sampler2D		_DincMap;
-			CBUFFER_END
-
-			struct a2v {
-				float4 vertex : POSITION;
-				float3 normal : NORMAL;
-				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;
-			};
-
-			struct v2f {
-				float4 vertex : SV_POSITION;
-				float3 normal : NORMAL;
-				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;	
-				#if _IRIDESCENCE
-				float3 wpos : TEXCOORD1;
-				#endif
-			};
-
-			float4x4 _V_Inv;
-
-			v2f vert(a2v i) {
-				v2f o;
-				o.vertex = UnityObjectToClipPos(i.vertex);
-				o.normal = UnityObjectToWorldNormal(i.normal);
-				o.tangent = float4(UnityObjectToWorldDir(i.tangent.xyz), i.tangent.w);
-				o.uv = TRANSFORM_TEX(i.uv, _MainTex);
-				#if _IRIDESCENCE
-				o.wpos = mul(unity_ObjectToWorld, i.vertex);
-				#endif
-				return o;
-			}
-
-			half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
-			{
-				#if defined(UNITY_NO_DXT5nm)
-					return packednormal.xyz * 2 - 1;
-				#else
-					half3 normal;
-					normal.xy = (packednormal.wy * 2 - 1);
-					normal.xy *= bumpScale;
-					normal.z = sqrt(1.0 - saturate(dot(normal.xy, normal.xy)));
-					return normal;
-				#endif
-			}
-
-			void frag(v2f i,out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3, out fixed4 target4 : SV_Target4) {
-
-				fixed3 diffuse = _Color * tex2D(_MainTex, i.uv).rgb;
-
-				#if _METALLICGLOSSMAP
-					float4 m_s = tex2D(_MetallicGlossMap, i.uv);
-					fixed metallic = m_s.r;
-					fixed smoothness = m_s.a * _GlossMapScale;
-				#else
-					fixed metallic = _Metallic;
-					fixed smoothness = _Smoothness;
-				#endif //_METALLICGLOSSMAP
-
-				#if _NORMALMAP
-					float4 ndata = tex2D(_BumpMap, i.uv);
-					float3 normal = UnpackScaleNormal(ndata, _BumpScale);
-					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
-					float3 binormal = cross(n, t) * i.tangent.w;
-					float3x3 rotation = float3x3(t, binormal, n);
-					normal = mul(normal, rotation);
-				#else
-					float3 normal = normalize(i.normal);
-				#endif // _NORMALMAP
-				#if _EMISSION
-					float3 emission = _EmissionColor * tex2D(_EmissionMap, i.uv);
-				#else
-					float3 emission = 0;
-				#endif // _EMISSION
-				#if _AOMAP
-					float ao = 1 - (_AOScale * (1 - tex2D(_AOMap, i.uv).r));
-				#else
-					float ao = 1;
-				#endif // _AOMAP
-					
-				float3 specular;
-				diffuse = DiffuseAndSpecularFromMetallic(diffuse, metallic, specular);				
-				#if _IRIDESCENCE
-					float3 cpos = _V_Inv._m03_m13_m23;
-					float3 v = normalize(cpos - i.wpos);
-					float cosTheta1 = dot(normal, v);
-					float cosTheta2 = sqrt(1.0 - (1 - cosTheta1 * cosTheta1) / (_Index * _Index));
-					float dinc = _Dinc * tex2D(_DincMap, i.uv).r;
-					specular *= IridescenceFresnel(cosTheta1, cosTheta2, _Index, _Index2, metallic, dinc);
-				#endif
-
-				Encode2GBuffer(diffuse, 1 - smoothness, specular, normal, emission, i.normal, ao, target0, target1, target2, target3, target4
-#if _IRIDESCENCE
-					,true
-#endif
-				);
-			}
-
-			ENDCG
-		}
-
-		Pass
-		{
-			Tags { "LightMode" = "Transparent" }
-
-			Blend off
-			ZTest on
-			ZWrite on
-			Cull back
-
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-
-			#include "UnityCG.cginc"
-			#include "./Includes/Light.hlsl"
-			#include "./Includes/LTCLight.hlsl"
-			#include "./Includes/PBS.hlsl"
-			#include "./Includes/Atmo/Sun.hlsl"
-
-			#pragma shader_feature _NORMALMAP
-			#pragma shader_feature _EMISSION
-			#pragma shader_feature _METALLICGLOSSMAP
-			#pragma shader_feature _AOMAP
-
-			CBUFFER_START(UnityPerMaterial)
-				float4			_Color;
-				sampler2D 		_MainTex;
-				float4			_MainTex_ST;
-				sampler2D		_BumpMap;
-				half			_BumpScale;
-				sampler2D		_MetallicGlossMap;
-				float			_GlossMapScale;
-				half			_Metallic;
-				float			_Smoothness;
-				float4			_EmissionColor;
-				sampler2D		_EmissionMap;
-				sampler2D		_AOMap;
-				float			_AOScale;
-				float			_Index;
-				float			_Index2;
-				float			_Dinc;
-				sampler2D		_DincMap;
-			CBUFFER_END
-
-			Texture2D _ScreenColor; 
-			SamplerState trilinear_clamp_sampler;
-			float4x4 _V_Inv, _VP_Inv;
-			float4 _ScreenParameters;
-
-			struct a2v {
-				float4 vertex : POSITION;
-				float3 normal : NORMAL;
-				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;
-			};
-
-			struct v2f {
-				float4 vertex : SV_POSITION;
-				float3 normal : NORMAL;
-				float4 tangent : TANGENT;
-				float2 uv : TEXCOORD0;
-				float4 wpos : TEXCOORD1;
-				float4 spos : TEXCOORD2;
-			};
-
-			v2f vert(a2v i) {
-				v2f o;
-				o.wpos = mul(unity_ObjectToWorld, i.vertex);
-				o.vertex = UnityObjectToClipPos(i.vertex);
-				o.normal = UnityObjectToWorldNormal(i.normal);
-				o.tangent = float4(UnityObjectToWorldDir(i.tangent.xyz), i.tangent.w);
-				o.uv = TRANSFORM_TEX(i.uv, _MainTex);
-				o.spos = ComputeScreenPos(o.vertex);
-				return o;
-			}
-
-			half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
-			{
-				#if defined(UNITY_NO_DXT5nm)
-					return packednormal.xyz * 2 - 1;
-				#else
-					half3 normal;
-					normal.xy = (packednormal.wy * 2 - 1);
-					normal.xy *= bumpScale;
-					normal.z = sqrt(1.0 - saturate(dot(normal.xy, normal.xy)));
-					return normal;
-				#endif
-			}
-
-			float4 frag(v2f i) : SV_Target {
-
+			SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float3 screenPos, float3 normal, float4 tangent) {
 				SurfaceInfo info = (SurfaceInfo)0;
 
-				fixed4 diffuse = _Color * tex2D(_MainTex, i.uv);
+				fixed4 diffuse = _Color * tex2D(_MainTex, uv);
 				info.diffuse = diffuse.rgb;
 				info.transparent = 1 - diffuse.a;
 
 				#if _METALLICGLOSSMAP
-					float4 m_s = tex2D(_MetallicGlossMap, i.uv);
+					float4 m_s = tex2D(_MetallicGlossMap, uv);
 					float metallic = m_s.r;
 					info.smoothness = m_s.a * _GlossMapScale;
 				#else
@@ -445,98 +104,108 @@
 				#endif //_METALLICGLOSSMAP
 
 				#if _NORMALMAP
-					info.normal = UnpackScaleNormal(tex2D(_BumpMap, i.uv), _BumpScale);
-					float3 n = normalize(i.normal), t = normalize(i.tangent.xyz);
-					float3 binormal = cross(n, t) * i.tangent.w;
+					info.normal = UnpackScaleNormal(tex2D(_BumpMap, uv), _BumpScale);
+					float3 n = normalize(normal), t = normalize(tangent.xyz);
+					float3 binormal = cross(n, t) * tangent.w;
 					float3x3 rotation = float3x3(t, binormal, n);
 					info.normal = mul(info.normal, rotation);
 				#else
-					info.normal = normalize(i.normal);
+					info.normal = normalize(normal);
 				#endif // _NORMALMAP
 				#if _EMISSION
-					info.emission = _EmissionColor * tex2D(_EmissionMap, i.uv);
+					info.emission = _EmissionColor * tex2D(_EmissionMap, uv);
 				#else
 					info.emission = 0;
 				#endif // _EMISSION
 				#if _AOMAP
-					info.diffuseAO_specAO = (1 - (_AOScale * (1 - tex2D(_AOMap, i.uv).r))).xx;
+					info.diffuseAO_specAO = (1 - (_AOScale * (1 - tex2D(_AOMap, uv).r))).xx;
 				#else
 					info.diffuseAO_specAO = (1).xx;
 				#endif // _AOMAP
 
 				info.diffuse = DiffuseAndSpecularFromMetallic(info.diffuse, metallic, /*out*/ info.specular);
-				
-				info.gnormal = i.normal;
 
-                float3 pos = i.wpos;
-				float3 camPos = _V_Inv._m03_m13_m23;
-                float3 view = normalize(camPos - pos);
-				float2 screenUV = i.spos.xy / i.spos.w;
+				#if _IRIDESCENCE
+					float3 cpos = _V_Inv._m03_m13_m23;
+					float3 v = normalize(cpos - wPos);
+					float cosTheta1 = dot(normal, v);
+					float cosTheta2 = sqrt(1.0 - (1 - cosTheta1 * cosTheta1) / (_Index * _Index));
+					float dinc = _Dinc * tex2D(_DincMap, uv).r;
+					info.specular *= IridescenceFresnel(cosTheta1, cosTheta2, _Index, _Index2, metallic, dinc);
+				#endif
 
-                float3 res = 0;
+				info.gnormal = normal;
+				info.index = _Index;
 
-                BegineLocalLightsLoop(screenUV, pos, _VP_Inv);
-                {
-                    res += PBS(PBS_FULLY, info, light.dir, light.radiance, view);
-                }
-                EndLocalLightsLoop;
-
-				//SunLight sun = _Sun[0];
-				//res += PBS(PBS_FULLY, info, sun.dir, sun.color, hitView);
-
-				for (int i = 0; i < _AreaLightCount; i++)
-				{
-					Light areaLight = _AreaLightBuffer[i];
-
-					float3 lightZ = areaLight.mainDirection_id.xyz;
-					float xz = sqrt(1 - areaLight.geometry.z * areaLight.geometry.z);
-					float3 lightX = float3(xz * cos(areaLight.geometry.w), areaLight.geometry.z, xz * sin(areaLight.geometry.w));
-					float3 lightY = cross(lightZ, lightX);
-
-					if (areaLight.radiance_type.w == TUBE) {
-						res += TubeLight(info, areaLight.radiance_type.xyz,
-											areaLight.position_range.xyz,
-											float4(lightZ, areaLight.geometry.x * 2),
-											float4(lightX, areaLight.geometry.y * 2),
-											pos, view);
-					}
-					else if (areaLight.radiance_type.w == QUAD) {
-						res += QuadLight(info, areaLight.radiance_type.xyz,
-											areaLight.position_range.xyz,
-											float4(-lightX, areaLight.geometry.x),
-											float4(lightY, areaLight.geometry.y),
-											pos, view);
-					}
-					else if (areaLight.radiance_type.w == DISC) {
-						res += DiscLight(info, areaLight.radiance_type.xyz,
-											areaLight.position_range.xyz,
-											float4(-lightX, areaLight.geometry.x * 2),
-											float4(lightY, areaLight.geometry.x * 2),
-											pos, view);
-					}
-				}
-
-				res += info.emission;
-
-				float3 result = 0;
-				float3 F = FresnelTerm(info.specular, dot(view, info.normal));
-				float3 trans = info.diffuse * info.transparent * (1 - F);
-
-				if (_Index != 1) {
-					float3 offset = refract(-view, info.normal, 1 / _Index);
-					offset = 2 * offset + view;
-					float4 p = mul(UNITY_MATRIX_VP, float4(pos + offset, 1));
-					p.xy /= p.w;
-					p.xy = p.xy / 2 + 0.5;
-					p.y = 1 - p.y;
-					float lod = lerp(0, 4, min(1, (_Index - 1) * 4) * (1 - info.smoothness));
-					return float4(res + _ScreenColor.SampleLevel(trilinear_clamp_sampler, p.xy, lod) * trans, 1);
-				}
-				else
-					return float4(res + _ScreenColor.SampleLevel(trilinear_clamp_sampler, screenUV, 0) * trans, 1);
+				return info;
 			}
 
-			ENDCG
+		ENDHLSL
+
+
+		//-------------------------------------------------
+		//-------------------- Pass -----------------------
+		//-------------------------------------------------
+		Pass
+		{
+			ColorMask 0
+			Name "PreZ"
+			Tags { "LightMode" = "PreZ" }
+			HLSLPROGRAM
+			#pragma vertex			PreZ_vert
+			#pragma fragment		PreZ_frag
+			ENDHLSL
+		}
+		Pass
+		{
+			Name "GBuffer_Equal"
+			Tags { "LightMode" = "GBuffer_Equal" }
+			ZWrite off
+			ZTest Equal
+			HLSLPROGRAM
+			#pragma vertex			Lit_vert
+			#pragma fragment		GBuffer_frag
+
+			#pragma shader_feature _NORMALMAP
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
+			#pragma shader_feature _IRIDESCENCE
+			ENDHLSL
+		}
+		Pass
+		{
+			Name "GBuffer_LEqual"
+			Tags { "LightMode" = "GBuffer_LEqual" }
+			HLSLPROGRAM
+			#pragma vertex			Lit_vert
+			#pragma fragment		GBuffer_frag
+
+			#pragma shader_feature _NORMALMAP
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
+			#pragma shader_feature _IRIDESCENCE
+			ENDHLSL
+		}
+		Pass
+		{
+			Name "Transparent"
+			Tags { "LightMode" = "Transparent" }
+			Blend off
+			ZTest on
+			ZWrite on
+			Cull back
+			HLSLPROGRAM
+			#pragma vertex			Lit_vert
+			#pragma fragment		Transparent_frag
+
+			#pragma shader_feature _NORMALMAP
+			#pragma shader_feature _EMISSION
+			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _AOMAP
+			#pragma shader_feature _IRIDESCENCE
+			ENDHLSL
 		}
     }
 
@@ -762,7 +431,7 @@
 			ENDCG
 		}
 
-		// RTGI pass
+		// Realtime pass
 		Pass
 		{
 			Name "RTGI"

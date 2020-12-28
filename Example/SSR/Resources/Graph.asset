@@ -1240,7 +1240,7 @@ MonoBehaviour:
     = 64;\r\n            ZBin3.includeRTLight = true;\r\n            ZBin3.enabled
     = true;\r\n            RTDI4 = new RTDI();\r\n            RTDI4.includeSunlight
     = false;\r\n            RTDI4.enabled = true;\r\n            CombineColorDepth5
-    = new CombineColorDepth();\r\n            CombineColorDepth5.ToneMap = false;\r\n           
+    = new CombineColorDepth();\r\n            CombineColorDepth5.ToneMap = true;\r\n           
     CombineColorDepth5.enabled = true;\r\n            AreaLight6 = new AreaLight();\r\n           
     AreaLight6.enabled = true;\r\n            SunAtmo7 = new SunAtmo();\r\n           
     SunAtmo7.TLutResolution = new Vector2Int(128, 128);\r\n            SunAtmo7.SkyLutResolution
