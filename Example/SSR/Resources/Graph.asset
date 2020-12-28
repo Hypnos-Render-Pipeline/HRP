@@ -243,6 +243,11 @@ MonoBehaviour:
     nodeType_str: HypnosRenderPipeline.RenderPass.RTDI
   - nodeName: CombineColorDepth
     parameters:
+    - name: ToneMap
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
@@ -337,6 +342,11 @@ MonoBehaviour:
       info: 
       type_str: System.Single
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e33323030303c2f666c6f61743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: applyAtmoFog
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
@@ -1124,7 +1134,7 @@ MonoBehaviour:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
     nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000
-  recompiled: 0
+  recompiled: 1
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Graph_Executor
     : HRGExecutor\r\n    {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
@@ -1230,12 +1240,13 @@ MonoBehaviour:
     = 64;\r\n            ZBin3.includeRTLight = true;\r\n            ZBin3.enabled
     = true;\r\n            RTDI4 = new RTDI();\r\n            RTDI4.includeSunlight
     = false;\r\n            RTDI4.enabled = true;\r\n            CombineColorDepth5
-    = new CombineColorDepth();\r\n            CombineColorDepth5.enabled = true;\r\n           
-    AreaLight6 = new AreaLight();\r\n            AreaLight6.enabled = true;\r\n           
-    SunAtmo7 = new SunAtmo();\r\n            SunAtmo7.TLutResolution = new Vector2Int(128,
-    128);\r\n            SunAtmo7.SkyLutResolution = new Vector2Int(64, 224);\r\n           
-    SunAtmo7.MSLutResolution = new Vector2Int(32, 32);\r\n            SunAtmo7.VolumeResolution
-    = new Vector3Int(32, 32, 32);\r\n            SunAtmo7.VolumeMaxDepth = 32000f;\r\n           
+    = new CombineColorDepth();\r\n            CombineColorDepth5.ToneMap = true;\r\n           
+    CombineColorDepth5.enabled = true;\r\n            AreaLight6 = new AreaLight();\r\n           
+    AreaLight6.enabled = true;\r\n            SunAtmo7 = new SunAtmo();\r\n           
+    SunAtmo7.TLutResolution = new Vector2Int(128, 128);\r\n            SunAtmo7.SkyLutResolution
+    = new Vector2Int(64, 224);\r\n            SunAtmo7.MSLutResolution = new Vector2Int(32,
+    32);\r\n            SunAtmo7.VolumeResolution = new Vector3Int(32, 32, 32);\r\n           
+    SunAtmo7.VolumeMaxDepth = 32000f;\r\n            SunAtmo7.applyAtmoFog = true;\r\n           
     SunAtmo7.enabled = true;\r\n            SkyBoxIBL8 = new SkyBoxIBL();\r\n           
     SkyBoxIBL8.enabled = false;\r\n            RTSpecular9 = new RTSpecular();\r\n           
     RTSpecular9.useRTShadow = true;\r\n            RTSpecular9.enabled = true;\r\n           
