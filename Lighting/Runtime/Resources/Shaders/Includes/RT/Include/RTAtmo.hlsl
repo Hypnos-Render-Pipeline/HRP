@@ -98,7 +98,7 @@ const float3 Sunlight(const float3 x, const float3 s) {
 	uv.x = saturate(Altitude(x) / _AtmosphereThickness);
 	uv.y = (c - horiz) / (1 - horiz) / 2;
 	uv.y = zip(uv.y);
-	return T(uv) * (1 - cos(_SunAngle)) * 39810;
+	return T(uv) * (1 - cos(_SunAngle)) * 199050;
 }
 
 

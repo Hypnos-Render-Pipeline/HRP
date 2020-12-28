@@ -474,7 +474,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 		{
 			float3 pos = v * (i + Rand()) + st;
 
-			float2 sh = Cloud(pos, fade, lod, true);
+			float2 sh = Cloud(pos, fade, lod);
 			float scatter = sh.x;
 			if (scatter != 0) {
 
@@ -519,19 +519,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 				hit_h += float2(sh.y * response, response);
 				av_dis += float2(i * response, response);
 			}
-			if (trans <= alphaFallback / 2) break;
-		}
-		//alpha need more accurate than color
-		for (int i = start_index; i < actual_sample_num; i++) 
-		{
-			float3 pos = v * (i + Rand()) + st;
-
-			float2 sh = Cloud(pos, fade, lod, true);
-			float scatter = sh.x;
-			scatter = exp(-scatter * stepLength);
-			trans *= scatter;
-			if (trans <= 0.01) {
-				trans = 0;
+			if (trans <= alphaFallback / 5) {
 				break;
 			}
 		}
@@ -544,7 +532,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 
 	fade = saturate(1 - (cloud_dis - 10000) / 40000);
 	res.xy *= fade;
-	res.a = 1 - (1 - res.a) * fade;
+	res.a = 1 - rescale10(res.a, alphaFallback / 5, 1) * fade;
 	res.z = hit_h.y != 0 ? hit_h.x / hit_h.y : 0;
 
 	return res;

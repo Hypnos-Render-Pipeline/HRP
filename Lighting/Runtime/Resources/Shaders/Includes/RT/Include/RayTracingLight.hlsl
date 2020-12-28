@@ -137,9 +137,11 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 
 		end_point = lpos;
 	}
-	
-	att = min(att, 2);
-	return true;
+
+	if (light.type != 0)
+		att = min(att, 2);
+
+	return att > 0.0001;
 }
 
 float4 FindNearestToPoint(float3 pos, float3 dir, float3 p) {
@@ -255,7 +257,9 @@ bool ResolveLightWithDir(const Light light, const float3 position, const float3 
 		end_point = lpos;
 	}
 
-	att = min(att, 2);
+	if (light.type != 0)
+		att = min(att, 2);
+
 	return att > 0.0001;
 }
 

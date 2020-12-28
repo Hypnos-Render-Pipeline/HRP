@@ -46,8 +46,9 @@ void Specular()
     float2 uv = (dispatchIdx + 0.5) * _WH.zw;
 
     float d = _DepthTex[dispatchIdx];
-    if (-PD2VD(d) > 1024) {
-        _TempResult[dispatchIdx] = -1;
+    float4 sr = _SpecTex[dispatchIdx];
+    if (d == 0 || all(sr.xyz == 0)) {
+        _TempResult[dispatchIdx] = 0;
         return;
     }
     float3 camPos = _V_Inv._m03_m13_m23;
@@ -61,20 +62,22 @@ void Specular()
 
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(0,
-                            _SpecTex[dispatchIdx],
+                            sr,
                             _NormalTex[dispatchIdx],
                             0,
                             1);
 
-	int4 sampleState = int4(dispatchIdx, _Clock % 16, 0);
+	int4 sampleState = int4(dispatchIdx, _Clock % 8, 0);
 
-    
-    float3 n = normalize(float3(0, 0, 0.5) + ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness)).xyz);
+    float4 ray_pdf = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness));
+    float3 n = normalize(float3(0, 0, 2) + ray_pdf.xyz);
 
     n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
+    
+    view += max(0, 0.1 - dot(n, view)) * n;
 
     float3 dir = reflect(-view, n);
-    pos += (view + info.normal + dir) * saturate(1 - dot(dir, info.normal)) * 0.18;
+    pos += (view + info.normal + dir) * saturate(1 - dot(dir, info.normal)) * 0.01;
 
     GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
 
@@ -140,6 +143,5 @@ void Specular()
         }
     }
 
-    float3 spec = PBS(PBS_SPECULAR, info, dir, res, view);
-    _TempResult[dispatchIdx] = float4(ToneMap(spec), min(gbuffer.dis, 10));
+    _TempResult[dispatchIdx] = float4(ToneMap(res), min(gbuffer.dis, 10));
 }

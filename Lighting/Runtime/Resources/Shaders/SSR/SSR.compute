@@ -13,7 +13,7 @@ uint _Clock;
 float4 _WH;
 float4x4 _V, _V_Inv;
 float4x4 _P, _P_Inv;
-float4x4 _VP, _VP_Inv, _Last_VP_Inv;
+float4x4 _VP, _VP_Inv, _Last_VP, _Last_VP_Inv;
 
 Texture2D<float> _HiZDepthTex;
 Texture2D<float> _HistoryDepth;
@@ -99,7 +99,7 @@ void Trace(uint2 id : SV_DispatchThreadID)
         pixel_size[i] = 1.0f / wh;
     }
 
-    int4 sampleState = int4(id, _Clock % 16, 0);
+    int4 sampleState = int4(id, _Clock % 8, 0);
 
     float d = _HiZDepthTex[id];
     if (d == 0) {
@@ -128,7 +128,7 @@ void Trace(uint2 id : SV_DispatchThreadID)
 
     float dang = lerp(3, 1, info.smoothness < 0.9 ? info.smoothness : 1);
 
-    float3 n = normalize(float3(0, 0, 0.5) + ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness)).xyz);
+    float3 n = normalize(float3(0, 0, 2) + ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness)).xyz);
 
     n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
 
@@ -193,9 +193,8 @@ void Trace(uint2 id : SV_DispatchThreadID)
         l = _SkyBox.SampleLevel(trilinear_clamp_sampler, wreflect, lerp(7, 0, info.smoothness));
         dis = 10;
     }
-    float3 res = PBS(PBS_SPECULAR, info, wreflect, l, view);
 
-    _TempResult[id] = float4(ToneMap(res), min(10, dis));
+    _TempResult[id] = float4(ToneMap(l), min(10, dis));
 }
 
 Texture2D<float4> _History;
@@ -207,7 +206,7 @@ groupshared float4 buffer_1[10][10];
 [numthreads(8, 8, 1)]
 void RemoveFlare(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
 {
-    // return;
+     return;
     // Load current result to shared & perform a inital temporal.
     // This stage is to generate a more accurate buffer for the bbox calculation, which helps reduce flickering.
     {
@@ -229,8 +228,8 @@ void RemoveFlare(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupT
 
                     float4 newC = max(0, _TempResult[texID]);// prevent NaN
                     float4 hisC = max(0, _History.SampleLevel(linear_clamp_sampler, prevUV, 0));
-                    float3 newN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0));
-                    float3 hisN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0));
+                    float3 newN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0).xyz);
+                    float3 hisN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0).xyz);
                     if (any(prevUV < 0) || any(prevUV > 1)) hisC = 0;
 
                     float mix_rate = (newC.w * hisC.w == 0) ? 0 : 0.2;
@@ -276,16 +275,14 @@ void RemoveFlare(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupT
     }
 }
 
-
-
 [numthreads(8, 8, 1)]
 void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
 {
     //_Result[id] = _TempResult[id]; return;
-    float smooth = 1 - _SpecTex[id].w; smooth *= smooth * smooth;
+    float smooth = 1 - _SpecTex[id].w; //smooth *= smooth * smooth;
 
     // Load current result to shared & perform a inital temporal.
-    // This stage is to generate a more accurate buffer for the bbox calculation, which helps reduce flickering.
+    // This stage is to generate a more accurate buffer for the bbox calculation & depth estimattion, which helps reduce flickering & ghost.
     {
         uint thread_id = groupThreadID.x + groupThreadID.y * 8;
         int2 lbID = groupID * 8 - 1;
@@ -307,33 +304,11 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
                     float4 newC = max(0, _TempResult[texID]);// prevent NaN
                     float4 hisC = max(0, _History.SampleLevel(linear_clamp_sampler, prevUV, 0));
-                    float3 newN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, uv, 0));
-                    float3 hisN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0));
+                    
+                    float mix_rate = (newC.w * hisC.w == 0) ? 0 : lerp(0.2, 0, smooth);
 
-                    float d = _HiZDepthTex.SampleLevel(point_clamp_sampler, uv, 0).x;
-                    float hd = _HistoryDepth.SampleLevel(point_clamp_sampler, prevUV, 0).x;
-
-                    float3 wpos;
-                    {
-                        float4 ndc = float4(uv * 2 - 1, d, 1);
-                        float4 worldPos = mul(_VP_Inv, ndc);
-                        wpos = worldPos.xyz / worldPos.w;
-                    }
-                    float3 hwpos;
-                    {
-                        float4 ndc = float4(prevUV * 2 - 1, hd, 1);
-                        float4 worldPos = mul(_Last_VP_Inv, ndc);
-                        hwpos = worldPos.xyz / worldPos.w;
-                    }
-
-                    if (any(prevUV < 0) || any(prevUV > 1)) hisC = 0;
-
-                    float mix_rate = (newC.w * hisC.w == 0) ? 0 : lerp(1, 0.2, smooth);
-                    //mix_rate *= smoothstep(0.2, 0.5, dot(newN, hisN));
-                    mix_rate *= max(0, 1 - distance(wpos, hwpos));
-
-                    buffer_0[offset.x][offset.y] = newC;
-                    buffer_1[offset.x][offset.y] = lerp(newC, hisC, mix_rate);
+                    buffer_0[offset.x][offset.y] = lerp(newC, hisC, mix_rate);
+                    buffer_1[offset.x][offset.y] = float4(DecodeNormal(_AOTex[texID].xyz), 1);
                 }
             }
         }
@@ -344,8 +319,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
     {
         uint2 bufferID = 1 + groupThreadID;
 
-        float4 oc = buffer_0[bufferID.x][bufferID.y];
-        float4 hc = buffer_1[bufferID.x][bufferID.y];
+        float4 oc = _TempResult[id];
         float4 minC = oc, maxC = oc;
 
         float4 lc = buffer_0[bufferID.x - 1][bufferID.y];
@@ -353,7 +327,6 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         float4 rc = buffer_0[bufferID.x + 1][bufferID.y];
         float4 uc = buffer_0[bufferID.x][bufferID.y + 1];
 
-        // bbox
         maxC = max(minC, lc);
         minC = min(minC, lc);
         maxC = max(minC, dc);
@@ -363,8 +336,49 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         maxC = max(minC, uc);
         minC = min(minC, uc);
 
-        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.95, 0.9, smooth);
-        mix_rate = lerp(mix_rate, mix_rate - 0.5, min(1, length(_MotionTex[id]) * 100));
+        float av_dis = (lc.w + dc.w + rc.w + uc.w + oc.w) / 5;
+
+        float3 av_n = buffer_1[bufferID.x][bufferID.y] + 
+                        buffer_1[bufferID.x - 1][bufferID.y] + buffer_1[bufferID.x + 1][bufferID.y] +
+                        buffer_1[bufferID.x][bufferID.y - 1] + buffer_1[bufferID.x][bufferID.y + 1];
+
+        float3 camPos = _V_Inv._m03_m13_m23;
+
+        float2 uv = (id + 0.5) * _WH.zw;
+        float3 newN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, uv, 0).xyz);
+        float d = _HiZDepthTex.SampleLevel(point_clamp_sampler, uv, 0).x;
+
+        float3 wpos;
+        {
+            float4 ndc = float4(uv * 2 - 1, d, 1);
+            float4 worldPos = mul(_VP_Inv, ndc);
+            wpos = worldPos.xyz / worldPos.w;
+        }
+        float2 prevUV;
+        {
+            float3 ref_wpos = wpos;
+            ref_wpos += normalize(ref_wpos - camPos) * lerp(av_dis, 0, min(1, (1 - length(av_n) / 5) * 100000));
+            float4 lvpoint = mul(_Last_VP, float4(ref_wpos, 1));
+            lvpoint /= lvpoint.w;
+            lvpoint = (lvpoint + 1) * 0.5;
+            prevUV = lvpoint.xy;
+        }
+        float hd = _HistoryDepth.SampleLevel(point_clamp_sampler, prevUV, 0).x;
+        float3 hisN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0).xyz);
+        float3 hwpos;
+        {
+            float4 ndc = float4(prevUV * 2 - 1, hd, 1);
+            float4 worldPos = mul(_Last_VP_Inv, ndc);
+            hwpos = worldPos.xyz / worldPos.w;
+        }
+
+        float weight = smoothstep(0.2, 0.5, dot(newN, hisN)) * max(0, 1 - distance(wpos, hwpos));
+        if (any(prevUV < 0) || any(prevUV > 1)) weight = 0;
+
+        float4 hc = _History.SampleLevel(linear_clamp_sampler, prevUV, 0);
+
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.95, 0.7, smooth * smooth * smooth);
+        mix_rate *= lerp(mix_rate, mix_rate - 0.5, min(1, length(_MotionTex[id]) * 100)) * weight;
         hc = clamp(hc, minC - 0.5, maxC + 0.5);
         float4 mixed = lerp(oc, hc, mix_rate);
         _Result[id] = mixed;
@@ -378,7 +392,6 @@ float2 _SmoothRange;
 #define GROUPSHARED_COUNT (GROUPSHARED_SIZE * GROUPSHARED_SIZE)
 groupshared float4 buffer2_0[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
 groupshared float4 buffer2_1[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
-groupshared float3 buffer2_2[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
 groupshared bool active;
 
 RWStructuredBuffer<int> _Indirect;
@@ -404,8 +417,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
                 uint2 texID = lbID + offset;
                 if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
                     buffer2_0[offset.x][offset.y] = 0;
-                    buffer2_1[offset.x][offset.y] = 0;
-                    buffer2_2[offset.x][offset.y] = -1;                    
+                    buffer2_1[offset.x][offset.y] = 0;             
                 }
                 else {
                     float4 newC = _Result[texID];
@@ -413,7 +425,6 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
                     float3 normal = DecodeNormal(n_m.xyz);
                     buffer2_0[offset.x][offset.y] = newC;
                     buffer2_1[offset.x][offset.y] = float4(normal, PD2VD(_HiZDepthTex[texID]));
-                    buffer2_2[offset.x][offset.y] = _SpecTex[texID].xyz;
                 }
             }
         }
@@ -438,7 +449,6 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
             float w = 0;
             int2 baseID = groupThreadID + SPATIAL_RADIUS;
             float4 cn_cd = buffer2_1[baseID.x][baseID.y];
-            float3 cc = buffer2_2[baseID.x][baseID.y];
             for (int i = -SPATIAL_RADIUS; i <= SPATIAL_RADIUS; i++)
             {
                 for (int j = -SPATIAL_RADIUS; j <= SPATIAL_RADIUS; j++)
@@ -448,9 +458,6 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
                     float4 n_d = buffer2_1[id_in_shared.x][id_in_shared.y];
                     float3 normal = n_d.xyz;
                     float4 l = buffer2_0[id_in_shared.x][id_in_shared.y];
-                    float3 cd = cc - buffer2_2[id_in_shared.x][id_in_shared.y];
-                    cd *= sqrt(float3(3, 4, 2));
-                    weight *= max(0, 1 - dot(cd, cd) * 10);
                     weight *= (l.w >= 0) * smoothstep(0.999, 1, dot(cn_cd.xyz, normal)) * max(0, 1 - abs(cn_cd.w - n_d.w));
                     w += weight;
                     res += l * weight;
@@ -498,7 +505,6 @@ void SFilterIndirect(uint2 groupThreadID : SV_GroupThreadID, uint groupID : SV_G
 [numthreads(8, 8, 1)]
 void FinalSynthesis(uint2 id : SV_DispatchThreadID)
 {
-    //_Result[id] = _Result[id].w / 10;
     //return;
     float4 aoData = _AOTex[id];
     float3 gN = DecodeNormal(aoData.xyz);
@@ -512,9 +518,20 @@ void FinalSynthesis(uint2 id : SV_DispatchThreadID)
         view = normalize(_V_Inv._m03_m13_m23 - viewPos.xyz / viewPos.w);
     }
 
-    float specAO = CalculateSpecAO(ao, _SpecTex[id].w, view, gN);
+    view += max(0, 0.1 - dot(n, view)) * n;
+
+    float4 spec_r = _SpecTex[id];
+    float specAO = CalculateSpecAO(ao, spec_r.w, view, gN);
 
     float4 sceneColor = _SceneColor[id];
     sceneColor.a = sceneColor.a != 0;
-    _Result[id] = sceneColor + sceneColor.a * specAO * float4(UnToneMap(_Result[id].xyz), 0);
+    
+    float3 F = FresnelTerm(spec_r.xyz, dot(view, n)) * (any(spec_r.xyz) ? 1.0 : 0.0);
+    
+    _Result[id] = sceneColor + sceneColor.a* specAO* float4(
+        SmithJointGGXVisibilityTerm(
+            dot(view, n), 
+            dot(view, n), 
+            PerceptualRoughnessToRoughness(spec_r.w)
+        ) * F * UnToneMap(_Result[id].xyz), 0);
 }
