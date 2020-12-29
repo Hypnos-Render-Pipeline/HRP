@@ -526,12 +526,5 @@ void FinalSynthesis(uint2 id : SV_DispatchThreadID)
     float4 sceneColor = _SceneColor[id];
     sceneColor.a = sceneColor.a != 0;
     
-    float3 F = FresnelTerm(spec_r.xyz, dot(view, n)) * (any(spec_r.xyz) ? 1.0 : 0.0);
-    
-    _Result[id] = sceneColor + sceneColor.a* specAO* float4(
-        SmithJointGGXVisibilityTerm(
-            dot(view, n), 
-            dot(view, n), 
-            PerceptualRoughnessToRoughness(spec_r.w)
-        ) * F * UnToneMap(_Result[id].xyz), 0);
+    _Result[id] = sceneColor + sceneColor.a * specAO * float4(spec_r.xyz * UnToneMap(_Result[id].xyz), 0);
 }

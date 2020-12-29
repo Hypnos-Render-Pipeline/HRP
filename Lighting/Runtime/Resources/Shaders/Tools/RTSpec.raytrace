@@ -142,6 +142,6 @@ void Specular()
             res += sl;
         }
     }
-
+    res = PBS(PBS_SPECULAR, info, dir, res, view) / (info.specular == 0 ? 1 : info.specular);
     _TempResult[dispatchIdx] = float4(ToneMap(res), min(gbuffer.dis, 10));
 }
