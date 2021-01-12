@@ -190,6 +190,8 @@ Shader "Hidden/AtmoLut"
                     dispatch_dir = mul(_V_Inv, float4(dispatch_dir.xyz, 0));
                     float3 v = normalize(dispatch_dir.xyz);
                     float3 dir = normalize(mul(_V_Inv, float4(0, 0, -1, 0)));
+                    float dotvc = -dot(normalize(_V_Inv._m02_m12_m22), v);
+                    depth /= dotvc;
                     
                     //float3 x_0;
                     //X_0(x, v, x_0);
@@ -271,6 +273,160 @@ Shader "Hidden/AtmoLut"
                         res += 0.1 / 255.;
                     }
                     return res;
+                }
+            ENDCG
+        }
+
+        
+        Pass // Apply fog
+        {
+            CGPROGRAM
+                #pragma vertex vert
+                #pragma fragment frag
+
+                #define T T_TAB
+                #include "../Includes/Atmo/Atmo.hlsl"
+                #include "../Includes/Terrain.hlsl"
+
+                sampler2D _DepthTex;
+                sampler2D _MainTex;
+                samplerCUBE _SkyTex;
+
+                int _RenderGround;
+                int _ApplyAtmoFog;
+                float4x4 _P_Inv, _V_Inv;
+
+                float4 GetWorldPositionFromDepthValue(float2 uv, float linearDepth)
+                {
+                    float camPosZ = _ProjectionParams.y + (_ProjectionParams.z - _ProjectionParams.y) * linearDepth;
+                    float height = 2 * camPosZ / unity_CameraProjection._m11;
+                    float width = _ScreenParams.x / _ScreenParams.y * height;
+
+                    float camPosX = width * uv.x - width / 2;
+                    float camPosY = height * uv.y - height / 2;
+                    float4 camPos = float4(camPosX, camPosY, camPosZ, 1.0);
+                    return mul(unity_CameraToWorld, camPos);
+                }
+
+                float Trans(float a, float b, float d, float den, float att) {
+                    float k = (b - a) / d;
+                    float ka = -att * k;
+                    float kb = -att * a;
+
+                    float inter = (exp(ka * d + kb) - exp(kb)) / ka;
+
+                    return exp(-den * inter * sqrt(1 + k * k));
+                }
+
+                float HeightFog(float h) {
+                    return 0.001 * exp(-0.04 * h);
+                }
+
+                int _Clock;
+                uint sampleIndex = 0;
+                float hash(float n)
+                {
+                    return frac(sin(n) * 43758.5453);
+                }
+                float Roberts1_(uint n) {
+                    const float g = 1.6180339887498948482;
+                    const float a = 1.0 / g;
+                    return frac(0.5 + a * n);
+                }
+                float2 Roberts2_(uint n) {
+                    const float g = 1.32471795724474602596;
+                    const float2 a = float2(1.0 / g, 1.0 / (g * g));
+                    return  frac(0.5 + a * n);
+                }
+                void RandSeed(uint2 seed) {
+                    sampleIndex = (uint)_Clock % 1024 + hash((seed.x % 64 + seed.y % 64 * 64) / 64./64.) * 64*64;
+                }
+
+                float Rand()
+                {
+                    return Roberts1_(sampleIndex++);
+                }
+
+                float Rand2()
+                {
+                    return Roberts2_(sampleIndex++);
+                }
+
+                float4 frag(v2f i) : SV_Target
+                {
+                    RandSeed(i.vertex.xy);
+                    float3 s = normalize(_SunDir);
+                    float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
+                    float depth = tex2Dlod(_DepthTex, float4(i.uv, 0, 0)).x;
+                    bool sky_occ = depth != 0;
+                    depth = LinearEyeDepth(depth);
+                    float4 dispatch_dir = mul(_P_Inv, float4(i.uv * 2 - 1, 1, 1));
+                    dispatch_dir /= dispatch_dir.w;
+                    float dotCV = -normalize(dispatch_dir.xyz).z;
+                    dispatch_dir = mul(_V_Inv, float4(dispatch_dir.xyz, 0));
+                    float3 v = normalize(dispatch_dir.xyz);
+                    float3 dir = normalize(mul(_V_Inv, float4(0, 0, -1, 0)));
+                    float dotvc = -dot(normalize(_V_Inv._m02_m12_m22), v);
+                    depth /= dotvc;
+                    
+                    float3 cpos = _WorldSpaceCameraPos;
+                    float3 wpos = cpos + v * depth;
+                    
+                    int spp = 32;
+                    float max_dis = min(depth, 4000);
+                    float bias = Rand();
+                    float fogTrans = 1;
+                    float directLight = 0;
+                    float ambientLight = 0;
+                    float stepLength = max_dis / spp;
+
+                    float3 s_t = normalize(cross(float3(0, -1, 0), s));
+                    if (s_t.x < 0) s_t = -s_t;
+                    float3 s_bt = cross(s, s_t);
+
+                    for (int step = 0; step < spp; step++)
+                    {
+                        float nd = max_dis * (float)(step + bias) / spp;
+                        float3 lp = cpos + v * nd;
+
+                        float2 rnd = Rand2();
+                        rnd.x *= (2 * 3.14159265359);
+                        float2 offset; sincos(rnd.x, offset.x, offset.y);
+                        offset *= rnd.y * 20;
+
+                        float scatter = HeightFog(lp.y) * (1 - nd / 4000);
+
+                        scatter = exp(-scatter * stepLength);
+                        fogTrans *= scatter;
+                        scatter = 1 - scatter;
+
+                        float response = fogTrans * scatter;
+
+                        lp += s_t * offset.x + s_bt * offset.y;
+
+                        directLight += response * (TerrainShadow(lp) * 0.95 + 0.05);
+                        ambientLight += response;
+                    }
+
+                    float4 sceneColor = tex2Dlod(_MainTex, float4(i.uv, 0, 0));
+
+                    float phase = GetPhase(-0.5, dot(v, _SunDir));
+                    float3 fogColor = directLight * Sunlight(x, _SunDir) * phase * 0.7 + ambientLight * texCUBElod(_SkyTex, float4(0, 1, 0, 0));
+
+                    float3 in_scatter = fogColor + (sky_occ ? lerp(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, Scatter(x, v, depth, s), 1 - smoothstep(0.9, 1, depth / _MaxDepth)) : 0);
+                    float3 trans = fogTrans * (sky_occ ? T(x, x + depth * v) : 1);
+
+                    float4 output = float4(in_scatter + trans * sceneColor.xyz, sceneColor.a);
+
+                    uint2 id = i.vertex.xy;
+                    int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
+                    int index = id.x % 4 + id.y % 4 * 4;
+                    float noise = hash12(id);
+
+                    if (noise * 16 > k[index]) {
+                        output.xyz += 0.2/255.;
+                    }
+                    return output;
                 }
             ENDCG
         }

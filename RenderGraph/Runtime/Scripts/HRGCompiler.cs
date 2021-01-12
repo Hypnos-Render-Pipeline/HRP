@@ -312,9 +312,12 @@ namespace HypnosRenderPipeline.RenderGraph
                                         foreach (var pin in pin_map)
                                         {
                                             var name = node_name + "." + pin.Key;
-                                            if (node.outputs.FindIndex(e => { return e.name == pin.Key; }) > 0)
+                                            if (node.outputs.FindIndex(e => { return e.name == pin.Key; }) >= 0)
                                             {
-                                                m_code.SetValue<bool>(name + ".connected", enabled);
+                                                if (node.inputs.FindIndex(e => { return e.name == pin.Key; }) < 0)
+                                                {
+                                                    m_code.SetValue<bool>(name + ".connected", enabled);
+                                                }
                                             }
                                         }
                                     }
@@ -327,6 +330,10 @@ namespace HypnosRenderPipeline.RenderGraph
                                         var nodeRec = GetNodeInstance(node);
                                         foreach (var output_value in nodeRec.outputs)
                                         {
+                                            if (!enabled && node.inputs.FindIndex(e => { return e.name == output_value.Key; }) >= 0)
+                                            {
+                                                continue;
+                                            }
                                             var from_name = nodeName[node] + "." + output_value.Key;
 
                                             List<string> next_pins = new List<string>();
@@ -711,7 +718,7 @@ namespace HypnosRenderPipeline.RenderGraph
                 {
                     errorString += (et as CompilerError).ErrorText + "\n";
                 }
-                throw new Exception(errorString);
+                throw new Exception(errorString + "\n\n" + code);
             }
             else
             {

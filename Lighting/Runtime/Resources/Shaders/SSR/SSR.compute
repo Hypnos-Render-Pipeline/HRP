@@ -458,7 +458,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID) {
                     float4 n_d = buffer2_1[id_in_shared.x][id_in_shared.y];
                     float3 normal = n_d.xyz;
                     float4 l = buffer2_0[id_in_shared.x][id_in_shared.y];
-                    weight *= (l.w >= 0) * smoothstep(0.999, 1, dot(cn_cd.xyz, normal)) * max(0, 1 - abs(cn_cd.w - n_d.w));
+                    weight *= (l.w >= 0) * smoothstep(0.997, 1, dot(cn_cd.xyz, normal)) * max(0, 1 - abs(cn_cd.w - n_d.w));
                     w += weight;
                     res += l * weight;
                 }

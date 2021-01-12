@@ -132,7 +132,7 @@ namespace HypnosRenderPipeline
                     rc.camera = cam;
                     rc.commandBuffer = cb;
                     cam.TryGetCullingParameters(out defaultCullingParams);
-                    rc.defaultCullingResult = context.Cull(ref defaultCullingParams);
+                    rc.defaultCullingResult = cb.Cull(ref defaultCullingParams);
 
                     Matrix4x4 v = cam.worldToCameraMatrix, p = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false);
                     cb.SetGlobalMatrix("_V", v);

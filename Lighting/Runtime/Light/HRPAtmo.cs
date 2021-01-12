@@ -212,6 +212,16 @@ namespace HypnosRenderPipeline
         }
 
         /// <summary>
+        /// Render atmo fog to a extra texture.
+        /// </summary>
+        public void RenderFogToRT(CommandBuffer cb, int sceneColor, int depth, int skyIrradiance, RenderTargetIdentifier target)
+        {
+            cb.SetGlobalTexture("_DepthTex", depth);
+            cb.SetGlobalTexture("_SkyTex", skyIrradiance);
+            cb.Blit(sceneColor, target, lutMat, 5);
+        }
+
+        /// <summary>
         /// Render atmo, will use the preset camera parameters(_ProjectionParams, _ScreenParams, unity_CameraProjection, unity_CameraToWorld, _WorldSpaceCameraPos). 
         /// If these value are not set in your pipeline, please set them before call this function.
         /// </summary>

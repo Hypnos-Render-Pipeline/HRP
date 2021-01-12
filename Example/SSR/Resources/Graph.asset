@@ -235,8 +235,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1984.0001
-      y: 1250.9393
+      x: 1984
+      y: 1258.935
       width: 300
       height: 388
     info: 
@@ -266,10 +266,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 6468.052
-      y: 1437
+      x: 6463.7427
+      y: 1429.2825
       width: 300
-      height: 153
+      height: 172
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   - nodeName: AreaLight
@@ -385,15 +385,18 @@ MonoBehaviour:
     - name: skyBox
       info: 
       mustConnect: 0
+    - name: afterAtmo
+      info: 
+      mustConnect: 0
     - name: sunBuffer
       info: 
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2917.119
+      x: 2918.749
       y: 1365
       width: 300
-      height: 450
+      height: 469
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SunAtmo
   - nodeName: LocalLighting
@@ -450,7 +453,7 @@ MonoBehaviour:
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     inputs:
     - name: skyBox
@@ -506,8 +509,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3490.0002
-      y: 1151.5
+      x: 3490
+      y: 1274.4304
       width: 300
       height: 129
     info: 
@@ -611,8 +614,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 5384.0005
-      y: 1360.0001
+      x: 5397.688
+      y: 1361
       width: 300
       height: 412
     info: 
@@ -731,8 +734,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 5996.737
-      y: 1408
+      x: 5928.6875
+      y: 1429
       width: 300
       height: 316
     info: 
@@ -754,8 +757,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 4820.919
-      y: 1437
+      x: 4821
+      y: 1438.3225
       width: 300
       height: 129
     info: 
@@ -1021,10 +1024,6 @@ MonoBehaviour:
     o: 9
     i_n: target
     o_n: target
-  - i: 1
-    o: 5
-    i_n: result
-    o_n: combined
   - i: 14
     o: 3
     i_n: lightBuffer
@@ -1081,27 +1080,31 @@ MonoBehaviour:
     o: 14
     i_n: color
     o_n: target
+  - i: 1
+    o: 5
+    i_n: result
+    o_n: combined
   node_edgeRecs:
   - node: 2
     in_edges: 
-    out_edge: 00000000010000000a0000000f000000300000003900000044000000
+    out_edge: 00000000010000000a0000000f000000300000003900000043000000
   - node: 3
     in_edges: 00000000
-    out_edge: 020000000300000015000000160000002e0000002f00000037000000380000004200000043000000
+    out_edge: 020000000300000015000000160000002e0000002f00000037000000380000004100000042000000
   - node: 4
     in_edges: 010000000200000003000000040000000500000006000000070000000800000029000000
-    out_edge: 4c000000
+    out_edge: 4b000000
   - node: 0
     in_edges: 
-    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d000000320000003300000034000000350000003b0000003c0000003d00000046000000
+    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d000000320000003300000034000000350000003b0000003c0000003d00000045000000
   - node: 5
-    in_edges: 090000004f000000
-    out_edge: 41000000
+    in_edges: 090000004e000000
+    out_edge: 4f000000
   - node: 6
-    in_edges: 0a0000000b0000000c0000000d0000000e0000002b0000004c000000
-    out_edge: 100000001b0000001e000000220000003f000000450000004d000000
+    in_edges: 0a0000000b0000000c0000000d0000000e0000002b0000004b000000
+    out_edge: 100000001b0000001e000000220000003f000000440000004c000000
   - node: 7
-    in_edges: 0f000000100000001100000012000000130000001b0000002c00000046000000
+    in_edges: 0f000000100000001100000012000000130000001b0000002c00000045000000
     out_edge: 1c0000001d0000002800000031000000360000003a0000003e000000
   - node: 8
     in_edges: 1400000015000000160000001700000018000000190000001a0000002a000000
@@ -1113,28 +1116,28 @@ MonoBehaviour:
     in_edges: 22000000
     out_edge: 23000000
   - node: 11
-    in_edges: 230000002400000025000000260000002700000028000000490000004a000000
+    in_edges: 2300000024000000250000002600000027000000280000004800000049000000
     out_edge: 
   - node: 12
-    in_edges: 2e0000002f00000030000000310000003200000033000000340000003500000036000000480000004b0000004d000000
-    out_edge: 4e000000
+    in_edges: 2e0000002f00000030000000310000003200000033000000340000003500000036000000470000004a0000004c000000
+    out_edge: 4d000000
   - node: 13
     in_edges: 3700000038000000390000003a0000003b0000003c0000003d0000003e0000003f00000040000000
-    out_edge: 470000004a0000004b000000
-  - node: 1
-    in_edges: 41000000
-    out_edge: 
+    out_edge: 46000000490000004a000000
   - node: 14
-    in_edges: 420000004300000044000000450000004e000000
-    out_edge: 4f000000
+    in_edges: 410000004200000043000000440000004d000000
+    out_edge: 4e000000
   - node: 15
-    in_edges: 47000000
-    out_edge: 4800000049000000
+    in_edges: 46000000
+    out_edge: 4700000048000000
+  - node: 1
+    in_edges: 4f000000
+    out_edge: 
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
     nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000
-  recompiled: 0
+  recompiled: 1
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Graph_Executor
     : HRGExecutor\r\n    {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
@@ -1187,7 +1190,8 @@ MonoBehaviour:
     System.Int32 SunAtmo7_ao = Shader.PropertyToID(\"SunAtmo7.ao\");\r\n        System.Int32
     SunAtmo7_motion = Shader.PropertyToID(\"SunAtmo7.motion\");\r\n        System.Int32
     SunAtmo7_skyBox = Shader.PropertyToID(\"SunAtmo7.skyBox\");\r\n        System.Int32
-    SunAtmo7_sunBuffer = Shader.PropertyToID(\"SunAtmo7.sunBuffer\");\r\n       
+    SunAtmo7_afterAtmo = Shader.PropertyToID(\"SunAtmo7.afterAtmo\");\r\n       
+    System.Int32 SunAtmo7_sunBuffer = Shader.PropertyToID(\"SunAtmo7.sunBuffer\");\r\n       
     System.Int32 SkyBoxIBL8_skyBox = Shader.PropertyToID(\"SkyBoxIBL8.skyBox\");\r\n       
     System.Int32 SkyBoxIBL8_target = Shader.PropertyToID(\"SkyBoxIBL8.target\");\r\n       
     System.Int32 SkyBoxIBL8_depth = Shader.PropertyToID(\"SkyBoxIBL8.depth\");\r\n       
@@ -1248,7 +1252,7 @@ MonoBehaviour:
     32);\r\n            SunAtmo7.VolumeResolution = new Vector3Int(32, 32, 32);\r\n           
     SunAtmo7.VolumeMaxDepth = 32000f;\r\n            SunAtmo7.applyAtmoFog = true;\r\n           
     SunAtmo7.enabled = true;\r\n            SkyBoxIBL8 = new SkyBoxIBL();\r\n           
-    SkyBoxIBL8.enabled = false;\r\n            RTSpecular9 = new RTSpecular();\r\n           
+    SkyBoxIBL8.enabled = true;\r\n            RTSpecular9 = new RTSpecular();\r\n           
     RTSpecular9.useRTShadow = true;\r\n            RTSpecular9.enabled = true;\r\n           
     RTGI10 = new RTGI();\r\n            RTGI10.useRTShadow = true;\r\n           
     RTGI10.maxDepth = 2;\r\n            RTGI10.spp = 1;\r\n            RTGI10.showVariance
@@ -1290,7 +1294,8 @@ MonoBehaviour:
     CullLight2.lights.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                CullLight2.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                {\r\n                    CullLight2.lights.connected
+    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //ZBin3\r\n           
     {\r\n                context.commandBuffer.name = \"ZBin3\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1305,7 +1310,8 @@ MonoBehaviour:
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                ZBin3.Execute(context);\r\n                // postprocess
     node\r\n                {\r\n                    ZBin3.depth.ReleaseResourcces(context);\r\n                   
-    ZBin3.tileLights.connected = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    ZBin3.lightBuffer.connected = true;\r\n                    ZBin3.tileLights.connected
+    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //RTDI4\r\n           
     {\r\n                context.commandBuffer.name = \"RTDI4\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1343,8 +1349,7 @@ MonoBehaviour:
     // outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                AreaLight6.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                    AreaLight6.depth.connected =
-    true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //SunAtmo7\r\n           
     {\r\n                context.commandBuffer.name = \"SunAtmo7\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1358,13 +1363,16 @@ MonoBehaviour:
     SunAtmo7.motion.connected = true;\r\n                    SunAtmo7.motion.Move(GBuffer0.motion);\r\n                   
     // outputs\r\n                    SunAtmo7.skyBox.AllocateResourcces(context,
     SunAtmo7_skyBox);\r\n                    SunAtmo7.skyBox.name = \"SunAtmo7.skyBox\";\r\n                   
-    SunAtmo7.skyBox.connected = true;\r\n                    SunAtmo7.sunBuffer.AllocateResourcces(context,
+    SunAtmo7.skyBox.connected = true;\r\n                    SunAtmo7.afterAtmo.AllocateResourcces(context,
+    SunAtmo7_afterAtmo);\r\n                    SunAtmo7.afterAtmo.name = \"SunAtmo7.afterAtmo\";\r\n                   
+    SunAtmo7.afterAtmo.connected = false;\r\n                    SunAtmo7.sunBuffer.AllocateResourcces(context,
     SunAtmo7_sunBuffer);\r\n                    SunAtmo7.sunBuffer.name = \"SunAtmo7.sunBuffer\";\r\n                   
     SunAtmo7.sunBuffer.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                SunAtmo7.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                    SunAtmo7.skyBox.connected =
-    true;\r\n                    SunAtmo7.sunBuffer.connected = true;\r\n               
+    node\r\n                {\r\n                    SunAtmo7.afterAtmo.ReleaseResourcces(context);\r\n                   
+    SunAtmo7.skyBox.connected = true;\r\n                    SunAtmo7.afterAtmo.connected
+    = true;\r\n                    SunAtmo7.sunBuffer.connected = true;\r\n               
     }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //SkyBoxIBL8\r\n           
     {\r\n                context.commandBuffer.name = \"SkyBoxIBL8\";\r\n               
@@ -1380,9 +1388,10 @@ MonoBehaviour:
     SkyBoxIBL8_irradiance);\r\n                    SkyBoxIBL8.irradiance.name = \"SkyBoxIBL8.irradiance\";\r\n                   
     SkyBoxIBL8.irradiance.connected = false;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                // postprocess node\r\n                {\r\n                   
-    SkyBoxIBL8.irradiance.ReleaseResourcces(context);\r\n                    SkyBoxIBL8.irradiance.connected
-    = false;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                SkyBoxIBL8.Execute(context);\r\n                // postprocess
+    node\r\n                {\r\n                    SkyBoxIBL8.irradiance.ReleaseResourcces(context);\r\n                   
+    SkyBoxIBL8.irradiance.connected = true;\r\n                }\r\n               
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //RTGI10\r\n           
     {\r\n                context.commandBuffer.name = \"RTGI10\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1390,7 +1399,7 @@ MonoBehaviour:
     RTGI10.tiledLights.connected = true;\r\n                    RTGI10.tiledLights.Move(ZBin3.tileLights);\r\n                   
     RTGI10.lights.connected = true;\r\n                    RTGI10.lights.Move(CullLight2.lights);\r\n                   
     RTGI10.sun.connected = true;\r\n                    RTGI10.sun.Move(SunAtmo7.sunBuffer);\r\n                   
-    RTGI10.target.connected = false;\r\n                    RTGI10.target.Move(SkyBoxIBL8.target);\r\n                   
+    RTGI10.target.connected = true;\r\n                    RTGI10.target.Move(SkyBoxIBL8.target);\r\n                   
     RTGI10.depth.connected = true;\r\n                    RTGI10.depth.Move(AreaLight6.depth);\r\n                   
     RTGI10.motion.connected = true;\r\n                    RTGI10.motion.Move(GBuffer0.motion);\r\n                   
     RTGI10.diffuse.connected = true;\r\n                    RTGI10.diffuse.Move(GBuffer0.diffuse);\r\n                   
@@ -1409,8 +1418,8 @@ MonoBehaviour:
     = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                PyramidColor12.Execute(context);\r\n                //
-    postprocess node\r\n                {\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    postprocess node\r\n                {\r\n                    PyramidColor12.pyramidColor.connected
+    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //RTSpecular9\r\n           
     {\r\n                context.commandBuffer.name = \"RTSpecular9\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1449,9 +1458,8 @@ MonoBehaviour:
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                Transparent11.Execute(context);\r\n                //
     postprocess node\r\n                {\r\n                    Transparent11.areaLightBuffer.ReleaseResourcces(context);\r\n                   
-    Transparent11.filterdScreenColor.ReleaseResourcces(context);\r\n                   
-    Transparent11.target.connected = true;\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    Transparent11.filterdScreenColor.ReleaseResourcces(context);\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //CombineColorDepth5\r\n           
     {\r\n                context.commandBuffer.name = \"CombineColorDepth5\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1463,8 +1471,9 @@ MonoBehaviour:
     = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                CombineColorDepth5.Execute(context);\r\n               
-    // postprocess node\r\n                {\r\n                    CombineColorDepth5.color.ReleaseResourcces(context);\r\n               
-    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    // postprocess node\r\n                {\r\n                    CombineColorDepth5.color.ReleaseResourcces(context);\r\n                   
+    CombineColorDepth5.combined.connected = true;\r\n                }\r\n               
+    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //OutputNode1\r\n           
     {\r\n                context.commandBuffer.name = \"OutputNode1\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1501,26 +1510,27 @@ MonoBehaviour:
     SunAtmo7.diffuse.Dispose();\r\n                SunAtmo7.specular.Dispose();\r\n               
     SunAtmo7.normal.Dispose();\r\n                SunAtmo7.ao.Dispose();\r\n               
     SunAtmo7.motion.Dispose();\r\n                SunAtmo7.skyBox.Dispose();\r\n               
-    SunAtmo7.sunBuffer.Dispose();\r\n                SunAtmo7.Dispose();\r\n           
-    }\r\n            // SkyBoxIBL8\r\n            {\r\n                SkyBoxIBL8.skyBox.Dispose();\r\n               
-    SkyBoxIBL8.target.Dispose();\r\n                SkyBoxIBL8.depth.Dispose();\r\n               
-    SkyBoxIBL8.diffuse.Dispose();\r\n                SkyBoxIBL8.specular.Dispose();\r\n               
-    SkyBoxIBL8.normal.Dispose();\r\n                SkyBoxIBL8.ao.Dispose();\r\n               
-    SkyBoxIBL8.irradiance.Dispose();\r\n                SkyBoxIBL8.Dispose();\r\n           
-    }\r\n            // RTSpecular9\r\n            {\r\n                RTSpecular9.lightBuffer.Dispose();\r\n               
-    RTSpecular9.tiledLights.Dispose();\r\n                RTSpecular9.lights.Dispose();\r\n               
-    RTSpecular9.sun.Dispose();\r\n                RTSpecular9.target.Dispose();\r\n               
-    RTSpecular9.filteredColor.Dispose();\r\n                RTSpecular9.depth.Dispose();\r\n               
-    RTSpecular9.motion.Dispose();\r\n                RTSpecular9.specular.Dispose();\r\n               
-    RTSpecular9.normal.Dispose();\r\n                RTSpecular9.ao.Dispose();\r\n               
-    RTSpecular9.skybox.Dispose();\r\n                RTSpecular9.Dispose();\r\n           
-    }\r\n            // RTGI10\r\n            {\r\n                RTGI10.lightBuffer.Dispose();\r\n               
-    RTGI10.tiledLights.Dispose();\r\n                RTGI10.lights.Dispose();\r\n               
-    RTGI10.sun.Dispose();\r\n                RTGI10.target.Dispose();\r\n               
-    RTGI10.depth.Dispose();\r\n                RTGI10.motion.Dispose();\r\n               
-    RTGI10.diffuse.Dispose();\r\n                RTGI10.normal.Dispose();\r\n               
-    RTGI10.skybox.Dispose();\r\n                RTGI10.Dispose();\r\n           
-    }\r\n            // Transparent11\r\n            {\r\n                Transparent11.lightBuffer.Dispose();\r\n               
+    SunAtmo7.afterAtmo.Dispose();\r\n                SunAtmo7.sunBuffer.Dispose();\r\n               
+    SunAtmo7.Dispose();\r\n            }\r\n            // SkyBoxIBL8\r\n           
+    {\r\n                SkyBoxIBL8.skyBox.Dispose();\r\n                SkyBoxIBL8.target.Dispose();\r\n               
+    SkyBoxIBL8.depth.Dispose();\r\n                SkyBoxIBL8.diffuse.Dispose();\r\n               
+    SkyBoxIBL8.specular.Dispose();\r\n                SkyBoxIBL8.normal.Dispose();\r\n               
+    SkyBoxIBL8.ao.Dispose();\r\n                SkyBoxIBL8.irradiance.Dispose();\r\n               
+    SkyBoxIBL8.Dispose();\r\n            }\r\n            // RTSpecular9\r\n           
+    {\r\n                RTSpecular9.lightBuffer.Dispose();\r\n                RTSpecular9.tiledLights.Dispose();\r\n               
+    RTSpecular9.lights.Dispose();\r\n                RTSpecular9.sun.Dispose();\r\n               
+    RTSpecular9.target.Dispose();\r\n                RTSpecular9.filteredColor.Dispose();\r\n               
+    RTSpecular9.depth.Dispose();\r\n                RTSpecular9.motion.Dispose();\r\n               
+    RTSpecular9.specular.Dispose();\r\n                RTSpecular9.normal.Dispose();\r\n               
+    RTSpecular9.ao.Dispose();\r\n                RTSpecular9.skybox.Dispose();\r\n               
+    RTSpecular9.Dispose();\r\n            }\r\n            // RTGI10\r\n           
+    {\r\n                RTGI10.lightBuffer.Dispose();\r\n                RTGI10.tiledLights.Dispose();\r\n               
+    RTGI10.lights.Dispose();\r\n                RTGI10.sun.Dispose();\r\n               
+    RTGI10.target.Dispose();\r\n                RTGI10.depth.Dispose();\r\n               
+    RTGI10.motion.Dispose();\r\n                RTGI10.diffuse.Dispose();\r\n               
+    RTGI10.normal.Dispose();\r\n                RTGI10.skybox.Dispose();\r\n               
+    RTGI10.Dispose();\r\n            }\r\n            // Transparent11\r\n           
+    {\r\n                Transparent11.lightBuffer.Dispose();\r\n               
     Transparent11.tiledLights.Dispose();\r\n                Transparent11.lights.Dispose();\r\n               
     Transparent11.areaLightBuffer.Dispose();\r\n                Transparent11.filterdScreenColor.Dispose();\r\n               
     Transparent11.target.Dispose();\r\n                Transparent11.depth.Dispose();\r\n               

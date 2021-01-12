@@ -34,9 +34,8 @@ namespace HypnosRenderPipeline.RenderPass
                                                                 SizeCastMode.Fixed,
                                                                 ColorCastMode.Fixed,
                                                                 SizeScale.Full);
-#if UNITY_EDITOR
+
         public bool debugTiledLight = false;
-#endif
 
         static MaterialWithName lightingMat = new MaterialWithName("Hidden/DeferredLighting");
 

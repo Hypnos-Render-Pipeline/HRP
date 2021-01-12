@@ -56,8 +56,9 @@ namespace HypnosRenderPipeline.Tools
 
         public void OnPostprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
         {
-            var fromPath = Assembly.Load("UnityEditor").Location.Replace("\\Managed\\UnityEditor.dll", "") + "\\MonoBleedingEdge";
-
+            var fromPath = Assembly.Load("UnityEditor").Location.Replace("\\Managed\\UnityEditor.dll", "")
+                                    .Replace("\\Managed\\UnityEngine\\UnityEditor.dll", "") + "\\MonoBleedingEdge";
+            
             var t = report.summary.outputPath;
             string toPath = t.Substring(0, t.LastIndexOf("/")).Replace("/", "\\") + "\\MonoBleedingEdge";
             CopyDic(fromPath + "\\bin", toPath + "\\bin");
@@ -67,7 +68,7 @@ namespace HypnosRenderPipeline.Tools
         {
             if (!Directory.Exists(sourceDir))
             {
-                throw new ApplicationException("Source directory does not exist");
+                throw new UnityEditor.Build.BuildFailedException("Source directory does not exist:" + sourceDir);
             }
             if (!Directory.Exists(toDir))
             {

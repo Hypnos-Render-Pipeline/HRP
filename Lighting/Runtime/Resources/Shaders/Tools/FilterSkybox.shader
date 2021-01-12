@@ -80,6 +80,7 @@ Shader "Hidden/FilterSkybox"
                             {
                                 float3 dir = UV2Dir(s, float2(x, y));
                                 float w_ = max(0, dot(v, dir));
+                                w_ = pow(w_, 1.2);
                                 w += w_;
                                 res += texCUBElod(_MainTex, float4(dir, 5)) * w_;
                             }

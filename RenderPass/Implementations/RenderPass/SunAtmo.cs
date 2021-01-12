@@ -48,6 +48,9 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.Out)]
         public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf) { dimension = TextureDimension.Cube, useMipMap = true }, sizeScale: SizeScale.Custom);
 
+        [NodePin(PinType.Out)]
+        public AfterAtmo afterAtmo = new AfterAtmo();
+
         public struct SunLight
         {
             public float3 dir;
@@ -140,7 +143,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         int hash;
 
-        public SunAtmo() { 
+        public SunAtmo() {
             hash = GetHashCode();
 
             worleyVolume3D = new RenderTexture(32, 32, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
@@ -192,6 +195,7 @@ namespace HypnosRenderPipeline.RenderPass
 
         public override void DisExecute(RenderContext contex)
         {
+            afterAtmo.atmo = null;
             contex.commandBuffer.SetComputeBufferData(sunBuffer, sunLightClear);
         }
 
@@ -220,6 +224,9 @@ namespace HypnosRenderPipeline.RenderPass
                 lum = sun.color * sun.radiance * math.pow(10, 5.7f);
                 dir = -sun.direction;
             }
+
+            afterAtmo.atmo = atmo;
+
             if (atmo != null)
             {
                 bool LutSizeChanged = InitLut();

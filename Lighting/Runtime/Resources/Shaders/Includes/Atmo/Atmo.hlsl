@@ -130,6 +130,37 @@ inline const float3 GetDir_11(const float cos) {
 #endif
 	return float3(0, 1, 0) * k + sqrt(1 - k * k) * float3(1, 0, 0);
 }
+
+float GetPhase(float g, float dot) {
+	return (1 - g * g) / pow(1 + g * g + 2 * g * dot, 1.5);
+}
+
+float numericalMieFit(float costh)
+{
+	// This function was optimized to minimize (delta*delta)/reference in order to capture
+	// the low intensity behavior.
+	float bestParams[10];
+	bestParams[0] = 9.805233e-06;
+	bestParams[1] = -6.500000e+01;
+	bestParams[2] = -5.500000e+01;
+	bestParams[3] = 8.194068e-01;
+	bestParams[4] = 1.388198e-01;
+	bestParams[5] = -8.370334e+01;
+	bestParams[6] = 7.810083e+00;
+	bestParams[7] = 2.054747e-03;
+	bestParams[8] = 2.600563e-02;
+	bestParams[9] = -4.552125e-12;
+
+	float p1 = costh + bestParams[3];
+	float4 expValues = exp(float4(bestParams[1] * costh + bestParams[2], bestParams[5] * p1 * p1, bestParams[6] * costh, bestParams[9] * costh));
+	float4 expValWeight = float4(bestParams[0], bestParams[4], bestParams[7], bestParams[8]);
+	return dot(expValues, expValWeight) * 0.25;
+}
+inline float numericalMieFitMultiScatter() {
+	// This is the acossiated multi scatter term used to simulate multi scatter effect.
+	return 0.1026;
+}
+
 inline const float3 Beta_R_S(const float h) {
 	return lerp(beta_R_S_0 * exp(-h / H_R), 0, saturate(h / atmosphere_thickness * 6 - 5));
 }
@@ -532,7 +563,7 @@ const float3 SkyBox(float3 x, const float3 v, const float3 s) {
 
 const float3 Scatter(const float3 x, const float3 v, const float depth, const float3 s) {
 
-	float phi = pow(acos(dot(normalize(v.xz), normalize(s.xz))) / pi, 0.33333);
+	float phi = pow(acos(clamp(dot(normalize(v.xz), normalize(s.xz)), -1, 1)) / pi, 0.33333);
 
 	float rho;
 	float horiz = length(x);

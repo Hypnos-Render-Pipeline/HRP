@@ -75,6 +75,18 @@ namespace HypnosRenderPipeline
             }
         }
 
+        public static CullingResults Cull(this CommandBuffer cb, ref ScriptableCullingParameters cullingParams)
+        {
+            if (!m_GPUDriven)
+            {
+                return m_context.Cull(ref cullingParams);
+            }
+            else
+            {
+                throw new NotImplementedException(NotImp);
+                //return new CullingResults();
+            }
+        }
 
         public static void DrawRenderers(this CommandBuffer cb, CullingResults cullingResults, ref DrawingSettings drawingSettings, ref FilteringSettings filteringSettings, NativeArray<ShaderTagId> renderTypes, NativeArray<RenderStateBlock> stateBlocks)
         {
@@ -114,6 +126,33 @@ namespace HypnosRenderPipeline
             {
                 throw new NotImplementedException(NotImp);
             }
+        }
+
+
+        public static void DebugDrawBox(this CommandBuffer cb, Matrix4x4 mat, Color color)
+        {
+            Vector4 a, b, c, d, e, f, g, h;
+            a = mat * new Vector4(-0.5f, -0.5f, -0.5f, 1);
+            b = mat * new Vector4(0.5f, -0.5f, -0.5f, 1);
+            c = mat * new Vector4(-0.5f, -0.5f, 0.5f, 1);
+            d = mat * new Vector4(0.5f, -0.5f, 0.5f, 1);
+            e = mat * new Vector4(-0.5f, 0.5f, -0.5f, 1);
+            f = mat * new Vector4(0.5f, 0.5f, -0.5f, 1);
+            g = mat * new Vector4(-0.5f, 0.5f, 0.5f, 1);
+            h = mat * new Vector4(0.5f, 0.5f, 0.5f, 1);
+
+            Debug.DrawLine(a, b, color);
+            Debug.DrawLine(a, c, color);
+            Debug.DrawLine(b, d, color);
+            Debug.DrawLine(c, d, color);
+            Debug.DrawLine(e, f, color);
+            Debug.DrawLine(e, g, color);
+            Debug.DrawLine(f, h, color);
+            Debug.DrawLine(g, h, color);
+            Debug.DrawLine(a, e, color);
+            Debug.DrawLine(b, f, color);
+            Debug.DrawLine(c, g, color);
+            Debug.DrawLine(d, h, color);
         }
     }
 }

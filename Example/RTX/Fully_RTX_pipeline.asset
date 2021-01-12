@@ -381,7 +381,8 @@ MonoBehaviour:
     CullLight0.lights.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                CullLight0.Execute(context);\r\n                // postprocess
-    node\r\n                {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    node\r\n                {\r\n                    CullLight0.lights.connected
+    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //ZBin1\r\n           
     {\r\n                context.commandBuffer.name = \"ZBin1\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -396,7 +397,8 @@ MonoBehaviour:
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                ZBin1.Execute(context);\r\n                // postprocess
     node\r\n                {\r\n                    ZBin1.depth.ReleaseResourcces(context);\r\n                   
-    ZBin1.tileLights.connected = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    ZBin1.lightBuffer.connected = true;\r\n                    ZBin1.tileLights.connected
+    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //RTDI4\r\n           
     {\r\n                context.commandBuffer.name = \"RTDI4\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -426,29 +428,25 @@ MonoBehaviour:
     context.commandBuffer.Clear();\r\n            }\r\n            //OutputNode3\r\n           
     {\r\n                context.commandBuffer.name = \"OutputNode3\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    OutputNode3.result.connected = true;\r\n                    OutputNode3.result.AllocateResourcces(context,
-    OutputNode3_result);\r\n                    OutputNode3.result.name = \"OutputNode3.result\";\r\n                   
-    OutputNode3.result.CastFrom(context, RTDI4.lightingResult);\r\n                   
-    RTDI4.lightingResult.ReleaseResourcces(context);\r\n                    // outputs\r\n                   
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
-    context.commandBuffer.Clear();\r\n                }\r\n                // perform
-    node\r\n                result = OutputNode3.result.handle;\r\n               
-    return result;\r\n            }\r\n        }\r\n        \r\n        public void
-    Dispose()\r\n        {\r\n            // CullLight0\r\n            {\r\n               
-    CullLight0.lights.Dispose();\r\n                CullLight0.Dispose();\r\n           
-    }\r\n            // ZBin1\r\n            {\r\n                ZBin1.lights.Dispose();\r\n               
-    ZBin1.depth.Dispose();\r\n                ZBin1.lightBuffer.Dispose();\r\n               
-    ZBin1.tileLights.Dispose();\r\n                ZBin1.Dispose();\r\n           
-    }\r\n            // GBuffer2\r\n            {\r\n                GBuffer2.depth.Dispose();\r\n               
-    GBuffer2.diffuse.Dispose();\r\n                GBuffer2.specular.Dispose();\r\n               
-    GBuffer2.normal.Dispose();\r\n                GBuffer2.emission.Dispose();\r\n               
-    GBuffer2.microAO.Dispose();\r\n                GBuffer2.motion.Dispose();\r\n               
-    GBuffer2.Dispose();\r\n            }\r\n            // OutputNode3\r\n           
-    {\r\n                OutputNode3.result.Dispose();\r\n                OutputNode3.Dispose();\r\n           
-    }\r\n            // RTDI4\r\n            {\r\n                RTDI4.lights.Dispose();\r\n               
-    RTDI4.lightBuffer.Dispose();\r\n                RTDI4.tiledLights.Dispose();\r\n               
-    RTDI4.directionalLightBuffer.Dispose();\r\n                RTDI4.depth.Dispose();\r\n               
-    RTDI4.diffuse.Dispose();\r\n                RTDI4.specular.Dispose();\r\n               
-    RTDI4.normal.Dispose();\r\n                RTDI4.emission.Dispose();\r\n               
-    RTDI4.ao.Dispose();\r\n                RTDI4.lightingResult.Dispose();\r\n               
-    RTDI4.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"
+    OutputNode3.result.connected = true;\r\n                    OutputNode3.result.Move(RTDI4.lightingResult);\r\n                   
+    // outputs\r\n                }\r\n                // perform node\r\n               
+    result = OutputNode3.result.handle;\r\n                return result;\r\n           
+    }\r\n        }\r\n        \r\n        public void Dispose()\r\n        {\r\n           
+    // CullLight0\r\n            {\r\n                CullLight0.lights.Dispose();\r\n               
+    CullLight0.Dispose();\r\n            }\r\n            // ZBin1\r\n           
+    {\r\n                ZBin1.lights.Dispose();\r\n                ZBin1.depth.Dispose();\r\n               
+    ZBin1.lightBuffer.Dispose();\r\n                ZBin1.tileLights.Dispose();\r\n               
+    ZBin1.Dispose();\r\n            }\r\n            // GBuffer2\r\n            {\r\n               
+    GBuffer2.depth.Dispose();\r\n                GBuffer2.diffuse.Dispose();\r\n               
+    GBuffer2.specular.Dispose();\r\n                GBuffer2.normal.Dispose();\r\n               
+    GBuffer2.emission.Dispose();\r\n                GBuffer2.microAO.Dispose();\r\n               
+    GBuffer2.motion.Dispose();\r\n                GBuffer2.Dispose();\r\n           
+    }\r\n            // OutputNode3\r\n            {\r\n                OutputNode3.result.Dispose();\r\n               
+    OutputNode3.Dispose();\r\n            }\r\n            // RTDI4\r\n           
+    {\r\n                RTDI4.lights.Dispose();\r\n                RTDI4.lightBuffer.Dispose();\r\n               
+    RTDI4.tiledLights.Dispose();\r\n                RTDI4.directionalLightBuffer.Dispose();\r\n               
+    RTDI4.depth.Dispose();\r\n                RTDI4.diffuse.Dispose();\r\n               
+    RTDI4.specular.Dispose();\r\n                RTDI4.normal.Dispose();\r\n               
+    RTDI4.emission.Dispose();\r\n                RTDI4.ao.Dispose();\r\n               
+    RTDI4.lightingResult.Dispose();\r\n                RTDI4.Dispose();\r\n           
+    }\r\n        }\r\n    }\r\n}\r\n"

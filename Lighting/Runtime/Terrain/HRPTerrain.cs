@@ -59,6 +59,7 @@ namespace HypnosRenderPipeline
         }
 
         public CommandBuffer cb;
+        public CommandBuffer shadowCb;
 
         [HideInInspector]
         public Texture2D lodTexture;
@@ -151,6 +152,11 @@ namespace HypnosRenderPipeline
                 properties[i].SetBuffer("_TileIndex", cullingBuffers.indexBuffer);
                 cb.DrawMeshInstancedIndirect(lodMeshs[i], 0, mat, i == 0 ? 0 : 1, cullingBuffers.argsBuffer, 0, properties[i]);
             }
+
+
+            shadowCb = new CommandBuffer();
+            shadowCb.name = "Terrain Shadow";
+            shadowCb.Blit(null, BuiltinRenderTextureType.CurrentActive, mat, 2);
         }
 
 

@@ -93,26 +93,29 @@ bool IntersectTriangle(float3 o, float3 d, float3 v0, float3 v1, float3 v2)
 }
 
 inline bool ConeConeTest(float3 p, float3 v, float t, float3 p1, float3 v1, float d1, float t1) {
+    float3 pp1 = p - p1;
+    float lpp1 = length(pp1);
+    float pp1dotv1 = dot(p - p1, v1);
+    if (pp1dotv1 > sqrt(1 - t1 * t1) * lpp1 && pp1dotv1 < d1)return true;
+
     float3 fp = p1 + v1 * d1;
     float3 v_ = normalize(normalize(cross(cross(v, fp - p), v)) * t + v);
     float dis = dot(fp - p, v1) / dot(v_, v1);
     if (distance(dis * v_ + p, fp) < d1 * t1 + dis * t) return true;
 
 
-    float3 ta = normalize(cross(v1, normalize(fp - p)));
+    float3 ta = normalize(cross(v1, v));
     float3 n = normalize(cross(ta, v1));
-    dis = dot(p1 - p, n) / dot(v, n);
-    dis *= t / dot(n, v);
-    p1 -= dis * v1;
-    float3 p2 = p1 + (v1 + ta * t1 * 2) * (d1 + dis * 2) + ta * dis;
-    float3 p3 = p1 + (v1 - ta * t1 * 2) * (d1 + dis * 2) - ta * dis;
+    dis = (d1 + 1) * t1;
+    p1 -= v1;
+    float3 p2 = fp + ta * (dis + 1);
+    float3 p3 = fp - ta * (dis * 1);
 
     if (IntersectTriangle(p, v, p1, p2, p3)) return true;
 
-    if (dot(normalize(p - p1), v1) > sqrt(1 - t1 * t1) - 0.01)return true;
-
     return false;
 }
+
 bool ConeIntersect(float4 position_range, float3 dir, float angle, float4x4 planes)
 {
     [unroll]

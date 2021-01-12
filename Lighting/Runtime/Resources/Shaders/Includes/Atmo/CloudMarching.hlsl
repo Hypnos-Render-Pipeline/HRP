@@ -93,34 +93,6 @@ float2 IntersectSphere2(float3 p, float3 v, float3 o, float r)
 inline float GetT(float s, float t) {
 	return exp(-t * s);
 }
-float GetPhase(float g, float dot) {
-	return (1 - g * g) / pow(1 + g * g + 2 * g * dot, 1.5);
-}
-float numericalMieFit(float costh)
-{
-	// This function was optimized to minimize (delta*delta)/reference in order to capture
-	// the low intensity behavior.
-	float bestParams[10];
-	bestParams[0] = 9.805233e-06;
-	bestParams[1] = -6.500000e+01;
-	bestParams[2] = -5.500000e+01;
-	bestParams[3] = 8.194068e-01;
-	bestParams[4] = 1.388198e-01;
-	bestParams[5] = -8.370334e+01;
-	bestParams[6] = 7.810083e+00;
-	bestParams[7] = 2.054747e-03;
-	bestParams[8] = 2.600563e-02;
-	bestParams[9] = -4.552125e-12;
-
-	float p1 = costh + bestParams[3];
-	float4 expValues = exp(float4(bestParams[1] * costh + bestParams[2], bestParams[5] * p1 * p1, bestParams[6] * costh, bestParams[9] * costh));
-	float4 expValWeight = float4(bestParams[0], bestParams[4], bestParams[7], bestParams[8]);
-	return dot(expValues, expValWeight) * 0.25;
-}
-inline float numericalMieFitMultiScatter() {
-	// This is the acossiated multi scatter term used to simulate multi scatter effect.
-	return 0.1026;
-}
 
 float remap(float v, float a, float b, float c, float d) {
 	return (clamp(v, a, b) - a) / max(0.0001, b - a) * (d - c) + c;
@@ -147,12 +119,12 @@ float CloudType(float h, float t) {
 }
 
 float3 Space(float3 v) {
-	v = mul(_LightTransform, float4(v, 0));
+	v = mul(_LightTransform, float4(v, 0)).xyz;
 	float3 normalizedCoords = normalize(v);
 	float latitude = acos(normalizedCoords.y);
 	float longitude = atan2(normalizedCoords.z, normalizedCoords.x);
 	float2 sphereCoords = float2(longitude, latitude) * float2(0.5 / 3.14159265359f, 1.0 / 3.14159265359f);
-	return tex2Dlod(_SpaceMap, float4(float2(0.5, 1.0) - sphereCoords, 0, 0));
+	return tex2Dlod(_SpaceMap, float4(float2(0.5, 1.0) - sphereCoords, 0, 0)).xyz;
 }
 
 inline float4 HighCloud(const float3 p, const float3 v) {
@@ -216,7 +188,7 @@ inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
 	cloud_coverage = rescale01(cloud_coverage, 1 - _CloudCoverage, 1);
 
 	// apply anvil deformations
-	cloud_coverage = pow(cloud_coverage, lerp(1, 0.2, min(1, height_fraction * 5) * weather_data.x));
+	cloud_coverage = pow(max(0, cloud_coverage), lerp(1, 0.2, min(1, height_fraction * 5) * weather_data.x));
 
 	//Use remapper to apply cloud coverage attribute
 	float base_cloud_with_coverage = rescale01(base_cloud, 1 - cloud_coverage, 1.0) * cloud_coverage;
@@ -272,7 +244,7 @@ inline float2 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	cloud_coverage = rescale01(cloud_coverage, 1 - _CloudCoverage, 1);
 
 	// apply anvil deformations
-	cloud_coverage = pow(cloud_coverage, lerp(1, 0.2, min(1, height_fraction * 5) * weather_data.x));
+	cloud_coverage = pow(max(0, cloud_coverage), lerp(1, 0.2, min(1, height_fraction * 5) * weather_data.x));
 
 	//Use remapper to apply cloud coverage attribute
 	float base_cloud_with_coverage = rescale01(base_cloud, 1 - cloud_coverage, 1.0);
@@ -309,7 +281,7 @@ inline float2 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 }
 
 float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d = 9999999) {
-
+	cloud_dis = 0;
 	const float max_dis = lerp(8000, 24000, _Quality.w);
 	const float sample_num = _Quality.z;
 
@@ -421,7 +393,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 				trans *= scatter;
 				scatter = 1 - scatter;
 
-				float depth_probability = pow(sh.x * 150, remap(sh.y, 0.3, 0.85, 0.3, 2));
+				float depth_probability = pow(max(0, sh.x * 150), remap(sh.y, 0.3, 0.85, 0.3, 2));
 				float vertical_probability = pow(remap(sh.y, 0.07, 0.14, 0.1, 1.0), 0.8);
 				float in_scatter_probability = depth_probability * vertical_probability;
 
@@ -443,7 +415,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 						float2 offset; sincos(rnd.x, offset.x, offset.y);
 						offset *= rnd.y * j;
 						lpos_ += vt_ * offset.x + vbt_ * offset.y;
-						shadowScatter += Cloud(lpos_, fade, max(lod, j / shadow_sample_num * 4));
+						shadowScatter += Cloud(lpos_, fade, max(lod, (float)j / shadow_sample_num * 4)).x;
 					}
 					float forward_scatter = exp(-shadowScatter * shadowLength);					
 					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(- 0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
@@ -482,7 +454,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 				trans *= scatter;
 				scatter = 1 - scatter;
 
-				float depth_probability = pow(sh.x * 150, remap(sh.y, 0.3, 0.85, 0.3, 2));
+				float depth_probability = pow(max(0, sh.x * 150), remap(sh.y, 0.3, 0.85, 0.3, 2));
 				float vertical_probability = pow(remap(sh.y, 0.07, 0.14, 0.1, 1.0), 0.8);
 				float in_scatter_probability = depth_probability * vertical_probability;
 
@@ -504,7 +476,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 						float2 offset; sincos(rnd.x, offset.x, offset.y);
 						offset *= rnd.y * j;
 						lpos_ += vt_ * offset.x + vbt_ * offset.y;
-						shadowScatter += Cloud(lpos_, fade, max(lod, j / shadow_sample_num * 4), true);
+						shadowScatter += Cloud(lpos_, fade, max(lod, (float)j / shadow_sample_num * 4), true).x;
 					}
 					float forward_scatter = exp(-shadowScatter * shadowLength);
 					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.85 + 0.15, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);

@@ -59,6 +59,7 @@ void Specular()
         pos = worldPos.xyz / worldPos.w;
     }
     float3 view = normalize(camPos - pos);
+    pos += view * 0.01;
 
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(0,
