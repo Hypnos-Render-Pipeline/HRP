@@ -31,6 +31,7 @@ struct SolvedLocalLight
 };
 
 uint _LocalLightCount;
+float _Faraway;
 float4 _TileCount;
 StructuredBuffer<Light> _LocalLightBuffer;
 
@@ -78,6 +79,7 @@ float4 farPlane_ = mul(invVP, float4(0, 0, 0, 1));\
 farPlane_ /= farPlane_.w;\
 float far = distance(farPlane_.xyz, nearPlane_);\
 float3 viewDir_ = (farPlane_.xyz - nearPlane_) / far;\
+far = _Faraway;\
 uint bin = 1 << uint(floor(sqrt(dot(pos - nearPlane_, viewDir_) / far) * tileCount.z));\
 uint lightCount = min(_TileLights[start_offset], tileCount.w);\
 start_offset += 1;\

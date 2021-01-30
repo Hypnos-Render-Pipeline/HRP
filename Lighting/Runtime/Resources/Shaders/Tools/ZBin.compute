@@ -223,6 +223,7 @@ void BinCulling(uint3 id : SV_DispatchThreadID)
     float4 farPlane = mul(_VP_Inv, float4(0, 0, 0, 1));
     farPlane /= farPlane.w;
     float3 viewDir = normalize(farPlane.xyz - cam);
+    farPlane.xyz = _Faraway * viewDir + cam;
 
     float inv_bin = 1.0f / tileCount.z;
 

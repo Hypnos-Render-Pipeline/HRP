@@ -34,6 +34,8 @@ namespace HypnosRenderPipeline.RenderPass
 
         public bool includeRTLight = false;
 
+        public float faraway = 100;
+
 
         public override void Execute(RenderContext context)
         {
@@ -59,6 +61,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetComputeBufferData(lightBuffer, lightBufferCPU);
 
             cb.SetGlobalInt("_LocalLightCount", lightCount);
+            cb.SetGlobalFloat("_Faraway", faraway + 10);
             cb.SetGlobalBuffer("_LocalLightBuffer", lightBuffer);
 
             cb.SetGlobalVector("_TileCount", new Vector4(tileCount.x, tileCount.y, tileCount.z, maxLightCountPerTile));
