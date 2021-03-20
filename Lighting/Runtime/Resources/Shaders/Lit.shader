@@ -16,7 +16,9 @@ Shader "HRP/Lit"
 		_Index2("Iridescent IOR", Range(1, 3)) = 1
 		_Dinc("Iridescent Thickness(mm)", Range(0, 6)) = 1
 		_DincMap("Iridescent Thickness Map(R)", 2D) = "white" {}
-			
+		
+		_AnisoMap("Metallic Smoothness", 2D) = "black" {}
+		_AnisoStrength("Anisotropic Strength", Range(-1, 1)) = 0.0
 
 		_Smoothness("Smoothness", Range(0,1)) = 0.5
 		_GlossMapScale("SmoothnessMapScale", Range(0,1)) = 1.0
@@ -225,6 +227,7 @@ Shader "HRP/Lit"
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
 			#pragma shader_feature _METALLICGLOSSMAP
+			#pragma shader_feature _ANISOMAP
 			#pragma shader_feature _AOMAP
 			#pragma shader_feature _SUBSURFACE
 			#pragma shader_feature _CLEARCOAT
@@ -264,6 +267,14 @@ Shader "HRP/Lit"
 			float       _Smoothness;
 
 			#endif // _METALLICGLOSSMAP
+
+			#if _ANISOMAP
+
+			Texture2D _AnisoMap;
+
+			#endif
+
+			float _AnisoStrength;
 
 			#if _EMISSION
 
@@ -320,6 +331,15 @@ Shader "HRP/Lit"
 					IN.smoothness = _Smoothness;
 				#endif
 				
+				#if _ANISOMAP
+					float2 aniso = SampleTex(_AnisoMap, uv, 0).xy;
+					IN.aniso = aniso.x * _AnisoStrength;
+					float aniso_angle = aniso.y;
+				#else
+					IN.aniso = _AnisoStrength;
+					float aniso_angle = 0;
+				#endif
+
 				IN.diffuse = DiffuseAndSpecularFromMetallic(IN.diffuse, metallic, /*out*/ IN.specular);
 				
 				IN.gnormal = i.tangentToWorld[2];
@@ -368,6 +388,8 @@ Shader "HRP/Lit"
 					IN.dinc = _Dinc * SampleTex(_DincMap, uv, 0).r;
 				#endif
 
+				float2 xy; sincos(aniso_angle * 2 * PI, xy.y, xy.x);
+				IN.tangent = mul(float3(xy, 0), i.tangentToWorld);
 
 				IN.discarded = diffuse.a < _Cutoff;
 				

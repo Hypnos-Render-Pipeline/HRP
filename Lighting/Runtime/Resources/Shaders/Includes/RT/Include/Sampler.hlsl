@@ -99,9 +99,34 @@ float3 CosineSampleHemisphere(float2 E, float3 N) {
 	return UniformSampleSphere(E).xyz + N;
 }
 
+float3x3 GetMatrixFromNormal(float3 v1) {
+	float3 v2, v3;
+	v1 = normalize(v1);
 
+	if (abs(v1.z) > sqrt(1 / 2)) {
+		v2 = normalize(cross(v1, float3(0, 1, 0)));
+	}
+	else {
+		v2 = normalize(cross(v1, float3(0, 0, 1)));
+	}
+	v3 = cross(v2, v1);
 
-float4 ImportanceSampleGGX(float2 E, float Roughness) {
+	//v2 = normalize(cross(v1, float3(1, 0, 0)));
+	//v3 = normalize(cross(v2, v1));
+
+	return float3x3(v2, v3, v1);
+}
+
+float3x3 GetMatrixFromNormal(float3 v1, float2 E) {
+	float3 v2, v3;
+	v1 = normalize(v1);
+	v2 = normalize(cross(v1, UniformSampleSphere(E).xyz));
+	v3 = cross(v2, v1);
+
+	return float3x3(v2, v3, v1);
+}
+
+float3 ImportanceSampleGGX(float2 E, float Roughness) {
 	float m = Roughness * Roughness;
 	float m2 = m * m;
 
@@ -113,12 +138,36 @@ float4 ImportanceSampleGGX(float2 E, float Roughness) {
 	H.x = SinTheta * cos(Phi);
 	H.y = SinTheta * sin(Phi);
 	H.z = CosTheta;
+	return H;
+}
 
-	float d = (CosTheta * m2 - CosTheta) * CosTheta + 1;
-	float D = m2 / (PI * d * d);
+float3 ImportanceSampleAnisoGGX(float2 E, float2 Roughness) {
+	float2 m = Roughness * Roughness;
 
-	float PDF = D * CosTheta;
-	return float4(H, PDF);
+	float Phi = 2 * PI * E.x;
+	float2 cs = float2(cos(Phi), sin(Phi));
+	float2 xy = sqrt(E.y) * cs * m;
+	float z = sqrt(1 - E.y);
+
+	return normalize(float3(xy, z));
+}
+
+float3 ImportanceSampleAnisoVGGX(float2 E, float3 v, float2 Roughness) {
+	float2 m = Roughness * Roughness;
+
+	float3 Ve = normalize(v * float3(m, 1));
+
+	float Phi = 2 * PI * E.x;
+	float2 cs = float2(cos(Phi), sin(Phi));
+	float2 xy = sqrt(E.y) * cs;
+
+	float3x3 mat = GetMatrixFromNormal(Ve);
+
+	float s = 0.5 * (1 + Ve.z);
+	xy.y = (1 - s) * sqrt(1 - xy.x * xy.x) + s * xy.y;
+
+	float3 N = mul(float3(xy, sqrt(max(0, 1 - xy.x * xy.x - xy.y * xy.y))), mat);
+	return normalize(float3(N.xy * m, N.z));
 }
 
 float2 UniformSampleDisk(float2 Random) {
@@ -136,33 +185,6 @@ float2 UniformSampleRegularPolygon(int sides, float2 Random) {
 	Random.x = (Random.x - (float)triangle_index * inv_sides) * sides;
 	Random.y = sqrt(Random.y);
 	return (1 - Random.y) * a + Random.x * Random.y * b;
-}
-
-float3x3 GetMatrixFromNormal(float3 v1) {
-	float3 v2, v3;
-	v1 = normalize(v1);
-
-	if (abs(v1.z) > sqrt(1 / 2)) {
-		v2 = normalize(cross(v1, float3(0, 1, 0)));
-	}
-	else {
-		v2 = normalize(cross(v1, float3(0, 0, 1)));
-	}
-	v3 = cross(v2, v1);
-
-		//v2 = normalize(cross(v1, float3(1, 0, 0)));
-		//v3 = normalize(cross(v2, v1));
-
-	return float3x3(v2, v3, v1);
-}
-    
-float3x3 GetMatrixFromNormal(float3 v1, float2 E) {
-	float3 v2, v3;
-	v1 = normalize(v1);
-	v2 = normalize(cross(v1, UniformSampleSphere(E).xyz));
-	v3 = cross(v2, v1);
-	
-	return float3x3(v2, v3, v1);
 }
 
 float3 dFromALd(float Ld, float3 A) {

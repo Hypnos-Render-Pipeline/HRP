@@ -44,7 +44,7 @@ void LocalLight()
                             _EmissionTex[dispatchIdx],
                             _AOTex[dispatchIdx]);
 
-    float3 spos = pos + info.gnormal * 0.01;
+    float3 spos = pos + info.gnormal * 0.01 + view * 0.01;
 
     float3 res = 0;
     
@@ -92,7 +92,7 @@ void DirecionalLight()
 
     float3 res = 0;
     
-    float3 spos = pos + info.gnormal * 0.01;
+    float3 spos = pos + info.gnormal * 0.01 + view * 0.01;
 
 	int4 sampleState = int4(dispatchIdx, _Clock, 0);
 

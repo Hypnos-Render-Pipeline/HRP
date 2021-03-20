@@ -182,7 +182,7 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 
 	float3 present_point = p + v * cloud_dis;
 	float3 sunLight = Sunlight(present_point, _SunDir);
-	float3 ambd = Tu_L(p, _SunDir)* _SunLuminance;
+	float3 ambd = Tu_L(p, _SunDir) * _SunLuminance;
 	float3 ambu = sunLight * 0.75 + SkyBox(present_point, normalize(present_point), _SunDir) * _SunLuminance * 2;
 	float3 amb = lerp(ambd, ambu, res.z * 0.7 + 0.3) * 2;
 	sunLight *= 7;

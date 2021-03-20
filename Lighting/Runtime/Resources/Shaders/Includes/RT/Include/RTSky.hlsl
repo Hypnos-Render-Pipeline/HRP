@@ -55,7 +55,7 @@ void SkyLight(inout RayIntersection rayIntersection, const int distance = 10000)
 	else if (_Procedural == 1) {
 		float2 tc = ToRadialCoords(RotateAroundYInDegrees(WorldRayDirection(), -_Rotation));
 
-		half4 tex = _Skybox.SampleLevel(sampler_Skybox, tc, rayIntersection.roughness * 7);
+		half4 tex = _Skybox.SampleLevel(sampler_Skybox, tc, rayIntersection.roughness * 3);
 		half3 c = DecodeHDR(tex, _MainTex_HDR);
 		c = c * _Tint.rgb;
 		c *= _Exposure;

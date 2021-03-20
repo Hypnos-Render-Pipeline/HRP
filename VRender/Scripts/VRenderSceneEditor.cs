@@ -189,6 +189,7 @@ class VRenderForScene
 
             instance.dof.FocusDistance = EditorGUILayout.FloatField("Focus Distance", instance.dof.FocusDistance);
             instance.dof.Aperture = EditorGUILayout.Slider("Aperture", instance.dof.Aperture, 0, 1);
+            instance.dof.bokehTexture = (Texture2D)EditorGUILayout.ObjectField("Bokeh Texture", instance.dof.bokehTexture, typeof(Texture2D), false);
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Light settings");

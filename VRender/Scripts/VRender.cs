@@ -45,9 +45,10 @@ public class VRenderParameters
         public float FocusDistance;
         [Range(0, 10)]
         public float Aperture;
+        public Texture2D bokehTexture;
     }
 
-    public DOF DOFConfig = new DOF { FocusDistance = 10f, Aperture = 0f };
+    public DOF DOFConfig = new DOF { FocusDistance = 10f, Aperture = 0f, bokehTexture = null };
 
     [System.Serializable]
     public struct LightSetting
@@ -178,6 +179,8 @@ public class VRender : IDisposable
     RenderTexture VolumeLut;
     RenderTexture SkyLut;
 
+    Texture2D bokehTex;
+
     int hash;
 
     public VRender(Camera cam, VRenderParameters parameters = null)
@@ -212,6 +215,7 @@ public class VRender : IDisposable
 
         hash = Time.time.GetHashCode();
 
+        bokehTex = Resources.Load<Texture2D>("Bokeh");
         //if (LightManager.sunLight != null && LightManager.sunLight.atmoPreset != null)
         //{
         //    Color lum;
@@ -334,6 +338,7 @@ public class VRender : IDisposable
         cb.SetGlobalTexture("_ScramblingTile", bnsLoader.tex_scrambling);
         cb.SetGlobalTexture("_RankingTile", bnsLoader.tex_rankingTile);
         cb.SetGlobalTexture("_RdLut", ssLut);
+        cb.SetGlobalTexture("_Response", parameters.DOFConfig.bokehTexture != null ? parameters.DOFConfig.bokehTexture  : bokehTex);
         cb.SetRayTracingIntParam(rtShader, "_CacheIrradiance", parameters.cacheIrradiance ? (parameters.debugMode == VRenderParameters.DebugMode.irradianceCache ? 2 : 1) : 0);
         cb.SetRayTracingVectorParam(rtShader, "_IVScale", Vector4.one * parameters.IrradianceVolumeScale);
         cb.SetRayTracingTextureParam(rtShader, "_IrrVolume", tex3D_iv);
@@ -604,7 +609,7 @@ public class VRender : IDisposable
         parameters.DOFConfig.Aperture = max(parameters.DOFConfig.Aperture, 0.0f);
         if (_cacheIrr != parameters.cacheIrradiance ||
             _maxDepth != parameters.maxDepth ||
-            _dof.Aperture != parameters.DOFConfig.Aperture || _dof.FocusDistance != parameters.DOFConfig.FocusDistance ||
+            _dof.Aperture != parameters.DOFConfig.Aperture || _dof.FocusDistance != parameters.DOFConfig.FocusDistance || _dof.bokehTexture != parameters.DOFConfig.bokehTexture ||
             _noGITag != parameters.noGITag)
         {
             _maxDepth = parameters.maxDepth;

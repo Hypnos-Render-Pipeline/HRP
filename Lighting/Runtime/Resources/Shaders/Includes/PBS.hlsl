@@ -12,7 +12,9 @@ struct SurfaceInfo {
 	float3	specular;
 	float	transparent;
 	float	smoothness;
+	float   aniso;
 	float3	normal;
+	float3	tangent;
 	float3	gnormal;
 	float3	emission;
 	float2  diffuseAO_specAO;
@@ -109,6 +111,13 @@ inline float SmoothnessToPerceptualRoughness(const float smoothness)
 	return (1 - smoothness);
 }
 
+float2 CalculateAnisoRoughness(float roughness, float aniso) {
+
+	float k = sqrt(-0.9 * abs(aniso) + 1);
+	k = aniso > 0 ? k : 1 / k;
+	return min(1, max(0.008, float2(roughness * k, roughness / k)));
+}
+
 float DisneyDiffuse(const float NdotV, const float NdotL, const float LdotH, const float sheen, const float perceptualRoughness)
 {
 	float fd90 = 0.5 + 2 * LdotH * LdotH * perceptualRoughness;
@@ -147,6 +156,16 @@ inline float GGXTerm(const float NdotH, const float roughness)
 	float d = (NdotH * a2 - NdotH) * NdotH + 1.0f; // 2 mad
 	return M_1_PI * a2 / (d * d + 1e-7f); // This function is not intended to be running on Mobile,
 										  // therefore epsilon is smaller than what can be represented by float
+}
+
+inline float AnisoGGXTerm(const float NoH, const float2 roughness, float3 H, float3 X, float3 Y)
+{
+	float ax = roughness.x * roughness.x;
+	float ay = roughness.y * roughness.y;
+	float XoH = dot(X, H);
+	float YoH = dot(Y, H);
+	float d = XoH * XoH / (ax * ax) + YoH * YoH / (ay * ay) + NoH * NoH;
+	return 1 / (M_PI * ax * ay * d * d);
 }
 
 inline float3 FresnelTerm(const float3 F0, const float cosA)
@@ -278,9 +297,9 @@ float3 IridescenceFresnel(float cosTheta1, float cosTheta2, float eta_2, float e
 //#undef sqr
 
 
-float3 BRDF(const int type, const float3 diffColor, const float3 specColor, const float smoothness, const float2 ao, const float clearCoat, const float sheen,
+float3 BRDF(const int type, const float3 diffColor, const float3 specColor, const float smoothness, const float aniso, const float2 ao, const float clearCoat, const float sheen,
 	const bool iridescence,const float eta_2, const float eta_3, const float kappa_3, const float dinc, const bool specF,
-	float3 normal, const float3 viewDir, const float3 lightDir,
+	float3 normal, float3 tangent, const float3 viewDir, const float3 lightDir,
 	const float3 lightSatu) {
 
 	float perceptualRoughness = SmoothnessToPerceptualRoughness(smoothness);
@@ -303,8 +322,17 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 
 	roughness = max(roughness, 0.008);
 	float G = SmithJointGGXVisibilityTerm(nl, nv, roughness) * M_PI;
-	float D = GGXTerm(nh, roughness);
+	float D; 
 	
+	if (aniso != 0) {
+		float3 X = tangent;
+		float3 Y = normalize(cross(X, normal));
+		X = cross(normal, Y);
+		D = AnisoGGXTerm(nh, CalculateAnisoRoughness(roughness, aniso), floatDir, X, Y);
+	}
+	else
+		D = GGXTerm(nh, roughness);
+
 	float3 F;
 	if (iridescence) {
 		float cosTheta2 = sqrt(1.0 - (1 - lh * lh) / max(0.0000001, eta_2 * eta_2));
@@ -322,6 +350,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	else if (type == 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
 	else if (type == 8) return nl * DFG * ao.y * lightSatu;
 	else if (type == 16) return nl * diffuseTerm * diffColor * ao.x * lightSatu;
+	else if (type == 32) return F * lightSatu * ao.y;
 	else return 0;
 }
  
@@ -331,6 +360,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 #define PBS_FULLY (4)
 #define PBS_SS_SPEC (8)
 #define PBS_SS_DIFFUSE (16)
+#define PBS_SPECULAR_F (32)
 
 float CalculateDiffuseAO(float ao, float3 L, float3 gN) {
 	float NdotL = max(0, dot(normalize(L), gN));
@@ -350,12 +380,10 @@ float3 PBS(const int type, SurfaceInfo IN, const float3 lightDir, const float3 l
 	float3 diffuse;
 	diffuse = IN.diffuse;
 
-	float3 normal = IN.normal;
-
 	diffuse *= 1 - IN.transparent;
-	color = BRDF(type, diffuse, IN.specular, IN.smoothness, IN.diffuseAO_specAO, IN.clearCoat, IN.sheen,
+	color = BRDF(type, diffuse, IN.specular, IN.smoothness, IN.aniso, IN.diffuseAO_specAO, IN.clearCoat, IN.sheen,
 		IN.iridescence, IN.index, IN.index2, max(IN.specular.x, max(IN.specular.y, IN.specular.z)), IN.dinc, IN.specF,
-		normal, viewDir, lightDir, lightSatu);
+		IN.normal, IN.tangent, viewDir, lightDir, lightSatu);
 
 	return color;
 }

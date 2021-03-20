@@ -65,6 +65,11 @@ MonoBehaviour:
       type_str: System.Boolean
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
+    - name: faraway
+      info: 
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e3130303c2f666c6f61743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
@@ -339,22 +344,23 @@ MonoBehaviour:
     = 200f;\r\n            CullLight0.faraway = 100f;\r\n            CullLight0.enabled
     = true;\r\n            ZBin1 = new ZBin();\r\n            ZBin1.tileCount = new
     Vector3Int(128, 64, 24);\r\n            ZBin1.maxLightCountPerTile = 64;\r\n           
-    ZBin1.includeRTLight = true;\r\n            ZBin1.enabled = true;\r\n           
-    GBuffer2 = new GBuffer();\r\n            GBuffer2.a = 1f;\r\n            GBuffer2.b
-    = false;\r\n            GBuffer2.c = new Vector2(1.10973f, 2f);\r\n           
-    GBuffer2.d = E.d;\r\n            GBuffer2.e = 10;\r\n            GBuffer2.f =
-    new Color(1f, 2f, 3f, 0.22334f);\r\n            GBuffer2.enabled = true;\r\n           
-    OutputNode3 = new OutputNode();\r\n            OutputNode3.enabled = true;\r\n           
-    RTDI4 = new RTDI();\r\n            RTDI4.includeSunlight = true;\r\n           
-    RTDI4.enabled = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
-    context, bool debug = false)\r\n        {\r\n            System.Int32 result
-    = -1;\r\n            \r\n            //GBuffer2\r\n            {\r\n               
-    context.commandBuffer.name = \"GBuffer2\";\r\n                // preprocess node\r\n               
-    {\r\n                    // inputs\r\n                    GBuffer2.depth.AllocateResourcces(context,
-    GBuffer2_depth);\r\n                    GBuffer2.depth.name = \"GBuffer2.depth\";\r\n                   
-    // outputs\r\n                    GBuffer2.diffuse.AllocateResourcces(context,
-    GBuffer2_diffuse);\r\n                    GBuffer2.diffuse.name = \"GBuffer2.diffuse\";\r\n                   
-    GBuffer2.diffuse.connected = true;\r\n                    GBuffer2.specular.AllocateResourcces(context,
+    ZBin1.includeRTLight = true;\r\n            ZBin1.faraway = 100f;\r\n           
+    ZBin1.enabled = true;\r\n            GBuffer2 = new GBuffer();\r\n           
+    GBuffer2.a = 1f;\r\n            GBuffer2.b = false;\r\n            GBuffer2.c
+    = new Vector2(1.10973f, 2f);\r\n            GBuffer2.d = E.d;\r\n           
+    GBuffer2.e = 10;\r\n            GBuffer2.f = new Color(1f, 2f, 3f, 0.22334f);\r\n           
+    GBuffer2.enabled = true;\r\n            OutputNode3 = new OutputNode();\r\n           
+    OutputNode3.enabled = true;\r\n            RTDI4 = new RTDI();\r\n           
+    RTDI4.includeSunlight = true;\r\n            RTDI4.enabled = true;\r\n       
+    }\r\n        \r\n        public int Execute(RenderContext context, bool debug
+    = false)\r\n        {\r\n            System.Int32 result = -1;\r\n           
+    \r\n            //GBuffer2\r\n            {\r\n                context.commandBuffer.name
+    = \"GBuffer2\";\r\n                // preprocess node\r\n                {\r\n                   
+    // inputs\r\n                    GBuffer2.depth.AllocateResourcces(context, GBuffer2_depth);\r\n                   
+    GBuffer2.depth.name = \"GBuffer2.depth\";\r\n                    // outputs\r\n                   
+    GBuffer2.diffuse.AllocateResourcces(context, GBuffer2_diffuse);\r\n                   
+    GBuffer2.diffuse.name = \"GBuffer2.diffuse\";\r\n                    GBuffer2.diffuse.connected
+    = true;\r\n                    GBuffer2.specular.AllocateResourcces(context,
     GBuffer2_specular);\r\n                    GBuffer2.specular.name = \"GBuffer2.specular\";\r\n                   
     GBuffer2.specular.connected = true;\r\n                    GBuffer2.normal.AllocateResourcces(context,
     GBuffer2_normal);\r\n                    GBuffer2.normal.name = \"GBuffer2.normal\";\r\n                   

@@ -255,6 +255,11 @@ MonoBehaviour:
       type_str: System.Boolean
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
+    - name: faraway
+      info: 
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e3130303c2f666c6f61743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
@@ -889,7 +894,7 @@ MonoBehaviour:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
     nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c000000
-  recompiled: 0
+  recompiled: 1
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Te_Executor : HRGExecutor\r\n   
     {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
@@ -990,22 +995,22 @@ MonoBehaviour:
     LocalLighting3.debugTiledLight = false;\r\n            LocalLighting3.enabled
     = true;\r\n            ZBin4 = new ZBin();\r\n            ZBin4.tileCount = new
     Vector3Int(128, 64, 24);\r\n            ZBin4.maxLightCountPerTile = 64;\r\n           
-    ZBin4.includeRTLight = false;\r\n            ZBin4.enabled = true;\r\n           
-    GBuffer5 = new GBuffer();\r\n            GBuffer5.a = 1f;\r\n            GBuffer5.b
-    = false;\r\n            GBuffer5.c = new Vector2(1.10973f, 2f);\r\n           
-    GBuffer5.d = E.d;\r\n            GBuffer5.e = 10;\r\n            GBuffer5.f =
-    new Color(1f, 2f, 3f, 0.22334f);\r\n            GBuffer5.enabled = true;\r\n           
-    OutputNode6 = new OutputNode();\r\n            OutputNode6.enabled = true;\r\n           
-    AreaLight7 = new AreaLight();\r\n            AreaLight7.enabled = true;\r\n           
-    CombineColorDepth8 = new CombineColorDepth();\r\n            CombineColorDepth8.ToneMap
-    = true;\r\n            CombineColorDepth8.enabled = true;\r\n            SkyBoxIBL9
-    = new SkyBoxIBL();\r\n            SkyBoxIBL9.enabled = true;\r\n            PreZ10
-    = new PreZ();\r\n            PreZ10.mask = -1;\r\n            PreZ10.enabled
-    = true;\r\n            RTSpecular11 = new RTSpecular();\r\n            RTSpecular11.useRTShadow
-    = false;\r\n            RTSpecular11.enabled = true;\r\n            ApplyAtmoFog12
-    = new ApplyAtmoFog();\r\n            ApplyAtmoFog12.enabled = true;\r\n       
-    }\r\n        \r\n        public int Execute(RenderContext context, bool debug
-    = false)\r\n        {\r\n            System.Int32 result = -1;\r\n           
+    ZBin4.includeRTLight = false;\r\n            ZBin4.faraway = 100f;\r\n           
+    ZBin4.enabled = true;\r\n            GBuffer5 = new GBuffer();\r\n           
+    GBuffer5.a = 1f;\r\n            GBuffer5.b = false;\r\n            GBuffer5.c
+    = new Vector2(1.10973f, 2f);\r\n            GBuffer5.d = E.d;\r\n           
+    GBuffer5.e = 10;\r\n            GBuffer5.f = new Color(1f, 2f, 3f, 0.22334f);\r\n           
+    GBuffer5.enabled = true;\r\n            OutputNode6 = new OutputNode();\r\n           
+    OutputNode6.enabled = true;\r\n            AreaLight7 = new AreaLight();\r\n           
+    AreaLight7.enabled = true;\r\n            CombineColorDepth8 = new CombineColorDepth();\r\n           
+    CombineColorDepth8.ToneMap = true;\r\n            CombineColorDepth8.enabled
+    = true;\r\n            SkyBoxIBL9 = new SkyBoxIBL();\r\n            SkyBoxIBL9.enabled
+    = true;\r\n            PreZ10 = new PreZ();\r\n            PreZ10.mask = -1;\r\n           
+    PreZ10.enabled = true;\r\n            RTSpecular11 = new RTSpecular();\r\n           
+    RTSpecular11.useRTShadow = false;\r\n            RTSpecular11.enabled = true;\r\n           
+    ApplyAtmoFog12 = new ApplyAtmoFog();\r\n            ApplyAtmoFog12.enabled =
+    true;\r\n        }\r\n        \r\n        public int Execute(RenderContext context,
+    bool debug = false)\r\n        {\r\n            System.Int32 result = -1;\r\n           
     \r\n            //PreZ10\r\n            {\r\n                context.commandBuffer.name
     = \"PreZ10\";\r\n                // preprocess node\r\n                {\r\n                   
     // inputs\r\n                    PreZ10.depth.AllocateResourcces(context, PreZ10_depth);\r\n                   

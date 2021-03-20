@@ -58,5 +58,42 @@ Shader "Hidden/ACES"
             }
             ENDCG
         }
+
+
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct v2f
+            {
+                float2 uv : TEXCOORD0;
+                float4 vertex : SV_POSITION;
+            };
+
+            sampler2D _MainTex, _History_Final_Result;
+
+            v2f vert(appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = v.uv;
+                return o;
+            }
+
+            float4 frag(v2f i) : SV_Target
+            {
+                float4 col = lerp(tex2Dlod(_MainTex, float4(i.uv, 0, 0)), tex2Dlod(_History_Final_Result, float4(i.uv, 0, 0)), 0.9);
+                return col;
+            }
+            ENDCG
+        }
     }
 }

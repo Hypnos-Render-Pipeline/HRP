@@ -205,12 +205,15 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		float2 sample_2D;
 		sample_2D.x = SAMPLE;
 		sample_2D.y = SAMPLE;
-		float4 n = ImportanceSampleGGX(sample_2D, max((1 - surface.smoothness) * (1 - surface.smoothness), 0.008));
-		n.xyz = mul(n.xyz, IN.tangentToWorld);
+
+		float3 v_t = float3(dot(IN.tangentToWorld[0], viewDir), dot(IN.tangentToWorld[1], viewDir), dot(IN.tangentToWorld[2], viewDir));
+		float2 r2 = CalculateAnisoRoughness(1 - surface.smoothness, surface.aniso);
+		float3 n = ImportanceSampleAnisoVGGX(sample_2D, v_t, r2);
+		n = mul(n, IN.tangentToWorld);
 		nextDir = reflect(-viewDir, n);
 
 		if (dot(nextDir, surface.normal) > 0) {
-			directColor += PBS(PBS_SPECULAR, surface, nextDir, LightLuminanceCameraWithFog(IN.position, nextDir, sampleState), viewDir);
+			directColor += PBS(PBS_SPECULAR_F, surface, nextDir, LightLuminanceCameraWithFog(IN.position, nextDir, sampleState), viewDir);
 		}
 	}
 #endif
@@ -247,8 +250,9 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		sample_2D.x = SAMPLE;
 		sample_2D.y = SAMPLE;
 
-		float4 n = ImportanceSampleGGX(sample_2D, max((1 - surface.smoothness) * (1 - surface.smoothness), 0.008));
-		n.xyz = mul(n.xyz, IN.tangentToWorld);
+		float2 r2 = CalculateAnisoRoughness(1 - surface.smoothness, surface.aniso);
+		float3 n = ImportanceSampleAnisoGGX(sample_2D, r2);
+		n = mul(n, IN.tangentToWorld);
 
 
 		float3 coef = diffuse * surface.transparent * (IN.isFrontFace ? (1 - F) : 1);
@@ -350,18 +354,24 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		sample_2D.x = SAMPLE;
 		sample_2D.y = SAMPLE;
 
+		float3 X = surface.tangent;
+		float3 Y = normalize(cross(X, surface.normal));
+		X = cross(surface.normal, Y);
+		IN.tangentToWorld = float3x3(X, Y, surface.normal);
 #if _CLEARCOAT
 		if (rand_num.x <= threashold.z) {
 #endif
-			float4 n = ImportanceSampleGGX(sample_2D, max((1 - surface.smoothness) * (1 - surface.smoothness), 0.008));
-			n.xyz = mul(n.xyz, IN.tangentToWorld);
+			float3 v_t = float3(dot(IN.tangentToWorld[0], viewDir), dot(IN.tangentToWorld[1], viewDir), dot(IN.tangentToWorld[2], viewDir));
+			float2 r2 = CalculateAnisoRoughness(1 - surface.smoothness, surface.aniso);
+			float3 n = ImportanceSampleAnisoVGGX(sample_2D, v_t, r2);
+			n = mul(n, IN.tangentToWorld);
 			nextDir = reflect(-viewDir, n);
 			rayRoughness = 1 - surface.smoothness;
 
 			if (dot(nextDir, surface.normal) > 0) {
 				float coat = surface.clearCoat;
 				surface.clearCoat = 0;
-				float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
+				float3 coef = PBS(PBS_SPECULAR_F, surface, nextDir, 1.0, viewDir);
 
 				weight.xyz = coef * (1 - coat) / refr_diff_refl_coat.z;
 			}
@@ -373,8 +383,9 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		else {
 			surface.smoothness = min(1 - rayRoughness, 1);
 
-			float4 n = ImportanceSampleGGX(sample_2D, max((1 - surface.smoothness) * (1 - surface.smoothness), 0.008));
-			n.xyz = mul(n.xyz, IN.tangentToWorld);
+			float3 v_t = float3(dot(IN.tangentToWorld[0], viewDir), dot(IN.tangentToWorld[1], viewDir), dot(IN.tangentToWorld[2], viewDir));
+			float3 n = ImportanceSampleAnisoVGGX(sample_2D, v_t, max((1 - surface.smoothness), 0.008));
+			n = mul(n, IN.tangentToWorld);
 			nextDir = reflect(-viewDir, n);
 			rayRoughness = 1 - surface.smoothness;
 
@@ -383,7 +394,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				surface.clearCoat = 0;
 				surface.specular = min(1 - rayRoughness, 1);
 				surface.diffuse = min(1 - rayRoughness, 1);
-				float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
+				float3 coef = PBS(PBS_SPECULAR_F, surface, nextDir, 1.0, viewDir);
 
 				weight.xyz = coef * coat / refr_diff_refl_coat.w;
 			}

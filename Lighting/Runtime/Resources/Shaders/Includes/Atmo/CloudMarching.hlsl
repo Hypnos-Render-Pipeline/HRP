@@ -124,7 +124,7 @@ float3 Space(float3 v) {
 	float latitude = acos(normalizedCoords.y);
 	float longitude = atan2(normalizedCoords.z, normalizedCoords.x);
 	float2 sphereCoords = float2(longitude, latitude) * float2(0.5 / 3.14159265359f, 1.0 / 3.14159265359f);
-	return tex2Dlod(_SpaceMap, float4(float2(0.5, 1.0) - sphereCoords, 0, 0)).xyz;
+	return tex2Dlod(_SpaceMap, float4(float2(0.5, 1.0) - sphereCoords, 0, 0)).xyz * 0.2;
 }
 
 inline float4 HighCloud(const float3 p, const float3 v) {
@@ -140,6 +140,10 @@ inline float4 HighCloud(const float3 p, const float3 v) {
 	float control = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 300 - _Time.x * 0.02, 0, 0)).z;
 
 	return float4(max(data1 * control, data2), hitP);
+}
+
+inline float HeightDensity(float h, float y) {
+	return smoothstep(0.1, lerp(0.5, 0.2, y), h);
 }
 
 inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
@@ -229,7 +233,7 @@ inline float2 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	float3 nom_p = normalize(p);
 	float2 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, lod).rg;
 	base_cloud = lerp(1, base_cloud, fade);
-	weather_data = lerp(1, weather_data, fade);
+	weather_data = lerp(float2(1, 0.2), weather_data, fade);
 	
 	//return weather_data.r * weather_data.g * 0.001;
 
@@ -277,7 +281,7 @@ inline float2 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 
 	}
 
-	return float2(final_cloud * smoothstep(0, 0.5, height_fraction) * 0.05 * _CloudDensity * lerp(0.1, 1, weather_data.y), oh);
+	return float2(final_cloud * HeightDensity(height_fraction, weather_data.y) * 0.05 * _CloudDensity * lerp(0.1, 1, weather_data.y), oh);
 }
 
 float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d = 9999999) {
@@ -343,6 +347,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 	float phase = numericalMieFit(VdotS);
 	float multiScatterPhase = phase + numericalMieFitMultiScatter();
 	float InvVDotS01 = 1 - (VdotS + 1) / 2;
+	float sunHeight = rescale01(dot(normalize(p), s), -0.4, 0.4);
 	float rescaledPdotS01 = rescale01(dot(normalize(p), s), 0, 0.3);
 
 	float alphaFallback = lerp(0.3, 0.05, _Quality.w);
@@ -418,7 +423,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 						shadowScatter += Cloud(lpos_, fade, max(lod, (float)j / shadow_sample_num * 4)).x;
 					}
 					float forward_scatter = exp(-shadowScatter * shadowLength);					
-					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(- 0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
+					energy = pow(forward_scatter, 4) * 2 * (1 - InvVDotS01) + lerp(smoothstep(0.2, 0.7, sh.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
 				}
 
 				float light = energy;
@@ -426,7 +431,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 				float response = trans * scatter;
 				
 				sun += response * msPhase * light * in_scatter_probability;
-				amb += (0.3 + 0.7 * smoothstep(0.2, 0.7, sh.y)) * response * lerp(1, in_scatter_probability, rescaledPdotS01);
+				amb += lerp(1, 0.3 + 0.7 * smoothstep(0.2, 0.7, sh.y), sunHeight) * response * lerp(1, in_scatter_probability, rescaledPdotS01);
 				hit_h += float2(sh.y * response, response);				
 				av_dis += float2(i * response, response);
 			}
@@ -476,10 +481,10 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 						float2 offset; sincos(rnd.x, offset.x, offset.y);
 						offset *= rnd.y * j;
 						lpos_ += vt_ * offset.x + vbt_ * offset.y;
-						shadowScatter += Cloud(lpos_, fade, max(lod, (float)j / shadow_sample_num * 4), true).x;
+						shadowScatter += Cloud(lpos_, fade, max(lod, (float)j / shadow_sample_num * 4)).x;
 					}
 					float forward_scatter = exp(-shadowScatter * shadowLength);
-					energy = lerp(smoothstep(0.2, 0.7, sh.y) * 0.85 + 0.15, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
+					energy = pow(forward_scatter, 4) * 2 * (1 - InvVDotS01) + lerp(smoothstep(0.2, 0.7, sh.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);
 				}
 
 				float light = energy;
@@ -487,7 +492,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 				float response = trans * scatter;
 
 				sun += response * msPhase * light * in_scatter_probability;
-				amb += (0.3 + 0.7 * smoothstep(0.2, 0.7, sh.y)) * response * lerp(1, in_scatter_probability, rescaledPdotS01);
+				amb += lerp(1, 0.3 + 0.7 * smoothstep(0.2, 0.7, sh.y), sunHeight) * response * lerp(1, in_scatter_probability, rescaledPdotS01);
 				hit_h += float2(sh.y * response, response);
 				av_dis += float2(i * response, response);
 			}

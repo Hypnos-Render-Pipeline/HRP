@@ -253,6 +253,11 @@ MonoBehaviour:
       type_str: System.Boolean
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
+    - name: TemporalAccumulate
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e66616c73653c2f626f6f6c65616e3e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: enabled
       info: Should this node be excuted.
       type_str: System.Boolean
@@ -315,8 +320,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 2427.9998
-      y: 1437
+      x: 2434.1182
+      y: 1418.5
       width: 300
       height: 297
     info: 
@@ -1077,18 +1082,18 @@ MonoBehaviour:
     o: 12
     i_n: target
     o_n: target
-  - i: 5
-    o: 14
-    i_n: color
-    o_n: target
-  - i: 1
-    o: 5
-    i_n: result
-    o_n: combined
   - i: 6
     o: 4
     i_n: target
     o_n: lightingResult
+  - i: 1
+    o: 5
+    i_n: result
+    o_n: combined
+  - i: 5
+    o: 14
+    i_n: color
+    o_n: target
   node_edgeRecs:
   - node: 2
     in_edges: 
@@ -1098,15 +1103,15 @@ MonoBehaviour:
     out_edge: 020000000300000015000000160000002e0000002f00000037000000380000004100000042000000
   - node: 4
     in_edges: 010000000200000003000000040000000500000006000000070000000800000029000000
-    out_edge: 4f000000
+    out_edge: 4d000000
   - node: 0
     in_edges: 
     out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e000000110000001200000013000000140000001700000018000000190000001a0000001f000000200000002100000024000000250000002600000027000000290000002a0000002b0000002c0000002d000000320000003300000034000000350000003b0000003c0000003d00000045000000
   - node: 5
-    in_edges: 090000004d000000
+    in_edges: 090000004f000000
     out_edge: 4e000000
   - node: 6
-    in_edges: 0a0000000b0000000c0000000d0000000e0000002b0000004f000000
+    in_edges: 0a0000000b0000000c0000000d0000000e0000002b0000004d000000
     out_edge: 100000001b0000001e000000220000003f000000440000004b000000
   - node: 7
     in_edges: 0f000000100000001100000012000000130000001b0000002c00000045000000
@@ -1131,7 +1136,7 @@ MonoBehaviour:
     out_edge: 46000000490000004a000000
   - node: 14
     in_edges: 410000004200000043000000440000004c000000
-    out_edge: 4d000000
+    out_edge: 4f000000
   - node: 15
     in_edges: 46000000
     out_edge: 4700000048000000
@@ -1250,26 +1255,27 @@ MonoBehaviour:
     = 100f;\r\n            ZBin3.enabled = true;\r\n            RTDI4 = new RTDI();\r\n           
     RTDI4.includeSunlight = false;\r\n            RTDI4.enabled = true;\r\n           
     CombineColorDepth5 = new CombineColorDepth();\r\n            CombineColorDepth5.ToneMap
-    = true;\r\n            CombineColorDepth5.enabled = true;\r\n            AreaLight6
-    = new AreaLight();\r\n            AreaLight6.enabled = true;\r\n            SunAtmo7
-    = new SunAtmo();\r\n            SunAtmo7.TLutResolution = new Vector2Int(128,
-    128);\r\n            SunAtmo7.SkyLutResolution = new Vector2Int(64, 224);\r\n           
-    SunAtmo7.MSLutResolution = new Vector2Int(32, 32);\r\n            SunAtmo7.VolumeResolution
-    = new Vector3Int(32, 32, 32);\r\n            SunAtmo7.VolumeMaxDepth = 32000f;\r\n           
-    SunAtmo7.applyAtmoFog = true;\r\n            SunAtmo7.enabled = true;\r\n           
-    SkyBoxIBL8 = new SkyBoxIBL();\r\n            SkyBoxIBL8.enabled = true;\r\n           
-    RTSpecular9 = new RTSpecular();\r\n            RTSpecular9.useRTShadow = true;\r\n           
-    RTSpecular9.enabled = true;\r\n            RTGI10 = new RTGI();\r\n           
-    RTGI10.useRTShadow = true;\r\n            RTGI10.maxDepth = 2;\r\n           
-    RTGI10.spp = 1;\r\n            RTGI10.showVariance = false;\r\n            RTGI10.enabled
-    = true;\r\n            Transparent11 = new Transparent();\r\n            Transparent11.renderAreaLight
-    = true;\r\n            Transparent11.enabled = true;\r\n            PyramidColor12
-    = new PyramidColor();\r\n            PyramidColor12.enabled = true;\r\n       
-    }\r\n        \r\n        public int Execute(RenderContext context, bool debug
-    = false)\r\n        {\r\n            System.Int32 result = -1;\r\n           
-    \r\n            //GBuffer0\r\n            {\r\n                context.commandBuffer.name
-    = \"GBuffer0\";\r\n                // preprocess node\r\n                {\r\n                   
-    // inputs\r\n                    GBuffer0.depth.AllocateResourcces(context, GBuffer0_depth);\r\n                   
+    = true;\r\n            CombineColorDepth5.TemporalAccumulate = false;\r\n           
+    CombineColorDepth5.enabled = true;\r\n            AreaLight6 = new AreaLight();\r\n           
+    AreaLight6.enabled = true;\r\n            SunAtmo7 = new SunAtmo();\r\n           
+    SunAtmo7.TLutResolution = new Vector2Int(128, 128);\r\n            SunAtmo7.SkyLutResolution
+    = new Vector2Int(64, 224);\r\n            SunAtmo7.MSLutResolution = new Vector2Int(32,
+    32);\r\n            SunAtmo7.VolumeResolution = new Vector3Int(32, 32, 32);\r\n           
+    SunAtmo7.VolumeMaxDepth = 32000f;\r\n            SunAtmo7.applyAtmoFog = true;\r\n           
+    SunAtmo7.enabled = true;\r\n            SkyBoxIBL8 = new SkyBoxIBL();\r\n           
+    SkyBoxIBL8.enabled = true;\r\n            RTSpecular9 = new RTSpecular();\r\n           
+    RTSpecular9.useRTShadow = true;\r\n            RTSpecular9.enabled = true;\r\n           
+    RTGI10 = new RTGI();\r\n            RTGI10.useRTShadow = true;\r\n           
+    RTGI10.maxDepth = 2;\r\n            RTGI10.spp = 1;\r\n            RTGI10.showVariance
+    = false;\r\n            RTGI10.enabled = true;\r\n            Transparent11 =
+    new Transparent();\r\n            Transparent11.renderAreaLight = true;\r\n           
+    Transparent11.enabled = true;\r\n            PyramidColor12 = new PyramidColor();\r\n           
+    PyramidColor12.enabled = true;\r\n        }\r\n        \r\n        public int
+    Execute(RenderContext context, bool debug = false)\r\n        {\r\n           
+    System.Int32 result = -1;\r\n            \r\n            //GBuffer0\r\n           
+    {\r\n                context.commandBuffer.name = \"GBuffer0\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    GBuffer0.depth.AllocateResourcces(context, GBuffer0_depth);\r\n                   
     GBuffer0.depth.name = \"GBuffer0.depth\";\r\n                    // outputs\r\n                   
     GBuffer0.diffuse.AllocateResourcces(context, GBuffer0_diffuse);\r\n                   
     GBuffer0.diffuse.name = \"GBuffer0.diffuse\";\r\n                    GBuffer0.diffuse.connected

@@ -14,6 +14,7 @@ int _SubFrameIndex;
 
 float _NearPlane;
 
+Texture2D<float4> _Response; SamplerState sampler_Response;
 RWTexture2D<float4> Target;
 RWTexture2D<float4> History;
 RWTexture2D<float4> Record;
@@ -63,18 +64,16 @@ void RayGeneration()
 	float3 color = 0;
 	float3 rnd_length = Length[dispatchIdx].xyz * 10;
 
-	int sample_turn = frameIndex / 8;
+	int sample_turn = frameIndex / 255;
 	float2 roberts = Roberts2(sample_turn);
-	int4 sampleState = int4((dispatchIdx + int2(sample_turn / 128, sample_turn % 128)), frameIndex, sample_turn / 128 / 128);
+	int4 sampleState = int4(dispatchIdx + int2(roberts * 128), frameIndex, 0);
 
-	float rnd = SAMPLE;
+	float rnd = Roberts1(frameIndex);
 
 	if (rnd > variance) return;
 
 	for (int i = 0; i < spp; i++) {
-
-		roberts = Roberts2(frameIndex * spp + i);
-		float2 offset = roberts;
+		float2 offset = Roberts2(frameIndex * spp + i);
 
 
 		float2 dispatch_uv = (dispatchIdx + offset) / _Pixel_WH.xy * 2 - 1;
@@ -89,11 +88,18 @@ void RayGeneration()
 		float3 origin, direction;
 		origin = dispatch_pos;
 		direction = normalize(dispatch_dir.xyz);
+		float3 response = 1;
 
 		if (_DOF.y != 0) {
-			float2 aperture_offset = UniformSampleRegularPolygon(6, frac(float2(SAMPLE, SAMPLE) + roberts));
+			float2 aperture_offset = frac(float2(SAMPLE, SAMPLE) + roberts);//UniformSampleRegularPolygon(6, frac(float2(SAMPLE, SAMPLE) + roberts));
+			response = _Response.SampleLevel(sampler_Response, aperture_offset, 0).xyz;
+			int max_resample_num = 10;
+			while (max_resample_num-- > 0 && all(response == 0)) {
+				aperture_offset = frac(aperture_offset + offset);
+				response = _Response.SampleLevel(sampler_Response, aperture_offset, 0).xyz;
+			}
+			aperture_offset = (aperture_offset - 0.5) * 2;
 			aperture_offset *= _DOF.y;
-
 			float3 aim_point = origin + direction * _DOF.x;
 
 			origin += mul(_V_Inv, aperture_offset);
@@ -104,17 +110,15 @@ void RayGeneration()
 
 		float3 ori_offset = origin + _NearPlane / dotCV * direction;
 
-		//color += Tr(ori_offset, direction, 9999, sampleState);
-
 		if (_CacheIrradiance != 0)
 		{
-			color += PathTracer_IrrCache(_Max_depth,
+			color += response * PathTracer_IrrCache(_Max_depth,
 				ori_offset, direction,
 				/*inout*/pixelSampleState,
 				true, true, _CacheIrradiance == 2);
 		}
 		else {
-			color += PathTracer(_Max_depth,
+			color += response * PathTracer(_Max_depth,
 				ori_offset, direction,
 				/*inout*/pixelSampleState,
 				true, true);

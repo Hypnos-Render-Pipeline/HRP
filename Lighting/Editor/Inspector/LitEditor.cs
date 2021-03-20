@@ -18,6 +18,9 @@ namespace HypnosRenderPipeline
         MaterialProperty smoothness = null;
         MaterialProperty smoothnessScale = null;
 
+        MaterialProperty anisoMap = null;
+        MaterialProperty anisoStrength = null;
+
         MaterialProperty bumpMap = null;
         MaterialProperty bumpScale = null;
 
@@ -58,7 +61,10 @@ namespace HypnosRenderPipeline
             smoothness = FindProperty("_Smoothness", props);
             smoothnessScale = FindProperty("_GlossMapScale", props, false);
 
-            bumpScale = FindProperty("_BumpScale", props);
+            anisoMap = FindProperty("_AnisoMap", props);
+            anisoStrength = FindProperty("_AnisoStrength", props, false);
+
+             bumpScale = FindProperty("_BumpScale", props);
             bumpMap = FindProperty("_BumpMap", props);
 
             aoScale = FindProperty("_AOScale", props);
@@ -204,7 +210,10 @@ namespace HypnosRenderPipeline
         void DoNormalArea()
         {
             m_MaterialEditor.TexturePropertySingleLine(Styles.normalMapText, bumpMap, bumpMap.textureValue != null ? bumpScale : null);
-            m_MaterialEditor.TexturePropertySingleLine(Styles.aoMapText, aoMap, aoMap.textureValue != null ? aoScale : null);            
+            m_MaterialEditor.TexturePropertySingleLine(Styles.aoMapText, aoMap, aoMap.textureValue != null ? aoScale : null);
+
+            m_MaterialEditor.TexturePropertySingleLine(Styles.anisoMapText, anisoMap, null);
+            m_MaterialEditor.ShaderProperty(anisoStrength, anisoMap.textureValue != null ? Styles.anisoScaleText : Styles.anisoText, 2);
         }
 
         void DoEmissionArea(Material material)
@@ -233,7 +242,8 @@ namespace HypnosRenderPipeline
             SetKeyword(material, "_IRIDESCENCE", material.GetInt("_Iridescence") != 0);
 
             SetKeyword(material, "_METALLICGLOSSMAP", material.GetTexture("_MetallicGlossMap"));
-
+            SetKeyword(material, "_ANISOMAP", material.GetTexture("_AnisoMap"));
+            
             SetKeyword(material, "_CLEARCOAT", material.GetFloat("_ClearCoat") != 0);
 
             SetKeyword(material, "_SUBSURFACE", material.GetInt("_Subsurface") != 0);
@@ -294,7 +304,10 @@ namespace HypnosRenderPipeline
             public static GUIContent highlightsText = EditorGUIUtility.TrTextContent("Specular Highlights", "Specular Highlights");
             public static GUIContent reflectionsText = EditorGUIUtility.TrTextContent("Reflections", "Glossy Reflections");
             public static GUIContent normalMapText = EditorGUIUtility.TrTextContent("Normal Map", "Normal Map");
-            public static GUIContent aoMapText = EditorGUIUtility.TrTextContent("AO Map", "AO Map(R)"); 
+            public static GUIContent aoMapText = EditorGUIUtility.TrTextContent("AO Map", "AO Map(R)");
+            public static GUIContent anisoMapText = EditorGUIUtility.TrTextContent("Anisotropic Map", "Aniso Level (R) and Aniso Angle (G)");
+            public static GUIContent anisoScaleText = EditorGUIUtility.TrTextContent("Anisotropic", "Anisotropic scale factor");
+            public static GUIContent anisoText = EditorGUIUtility.TrTextContent("Anisotropic", "Anisotropic value");
             public static GUIContent iridescentText = EditorGUIUtility.TrTextContent("Iridescent Map", "Iridescent Map(RGB)"); 
             public static GUIContent heightMapText = EditorGUIUtility.TrTextContent("Height Map", "Height Map (G)");
             public static GUIContent occlusionText = EditorGUIUtility.TrTextContent("Occlusion", "Occlusion (G)");

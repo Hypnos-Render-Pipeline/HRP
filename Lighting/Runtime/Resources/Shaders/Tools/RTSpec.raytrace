@@ -70,8 +70,8 @@ void Specular()
 
 	int4 sampleState = int4(dispatchIdx, _Clock % 8, 0);
 
-    float4 ray_pdf = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness));
-    float3 n = normalize(float3(0, 0, 2) + ray_pdf.xyz);
+    float3 ray = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness));
+    float3 n = normalize(float3(0, 0, 2) + ray);
 
     n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
     

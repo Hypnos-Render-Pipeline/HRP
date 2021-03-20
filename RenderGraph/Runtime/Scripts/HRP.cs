@@ -37,6 +37,8 @@ namespace HypnosRenderPipeline
         {
             m_asset = asset;
 
+            GraphicsSettings.useScriptableRenderPipelineBatching = true;
+
 #if UNITY_EDITOR
             if (m_asset.useCompliedCodeInEditor)
             {
