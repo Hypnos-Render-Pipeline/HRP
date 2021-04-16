@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: metal_ani
   m_Shader: {fileID: 4800000, guid: 5c7f5126902e04e4aa6ef1395bbd23cd, type: 3}
-  m_ShaderKeywords: _ANISOMAP _CLEARCOAT _METALLICGLOSSMAP _NORMALMAP
+  m_ShaderKeywords: _ANISOMAP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -25,11 +25,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _AnisoMap:
-        m_Texture: {fileID: 2800000, guid: 4bb3f5ca5c900354b91ccaa55066c2fc, type: 3}
+        m_Texture: {fileID: 2800000, guid: 47f440392eb7b27418e41b4eb3d7278c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: c78f08d83c920f149b20431e6ac96313, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DincMap:
@@ -38,14 +38,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _EmissionMap:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 8, y: 8}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 8, y: 8}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 2800000, guid: dc67307d9c1e1fd4393e432b60dc89c3, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ScatterProfile:
@@ -56,7 +56,7 @@ Material:
     - _AOScale: 1
     - _AnisoStrength: 1
     - _BumpScale: 0.05
-    - _ClearCoat: 0.15
+    - _ClearCoat: 0
     - _Cutoff: 0
     - _Dinc: 1
     - _DstBlend: 0
@@ -70,7 +70,7 @@ Material:
     - _Mode: 0
     - _Modified: 0
     - _Sheen: 0
-    - _Smoothness: 0.75
+    - _Smoothness: 0.779
     - _SrcBlend: 1
     - _Subsurface: 0
     - _ZWrite: 1

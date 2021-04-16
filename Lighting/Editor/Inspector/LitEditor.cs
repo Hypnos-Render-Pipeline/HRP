@@ -305,7 +305,7 @@ namespace HypnosRenderPipeline
             public static GUIContent reflectionsText = EditorGUIUtility.TrTextContent("Reflections", "Glossy Reflections");
             public static GUIContent normalMapText = EditorGUIUtility.TrTextContent("Normal Map", "Normal Map");
             public static GUIContent aoMapText = EditorGUIUtility.TrTextContent("AO Map", "AO Map(R)");
-            public static GUIContent anisoMapText = EditorGUIUtility.TrTextContent("Anisotropic Map", "Aniso Level (R) and Aniso Angle (G)");
+            public static GUIContent anisoMapText = EditorGUIUtility.TrTextContent("Anisotropic Map", "Aniso Level (R) Aniso Angle (G) and High Pass (B)");
             public static GUIContent anisoScaleText = EditorGUIUtility.TrTextContent("Anisotropic", "Anisotropic scale factor");
             public static GUIContent anisoText = EditorGUIUtility.TrTextContent("Anisotropic", "Anisotropic value");
             public static GUIContent iridescentText = EditorGUIUtility.TrTextContent("Iridescent Map", "Iridescent Map(RGB)"); 

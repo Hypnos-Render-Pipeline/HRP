@@ -1,0 +1,57 @@
+Pass
+{
+    $include("Common.hlsl")
+    
+    $include("RTCommon.hlsl")
+    
+    $include("SurfaceDescription.hlsl")
+	
+    void GetSurfaceInfo(inout FragInputs i, out float3 albedo, out float transparent, out float index, out float index_rate, out float metallic, out float smoothness, out float3 normal, out float3 emission) {
+
+        normal = i.tangentToWorld[2];
+        float3 tangent = i.tangentToWorld[1];
+        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, normal, float4(tangent, 1), 0, i.uv0));
+
+        albedo = res.BaseColor;
+        transparent = 1 - res.Alpha;
+
+        metallic = res.Metallic;
+        smoothness = res.Smoothness;
+
+        float3 n = normalize(normal), t = normalize(tangent);
+        float3 binormal = cross(n, t);
+        float3x3 rotation = float3x3(t, binormal, n);
+        normal = mul(res.NormalTS, rotation);
+
+        emission = res.Emission;
+
+        index = 1;
+        index_rate = 1;
+    }
+
+	[shader("closesthit")]
+	void ClosestHit(inout RayIntersection_RTGI rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
+	{
+		CALCULATE_DATA(fragInput, viewDir);
+
+		GBuffer_RTGI gbuffer;
+
+		gbuffer.dis = RayTCurrent();
+		GetSurfaceInfo(fragInput, gbuffer.albedo, gbuffer.transparent, gbuffer.index, gbuffer.index_rate, gbuffer.metallic, gbuffer.smoothness, gbuffer.normal, gbuffer.emission);
+		gbuffer.front = fragInput.isFrontFace;
+		rayIntersection = EncodeGBuffer2RIData(gbuffer);
+	}
+
+	[shader("anyhit")]
+	void AnyHit(inout RayIntersection_RTGI rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
+	{
+		//CALCULATE_DATA(fragInput, viewDir);
+		//if (abs(dot(fragInput.tangentToWorld[2], WorldRayDirection())) < 0.13) {
+		//	IgnoreHit(); return;
+		//}
+		rayIntersection.data1 = 0;
+		AcceptHitAndEndSearch();
+	}
+
+	ENDHLSL
+} 

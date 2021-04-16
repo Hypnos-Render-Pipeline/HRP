@@ -196,7 +196,7 @@ namespace HypnosRenderPipeline.RenderPass
         public override void DisExecute(RenderContext contex)
         {
             afterAtmo.atmo = null;
-            contex.commandBuffer.SetComputeBufferData(sunBuffer, sunLightClear);
+            contex.commandBuffer.SetBufferData(sunBuffer, sunLightClear);
         }
 
         public override void Execute(RenderContext context)
@@ -457,7 +457,7 @@ namespace HypnosRenderPipeline.RenderPass
                     cb.ClearSkybox(skyBox, false, true, Color.clear);
 
                 if (sunBuffer.connected)
-                    cb.SetComputeBufferData(sunBuffer, sunLightClear);
+                    cb.SetBufferData(sunBuffer, sunLightClear);
             }
             cb.SetGlobalConstantBuffer(sunBuffer, "_Sun", 0, 28);
         }

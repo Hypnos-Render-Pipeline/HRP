@@ -7,9 +7,21 @@ ScriptedImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-  script: {fileID: 11500000, guid: ab49ededd0b778a4ebf5cfff479e07aa, type: 3}
-  resolution: 256
-  version: LM-63-1995
-  vertAngle: 37
-  horizAngle: 1
-  candela: 239.6
+  script: {fileID: 11500000, guid: 9801397f829a1ed42984340315cbf362, type: 3}
+  iesMetaData:
+    FileFormatVersion: LM-63-1995
+    IESPhotometricType: Type C
+    IESMaximumIntensity: 1000
+    IESMaximumIntensityUnit: Lumens
+    Manufacturer: 
+    LuminaireCatalogNumber: 
+    LuminaireDescription: 
+    LampCatalogNumber: 
+    LampDescription: 
+    PrefabLightType: 0
+    SpotAngle: 120
+    iesSize: 128
+    ApplyLightAttenuation: 1
+    UseIESMaximumIntensity: 1
+    CookieCompression: 2
+    LightAimAxisRotation: -90

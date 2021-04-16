@@ -65,7 +65,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _Modified: 0
-    - _Scatter: 100
+    - _Scatter: 62.2
     - _Sheen: 0
     - _SliceNum: 256
     - _Smoothness: 0.5

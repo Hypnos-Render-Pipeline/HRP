@@ -114,7 +114,7 @@ bool ResolveLight(const Light light, const float3 position, inout int4 sampleSta
 	}
 	else if (light.type == 6) { //Disc
 		float3 lnormal = light.b.xyz;
-		float3 ltangent = dot(lnormal, float3(0, 0, 1)) > 0.9 ? normalize(cross(lnormal, float3(0, 1, 0))) : normalize(cross(lnormal, float3(0, 0, 1)));
+		float3 ltangent = abs(dot(lnormal, float3(0, 0, 1))) > 0.9 ? normalize(cross(lnormal, float3(0, 1, 0))) : normalize(cross(lnormal, float3(0, 0, 1)));
 		float3 lbitangent = cross(lnormal, ltangent);
 		sample_2D = UniformSampleDisk(sample_2D + 0.5);
 		float3 lpos = ltangent * sample_2D.x + lbitangent * sample_2D.y;

@@ -97,7 +97,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             if (!sun.connected)
             {
-                cb.SetComputeBufferData(sun, sunLightClear);
+                cb.SetBufferData(sun, sunLightClear);
             }
 
             cb.SetGlobalTexture("_SceneColor", target);
@@ -171,7 +171,7 @@ namespace HypnosRenderPipeline.RenderPass
             }
 
             cb.SetGlobalVector("_ProcessRange", new Vector4(0.9f, 1f));
-            cb.SetComputeBufferData(argsBuffer, clearArray);
+            cb.SetBufferData(argsBuffer, clearArray);
             cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Result", tempRef);
             cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_Indirect", argsBuffer);
@@ -228,7 +228,7 @@ namespace HypnosRenderPipeline.RenderPass
         void DispatchSpatialFilter(CommandBuffer cb, int target, float lowSmooth, float highSmooth)
         {
             cb.SetGlobalVector("_ProcessRange", new Vector4(lowSmooth, highSmooth));
-            cb.SetComputeBufferData(argsBuffer_, clearArray);
+            cb.SetBufferData(argsBuffer_, clearArray);
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Result", target);
             cb.SetComputeBufferParam(denoise, CSPass.SFilterIndirect, "_Block", blockBuffer);
             cb.SetComputeBufferParam(denoise, CSPass.SFilterIndirect, "_Indirect", argsBuffer_);

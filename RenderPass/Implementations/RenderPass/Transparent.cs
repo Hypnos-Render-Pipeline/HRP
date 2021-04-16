@@ -82,7 +82,7 @@ namespace HypnosRenderPipeline.RenderPass
                         {
                             lightBufferCPU.Add(light.lightStructGPU);
                         }
-                        context.commandBuffer.SetComputeBufferData(areaLightBuffer, lightBufferCPU);
+                        context.commandBuffer.SetBufferData(areaLightBuffer, lightBufferCPU);
                     }
                 }
                 else if (!areaLightBuffer.connected) {

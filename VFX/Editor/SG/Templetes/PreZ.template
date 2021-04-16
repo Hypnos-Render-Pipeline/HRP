@@ -1,0 +1,19 @@
+Pass
+{
+    $include("Common.hlsl")
+
+    $Connected.Position: $include("VertexDescription.hlsl")
+
+	VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent, float4 color) {
+		VertexInfo info = (VertexInfo)0;
+        $Connected.Position: info.oOffset = VertexDescriptionFunction(Convert2VertexGraph(uv, vertex, oNormal, oTangent, color)).Position - vertex;
+        return info;
+	}
+
+    #pragma vertex   		PreZ_vert
+    #pragma fragment 		PreZ_frag
+
+    $splice(PostGraphIncludes)
+
+    ENDHLSL
+}

@@ -1,0 +1,50 @@
+Pass
+{
+    $include("Common.hlsl")
+
+    $include("VertexDescription.hlsl")
+    $include("SurfaceDescription.hlsl")
+
+	VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent, float4 color) {
+        VertexDescription res = VertexDescriptionFunction(Convert2VertexGraph(uv, vertex, oNormal, oTangent, color));
+        
+		VertexInfo info = (VertexInfo)0;
+        $Connected.Position: info.oOffset = res.Position - vertex;
+        info.oNormal = res.Normal;
+		info.oTangent = float4(res.Tangent, oTangent.w);
+		info.uv = uv;
+        return info;
+	}
+    
+	SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 normal, float4 tangent) {
+		SurfaceInfo info = (SurfaceInfo)0;
+
+        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(wPos, normal, tangent, screenPos, uv));
+
+		info.diffuse = res.BaseColor;
+		info.transparent = 1 - res.Alpha;
+		
+		info.diffuse = DiffuseAndSpecularFromMetallic(info.diffuse, res.Metallic, /*out*/ info.specular);
+		info.smoothness = res.Smoothness;
+
+		float3 n = normalize(normal), t = normalize(tangent.xyz);
+		float3 binormal = cross(n, t) * tangent.w;
+		float3x3 rotation = float3x3(t, binormal, n);
+		info.normal = mul(res.NormalTS, rotation);
+		
+		info.emission = res.Emission;
+		info.diffuseAO_specAO = res.Occlusion;
+
+		info.gnormal = normal;
+		info.index = 1;
+
+        return info;
+    }
+
+	#pragma vertex			Lit_vert
+	#pragma fragment		GBuffer_frag
+
+    $splice(PostGraphIncludes)
+
+    ENDHLSL
+} 

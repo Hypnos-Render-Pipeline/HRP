@@ -25,7 +25,8 @@ namespace HypnosRenderPipeline.RenderPass
                 if (res != null)
                 {
                     res.Release();
-                    Debug.LogWarning("Desc Changed");
+                    if (!PathDefine.release)
+                        Debug.LogWarning("Desc Changed");
                 }
                 res = new RenderTexture(desc);
                 res.Create();

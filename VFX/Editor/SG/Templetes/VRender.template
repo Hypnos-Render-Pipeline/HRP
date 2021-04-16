@@ -1,0 +1,50 @@
+Pass
+{
+    $include("Common.hlsl")
+    
+    $include("RTCommon.hlsl")
+    
+    $include("SurfaceDescription.hlsl")
+	
+    SurfaceInfo GetSurfaceInfo(inout FragInputs i) {
+        SurfaceInfo info = (SurfaceInfo)0;
+        float3 normal = i.tangentToWorld[2];
+        float3 tangent = i.tangentToWorld[1];
+        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, normal, float4(tangent, 1), 0, i.uv0));
+
+        info.diffuse = res.BaseColor;
+        info.transparent = 1 - res.Alpha;
+
+        info.diffuse = DiffuseAndSpecularFromMetallic(info.diffuse, res.Metallic, /*out*/ info.specular);
+        info.smoothness = res.Smoothness;
+
+        float3 n = normalize(normal), t = normalize(tangent);
+        float3 binormal = cross(n, t);
+        float3x3 rotation = float3x3(t, binormal, n);
+        info.normal = mul(res.NormalTS, rotation);
+
+        info.emission = res.Emission;
+        info.diffuseAO_specAO = res.Occlusion;
+
+        info.gnormal = normal;
+        info.index = 1;
+
+        return info;
+    }
+
+	//----------------------------------------------------------------------------------------
+	//------- DXR Shader functions - don't change them unless you know what you are doing ----
+	//----------------------------------------------------------------------------------------
+	[shader("closesthit")]
+	void ClosestHit(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes) {
+		LitClosestHit(/*inout*/rayIntersection, attributeData);
+	}
+
+	[shader("anyhit")]
+	void AnyHit(inout RayIntersection rayIntersection : SV_RayPayload, AttributeData attributeData : SV_IntersectionAttributes)
+	{
+		LitAnyHit(/*inout*/rayIntersection, attributeData);
+	}
+	
+	ENDHLSL
+} 

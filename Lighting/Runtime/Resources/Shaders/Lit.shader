@@ -79,7 +79,7 @@ Shader "HRP/Lit"
 				sampler2D		_DincMap;
 			CBUFFER_END
 
-			VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent) {
+			VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent, float4 color) {
 				VertexInfo info;
 				info.uv = TRANSFORM_TEX(uv, _MainTex);
 				info.oOffset = 0;
@@ -89,7 +89,7 @@ Shader "HRP/Lit"
 				return info;
 			}
 
-			SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float3 screenPos, float3 normal, float4 tangent) {
+			SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 normal, float4 tangent) {
 				SurfaceInfo info = (SurfaceInfo)0;
 
 				fixed4 diffuse = _Color * tex2D(_MainTex, uv);
@@ -270,7 +270,7 @@ Shader "HRP/Lit"
 
 			#if _ANISOMAP
 
-			Texture2D _AnisoMap;
+			Texture2D _AnisoMap; SamplerState sampler_PointRepeat;
 
 			#endif
 
@@ -332,7 +332,9 @@ Shader "HRP/Lit"
 				#endif
 				
 				#if _ANISOMAP
-					float2 aniso = SampleTex(_AnisoMap, uv, 0).xy;
+					float3 aniso = SampleTex(_AnisoMap, uv, 0).xyz;
+					if (aniso.z > 0.5)
+						aniso = _AnisoMap.SampleLevel(sampler_PointRepeat, uv, 0);
 					IN.aniso = aniso.x * _AnisoStrength;
 					float aniso_angle = aniso.y;
 				#else

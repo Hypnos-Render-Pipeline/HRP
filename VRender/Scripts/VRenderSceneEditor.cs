@@ -23,6 +23,8 @@ class VRenderForScene
     public float removeFlare = 2;
     public LayerMask layer = -1;
 
+    public bool realtime = false;
+
     Texture2D rtxon;
     Material mat;
 
@@ -101,6 +103,7 @@ class VRenderForScene
         }
 
         instance.vRender.parameters.halfResolution = instance.performance;
+        instance.vRender.parameters.temporalFrameNum = instance.realtime ? 8 : 9999999;
         instance.vRender.parameters.cacheIrradiance = instance.cacheIrradiance;
         instance.vRender.parameters.IrradianceVolumeScale = instance.IrradianceVolumeScale;
         instance.vRender.parameters.maxDepth = instance.maxBounce;
@@ -110,7 +113,7 @@ class VRenderForScene
         instance.vRender.parameters.nearPlane = instance.nearPlane;
         instance.vRender.parameters.cullingMask = instance.layer;
         instance.vRender.parameters.debugMode = instance.debug;
-        instance.vRender.parameters.removeFlare = instance.removeFlare;
+        instance.vRender.parameters.removeFlare = instance.realtime ? 1 : instance.removeFlare;
         instance.vRender.Render();
 
         SceneView.lastActiveSceneView.Repaint();
@@ -171,6 +174,7 @@ class VRenderForScene
         if (instance.flodout)
         {
             instance.performance = EditorGUILayout.Toggle("Performance First", instance.performance);
+            instance.realtime = EditorGUILayout.Toggle("Realtime Update", instance.realtime);            
             instance.cacheIrradiance = EditorGUILayout.Toggle("Cache Irradiance", instance.cacheIrradiance);
             if (instance.cacheIrradiance)
             {

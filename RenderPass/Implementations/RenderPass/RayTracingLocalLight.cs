@@ -84,7 +84,7 @@ namespace HypnosRenderPipeline.RenderPass
                 if (light.shadow == HRPLightShadowType.RayTrace)
                 {
                     lightStructGPU[0] = light.lightStructGPU;
-                    cb.SetComputeBufferData(lightConstBuffer, lightStructGPU);
+                    cb.SetBufferData(lightConstBuffer, lightStructGPU);
                     cb.SetRayTracingTextureParam(rtShader, "RenderTarget", shadowRT);
                     cb.DispatchRays(rtShader, "LocalLightShadow", (uint)desc.width, (uint)desc.height, 1, cam);
 

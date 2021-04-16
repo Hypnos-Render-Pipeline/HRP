@@ -58,7 +58,7 @@ namespace HypnosRenderPipeline.RenderPass
             }
             var lightCount = lightBufferCPU.Count;
             lightBuffer.ReSize(lightCount);
-            cb.SetComputeBufferData(lightBuffer, lightBufferCPU);
+            cb.SetBufferData(lightBuffer, lightBufferCPU);
 
             cb.SetGlobalInt("_LocalLightCount", lightCount);
             cb.SetGlobalFloat("_Faraway", faraway + 10);

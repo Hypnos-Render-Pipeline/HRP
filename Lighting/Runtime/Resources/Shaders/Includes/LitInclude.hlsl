@@ -1,7 +1,133 @@
 #ifndef LITINCLUDE_H_
 #define LITINCLUDE_H_
 
-#include "UnityCG.cginc"
+#include "UnityShaderVariables.cginc"
+#include "UnityShaderUtilities.cginc"
+#define TRANSFORM_TEX(tex,name) (tex.xy * name##_ST.xy + name##_ST.zw)
+// Tranforms position from world to homogenous space
+inline float4 UnityWorldToClipPos(in float3 pos)
+{
+	return mul(UNITY_MATRIX_VP, float4(pos, 1.0));
+}
+
+// Tranforms position from view to homogenous space
+inline float4 UnityViewToClipPos(in float3 pos)
+{
+	return mul(UNITY_MATRIX_P, float4(pos, 1.0));
+}
+
+// Tranforms position from object to camera space
+inline float3 UnityObjectToViewPos(in float3 pos)
+{
+	return mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, float4(pos, 1.0))).xyz;
+}
+inline float3 UnityObjectToViewPos(float4 pos) // overload for float4; avoids "implicit truncation" warning for existing shaders
+{
+	return UnityObjectToViewPos(pos.xyz);
+}
+
+// Tranforms position from world to camera space
+inline float3 UnityWorldToViewPos(in float3 pos)
+{
+	return mul(UNITY_MATRIX_V, float4(pos, 1.0)).xyz;
+}
+
+// Transforms direction from object to world space
+inline float3 UnityObjectToWorldDir(in float3 dir)
+{
+	return normalize(mul((float3x3)unity_ObjectToWorld, dir));
+}
+
+// Transforms direction from world to object space
+inline float3 UnityWorldToObjectDir(in float3 dir)
+{
+	return normalize(mul((float3x3)unity_WorldToObject, dir));
+}
+
+// Transforms normal from object to world space
+inline float3 UnityObjectToWorldNormal(in float3 norm)
+{
+#ifdef UNITY_ASSUME_UNIFORM_SCALING
+	return UnityObjectToWorldDir(norm);
+#else
+	// mul(IT_M, norm) => mul(norm, I_M) => {dot(norm, I_M.col0), dot(norm, I_M.col1), dot(norm, I_M.col2)}
+	return normalize(mul(norm, (float3x3)unity_WorldToObject));
+#endif
+}
+
+// Computes world space light direction, from world space position
+inline float3 UnityWorldSpaceLightDir(in float3 worldPos)
+{
+#ifndef USING_LIGHT_MULTI_COMPILE
+	return _WorldSpaceLightPos0.xyz - worldPos * _WorldSpaceLightPos0.w;
+#else
+#ifndef USING_DIRECTIONAL_LIGHT
+	return _WorldSpaceLightPos0.xyz - worldPos;
+#else
+	return _WorldSpaceLightPos0.xyz;
+#endif
+#endif
+}
+
+// Computes world space light direction, from object space position
+// *Legacy* Please use UnityWorldSpaceLightDir instead
+inline float3 WorldSpaceLightDir(in float4 localPos)
+{
+	float3 worldPos = mul(unity_ObjectToWorld, localPos).xyz;
+	return UnityWorldSpaceLightDir(worldPos);
+}
+
+// Computes object space light direction
+inline float3 ObjSpaceLightDir(in float4 v)
+{
+	float3 objSpaceLightPos = mul(unity_WorldToObject, _WorldSpaceLightPos0).xyz;
+#ifndef USING_LIGHT_MULTI_COMPILE
+	return objSpaceLightPos.xyz - v.xyz * _WorldSpaceLightPos0.w;
+#else
+#ifndef USING_DIRECTIONAL_LIGHT
+	return objSpaceLightPos.xyz - v.xyz;
+#else
+	return objSpaceLightPos.xyz;
+#endif
+#endif
+}
+
+// Computes world space view direction, from object space position
+inline float3 UnityWorldSpaceViewDir(in float3 worldPos)
+{
+	return _WorldSpaceCameraPos.xyz - worldPos;
+}
+
+// Computes world space view direction, from object space position
+// *Legacy* Please use UnityWorldSpaceViewDir instead
+inline float3 WorldSpaceViewDir(in float4 localPos)
+{
+	float3 worldPos = mul(unity_ObjectToWorld, localPos).xyz;
+	return UnityWorldSpaceViewDir(worldPos);
+}
+
+// Computes object space view direction
+inline float3 ObjSpaceViewDir(in float4 v)
+{
+	float3 objSpaceCameraPos = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos.xyz, 1)).xyz;
+	return objSpaceCameraPos - v.xyz;
+}
+
+inline float4 ComputeNonStereoScreenPos(float4 pos) {
+	float4 o = pos * 0.5f;
+	o.xy = float2(o.x, o.y * _ProjectionParams.x) + o.w;
+	o.zw = pos.zw;
+	return o;
+}
+
+inline float4 ComputeScreenPos(float4 pos) {
+	float4 o = ComputeNonStereoScreenPos(pos);
+#if defined(UNITY_SINGLE_PASS_STEREO)
+	o.xy = TransformStereoScreenSpaceTex(o.xy, pos.w);
+#endif
+	return o;
+}
+
 #include "./GBuffer.hlsl"
 #include "./Light.hlsl"
 #include "./LTCLight.hlsl"
@@ -20,8 +146,8 @@ struct VertexInfo {
 	float2 uv;
 };
 
-VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent);
-SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float3 screenPos, float3 wNormal, float4 wTangent);
+VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent, float4 color);
+SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 wNormal, float4 wTangent);
 
 half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
 {
@@ -41,6 +167,7 @@ struct Lit_a2v {
 	float3 normal : NORMAL;
 	float4 tangent : TANGENT;
 	float2 uv : TEXCOORD0;
+	float4 color : COLOR;
 };
 
 struct Lit_v2f {
@@ -53,14 +180,14 @@ struct Lit_v2f {
 };
 
 float4 PreZ_vert(Lit_a2v i) : SV_POSITION {
-	VertexInfo info = GetVertexInfo(i.uv, i.vertex, i.normal, i.tangent);
+	VertexInfo info = GetVertexInfo(i.uv, i.vertex, i.normal, i.tangent, i.color);
 	return UnityObjectToClipPos(i.vertex + info.oOffset);
 }
 void PreZ_frag() {}
 
 Lit_v2f Lit_vert(Lit_a2v i) {
 
-	VertexInfo info = GetVertexInfo(i.uv, i.vertex, i.normal, i.tangent);
+	VertexInfo info = GetVertexInfo(i.uv, i.vertex, i.normal, i.tangent, i.color);
 
 	Lit_v2f o;
 	o.vertex = UnityObjectToClipPos(i.vertex + info.oOffset);

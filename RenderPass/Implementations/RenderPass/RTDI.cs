@@ -90,7 +90,7 @@ namespace HypnosRenderPipeline.RenderPass
                 }
                 directionalLightBuffer.ReSize(lightBufferCPU.Count);
                 cb.SetGlobalInt("_DirecionalLightCount", lightBufferCPU.Count);
-                cb.SetComputeBufferData(directionalLightBuffer, lightBufferCPU);
+                cb.SetBufferData(directionalLightBuffer, lightBufferCPU);
                 cb.SetGlobalBuffer("_DirecionalLightBuffer", directionalLightBuffer);
             }
 

@@ -116,13 +116,13 @@ namespace HypnosRenderPipeline.RenderPass
                 blockBuffer_ = new ComputeBuffer(dispatchSize.x * dispatchSize.y, 4);
             }
             
-            cb.SetComputeBufferData(argsBuffer, clearArray);
+            cb.SetBufferData(argsBuffer, clearArray);
             cb.SetComputeTextureParam(ssr, CSPass.RemoveFlare, "_History", his0);
             cb.SetComputeTextureParam(ssr, CSPass.RemoveFlare, "_TempResult", tempRef);
             cb.DispatchCompute(ssr, CSPass.RemoveFlare, dispatchSize.x, dispatchSize.y, 1);
 
             cb.SetGlobalVector("_SmoothRange", new Vector4(0.95f, 1f));
-            cb.SetComputeBufferData(argsBuffer, clearArray);
+            cb.SetBufferData(argsBuffer, clearArray);
             cb.SetComputeTextureParam(ssr, CSPass.SFilter, "_Result", tempRef);
             cb.SetComputeBufferParam(ssr, CSPass.SFilter, "_Indirect", argsBuffer);
             cb.SetComputeBufferParam(ssr, CSPass.SFilter, "_NextBlock", blockBuffer);
@@ -157,7 +157,7 @@ namespace HypnosRenderPipeline.RenderPass
         void DispatchSpatialFilter(CommandBuffer cb, int result, float lowSmooth, float highSmooth)
         {
             cb.SetGlobalVector("_SmoothRange", new Vector4(lowSmooth, highSmooth));
-            cb.SetComputeBufferData(argsBuffer_, clearArray);
+            cb.SetBufferData(argsBuffer_, clearArray);
             cb.SetComputeTextureParam(ssr, 3, "_Result", result);
             cb.SetComputeBufferParam(ssr, 3, "_Block", blockBuffer);
             cb.SetComputeBufferParam(ssr, 3, "_Indirect", argsBuffer_);

@@ -160,12 +160,25 @@ inline float GGXTerm(const float NdotH, const float roughness)
 
 inline float AnisoGGXTerm(const float NoH, const float2 roughness, float3 H, float3 X, float3 Y)
 {
-	float ax = roughness.x * roughness.x;
-	float ay = roughness.y * roughness.y;
+	float ax = roughness.x;
+	float ay = roughness.y;
 	float XoH = dot(X, H);
 	float YoH = dot(Y, H);
 	float d = XoH * XoH / (ax * ax) + YoH * YoH / (ay * ay) + NoH * NoH;
-	return 1 / (M_PI * ax * ay * d * d);
+	return M_1_PI / (ax * ay * d * d);
+}
+
+float SmithJointAniso(const float2 roughness, float NoV, float NoL, float3 V, float3 L, float3 X, float3 Y)
+{
+	float ax = roughness.x;
+	float ay = roughness.y;
+	float XoV = dot(X, V);
+	float YoV = dot(Y, V);
+	float XoL = dot(X, L);
+	float YoL = dot(Y, L);
+	float Vis_SmithV = NoL * length(float3(ax * XoV, ay * YoV, NoV));
+	float Vis_SmithL = NoV * length(float3(ax * XoL, ay * YoL, NoL));
+	return 0.5 * rcp(Vis_SmithV + Vis_SmithL);
 }
 
 inline float3 FresnelTerm(const float3 F0, const float cosA)
@@ -298,7 +311,7 @@ float3 IridescenceFresnel(float cosTheta1, float cosTheta2, float eta_2, float e
 
 
 float3 BRDF(const int type, const float3 diffColor, const float3 specColor, const float smoothness, const float aniso, const float2 ao, const float clearCoat, const float sheen,
-	const bool iridescence,const float eta_2, const float eta_3, const float kappa_3, const float dinc, const bool specF,
+	const bool iridescence, const float eta_2, const float eta_3, const float kappa_3, const float dinc, const bool specF,
 	float3 normal, float3 tangent, const float3 viewDir, const float3 lightDir,
 	const float3 lightSatu) {
 
@@ -320,18 +333,22 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 
 	float roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
 
-	roughness = max(roughness, 0.008);
-	float G = SmithJointGGXVisibilityTerm(nl, nv, roughness) * M_PI;
-	float D; 
-	
+	float G;
+	float D;
+
 	if (aniso != 0) {
 		float3 X = tangent;
 		float3 Y = normalize(cross(X, normal));
 		X = cross(normal, Y);
-		D = AnisoGGXTerm(nh, CalculateAnisoRoughness(roughness, aniso), floatDir, X, Y);
+		float2 r2 = CalculateAnisoRoughness(roughness, aniso);
+		D = AnisoGGXTerm(nh, r2, floatDir, X, Y);
+		G = SmithJointAniso(r2, nv, nl, viewDir, lightDir, X, Y);
 	}
-	else
+	else{
+		roughness = max(roughness, 0.008);
 		D = GGXTerm(nh, roughness);
+		G = SmithJointGGXVisibilityTerm(nl, nv, roughness) * M_PI;
+	}
 
 	float3 F;
 	if (iridescence) {

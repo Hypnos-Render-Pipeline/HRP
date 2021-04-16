@@ -55,7 +55,7 @@ namespace HypnosRenderPipeline
                         //s.d.xyz *= 3.14159265359f;
                         break;
                     case HRPLightType.Disc:
-                        s.b = float4(-float4(light.transform.localToWorldMatrix.GetColumn(2)).xyz, light.quadSize.x);
+                        s.b = float4(-float4(light.transform.localToWorldMatrix.GetColumn(2)).xyz, light.discRadius);
                         s.c = light.range / 10;
                         //s.d.xyz *= 3.14159265359f;
                         break;

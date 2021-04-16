@@ -36,7 +36,7 @@ namespace HypnosRenderPipeline
         public HypnosRenderPipeline(HypnosRenderPipelineAsset asset)
         {
             m_asset = asset;
-
+            Shader.globalRenderPipeline = "HypnosRenderPipeline";
             GraphicsSettings.useScriptableRenderPipelineBatching = true;
 
 #if UNITY_EDITOR

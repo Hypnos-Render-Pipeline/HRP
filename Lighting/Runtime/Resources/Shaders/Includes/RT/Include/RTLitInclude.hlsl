@@ -1,7 +1,6 @@
 #ifndef LitInclude_H_
 #define LitInclude_H_
 
-
 #include "./RayTracingCommon.hlsl"
 #include "./Sampler.hlsl"
 #include "../../PBS.hlsl"

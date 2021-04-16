@@ -7,9 +7,21 @@ ScriptedImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-  script: {fileID: 11500000, guid: ab49ededd0b778a4ebf5cfff479e07aa, type: 3}
-  resolution: 256
-  version: IESNA91
-  vertAngle: 37
-  horizAngle: 9
-  candela: 1028
+  script: {fileID: 11500000, guid: 9801397f829a1ed42984340315cbf362, type: 3}
+  iesMetaData:
+    FileFormatVersion: LM-63-1991
+    IESPhotometricType: Type C
+    IESMaximumIntensity: 2400
+    IESMaximumIntensityUnit: Lumens
+    Manufacturer: LITHONIA HI-TEK LIGHTING
+    LuminaireCatalogNumber: AFVW 32TRT 6PR
+    LuminaireDescription: 6" OPEN DOWNLIGHT WITH ALZAK REFLECTOR (CA00630) WITH KICKER
+    LampCatalogNumber: PHILIPS PL-T/32/30/4P
+    LampDescription: ONE 32-WATT TRIPLE TUBE COMPACT FLUORESCENT, VERTICAL POSITI
+    PrefabLightType: 0
+    SpotAngle: 120
+    iesSize: 128
+    ApplyLightAttenuation: 1
+    UseIESMaximumIntensity: 1
+    CookieCompression: 2
+    LightAimAxisRotation: -90
