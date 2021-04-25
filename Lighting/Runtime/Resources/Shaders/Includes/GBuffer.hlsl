@@ -55,7 +55,7 @@ SurfaceInfo DecodeGBuffer(half4 target0, half4 target1, half4 target2, half4 tar
 {
 	SurfaceInfo info = (SurfaceInfo)0;
 	info.diffuse = target0.rgb;
-	info.specular = pow(target1.xyz, 1);
+	info.specular = target1.xyz;
 	info.smoothness = 1 - target1.a;
 	info.normal = DecodeNormal(target2.xyz);
 	info.specF = target2.w;

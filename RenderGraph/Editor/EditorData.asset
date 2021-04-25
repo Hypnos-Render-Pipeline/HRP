@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d6f58951d8f68a41a140d80d86233c7, type: 3}
   m_Name: EditorData
   m_EditorClassIdentifier: 
-  lastOpenPath: unnamed
+  lastOpenPath: Assets/HRP/Example/SSR/Resources/Graph.asset

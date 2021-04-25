@@ -57,9 +57,8 @@ namespace HypnosRenderPipeline.RenderPass
         ComputeBuffer argsBuffer_;
         int[] clearArray = new int[3] { 0, 1, 1 };
 
-        static ComputeShaderWithName ssr = new ComputeShaderWithName("Shaders/SSR/SSR");
-
-        static RTShaderWithName rtShader = new RTShaderWithName("Shaders/Tools/RTSpec");
+        static RTShaderWithName rtShader = new RTShaderWithName("Shaders/RTGI/RTSpec");
+        static ComputeShaderWithName denoise = new ComputeShaderWithName("Shaders/RTGI/SpecDenoise");
 
         static BNSLoader bnsLoader = BNSLoader.instance;
 
@@ -67,13 +66,14 @@ namespace HypnosRenderPipeline.RenderPass
 
         struct CSPass
         {
-            public static int Trace = 0;
-            public static int RemoveFlare = 1;
-            public static int TTFilter = 2;
-            public static int SFilter = 3;
-            public static int SFilterIndirect = 4;
+            public static int DownSampleDepth = 0;
+            public static int TTFilter = 1;
+            public static int SFilter = 2;
+            public static int SFilterIndirect = 3;
+            public static int UpSample = 4;
             public static int FinalSynthesis = 5;
         }
+
 
         public RTSpecular()
         {
@@ -104,12 +104,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             cb.SetGlobalTexture("_SkyBox", skybox);
 
-            var desc = target.desc.basicDesc;
-            desc.enableRandomWrite = true;
-            int result = Shader.PropertyToID("_SSRResult");
-            cb.GetTemporaryRT(result, desc);
-
-            int2 wh = new int2(desc.width, desc.height);
+            int2 wh = new int2(target.desc.basicDesc.width, target.desc.basicDesc.height);
 
             cb.SetGlobalVector("_WH", new Vector4(wh.x, wh.y, 1.0f / wh.x, 1.0f / wh.y));
             cb.SetGlobalInt("_UseRTShadow", useRTShadow ? 1 : 0);
@@ -119,8 +114,29 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetGlobalTexture("_ScramblingTile", bnsLoader.tex_scrambling);
             cb.SetGlobalTexture("_RankingTile", bnsLoader.tex_rankingTile);
 
-            int tempRef = Shader.PropertyToID("_TempReflection");
+            int2 halfWH = wh / 2 + math.int2(wh % 2 != 0);
+            int2 halfDispatchSize = halfWH / 8 + math.int2(halfWH % 8 != 0);
+
+            int halfIndex = Shader.PropertyToID("_HalfIndexTex_");
+            var half_depth_desc = depth.desc.basicDesc;
+            half_depth_desc.width = halfWH.x;
+            half_depth_desc.height = halfWH.y;
+            half_depth_desc.enableRandomWrite = true;
+            half_depth_desc.colorFormat = RenderTextureFormat.RHalf;
+            cb.GetTemporaryRT(halfIndex, half_depth_desc);
+            cb.SetComputeTextureParam(denoise, CSPass.DownSampleDepth, "_HalfIndexTex", halfIndex);
+            cb.DispatchCompute(denoise, CSPass.DownSampleDepth, halfDispatchSize.x, halfDispatchSize.y, 1);
+
+            int tempRef = Shader.PropertyToID("_TempReflection_");
+            int tempRef2 = Shader.PropertyToID("_TempReflection2_");
+            int tempTarget = Shader.PropertyToID("_TempTarget_");
+            int var0 = Shader.PropertyToID("_TempVariance_");
+            var desc = half_depth_desc;
+            desc.colorFormat = RenderTextureFormat.ARGBHalf;
             cb.GetTemporaryRT(tempRef, desc);
+            cb.GetTemporaryRT(tempRef2, desc);
+            desc.colorFormat = RenderTextureFormat.RGHalf;
+            cb.GetTemporaryRT(var0, desc);
 
             var acc = RTRegister.AccStruct();
 #if UNITY_2020_2_OR_NEWER
@@ -131,68 +147,85 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", acc);
             cb.SetRayTracingShaderPass(rtShader, "RTGI");
             cb.SetRayTracingTextureParam(rtShader, "_TempResult", tempRef);
+            cb.SetRayTracingTextureParam(rtShader, "_HalfIndexTex", halfIndex);
             cb.DispatchRays(rtShader, "Specular", (uint)desc.width, (uint)desc.height, 1, context.camera);
 
+            desc.width = wh.x;
+            desc.height = wh.y;
+            desc.colorFormat = RenderTextureFormat.ARGBHalf;
             RenderTexture his0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec_History0"), desc);
+            cb.GetTemporaryRT(tempTarget, desc);
+            RenderTexture hisNormal0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec_HistoryNormal0"), normal.desc.basicDesc);
+            desc = depth.desc.basicDesc;
             desc.colorFormat = RenderTextureFormat.RFloat;
-            RenderTexture hisDepth0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec_HistoryDepth0"), desc);
+            RenderTexture hisDepth0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec__HistoryDepth0"), desc);
 
-            int2 dispatchSize = new int2(wh.x / 8 + (wh.x % 8 != 0 ? 1 : 0), wh.y / 8 + (wh.y % 8 != 0 ? 1 : 0));
-            if (blockBuffer.count != dispatchSize.x * dispatchSize.y)
+            if (blockBuffer.count != halfDispatchSize.x * halfDispatchSize.y)
             {
                 blockBuffer.Release();
-                blockBuffer = new ComputeBuffer(dispatchSize.x * dispatchSize.y, 4);
+                blockBuffer = new ComputeBuffer(halfDispatchSize.x * halfDispatchSize.y, 4);
                 blockBuffer_.Release();
-                blockBuffer_ = new ComputeBuffer(dispatchSize.x * dispatchSize.y, 4);
+                blockBuffer_ = new ComputeBuffer(halfDispatchSize.x * halfDispatchSize.y, 4);
             }
 
 
+            cb.SetGlobalVector("_ProcessRange", new Vector4(0.95f, 1f));
             cb.SetBufferData(argsBuffer, clearArray);
-            cb.SetComputeTextureParam(ssr, CSPass.RemoveFlare, "_History", his0);
-            cb.SetComputeTextureParam(ssr, CSPass.RemoveFlare, "_TempResult", tempRef);
-            cb.DispatchCompute(ssr, CSPass.RemoveFlare, dispatchSize.x, dispatchSize.y, 1);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Result", tempRef);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Variance", var0);
+            cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_Indirect", argsBuffer);
+            cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_NextBlock", blockBuffer);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_HalfIndexTex", halfIndex);
+            cb.DispatchCompute(denoise, CSPass.SFilter, halfDispatchSize.x, halfDispatchSize.y, 1);
 
-            cb.SetGlobalVector("_SmoothRange", new Vector4(0.95f, 1f));
-            cb.SetBufferData(argsBuffer, clearArray);
-            cb.SetComputeTextureParam(ssr, CSPass.SFilter, "_Result", tempRef);
-            cb.SetComputeBufferParam(ssr, CSPass.SFilter, "_Indirect", argsBuffer);
-            cb.SetComputeBufferParam(ssr, CSPass.SFilter, "_NextBlock", blockBuffer);
-            cb.DispatchCompute(ssr, CSPass.SFilter, dispatchSize.x, dispatchSize.y, 1);
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_Variance", var0);
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_History", his0);
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HistoryNormal", hisNormal0);
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HistoryDepth", hisDepth0);
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_TempResult", tempRef);
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_Result", tempRef2);
+            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HalfIndexTex", halfIndex);
+            cb.DispatchCompute(denoise, CSPass.TTFilter, halfDispatchSize.x, halfDispatchSize.y, 1);
 
-            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_History", his0);
-            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_HistoryDepth", hisDepth0);
-            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_TempResult", tempRef);
-            cb.SetComputeTextureParam(ssr, CSPass.TTFilter, "_Result", result);
-            cb.DispatchCompute(ssr, CSPass.TTFilter, dispatchSize.x, dispatchSize.y, 1);
+            cb.CopyTexture(normal, hisNormal0);
+            cb.Blit(depth, hisDepth0);
 
-            DispatchSpatialFilter(cb, result, 0.9f, 0.95f);
-            DispatchSpatialFilter(cb, result, 0.85f, 0.9f);
-            DispatchSpatialFilter(cb, result, 0.75f, 0.85f);
-            DispatchSpatialFilter(cb, result, 0.6f, 0.75f);
-            DispatchSpatialFilter(cb, result, 0.45f, 0.6f);
-            DispatchSpatialFilter(cb, result, 0.2f, 0.45f);
-            DispatchSpatialFilter(cb, result, 0, 0.2f);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Variance", var0);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_HalfIndexTex", halfIndex);
+            DispatchSpatialFilter(cb, tempRef2, 0.9f, 0.95f);
+            DispatchSpatialFilter(cb, tempRef2, 0.8f, 0.9f);
+            DispatchSpatialFilter(cb, tempRef2, 0.6f, 0.8f);
+            DispatchSpatialFilter(cb, tempRef2, 0.3f, 0.6f);
+            DispatchSpatialFilter(cb, tempRef2, 0, 0.3f);
 
-            cb.CopyTexture(result, his0);
+            int2 dispatchSize = new int2(wh.x / 8 + (wh.x % 8 != 0 ? 1 : 0), wh.y / 8 + (wh.y % 8 != 0 ? 1 : 0));
+            cb.SetComputeTextureParam(denoise, CSPass.UpSample, "_Result", tempRef2);
+            cb.SetComputeTextureParam(denoise, CSPass.UpSample, "_FullSizeResult", his0);
+            cb.SetComputeTextureParam(denoise, CSPass.UpSample, "_HalfIndexTex", halfIndex);
+            cb.DispatchCompute(denoise, CSPass.UpSample, dispatchSize.x, dispatchSize.y, 1);
 
-            cb.SetComputeTextureParam(ssr, CSPass.FinalSynthesis, "_Result", result);
-            cb.DispatchCompute(ssr, CSPass.FinalSynthesis, dispatchSize.x, dispatchSize.y, 1);
+            cb.SetComputeTextureParam(denoise, CSPass.FinalSynthesis, "_History", his0);
+            cb.SetComputeTextureParam(denoise, CSPass.FinalSynthesis, "_Result", tempTarget);
+            cb.DispatchCompute(denoise, CSPass.FinalSynthesis, dispatchSize.x, dispatchSize.y, 1);
 
-            cb.CopyTexture(result, target);
-            cb.Blit(depth, hisDepth0); // from Depth24 to R32
+            cb.Blit(tempTarget, target);
 
+            cb.ReleaseTemporaryRT(halfIndex);
             cb.ReleaseTemporaryRT(tempRef);
+            cb.ReleaseTemporaryRT(tempRef2);
+            cb.ReleaseTemporaryRT(var0);
+            cb.ReleaseTemporaryRT(tempTarget);
         }
 
         void DispatchSpatialFilter(CommandBuffer cb, int result, float lowSmooth, float highSmooth)
         {
             cb.SetGlobalVector("_SmoothRange", new Vector4(lowSmooth, highSmooth));
             cb.SetBufferData(argsBuffer_, clearArray);
-            cb.SetComputeTextureParam(ssr, CSPass.SFilterIndirect, "_Result", result);
-            cb.SetComputeBufferParam(ssr, CSPass.SFilterIndirect, "_Block", blockBuffer);
-            cb.SetComputeBufferParam(ssr, CSPass.SFilterIndirect, "_Indirect", argsBuffer_);
-            cb.SetComputeBufferParam(ssr, CSPass.SFilterIndirect, "_NextBlock", blockBuffer_);
-            cb.DispatchCompute(ssr, CSPass.SFilterIndirect, argsBuffer, 0);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Result", result);
+            cb.SetComputeBufferParam(denoise, CSPass.SFilterIndirect, "_Block", blockBuffer);
+            cb.SetComputeBufferParam(denoise, CSPass.SFilterIndirect, "_Indirect", argsBuffer_);
+            cb.SetComputeBufferParam(denoise, CSPass.SFilterIndirect, "_NextBlock", blockBuffer_);
+            cb.DispatchCompute(denoise, CSPass.SFilterIndirect, argsBuffer, 0);
             SwapBuffer(ref argsBuffer, ref argsBuffer_);
             SwapBuffer(ref blockBuffer, ref blockBuffer_);
         }

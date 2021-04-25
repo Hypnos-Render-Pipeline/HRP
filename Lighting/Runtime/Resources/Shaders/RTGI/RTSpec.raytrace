@@ -17,6 +17,7 @@ int _UseRTShadow;
 float4 _WH;
 
 Texture2D<float> _DepthTex;
+Texture2D<float> _HalfIndexTex;
 Texture2D<float4> _SpecTex, _NormalTex, _AOTex, _SceneColor;
 Texture2D<float4> _FilteredColor;
 Texture2D<float2> _MotionTex;
@@ -38,15 +39,23 @@ float Luminance(float3 col) {
 float3 ToneMap(float3 color) {
     return color / (1 + Luminance(color));
 }
+int2 index2offset(const uint index) {
+    uint2 index2offset[4] = { uint2(0, 0), uint2(1, 0), uint2(1, 1), uint2(0, 1) };
+    return index2offset[index];
+}
+
 
 [shader("raygeneration")]
 void Specular()
 {
     uint2 dispatchIdx = DispatchRaysIndex().xy;
-    float2 uv = (dispatchIdx + 0.5) * _WH.zw;
+    int index = _HalfIndexTex[dispatchIdx];
+    uint2 fullResIndex = dispatchIdx * 2 + index2offset(index);
 
-    float d = _DepthTex[dispatchIdx];
-    float4 sr = _SpecTex[dispatchIdx];
+    float2 uv = (fullResIndex + 0.5) * _WH.zw;
+
+    float d = _DepthTex[fullResIndex];
+    float4 sr = _SpecTex[fullResIndex];
     if (d == 0 || all(sr.xyz == 0)) {
         _TempResult[dispatchIdx] = 0;
         return;
@@ -64,14 +73,14 @@ void Specular()
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(0,
                             sr,
-                            _NormalTex[dispatchIdx],
+                            _NormalTex[fullResIndex],
                             0,
                             1);
 
-	int4 sampleState = int4(dispatchIdx, _Clock % 8, 0);
+	int4 sampleState = int4(dispatchIdx, _Clock, 0);
 
-    float3 ray = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness) * (1 - info.smoothness));
-    float3 n = normalize(float3(0, 0, 2) + ray);
+    float3 ray = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness));
+    float3 n = ray;
 
     n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
     

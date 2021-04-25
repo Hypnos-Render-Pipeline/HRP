@@ -96,7 +96,7 @@ float4 CosineSampleHemisphere(float2 E) {
 }
 
 float3 CosineSampleHemisphere(float2 E, float3 N) {
-	return UniformSampleSphere(E).xyz + N;
+	return normalize(UniformSampleSphere(E).xyz + N);
 }
 
 float3x3 GetMatrixFromNormal(float3 v1) {

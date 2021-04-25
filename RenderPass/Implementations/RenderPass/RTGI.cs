@@ -131,7 +131,7 @@ namespace HypnosRenderPipeline.RenderPass
             int tempRef2 = Shader.PropertyToID("_TempReflection2");
             int tempTarget = Shader.PropertyToID("_TempTarget");
             int var0 = Shader.PropertyToID("_TempVariance"); 
-             var desc = half_depth_desc;
+            var desc = half_depth_desc;
             desc.colorFormat = RenderTextureFormat.ARGBHalf;
             cb.GetTemporaryRT(tempRef, desc);
             cb.GetTemporaryRT(tempRef2, desc);
@@ -192,12 +192,14 @@ namespace HypnosRenderPipeline.RenderPass
             cb.Blit(depth, hisDepth0);
 
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Variance", var0);
+            cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_HalfIndexTex", halfIndex);
             DispatchSpatialFilter(cb, tempRef2, 0.75f, 0.9f);
-            DispatchSpatialFilter(cb, tempRef2, 0.6f, 0.75f);
-            DispatchSpatialFilter(cb, tempRef2, 0.5f, 0.6f);
-            DispatchSpatialFilter(cb, tempRef2, 0.35f, 0.5f);
-            DispatchSpatialFilter(cb, tempRef2, 0.2f, 0.35f);
-            DispatchSpatialFilter(cb, tempRef2, 0, 0.2f);
+            DispatchSpatialFilter(cb, tempRef2, 0.5f, 0.75f);
+            DispatchSpatialFilter(cb, tempRef2, 0.25f, 0.5f);
+            DispatchSpatialFilter(cb, tempRef2, 0, 0.25f);
+            //DispatchSpatialFilter(cb, tempRef2, 0.5f, 0.6f);
+            //DispatchSpatialFilter(cb, tempRef2, 0.2f, 0.35f);
+            //DispatchSpatialFilter(cb, tempRef2, 0, 0.2f);
             //DispatchSpatialFilter(cb, tempRef2, 0.25f, 0.5f);
             //DispatchSpatialFilter(cb, tempRef2, 0, 0.25f);
             //DispatchSpatialFilter(cb, tempRef2, 0.45f, 0.6f);
