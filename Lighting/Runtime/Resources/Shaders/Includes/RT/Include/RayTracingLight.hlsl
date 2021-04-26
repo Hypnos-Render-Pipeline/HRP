@@ -291,6 +291,11 @@ float3 LightLuminance(float3 pos, float3 dir,
 	return direct_light;
 } 
 
+bool IsDeltaLight(Light light) {
+	if (light.type <= SPOT && !(light.type == POINT && light.b.y != 0)) return true;
+	return false;
+}
+
 float3 LightLuminanceCamera(float3 pos, float3 dir,
 	inout int4 sampleState) {
 	int light_count = clamp(_LightCount, 0, 100);
@@ -300,11 +305,11 @@ float3 LightLuminanceCamera(float3 pos, float3 dir,
 	{
 		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
-		if (light.type <= SPOT) return 0;
-
 		float3 attenuation;
 		float3 lightDir;
 		float3 end_point;
+
+		if (IsDeltaLight(light)) return 0;
 
 		bool in_light_range = ResolveLightWithDir(light, pos, dir,
 			/*out*/attenuation, /*out*/end_point);
@@ -320,7 +325,6 @@ float3 LightLuminanceCamera(float3 pos, float3 dir,
 	}
 	return direct_light * light_count;
 }
-
 
 float3 LightLuminanceSpec(float3 pos, float3 dir,
 	inout int4 sampleState) {

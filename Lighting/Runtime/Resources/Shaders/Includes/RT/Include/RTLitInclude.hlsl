@@ -169,7 +169,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			float2 rand_num_light = SAMPLE;
 			Light light = _LightList[floor(min(rand_num_light.x, 0.99) * light_count)];
 
-			if (light.type <= SPOT) useSpecLightDir = false;
+			if (IsDeltaLight(light)) useSpecLightDir = false;
 
 			float3 attenuation;
 			float3 lightDir;
@@ -265,11 +265,15 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		if (all_reflect) r_thre = 1;
 		if (rand_num.y < r_thre) {
 			nextDir = reflect(-viewDir, n);
-			rayRoughness = 0;
+			rayRoughness = surface.smoothness;
 		}
 		else {
 			nextDir = next_dir;
-			rayRoughness = 0;
+			rayRoughness = surface.smoothness;
+			weight *= IOR;
+			if (!IN.isFrontFace) {
+				directColor += weight.xyz * LightLuminanceCameraWithFog(IN.position, nextDir, sampleState);
+			}
 		}
 	}
 	else if (rand_num.x <= threashold.y) { //漫射

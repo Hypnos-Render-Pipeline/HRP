@@ -20,6 +20,7 @@ class VRenderForScene
     public VRenderParameters.LightSetting lightSetting;
     public bool enableFog;
     public VRenderParameters.DebugMode debug;
+    public VRenderParameters.DenoiseMode denoiseMode = VRenderParameters.DenoiseMode.SmartDenoise;
     public float removeFlare = 2;
     public LayerMask layer = -1;
 
@@ -75,7 +76,7 @@ class VRenderForScene
         vr.parameters.preferFrameRate = true;
         vr.parameters.halfResolution = true;
         vr.parameters.upsample = true;
-        vr.parameters.denosieMode = VRenderParameters.Mode.SmartDenoise;
+        vr.parameters.denosieMode = VRenderParameters.DenoiseMode.SmartDenoise;
         vr.parameters.strength = 0.15f;
         vr.parameters.nearPlane = 0.3f;
     }
@@ -113,6 +114,7 @@ class VRenderForScene
         instance.vRender.parameters.nearPlane = instance.nearPlane;
         instance.vRender.parameters.cullingMask = instance.layer;
         instance.vRender.parameters.debugMode = instance.debug;
+        instance.vRender.parameters.denosieMode = instance.denoiseMode;
         instance.vRender.parameters.removeFlare = instance.realtime ? 1 : instance.removeFlare;
         instance.vRender.Render();
 
@@ -206,6 +208,7 @@ class VRenderForScene
 
             instance.enableFog = EditorGUILayout.Toggle("Enable Fog Rendering", instance.enableFog);
             instance.debug = (VRenderParameters.DebugMode)EditorGUILayout.EnumPopup("Debug Mode", instance.debug);
+            instance.denoiseMode = (VRenderParameters.DenoiseMode)EditorGUILayout.EnumPopup("Denoise", instance.denoiseMode);
             instance.removeFlare = EditorGUILayout.Slider("Remove flare", instance.removeFlare, 1, 10);
 
             instance.layer = DrawLayerMaskField(instance.layer);

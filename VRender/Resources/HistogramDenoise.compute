@@ -1,0 +1,144 @@
+#pragma kernel Clear
+#pragma kernel AddSample
+#pragma kernel Debug
+
+#define HISTO_SIZE 10
+
+
+float2 _Pixel_WH;
+int _SubFrameIndex;
+
+struct Histogram {
+    float bin[HISTO_SIZE * 3];
+    float totalSampleNum;
+};
+
+RWStructuredBuffer<Histogram> _HistogramBuffer;
+RWTexture2D<float4> _History;
+Texture2D<float4> _FrameSamples;
+Texture2D<float4> _Variance;
+RWTexture2D<float4> _Denoised;
+
+int UnRoll(int2 idx) {
+    int2 wh = int2(_Pixel_WH.xy);
+    idx = clamp(idx, 0, wh - 1);
+    return idx.x + wh.x * idx.y;
+}
+
+void ClearHistogram(int id) {
+    _HistogramBuffer[id].totalSampleNum = 0;
+    for (int i = 0; i < HISTO_SIZE * 3; i++)
+        _HistogramBuffer[id].bin[i] = 0;
+}
+
+void AddSample(int id, float4 s) {
+    if (s.w == 0) return;
+    _HistogramBuffer[id].totalSampleNum += 1;
+
+    int3 idx = floor(min(s.xyz, 0.999) * HISTO_SIZE);
+
+    _HistogramBuffer[id].bin[idx.x] += 1;
+    _HistogramBuffer[id].bin[idx.y + HISTO_SIZE] += 1;
+    _HistogramBuffer[id].bin[idx.z + HISTO_SIZE * 2] += 1;
+}
+
+float Compare(int id0, int id1) {
+    Histogram x = _HistogramBuffer[id0];
+    Histogram y = _HistogramBuffer[id1];
+
+    float nx = x.totalSampleNum;
+    float ny = y.totalSampleNum;
+    float sqrt_y_x = sqrt(ny / nx);
+    float sqrt_x_y = sqrt(nx / ny);
+
+    float p = 0;
+    float res = 0;
+    for (int i = 0; i < HISTO_SIZE * 3; i++)
+    {
+        float hx = x.bin[i];
+        float hy = y.bin[i];
+        if (hx != 0 || hy != 0) {
+            p++;
+            float t = sqrt_y_x * hx - sqrt_x_y * hy;
+            res += t * t / (hx + hy);
+        }
+    }
+    return p == 0 ? 0 : res / p;
+}
+
+float ComparePatch(int2 id0, int2 id1) {
+    float res = 0;
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            int2 offset = int2(i, j);
+            res += Compare(UnRoll(id0 + offset), UnRoll(id1 + offset));
+        }
+    }
+    return res / 9;
+}
+
+[numthreads(32, 1, 1)]
+void Clear(uint id : SV_DispatchThreadID)
+{
+    if (id >= uint(_Pixel_WH.x * _Pixel_WH.y)) return;
+    ClearHistogram(id);
+}
+
+
+[numthreads(8,8,1)]
+void AddSample(uint2 id : SV_DispatchThreadID)
+{
+    if (any(id >= uint2(_Pixel_WH.xy))) return;
+    AddSample(UnRoll(id), _FrameSamples[id]);
+}
+
+
+
+
+float Luminance(float3 col) {
+    return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
+}
+float3 UnToneMap(float3 color) {
+    return color / (1 - Luminance(color));
+}
+[numthreads(8, 8, 1)]
+void Debug(uint2 id : SV_DispatchThreadID)
+{
+    uint sub_frame = (uint)_SubFrameIndex % (8 * 8);
+
+    uint layer = sub_frame % 4;
+    uint2 offset = uint2((layer & 1), (layer + (layer >> 1)) & 1) * 4;
+    layer = sub_frame / 4 % 4;
+    offset += uint2((layer & 1), (layer + (layer >> 1)) & 1) * 2;
+    layer = sub_frame / 16 % 4;
+    offset += uint2((layer & 1), (layer + (layer >> 1)) & 1) * 1;
+    //layer = sub_frame / 64 % 4;
+    //offset += uint2((layer & 1), (layer + (layer >> 1)) & 1);
+
+    id = id * 8 + offset;
+
+    if (any(id >= uint2(_Pixel_WH.xy))) return;
+
+    [branch]
+    if (_Variance[id].a < 0.25)
+    {
+        _Denoised[id] = _History[id];
+        return;
+    }
+
+    int2 wh = int2(_Pixel_WH.xy) - 1;
+    float4 res = 0;
+    for (int i = -5; i <= 5; i++)
+    {
+        for (int j = -5; j <= 5; j++)
+        {
+            int2 pairId = id + int2(i, j);
+            float w = max(0, 1 - ComparePatch((id), (pairId)));
+            res += float4(_History[clamp(pairId, 0, wh)].xyz * w, w);
+        }
+    }
+
+    _Denoised[id] = res / res.w;
+}

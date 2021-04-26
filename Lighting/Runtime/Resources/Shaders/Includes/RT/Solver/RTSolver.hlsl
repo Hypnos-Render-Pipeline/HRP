@@ -88,7 +88,7 @@ float3 PathTracer_IrrCache(const int maxDepth,
 	inout int4 sampleState, 
     bool traceFog = false, bool includeDirectional = false, bool debug = false, float roughness = 0) {
 
-	int depth = min(max(maxDepth, 1), 6);
+	int depth = min(max(maxDepth, 1), 12);
 	float3 res = 0;
 	[branch]
 	if (includeDirectional)

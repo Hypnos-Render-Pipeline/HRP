@@ -294,7 +294,7 @@ float3 LightLuminanceCameraWithFog(float3 pos, float3 dir,
 	{
 		Light light = _LightList[floor(min(rnd, 0.99) * light_count)];
 
-		if (light.type <= SPOT) return 0;
+		if (IsDeltaLight(light)) return 0;
 
 		float3 attenuation;
 		float3 lightDir;
@@ -327,7 +327,7 @@ float PhaseFunction(float3 i, float3 o, float g)
     //return 3 / (8 * 3.14159265359) * 0.3758 * (1 + mu * mu) / 2.6241 / pow((1.6241 - 1.58 * mu), 1.5);
 }
 
-float3 EvaluateLight(float3 pos, float3 dir, float3 sigmaS, float G, inout int4 sampleState) {
+float3 EvaluateLight(float3 pos, float3 dir, float G, inout int4 sampleState) {
 	float3 res = 0;
 	int light_count = clamp(_LightCount, 0, 100);
 	if (light_count == 0) return 0;
@@ -441,7 +441,7 @@ void DeterminateNextVertex(float3 pos, float3 dir, float dis,
 
 	float3 S = 0;
 	if (any(weight.xyz != 0)) {
-		S = EvaluateLight(nextPos, dir, sigmaS, G,
+		S = EvaluateLight(nextPos, dir, G,
 			/*inout*/sampleState);
 	}
 	directColor = S * weight.xyz;

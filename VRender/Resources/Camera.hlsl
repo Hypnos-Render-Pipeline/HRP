@@ -36,10 +36,25 @@ void RayGeneration()
 {
 	int2 dispatchIdx = DispatchRaysIndex().xy;
 	int frameIndex = _PreferFrameRate ? _Frame_Index / 4 : _Frame_Index / 2;
-	if (_PreferFrameRate)
+	if (_PreferFrameRate) {
+		int k = _SubFrameIndex + 1;
+		int2 un_dispatch = dispatchIdx;
+		un_dispatch = dispatchIdx * 2 + int2((k & 1), (k + (k >> 1)) & 1);
+		Target[un_dispatch] = 0;
+		k++;
+		un_dispatch = dispatchIdx * 2 + int2((k & 1), (k + (k >> 1)) & 1);
+		Target[un_dispatch] = 0;
+		k++;
+		un_dispatch = dispatchIdx * 2 + int2((k & 1), (k + (k >> 1)) & 1);
+		Target[un_dispatch] = 0;
 		dispatchIdx = dispatchIdx * 2 + int2((_SubFrameIndex & 1), (_SubFrameIndex + (_SubFrameIndex >> 1)) & 1);
-	else
+	}
+	else {
+		int2 un_dispatch = dispatchIdx;
+		un_dispatch.y = un_dispatch.y * 2 + (un_dispatch.x + _SubFrameIndex + 1) % 2;
+		Target[un_dispatch] = 0;
 		dispatchIdx.y = dispatchIdx.y * 2 + (dispatchIdx.x + _SubFrameIndex) % 2;
+	}
 
 	float4 old = History[dispatchIdx], rec = Record[dispatchIdx];
 	float variance = 1;
@@ -70,7 +85,10 @@ void RayGeneration()
 
 	float rnd = Roberts1(frameIndex);
 
-	if (rnd > variance) return;
+	if (rnd > variance) {
+		Target[dispatchIdx] = 0;
+		return;
+	}
 
 	for (int i = 0; i < spp; i++) {
 		float2 offset = Roberts2(frameIndex * spp + i);
@@ -129,7 +147,9 @@ void RayGeneration()
 	if (any(isnan(color))) color = float3(100000, 0, 100000);
 
 	color = clamp(color, 0, 100);
-	color = UnToneMap(ToneMap(color));
+	color = ToneMap(color);
+	Target[dispatchIdx] = float4(color, 1);
+	color = UnToneMap(color);
 
 	float3 ex = (old.xyz * old.w + color) / old.w;
 	float3 ex2 = (rec * old.w + color * color) / old.w;
@@ -152,7 +172,6 @@ void RayGeneration()
 		Record[dispatchIdx] = float4(color * color, 1);
 	}
 
-	Target[dispatchIdx] = float4(color, 1);//float4(ac_data, k + 1);
 }
 
 [shader("closesthit")]

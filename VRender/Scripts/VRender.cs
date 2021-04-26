@@ -7,6 +7,7 @@ using Unity.Mathematics;
 using System.Collections.Generic;
 using UnityEditor;
 using HypnosRenderPipeline;
+using UnityEditor.PackageManager.UI;
 
 [System.Serializable]
 public class VRenderParameters
@@ -130,10 +131,10 @@ public class VRenderParameters
     public DebugMode debugMode = DebugMode.none;
 
     [System.Serializable]
-    public enum Mode { none, SmartDenoise, Another };
+    public enum DenoiseMode { None, SmartDenoise, HisogramDenoise };
     [Space(15)]
     [Header("Quick deniose")]
-    public Mode denosieMode = Mode.none;
+    public DenoiseMode denosieMode = DenoiseMode.None;
     [Range(0.01f, 1)]
     public float strength = 0.1f;
     [Range(1, 100)]
@@ -167,12 +168,15 @@ public class VRender : IDisposable
     ComputeBuffer cb_LightList;
 
     RenderTexture frameSamples;
-    RenderTexture albedo, normal;
+
+    ComputeBuffer sampleHistogram;
 
     ComputeShader cs_clearVolume;
+    ComputeShader cs_histoDenoise;
     RenderTexture tex3D_iv;
 
     RenderTexture history = null, record = null;
+    RenderTexture denoised = null;
 
     RenderTexture TLut;
     RenderTexture MSLut;
@@ -196,6 +200,7 @@ public class VRender : IDisposable
         bnsLoader = HypnosRenderPipeline.BNSLoader.instance;
         cb_LightList = new ComputeBuffer(100, HypnosRenderPipeline.LightListGenerator.lightStructSize);
         cs_clearVolume = Resources.Load<ComputeShader>("ClearVolume");
+        cs_histoDenoise = Resources.Load<ComputeShader>("HistogramDenoise");
         tex3D_iv = new RenderTexture(128, 64, 0);
         tex3D_iv.dimension = TextureDimension.Tex3D;
         tex3D_iv.volumeDepth = 128;
@@ -277,6 +282,16 @@ public class VRender : IDisposable
             record.Release();
             record = null;
         }
+        if (denoised != null)
+        {
+            denoised.Release();
+            denoised = null;
+        }
+        if (sampleHistogram != null)
+        {
+            sampleHistogram.Release();
+            sampleHistogram = null;
+        }
         defaultBuffer.Dispose();
         defaultArray.Release();
     }
@@ -311,7 +326,7 @@ public class VRender : IDisposable
         parameters.temporalFrameNum = temporalFrameNumSwith;
         temporalFrameNumSwith = tmp;
 
-        int2 resolution = (int2)(math.float2(cam.pixelWidth, cam.pixelHeight) * (parameters.halfResolution ? 0.5f : 1));
+        int2 resolution = (int2)(float2(cam.pixelWidth, cam.pixelHeight) * (parameters.halfResolution ? 0.5f : 1));
 
         if (history == null || history.width != resolution.x || history.height != resolution.y)
         {
@@ -328,10 +343,16 @@ public class VRender : IDisposable
             record.Create();
         }
         SetupFrameSamplesBuffer(host, cb, resolution.x, resolution.y);        
-        if (parameters.cacheIrradiance && FrameIndex == 1)
+        if (FrameIndex == 1)
         {
-            cb.SetComputeTextureParam(cs_clearVolume, 0, "_Volume", tex3D_iv);
-            cb.DispatchCompute(cs_clearVolume, 0, 128 / 4, 64 / 4, 128 / 4);
+            if (parameters.cacheIrradiance)
+            {
+                cb.SetComputeTextureParam(cs_clearVolume, 0, "_Volume", tex3D_iv);
+                cb.DispatchCompute(cs_clearVolume, 0, 128 / 4, 64 / 4, 128 / 4);
+            }
+            cb.SetComputeBufferParam(cs_histoDenoise, 0, "_HistogramBuffer", sampleHistogram);
+            int total_pixel_count = resolution.x * resolution.y;
+            cb.DispatchCompute(cs_histoDenoise, 0, (total_pixel_count / 32) + (total_pixel_count % 32 != 0 ? 1 : 0), 1, 1);
         }
 
         cb.SetGlobalTexture("_Sobol", bnsLoader.tex_sobol);
@@ -358,6 +379,10 @@ public class VRender : IDisposable
             cb.DispatchRays(rtShader, "RayGeneration", (uint)resolution.x / 2, (uint)resolution.y / 2, 1, cam);
         else
             cb.DispatchRays(rtShader, "RayGeneration", (uint)resolution.x, (uint)resolution.y / 2, 1, cam);
+
+        cb.SetComputeTextureParam(cs_histoDenoise, 1, "_FrameSamples", frameSamples);
+        cb.SetComputeBufferParam(cs_histoDenoise, 1, "_HistogramBuffer", sampleHistogram);
+        cb.DispatchCompute(cs_histoDenoise, 1, (resolution.x / 8) + (resolution.x % 8 != 0 ? 1 : 0), (resolution.y / 8) + (resolution.y % 8 != 0 ? 1 : 0), 1);
 
         switch (parameters.debugMode)
         {
@@ -434,7 +459,7 @@ public class VRender : IDisposable
     {
         switch (parameters.denosieMode)
         {
-            case VRenderParameters.Mode.none:
+            case VRenderParameters.DenoiseMode.None:
                 if (parameters.halfResolution)
                 {
                     if (parameters.upsample)
@@ -446,17 +471,37 @@ public class VRender : IDisposable
                 else
                     cb.Blit(res, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
                 break;
-            case VRenderParameters.Mode.SmartDenoise:
-                cb.SetGlobalFloat("_DenoiseStrength", parameters.strength * 0.1f);
-                int k = Shader.PropertyToID("_VRenderTempDenoise");
-                cb.GetTemporaryRT(k, res.descriptor);
-                cb.SetGlobalFloat("_Flare", parameters.removeFlare);
-                cb.Blit(res, k, denoiseMaterial, 2);
-                cb.Blit(k, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), denoiseMaterial, 0);
-                cb.ReleaseTemporaryRT(k);
+            case VRenderParameters.DenoiseMode.SmartDenoise:
+                {
+                    cb.SetGlobalFloat("_DenoiseStrength", parameters.strength * 0.1f);
+                    int k = Shader.PropertyToID("_VRenderTempDenoise");
+                    cb.GetTemporaryRT(k, res.descriptor);
+                    cb.SetGlobalFloat("_Flare", parameters.removeFlare);
+                    cb.Blit(res, k, denoiseMaterial, 2);
+                    cb.Blit(k, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), denoiseMaterial, 0);
+                    cb.ReleaseTemporaryRT(k);
+                }
                 break;
-            case VRenderParameters.Mode.Another:
+            case VRenderParameters.DenoiseMode.HisogramDenoise:
+                {
+                    int2 resolution = (int2)(math.float2(cam.pixelWidth, cam.pixelHeight) * (parameters.halfResolution ? 0.5f : 1));
 
+                    int k = Shader.PropertyToID("_VRenderTempDenoise");
+                    cb.GetTemporaryRT(k, res.descriptor);
+                    cb.SetGlobalFloat("_Flare", 2);
+                    cb.Blit(res, k, denoiseMaterial, 2);
+
+                    cb.SetComputeTextureParam(cs_histoDenoise, 2, "_Variance", record);
+                    cb.SetComputeTextureParam(cs_histoDenoise, 2, "_Denoised", denoised);
+                    cb.SetComputeTextureParam(cs_histoDenoise, 2, "_History", k);
+                    cb.SetComputeBufferParam(cs_histoDenoise, 2, "_HistogramBuffer", sampleHistogram);
+                    cb.SetComputeIntParam(cs_histoDenoise, "_SubFrameIndex", subFrameIndex);
+                    resolution = resolution / 8 + int2(resolution % 8 != 0);
+                    cb.DispatchCompute(cs_histoDenoise, 2, (resolution.x / 8) + (resolution.x % 8 != 0 ? 1 : 0), (resolution.y / 8) + (resolution.y % 8 != 0 ? 1 : 0), 1);
+
+                    cb.ReleaseTemporaryRT(k);
+                    cb.Blit(denoised, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                }
                 break;
             default:
                 break;
@@ -485,7 +530,8 @@ public class VRender : IDisposable
         cb.SetGlobalMatrix("_P_Inv", GL.GetGPUProjectionMatrix(cam.projectionMatrix, false).inverse);
         cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
         //Debug.Log(cam.cameraToWorldMatrix);
-        cb.SetGlobalVector("_Pixel_WH", new Vector4(cam.pixelWidth, cam.pixelHeight) * (parameters.halfResolution ? 0.5f : 1));
+        int2 resolution = (int2)(float2(cam.pixelWidth, cam.pixelHeight) * (parameters.halfResolution ? 0.5f : 1));
+        cb.SetGlobalVector("_Pixel_WH", new Vector4(resolution.x, resolution.y, 1.0f / resolution.x, 1.0f / resolution.y));
         cb.SetGlobalVector("_WorldSpaceCameraPos", cam.transform.position);
     }
 
@@ -648,14 +694,13 @@ public class VRender : IDisposable
             frameSamples.useMipMap = false;
             frameSamples.Create();
 
-            albedo = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32, 0);
-            albedo.useMipMap = false;
-            albedo.Create();
+            denoised = new RenderTexture(w, h, 0, RenderTextureFormat.ARGBHalf, 0);
+            denoised.enableRandomWrite = true;
+            denoised.useMipMap = false;
+            denoised.Create();
 
-            normal = new RenderTexture(w, h, 0, RenderTextureFormat.ARGBHalf, 0);
-            normal.useMipMap = false;
-            normal.Create();
-
+            if (sampleHistogram != null) sampleHistogram.Release();
+            sampleHistogram = new ComputeBuffer(w * h, sizeof(float) * (10 * 3 + 1));
         }
     }
 }
