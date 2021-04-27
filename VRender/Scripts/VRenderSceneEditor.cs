@@ -20,7 +20,7 @@ class VRenderForScene
     public VRenderParameters.LightSetting lightSetting;
     public bool enableFog;
     public VRenderParameters.DebugMode debug;
-    public VRenderParameters.DenoiseMode denoiseMode = VRenderParameters.DenoiseMode.SmartDenoise;
+    public VRenderParameters.DenoiseMode denoiseMode = VRenderParameters.DenoiseMode.HisogramDenoise;
     public float removeFlare = 2;
     public LayerMask layer = -1;
 
@@ -76,7 +76,7 @@ class VRenderForScene
         vr.parameters.preferFrameRate = true;
         vr.parameters.halfResolution = true;
         vr.parameters.upsample = true;
-        vr.parameters.denosieMode = VRenderParameters.DenoiseMode.SmartDenoise;
+        vr.parameters.denosieMode = VRenderParameters.DenoiseMode.QuikDenoise;
         vr.parameters.strength = 0.15f;
         vr.parameters.nearPlane = 0.3f;
     }
@@ -193,24 +193,28 @@ class VRenderForScene
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Depth of field");
 
-            instance.dof.FocusDistance = EditorGUILayout.FloatField("Focus Distance", instance.dof.FocusDistance);
-            instance.dof.Aperture = EditorGUILayout.Slider("Aperture", instance.dof.Aperture, 0, 1);
-            instance.dof.bokehTexture = (Texture2D)EditorGUILayout.ObjectField("Bokeh Texture", instance.dof.bokehTexture, typeof(Texture2D), false);
+            instance.dof.Aperture = EditorGUILayout.Slider("  Aperture", instance.dof.Aperture, 0, 1);
+            if (instance.dof.Aperture != 0)
+            {
+                instance.dof.FocusDistance = EditorGUILayout.FloatField("  Focus Distance", instance.dof.FocusDistance);
+                instance.dof.bokehTexture = (Texture2D)EditorGUILayout.ObjectField("  Bokeh Texture", instance.dof.bokehTexture, typeof(Texture2D), false);
+            }
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Light settings");
 
-            instance.lightSetting.useAttenuationCurve = EditorGUILayout.Toggle("Use Attenuation Cureve", instance.lightSetting.useAttenuationCurve);
-            instance.lightSetting.attenuationCurve = EditorGUILayout.CurveField("Attenuation Cureve", instance.lightSetting.attenuationCurve);
+            instance.lightSetting.useAttenuationCurve = EditorGUILayout.Toggle("  Use Attenuation Cureve", instance.lightSetting.useAttenuationCurve);
+            if (instance.lightSetting.useAttenuationCurve)
+                instance.lightSetting.attenuationCurve = EditorGUILayout.CurveField("  Attenuation Cureve", instance.lightSetting.attenuationCurve);
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Other settings");
 
-            instance.enableFog = EditorGUILayout.Toggle("Enable Fog Rendering", instance.enableFog);
-            instance.debug = (VRenderParameters.DebugMode)EditorGUILayout.EnumPopup("Debug Mode", instance.debug);
-            instance.denoiseMode = (VRenderParameters.DenoiseMode)EditorGUILayout.EnumPopup("Denoise", instance.denoiseMode);
-            instance.removeFlare = EditorGUILayout.Slider("Remove flare", instance.removeFlare, 1, 10);
-
+            instance.enableFog = EditorGUILayout.Toggle("  Enable Fog Rendering", instance.enableFog);
+            instance.debug = (VRenderParameters.DebugMode)EditorGUILayout.EnumPopup("  Debug Mode", instance.debug);
+            instance.denoiseMode = (VRenderParameters.DenoiseMode)EditorGUILayout.EnumPopup("  Denoiser", instance.denoiseMode);
+            if (instance.denoiseMode == VRenderParameters.DenoiseMode.QuikDenoise)
+                instance.removeFlare = EditorGUILayout.Slider("  Remove flare", instance.removeFlare, 1, 10);
             instance.layer = DrawLayerMaskField(instance.layer);
         }
         EditorGUILayout.EndFoldoutHeaderGroup();
@@ -242,7 +246,7 @@ class VRenderForScene
         {
             layer = layer_int;
         }
-        layer = EditorGUILayout.MaskField(label: "Culling Mask", layer, layers.ToArray());
+        layer = EditorGUILayout.MaskField(label: "  Culling Mask", layer, layers.ToArray());
         if (layer == -1 || layer == 0)
         {
             layer_int = layer;

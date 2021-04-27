@@ -85,7 +85,7 @@ void RayGeneration()
 
 	float rnd = Roberts1(frameIndex);
 
-	if (rnd > variance) {
+	if (rnd > variance && old.w * sqrt_spp > 256) {
 		Target[dispatchIdx] = 0;
 		return;
 	}
@@ -154,13 +154,7 @@ void RayGeneration()
 	float3 ex = (old.xyz * old.w + color) / old.w;
 	float3 ex2 = (rec * old.w + color * color) / old.w;
 
-	if (old.w <= 512) {
-		variance = dot(abs(ex2 - ex * ex), 1) / dot(ex2 + 0.001, 1); // actual value should divide by '(old.w + 1)', but it works better...
-		variance = lerp(1, variance, min(1, (old.w * sqrt_spp) / 256.0));
-	}
-	else {
-		variance = rec.w;
-	}
+	variance = dot(abs(ex2 - ex * ex), 1) / dot(ex2 + 0.1, 1); // actual value should divide by '(old.w + 1)', but it works better...
 
 	int count = min(old.w + 1, _Max_Frame);
 	if (old.w != 0 && frameIndex != 0) {

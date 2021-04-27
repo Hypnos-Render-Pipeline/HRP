@@ -131,7 +131,7 @@ public class VRenderParameters
     public DebugMode debugMode = DebugMode.none;
 
     [System.Serializable]
-    public enum DenoiseMode { None, SmartDenoise, HisogramDenoise };
+    public enum DenoiseMode { None, QuikDenoise, HisogramDenoise };
     [Space(15)]
     [Header("Quick deniose")]
     public DenoiseMode denosieMode = DenoiseMode.None;
@@ -471,7 +471,7 @@ public class VRender : IDisposable
                 else
                     cb.Blit(res, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
                 break;
-            case VRenderParameters.DenoiseMode.SmartDenoise:
+            case VRenderParameters.DenoiseMode.QuikDenoise:
                 {
                     cb.SetGlobalFloat("_DenoiseStrength", parameters.strength * 0.1f);
                     int k = Shader.PropertyToID("_VRenderTempDenoise");
@@ -496,7 +496,7 @@ public class VRender : IDisposable
                     cb.SetComputeTextureParam(cs_histoDenoise, 2, "_History", k);
                     cb.SetComputeBufferParam(cs_histoDenoise, 2, "_HistogramBuffer", sampleHistogram);
                     cb.SetComputeIntParam(cs_histoDenoise, "_SubFrameIndex", subFrameIndex);
-                    resolution = resolution / 8 + int2(resolution % 8 != 0);
+                    resolution = resolution / 4 + int2(resolution % 4 != 0);
                     cb.DispatchCompute(cs_histoDenoise, 2, (resolution.x / 8) + (resolution.x % 8 != 0 ? 1 : 0), (resolution.y / 8) + (resolution.y % 8 != 0 ? 1 : 0), 1);
 
                     cb.ReleaseTemporaryRT(k);
@@ -700,7 +700,7 @@ public class VRender : IDisposable
             denoised.Create();
 
             if (sampleHistogram != null) sampleHistogram.Release();
-            sampleHistogram = new ComputeBuffer(w * h, sizeof(float) * (10 * 3 + 1));
+            sampleHistogram = new ComputeBuffer(w * h, sizeof(float) * 32);
         }
     }
 }
