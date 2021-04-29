@@ -170,7 +170,7 @@ namespace HypnosRenderPipeline.RenderPass
                 blockBuffer_ = new ComputeBuffer(halfDispatchSize.x * halfDispatchSize.y, 4);
             }
 
-            cb.SetGlobalVector("_ProcessRange", new Vector4(0.9f, 1f));
+            cb.SetGlobalVector("_ProcessRange", new Vector4(0.95f, 1f));
             cb.SetBufferData(argsBuffer, clearArray);
             cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Result", tempRef);
@@ -193,7 +193,8 @@ namespace HypnosRenderPipeline.RenderPass
 
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_HalfIndexTex", halfIndex);
-            DispatchSpatialFilter(cb, tempRef2, 0.75f, 0.9f);
+            DispatchSpatialFilter(cb, tempRef2, 0.85f, 0.95f);
+            DispatchSpatialFilter(cb, tempRef2, 0.75f, 0.85f);
             DispatchSpatialFilter(cb, tempRef2, 0.5f, 0.75f);
             DispatchSpatialFilter(cb, tempRef2, 0.25f, 0.5f);
             DispatchSpatialFilter(cb, tempRef2, 0, 0.25f);

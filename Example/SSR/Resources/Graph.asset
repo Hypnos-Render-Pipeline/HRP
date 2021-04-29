@@ -98,8 +98,8 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 6865.7373
-      y: 1485
+      x: 6174.447
+      y: 1519.5001
       width: 300
       height: 105
     info: 
@@ -133,8 +133,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1068.6611
-      y: 1054.8522
+      x: 1468.9998
+      y: 961.9999
       width: 300
       height: 168
     info: 
@@ -182,10 +182,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1469
-      y: 913.174
+      x: 1825.2861
+      y: 923.28595
       width: 300
-      height: 240
+      height: 261
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.ZBin
   - nodeName: RTDI
@@ -240,8 +240,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1984
-      y: 1258.935
+      x: 2189.9998
+      y: 1170.9998
       width: 300
       height: 388
     info: 
@@ -276,10 +276,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 6463.7427
-      y: 1429.2825
+      x: 5772.447
+      y: 1463.5001
       width: 300
-      height: 172
+      height: 191
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   - nodeName: AreaLight
@@ -320,8 +320,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 2434.1182
-      y: 1418.5
+      x: 2560.6436
+      y: 1415.4999
       width: 300
       height: 297
     info: 
@@ -403,10 +403,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2918.749
-      y: 1365
+      x: 2982.3213
+      y: 1322
       width: 300
-      height: 469
+      height: 493
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SunAtmo
   - nodeName: LocalLighting
@@ -452,8 +452,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1984.1643
-      y: 765.2179
+      x: 2340.2861
+      y: 775.28595
       width: 300
       height: 316
     info: 
@@ -496,8 +496,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3489.6382
-      y: 1500
+      x: 3399.0457
+      y: 1481.9999
       width: 300
       height: 297
     info: 
@@ -519,8 +519,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3490
-      y: 1274.4304
+      x: 3399.0457
+      y: 1255.9999
       width: 300
       height: 129
     info: 
@@ -563,8 +563,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 5383.859
-      y: 1003.5001
+      x: 4633.5483
+      y: 1046.0001
       width: 300
       height: 297
     info: 
@@ -624,8 +624,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 5384.001
-      y: 1361
+      x: 4633.5483
+      y: 1403
       width: 300
       height: 412
     info: 
@@ -645,7 +645,7 @@ MonoBehaviour:
     - name: spp
       info: 
       type_str: System.Int32
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e343c2f696e743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e313c2f696e743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     - name: showVariance
       info: 
@@ -694,8 +694,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 4043.8794
-      y: 1301
+      x: 3862.046
+      y: 1300.9999
       width: 300
       height: 429
     info: 
@@ -744,8 +744,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 6090.0327
-      y: 1360.9998
+      x: 5387.746
+      y: 1351.0001
       width: 300
       height: 316
     info: 
@@ -767,8 +767,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 4821
-      y: 1438.3225
+      x: 4239.046
+      y: 1435
       width: 300
       height: 129
     info: 
@@ -790,8 +790,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 5742.4
-      y: 1301.0002
+      x: 5012.995
+      y: 1343
       width: 300
       height: 129
     info: 
@@ -1302,7 +1302,7 @@ MonoBehaviour:
     SkyBoxIBL8.enabled = true;\r\n            RTSpecular9 = new RTSpecular();\r\n           
     RTSpecular9.useRTShadow = true;\r\n            RTSpecular9.enabled = true;\r\n           
     RTGI10 = new RTGI();\r\n            RTGI10.useRTShadow = true;\r\n           
-    RTGI10.maxDepth = 2;\r\n            RTGI10.spp = 4;\r\n            RTGI10.showVariance
+    RTGI10.maxDepth = 2;\r\n            RTGI10.spp = 1;\r\n            RTGI10.showVariance
     = false;\r\n            RTGI10.enabled = true;\r\n            Transparent11 =
     new Transparent();\r\n            Transparent11.renderAreaLight = true;\r\n           
     Transparent11.enabled = true;\r\n            PyramidColor12 = new PyramidColor();\r\n           

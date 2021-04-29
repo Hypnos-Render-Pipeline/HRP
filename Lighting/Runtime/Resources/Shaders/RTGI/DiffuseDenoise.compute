@@ -107,8 +107,7 @@ groupshared float4 buffer_0[10][10];
 void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThreadID, uint2 groupID : SV_GroupID)
 {
     //_Result[id] = _TempResult[id]; return;
-    // Load current result to shared & perform a inital temporal.
-    // This stage is to generate a more accurate buffer for the bbox calculation, which helps reduce flickering.
+    // Load current result to shared.
     {
         uint2 wh;
         _HalfIndexTex.GetDimensions(wh.x, wh.y);
@@ -145,6 +144,10 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         float4 dc = buffer_0[bufferID.x][bufferID.y - 1];
         float4 rc = buffer_0[bufferID.x + 1][bufferID.y];
         float4 uc = buffer_0[bufferID.x][bufferID.y + 1];
+        float4 ld = buffer_0[bufferID.x - 1][bufferID.y - 1];
+        float4 lu = buffer_0[bufferID.x - 1][bufferID.y + 1];
+        float4 rd = buffer_0[bufferID.x + 1][bufferID.y - 1];
+        float4 ru = buffer_0[bufferID.x + 1][bufferID.y + 1];
 
         // bbox
         maxC = max(minC, lc);
@@ -155,6 +158,14 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         minC = min(minC, rc);
         maxC = max(minC, uc);
         minC = min(minC, uc);
+        maxC = max(minC, ld);
+        minC = min(minC, ld);
+        maxC = max(minC, lu);
+        minC = min(minC, lu);
+        maxC = max(minC, rd);
+        minC = min(minC, rd);
+        maxC = max(minC, ru);
+        minC = min(minC, ru);
 
         uint2 fullIndex = half2FullIndex(id);
         float2 uv = (fullIndex + 0.5) * _WH.zw;
@@ -192,10 +203,10 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
             weight = 0.02;
         }
 
-        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.99, 0, speed);
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.985, 0, speed);
 
-        minC -= lerp(1, 0.05, speed) * weight;
-        maxC += lerp(1, 0.05, speed) * weight;
+        minC -= lerp(0.7, 0.05, speed) * weight;
+        maxC += lerp(0.7, 0.05, speed) * weight;
 
         hc.xyz = clamp(hc.xyz, minC.xyz, maxC.xyz);
 
@@ -205,7 +216,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
         float4 mixed = lerp(oc, hc, mix_rate);
 
-        _Result[id] = float4(weight < 0.02 ? oc : mixed.xyz, sampleNum);
+        _Result[id] = float4(weight < 0.02 ? oc.xyz : mixed.xyz, sampleNum);
 
         _Variance[id] = float2(max(0.2, 1 - sampleNum / 150), _Variance[id].y);
     }
@@ -277,7 +288,6 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
 
         blur = (blur - _ProcessRange.x) / (_ProcessRange.y - _ProcessRange.x);
 
-        //_Result[id] = _Result[id] + 0.1;
         // spatial filter
         {
             int2 baseID = groupThreadID + SPATIAL_RADIUS;
@@ -397,28 +407,28 @@ void UpSample(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         _FullSizeResult[id] = 0;
         return;
     }
-
     float4 res = 0;
     float w = 0;
     int2 baseID = floor(groupThreadID - 0.9) / 2 + 1;
     float3 cn = DecodeNormal(_NormalTex[id].xyz);
     float cd = PD2VD(_DepthTex[id]);
-    float2 cpos = groupThreadID * 0.125 + 0.0625;
+    bool2 gid_mod2 = groupThreadID % 2;
+    float2 bw[2];
+    bw[0].x = gid_mod2.x ? 100 : 1;
+    bw[0].y = gid_mod2.x ? 1 : 100;
+    bw[1].x = gid_mod2.y ? 100 : 1;
+    bw[1].y = gid_mod2.y ? 1 : 100;
     for (int i = 0; i <= 1; i++)
     {
         for (int j = 0; j <= 1; j++)
         {
             int2 texID = baseID + int2(i, j);
-            float2 pos = (texID - 1) * 0.25 + 0.125;
-            float2 dis = abs(cpos - pos);
-            dis /= 0.25;
-            dis = 1 - dis;
-            float bilinear_weight = dis.x * dis.y;
+            float bilinear_weight = bw[0][i] * bw[1][j];
 
             float4 nd = buffer3_1[texID.x][texID.y];
 
-            float depth_weight = max(0, 0.2 - abs(nd.w - cd)) + 0.1;
-            float normal_weight = smoothstep(0, 1, dot(cn, nd.xyz)) + 0.1;
+            float depth_weight = max(0, 0.2 - abs(nd.w - cd)) + 0.001;
+            float normal_weight = smoothstep(0, 1, dot(cn, nd.xyz)) + 0.001;
 
             float4 c = buffer3_0[texID.x][texID.y];
             float weight = (c.w > 0) * bilinear_weight * normal_weight * depth_weight;
