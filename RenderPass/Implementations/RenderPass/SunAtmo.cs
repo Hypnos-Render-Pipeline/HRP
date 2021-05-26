@@ -42,9 +42,6 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In)]
         public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
-        [NodePin(PinType.In)]
-        public TexturePin motion = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RGFloat, 0), colorCastMode: ColorCastMode.Fixed);
-
         [NodePin(PinType.Out)]
         public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf) { dimension = TextureDimension.Cube, useMipMap = true }, sizeScale: SizeScale.Custom);
 
@@ -70,6 +67,7 @@ namespace HypnosRenderPipeline.RenderPass
         RenderTexture worleyPerlinVolume3D;
         Texture2D curlNoise2D;
 
+        Texture2D blueNoise2D;
 
         struct TextureIDs
         {
@@ -80,7 +78,6 @@ namespace HypnosRenderPipeline.RenderPass
             public static int _Marching_Result_A = Shader.PropertyToID(nameof(_Marching_Result_A));
             public static int _History = Shader.PropertyToID(nameof(_History));
             public static int _HistoryDepth = Shader.PropertyToID(nameof(_HistoryDepth));
-            public static int _MotionTex = Shader.PropertyToID(nameof(_MotionTex));
             public static int _HalfResResult = Shader.PropertyToID(nameof(_HalfResResult));
             public static int _Cloud = Shader.PropertyToID(nameof(_Cloud));
             public static int _ShadowMapTexture = Shader.PropertyToID(nameof(_ShadowMapTexture));
@@ -93,7 +90,8 @@ namespace HypnosRenderPipeline.RenderPass
             public static int _Volume3D = Shader.PropertyToID(nameof(_Volume3D));
             public static int _WorleyVolume = Shader.PropertyToID(nameof(_WorleyVolume));
             public static int _WorleyPerlinVolume = Shader.PropertyToID(nameof(_WorleyPerlinVolume));
-            public static int _CurlNoise = Shader.PropertyToID(nameof(_CurlNoise));            
+            public static int _CurlNoise = Shader.PropertyToID(nameof(_CurlNoise));
+            public static int _BlueNoise = Shader.PropertyToID(nameof(_BlueNoise));
             public static int _SpaceMap = Shader.PropertyToID(nameof(_SpaceMap));
 
             public static int _CloudShadowMap = Shader.PropertyToID(nameof(_CloudShadowMap));
@@ -181,6 +179,7 @@ namespace HypnosRenderPipeline.RenderPass
             worleyPerlinVolume3D.GenerateMips();
 
             curlNoise2D = Resources.Load<Texture2D>("Textures/Cloud Noise/Curl");
+            blueNoise2D = Resources.Load<Texture2D>("Textures/Cloud Noise/BlueNoise");
         }
 
         public override void Dispose()
@@ -272,7 +271,7 @@ namespace HypnosRenderPipeline.RenderPass
                     r16Desc.dimension = TextureDimension.Tex2D;
                     var hisDesc = new RenderTextureDescriptor(depth_wh.x, depth_wh.y, rgba16Desc.colorFormat) { enableRandomWrite = true };
 
-                    var his = context.resourcesPool.GetTexture(TextureIDs._History, hisDesc);
+                    var his = context.resourcesPool.GetTexture(Shader.PropertyToID("SunAtmo_History"), hisDesc);
                     his.filterMode = FilterMode.Point;
 
                     cb.SetGlobalTexture(TextureIDs._CloudMap, atmo.cloudMap == null ? Texture2D.whiteTexture : atmo.cloudMap);
@@ -285,7 +284,7 @@ namespace HypnosRenderPipeline.RenderPass
                     }
                     else if (atmo.quality == HRPAtmo.Quality.medium)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(50, 5, 128, 0.33f));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(50, 7, 164, 0.2f));
                     }
                     else if (atmo.quality == HRPAtmo.Quality.high)
                     {
@@ -334,12 +333,14 @@ namespace HypnosRenderPipeline.RenderPass
                         worleyPerlinVolume3D.GenerateMips();
 
                         curlNoise2D = Resources.Load<Texture2D>("Textures/Cloud Noise/Curl");
+                        blueNoise2D = Resources.Load<Texture2D>("Textures/Cloud Noise/BlueNoise");
                     }
 #endif
 
                     cb.SetGlobalTexture(TextureIDs._WorleyVolume, worleyVolume3D);
                     cb.SetGlobalTexture(TextureIDs._WorleyPerlinVolume, worleyPerlinVolume3D);
                     cb.SetGlobalTexture(TextureIDs._CurlNoise, curlNoise2D);
+                    cb.SetGlobalTexture(TextureIDs._BlueNoise, blueNoise2D);
                     if (atmo.spaceMap != null)
                         cb.SetGlobalTexture(TextureIDs._SpaceMap, atmo.spaceMap);
                     else
@@ -408,7 +409,6 @@ namespace HypnosRenderPipeline.RenderPass
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.CheckboardUpsample, TextureIDs._Ray_Index, TextureIDs._Ray_Index);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.CheckboardUpsample, TextureIDs._History, his);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.CheckboardUpsample, TextureIDs._DownSampled_MinMax_Depth, TextureIDs._DownSampled_MinMax_Depth);
-                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.CheckboardUpsample, TextureIDs._MotionTex, motion);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.CheckboardUpsample, TextureIDs._HalfResResult, TextureIDs._HalfResResult);
                         cb.DispatchCompute(cloudCS, (int)CloudPass.CheckboardUpsample, dispatch_size_half.x, dispatch_size_half.y, 1);
 

@@ -10,7 +10,7 @@
 #define T T_TAB
 #include "../Includes/Atmo/CloudMarching.hlsl"
 
-float4x4 _V, _V_Inv, _VP_Inv;
+float4x4 _V, _V_Inv, _VP_Inv, _Last_VP;
 
 float4 _ZBufferParams;
 
@@ -184,8 +184,8 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 	float3 sunLight = Sunlight(present_point, _SunDir);
 	float3 ambd = Tu_L(p, _SunDir) * _SunLuminance;
 	float3 ambu = sunLight * 0.75 + SkyBox(present_point, normalize(present_point), _SunDir) * _SunLuminance * 2;
-	float3 amb = lerp(ambd, ambu, res.z * 0.7 + 0.3) * 2;
-	sunLight *= 7;
+	float3 amb = lerp(ambd, ambu, res.z * 0.7 + 0.3) * 1.5;
+	sunLight *= 5;
 
 	_Marching_Result_A[tile_id] = float4((res.x * sunLight + res.y * lerp(0.5, 1, res.z) * amb) * _Brightness, res.a);
 }
@@ -212,7 +212,15 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 
 	float d = _DownSampled_MinMax_Depth[id];
 
-	float2 reproj_offset = _MotionTex.SampleLevel(sampler_MotionTex, uv_in_half_resolution, 0).rg;
+
+	float4 vpoint = float4(uv_in_half_resolution * 2 - 1, 0, 1);
+
+	float4 wpoint;
+	wpoint = mul(_VP_Inv, vpoint); wpoint /= wpoint.w;
+	float4 lvpoint = mul(_Last_VP, wpoint);
+	lvpoint /= lvpoint.w;
+	lvpoint = (lvpoint + 1) * 0.5;
+	float2 reproj_offset = uv_in_half_resolution - lvpoint.xy;
 	float move_speed = length(reproj_offset);
 
 	float4 history = _History.SampleLevel(sampler_bilinear_clamp, uv_in_half_resolution - reproj_offset, 0);
@@ -240,7 +248,7 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 	//_HalfResResult[id] = history; return;
 	if (any(id >= uint2(_WH.xy / 2))) return;
 	if (offset2index(id % 2) == int(_Ray_Index[id / 2].x)) {
-		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.05, 0.6, _Quality.w));
+		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.05, 0.1, _Quality.w));
 		return;
 	}
 

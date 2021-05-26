@@ -4,6 +4,7 @@
 #pragma kernel SFilterIndirect
 #pragma kernel UpSample 
 #pragma kernel FinalSynthesis
+#pragma kernel Subtract
 
 #include "../Includes/GBuffer.hlsl"
 #include "../Includes/PBS.hlsl"
@@ -174,6 +175,8 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         float2 prevUV = uv - motion;
 
         float4 hc = _History.SampleLevel(point_clamp_sampler, prevUV, 0);
+        float3 av_c = _Result[id].xyz;
+        hc.xyz += smoothstep(0.0005, 0.001, abs(av_c)) * 2 * av_c;
         hc = max(hc, 0);
 
         float3 n = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, uv, 0).xyz);
@@ -216,13 +219,14 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
         float4 mixed = lerp(oc, hc, mix_rate);
 
-        _Result[id] = float4(weight < 0.02 ? oc.xyz : mixed.xyz, sampleNum);
+        _Variance[id] = float2(max(0.2, 1 - sampleNum / 150), _Variance[id].y); //length(av_c);// 
 
-        _Variance[id] = float2(max(0.2, 1 - sampleNum / 150), _Variance[id].y);
+        _Result[id] = float4(weight < 0.02 ? oc.xyz : mixed.xyz, sampleNum);
     }
 }
 
 
+int variance;
 float2 _ProcessRange;
 
 #define SPATIAL_RADIUS 3
@@ -294,6 +298,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
             float4 original = buffer2_0[baseID.x][baseID.y];
             float normal_coef = 0.992;
             if (var) normal_coef = _Variance[id].y ? 0.5 : 0.992;
+            if (!variance) normal_coef = 0;
             float L = 0;
             float L2 = 0;
             int count = 0;
@@ -328,11 +333,11 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
                 L /= max(1, count);
                 float v = saturate(max(0, L2 - L * L) * 80);
 
-                _Variance[id] = float2(v, w <= 3);
+                //_Variance[id] = float2(v, w <= 3);
                 _Result[id] = float4(diffuse.xyz, original.w);
             }
             else {
-                _Result[id] = float4(lerp(original.xyz, diffuse.xyz, _Variance[id].x), original.w);
+                _Result[id] = float4(variance ? lerp(original.xyz, diffuse.xyz, 1) : diffuse.xyz, original.w);
             }
         }
     }
@@ -462,3 +467,22 @@ void FinalSynthesis(uint2 id : SV_DispatchThreadID)
     sceneColor.a = sceneColor.a != 0;
     _Result[id] = sceneColor + sceneColor.a * float4(UnToneMap(res.xyz * _BaseColorTex[id].xyz), 0);
 }
+
+
+RWTexture2D<float4> _A, _B;
+Texture2D<float4> _C;
+
+[numthreads(8, 8, 1)]
+void Subtract(uint2 id : SV_DispatchThreadID)
+{
+    uint2 fullIndex = half2FullIndex(id);
+    float2 uv = (fullIndex + 0.5) * _WH.zw;
+    float2 motion = _MotionTex[fullIndex];
+    float2 prevUV = uv - motion;
+
+    float4 hc = _History.SampleLevel(point_clamp_sampler, prevUV, 0);
+    float3 av_c = _Result[id].xyz;
+
+    _B[id] = lerp(_C.SampleLevel(point_clamp_sampler, prevUV, 0), _A[id] - hc, 0.005) * 0.9;
+}
+
