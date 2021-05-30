@@ -7,29 +7,55 @@ Pass
     $include("SurfaceDescription.hlsl")
 	
     SurfaceInfo GetSurfaceInfo(inout FragInputs i) {
-        SurfaceInfo info = (SurfaceInfo)0;
-        float3 normal = i.tangentToWorld[2];
-        float3 tangent = i.tangentToWorld[1];
-        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, normal, float4(tangent, 1), 0, i.uv0));
+			
+		SurfaceInfo IN;
 
-        info.diffuse = res.BaseColor;
-        info.transparent = 1 - res.Alpha;
+		IN.normal = i.tangentToWorld[2];
+		IN.normal *= i.isFrontFace ? 1 : -1;
+		i.tangentToWorld[2] = IN.normal;
+		i.tangentToWorld[0] = cross(i.tangentToWorld[1], i.tangentToWorld[2]);
+		i.tangentToWorld[1] = cross(i.tangentToWorld[2], i.tangentToWorld[0]);
 
-        info.diffuse = DiffuseAndSpecularFromMetallic(info.diffuse, res.Metallic, /*out*/ info.specular);
-        info.smoothness = res.Smoothness;
+        IN.normal = i.tangentToWorld[2];
+        IN.tangent = i.tangentToWorld[1];
+		IN.gnormal = i.tangentToWorld[2];
 
-        float3 n = normalize(normal), t = normalize(tangent);
-        float3 binormal = cross(n, t);
-        float3x3 rotation = float3x3(t, binormal, n);
-        info.normal = mul(res.NormalTS, rotation);
+        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, IN.normal, float4(IN.tangent, 1), 0, i.uv0));
+				
+		IN.normal = normalize(mul(res.NormalTS * float3(-1,-1,1), i.tangentToWorld));
+		i.tangentToWorld[2] = IN.normal;
+		i.tangentToWorld[0] = cross(i.tangentToWorld[1], i.tangentToWorld[2]);
+		i.tangentToWorld[1] = cross(i.tangentToWorld[2], i.tangentToWorld[0]);
 
-        info.emission = res.Emission;
-        info.diffuseAO_specAO = res.Occlusion;
+		IN.diffuse = res.BaseColor;
+		IN.transparent = 1 - res.Alpha;
+								
+		float metallic = res.Metallic;
+		IN.smoothness = res.Smoothness;
 
-        info.gnormal = normal;
-        info.index = 1;
+		IN.aniso = 0;
+		float aniso_angle = 0;
 
-        return info;
+		IN.diffuse = DiffuseAndSpecularFromMetallic(IN.diffuse, metallic, /*out*/ IN.specular);
+
+		IN.clearCoat = 0;
+		IN.sheen = 0;
+
+		IN.emission = 0;
+		IN.diffuseAO_specAO = (1).xx;
+
+		IN.index = 1;
+
+		IN.Ld = 0;
+					
+		float2 xy; sincos(aniso_angle * 2 * PI, xy.y, xy.x);
+		IN.tangent = mul(float3(xy, 0), i.tangentToWorld);
+
+		IN.discarded = 0;
+				
+		IN.clearCoat *= 1 - IN.transparent;
+
+		return IN;
     }
 
 	//----------------------------------------------------------------------------------------

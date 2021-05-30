@@ -37,7 +37,7 @@ float Luminance(float3 col) {
     return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
 }
 float3 ToneMap(float3 color) {
-    return color / (1 + Luminance(color));
+    return color / (1 + color);
 }
 int2 index2offset(const uint index) {
     uint2 index2offset[4] = { uint2(0, 0), uint2(1, 0), uint2(1, 1), uint2(0, 1) };
@@ -77,81 +77,103 @@ void Specular()
                             0,
                             1);
 
-	int4 sampleState = int4(dispatchIdx, _Clock, 0);
+    int period = lerp(32, 1, info.smoothness);
+	int4 sampleState = int4(dispatchIdx, _Clock % period, 0);
 
-    float3 ray = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness));
-    float3 n = ray;
+    float max_spec = max(info.specular.x, max(info.specular.y, info.specular.z));
+    int spp = 1;//lerp(4, 1, max(info.smoothness, (1 - max_spec)));
+    float3 l = 0;
+    float av_d = 0;
+    for (int i = 0; i < spp; i++){        
+        float3 ray = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness));
+        float3 n = normalize(float3(0, 0, 2) + ray);
 
-    n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
+        n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
     
-    view += max(0, 0.1 - dot(n, view)) * n;
+        view += max(0, 0.1 - dot(n, view)) * n;
 
-    float3 dir = reflect(-view, n);
-    pos += (view + info.normal + dir) * saturate(1 - dot(dir, info.normal)) * 0.01;
+        float3 dir = reflect(-view, n);
+        pos += (view + info.normal + dir) * saturate(1 - dot(dir, info.normal)) * 0.01;
 
-    GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
+        GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
 
-    float3 res = 0;
-    if (gbuffer.miss) {
-        res = _SkyBox.SampleLevel(trilinear_clamp_sampler, dir, lerp(7, 0, info.smoothness));
-    }
-    else {
-        float3 hitPos = gbuffer.dis * dir + pos;
-        float4 ppos = mul(_VP, float4(hitPos, 1));
-        float2 uv = ppos.xy / ppos.w;
-        uv = (uv + 1) * 0.5;
-        res = _FilteredColor.SampleLevel(trilinear_clamp_sampler, uv, lerp(7, 0, max(1 - gbuffer.dis / 10, info.smoothness)));
-        bool offscreen = any(uv < 0) || any(uv > 1);
-        bool illegal = offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.1;
-        //illegal=true;
-        if (illegal) { // can't find illegal hit in screen, calculate it
-            SurfaceInfo hitInfo = (SurfaceInfo)0;
-            hitInfo.diffuse = gbuffer.albedo;
-            hitInfo.smoothness = gbuffer.smoothness;
-            float3 metallic = gbuffer.metallic;
-            hitInfo.gnormal = hitInfo.normal = gbuffer.normal;
-            hitInfo.transparent = gbuffer.transparent;
-            hitInfo.diffuseAO_specAO = 1;
-            hitInfo.diffuse = DiffuseAndSpecularFromMetallic(hitInfo.diffuse, metallic, /*out*/ hitInfo.specular);
+        float3 res = 0;
+        if (gbuffer.miss) {
+            res = _SkyBox.SampleLevel(trilinear_clamp_sampler, dir, lerp(7, 0, info.smoothness));
+        }
+        else {
+            float3 hitPos = gbuffer.dis * dir + pos;
+            float4 ppos = mul(_VP, float4(hitPos, 1));
+            float2 uv = ppos.xy / ppos.w;
+            uv = (uv + 1) * 0.5;
+            res = _FilteredColor.SampleLevel(trilinear_clamp_sampler, uv, lerp(7, 0, max(1 - gbuffer.dis / 10, info.smoothness)));
+            bool offscreen = any(uv < 0) || any(uv > 1);
+            bool illegal = offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.1;
+            //illegal=true;
+            if (illegal) { // can't find illegal hit in screen, calculate it
+                SurfaceInfo hitInfo = (SurfaceInfo)0;
+                hitInfo.diffuse = gbuffer.albedo;
+                hitInfo.smoothness = gbuffer.smoothness;
+                float3 metallic = gbuffer.metallic;
+                hitInfo.gnormal = hitInfo.normal = gbuffer.normal;
+                hitInfo.transparent = gbuffer.transparent;
+                hitInfo.diffuseAO_specAO = 1;
+                hitInfo.diffuse = DiffuseAndSpecularFromMetallic(hitInfo.diffuse, metallic, /*out*/ hitInfo.specular);
 				
             
-            float3 hitView = -dir;
-            res = 0;//float3(1,0,1);
-            [branch]
-            if (offscreen) {   
-                BegineAllLocalLightsLoop(uv, hitPos, _VP_Inv);
-                {
-                    sampleState.w = 0;
-                    float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
-                    [branch]
-                    if (_UseRTShadow && any(lres > 0)) {
-                        lres *= TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+                float3 hitView = -dir;
+                res = gbuffer.emission;//float3(1,0,1);
+                [branch]
+                if (offscreen) {   
+                    BegineAllLocalLightsLoop(uv, hitPos, _VP_Inv);
+                    {
+                        sampleState.w = 0;
+                        float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+                        [branch]
+                        if (_UseRTShadow && any(lres > 0)) {
+                            lres *= TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+                        }
+                        res += lres;
                     }
-                    res += lres;
+                    EndAllLocalLightsLoop;  
                 }
-                EndAllLocalLightsLoop;  
-            }
-            else{           
-                BegineLocalLightsLoop(uv, hitPos, _VP_Inv); // use zbin to cull light.
-                {
-                    sampleState.w = 0;
-                    float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
-                    [branch]
-                    if (_UseRTShadow && any(lres > 0)) {
-                        lres *=  TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+                else{           
+                    BegineLocalLightsLoop(uv, hitPos, _VP_Inv); // use zbin to cull light.
+                    {
+                        sampleState.w = 0;
+                        float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+                        [branch]
+                        if (_UseRTShadow && any(lres > 0)) {
+                            lres *=  TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01);
+                        }
+                        res += lres;
                     }
-                    res += lres;
+                    EndLocalLightsLoop;
                 }
-                EndLocalLightsLoop;
-            }
 
-            float3 sl = PBS(PBS_FULLY, hitInfo, sunDir, sunColor, hitView);
-             if (_UseRTShadow && any(sl > 0)) {
-                sl *= TraceShadow_RTGI(hitPos, sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
+	            BegineDirectionalLightsLoop(hitPos);
+	            {
+	                sampleState.w = 0;
+	                float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+	                [branch]
+	                if (_UseRTShadow && any(lres > 0)) {
+	                    lres *= TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
+	                }
+                    res += lres;
+	            }
+	            EndDirectionalLightsLoop;
+
+                float3 sl = PBS(PBS_FULLY, hitInfo, sunDir, sunColor, hitView);
+                 if (_UseRTShadow && any(sl > 0)) {
+                    sl *= TraceShadow_RTGI(hitPos, sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
+                }
+                res += sl;
             }
-            res += sl;
         }
+        l += PBS(PBS_SPECULAR, info, dir, res, view);
+        av_d += gbuffer.dis;
     }
-    res = PBS(PBS_SPECULAR, info, dir, res, view) / (info.specular == 0 ? 1 : info.specular);
-    _TempResult[dispatchIdx] = float4(ToneMap(res), min(gbuffer.dis, 10));
+
+     l = l / (info.specular == 0 ? 1 : info.specular) / spp;
+    _TempResult[dispatchIdx] = float4(ToneMap(l), min(av_d / spp, 10));
 }

@@ -24,7 +24,7 @@ MonoBehaviour:
   MultiScatterStrength: 1
   RenderGround: 1
   spaceMap: {fileID: 2800000, guid: 5ab476261f15e3146b16190c59046c8f, type: 3}
-  quality: 4
+  quality: 0
   CloudCoverage: 1
   CloudDensity: 1
   cloudMap: {fileID: 2800000, guid: 356c78ed80b0de24f801f4a06d116a2e, type: 3}

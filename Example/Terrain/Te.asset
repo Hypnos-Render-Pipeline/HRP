@@ -150,9 +150,6 @@ MonoBehaviour:
     - name: ao
       info: 
       mustConnect: 0
-    - name: motion
-      info: 
-      mustConnect: 0
     outputs:
     - name: target
       info: 
@@ -211,11 +208,6 @@ MonoBehaviour:
     nodeType_str: HypnosRenderPipeline.RenderPass.CullLight
   - nodeName: CombineColorDepth
     parameters:
-    - name: ToneMap
-      info: 
-      type_str: System.Boolean
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-      obj_ref: {fileID: 0}
     - name: TemporalAccumulate
       info: 
       type_str: System.Boolean
@@ -377,7 +369,7 @@ MonoBehaviour:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
     nodes: 000000000100000003000000020000000400000005000000
-  recompiled: 0
+  recompiled: 1
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Te_Executor : HRGExecutor\r\n   
     {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
@@ -400,7 +392,6 @@ MonoBehaviour:
     System.Int32 SunAtmo2_specular = Shader.PropertyToID(\"SunAtmo2.specular\");\r\n       
     System.Int32 SunAtmo2_normal = Shader.PropertyToID(\"SunAtmo2.normal\");\r\n       
     System.Int32 SunAtmo2_ao = Shader.PropertyToID(\"SunAtmo2.ao\");\r\n        System.Int32
-    SunAtmo2_motion = Shader.PropertyToID(\"SunAtmo2.motion\");\r\n        System.Int32
     SunAtmo2_skyBox = Shader.PropertyToID(\"SunAtmo2.skyBox\");\r\n        System.Int32
     SunAtmo2_afterAtmo = Shader.PropertyToID(\"SunAtmo2.afterAtmo\");\r\n       
     System.Int32 SunAtmo2_sunBuffer = Shader.PropertyToID(\"SunAtmo2.sunBuffer\");\r\n       
@@ -428,13 +419,13 @@ MonoBehaviour:
     CullLight();\r\n            CullLight3.cullingType = CullLight.CullingType.Frustum;\r\n           
     CullLight3.radius = 200f;\r\n            CullLight3.faraway = 100f;\r\n           
     CullLight3.enabled = true;\r\n            CombineColorDepth4 = new CombineColorDepth();\r\n           
-    CombineColorDepth4.ToneMap = true;\r\n            CombineColorDepth4.TemporalAccumulate
-    = false;\r\n            CombineColorDepth4.enabled = true;\r\n            SkyBoxIBL5
-    = new SkyBoxIBL();\r\n            SkyBoxIBL5.enabled = true;\r\n        }\r\n       
-    \r\n        public int Execute(RenderContext context, bool debug = false)\r\n       
-    {\r\n            System.Int32 result = -1;\r\n            \r\n            //CullLight3\r\n           
-    {\r\n                context.commandBuffer.name = \"CullLight3\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    CombineColorDepth4.TemporalAccumulate = false;\r\n            CombineColorDepth4.enabled
+    = true;\r\n            SkyBoxIBL5 = new SkyBoxIBL();\r\n            SkyBoxIBL5.enabled
+    = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
+    context, bool debug = false)\r\n        {\r\n            System.Int32 result
+    = -1;\r\n            \r\n            //CullLight3\r\n            {\r\n               
+    context.commandBuffer.name = \"CullLight3\";\r\n                // preprocess
+    node\r\n                {\r\n                    // inputs\r\n                   
     // outputs\r\n                    CullLight3.lights.AllocateResourcces(context,
     CullLight3_lights);\r\n                    CullLight3.lights.name = \"CullLight3.lights\";\r\n                   
     CullLight3.lights.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
@@ -476,11 +467,9 @@ MonoBehaviour:
     SunAtmo2.specular.connected = true;\r\n                    SunAtmo2.specular.Move(TerrainPass1.specular);\r\n                   
     SunAtmo2.normal.connected = true;\r\n                    SunAtmo2.normal.Move(TerrainPass1.normal);\r\n                   
     SunAtmo2.ao.connected = true;\r\n                    SunAtmo2.ao.Move(TerrainPass1.microAO);\r\n                   
-    SunAtmo2.motion.AllocateResourcces(context, SunAtmo2_motion);\r\n                   
-    SunAtmo2.motion.name = \"SunAtmo2.motion\";\r\n                    // outputs\r\n                   
-    SunAtmo2.skyBox.AllocateResourcces(context, SunAtmo2_skyBox);\r\n                   
-    SunAtmo2.skyBox.name = \"SunAtmo2.skyBox\";\r\n                    SunAtmo2.skyBox.connected
-    = true;\r\n                    SunAtmo2.afterAtmo.AllocateResourcces(context,
+    // outputs\r\n                    SunAtmo2.skyBox.AllocateResourcces(context,
+    SunAtmo2_skyBox);\r\n                    SunAtmo2.skyBox.name = \"SunAtmo2.skyBox\";\r\n                   
+    SunAtmo2.skyBox.connected = true;\r\n                    SunAtmo2.afterAtmo.AllocateResourcces(context,
     SunAtmo2_afterAtmo);\r\n                    SunAtmo2.afterAtmo.name = \"SunAtmo2.afterAtmo\";\r\n                   
     SunAtmo2.afterAtmo.connected = false;\r\n                    SunAtmo2.sunBuffer.AllocateResourcces(context,
     SunAtmo2_sunBuffer);\r\n                    SunAtmo2.sunBuffer.name = \"SunAtmo2.sunBuffer\";\r\n                   
@@ -488,11 +477,10 @@ MonoBehaviour:
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                SunAtmo2.Execute(context);\r\n                // postprocess
     node\r\n                {\r\n                    SunAtmo2.sunLight.ReleaseResourcces(context);\r\n                   
-    SunAtmo2.motion.ReleaseResourcces(context);\r\n                    SunAtmo2.afterAtmo.ReleaseResourcces(context);\r\n                   
-    SunAtmo2.sunBuffer.ReleaseResourcces(context);\r\n                    SunAtmo2.skyBox.connected
-    = true;\r\n                    SunAtmo2.afterAtmo.connected = true;\r\n                   
-    SunAtmo2.sunBuffer.connected = true;\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    SunAtmo2.afterAtmo.ReleaseResourcces(context);\r\n                    SunAtmo2.sunBuffer.ReleaseResourcces(context);\r\n                   
+    SunAtmo2.skyBox.connected = true;\r\n                    SunAtmo2.afterAtmo.connected
+    = true;\r\n                    SunAtmo2.sunBuffer.connected = true;\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //SkyBoxIBL5\r\n           
     {\r\n                context.commandBuffer.name = \"SkyBoxIBL5\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -542,15 +530,15 @@ MonoBehaviour:
     SunAtmo2.target.Dispose();\r\n                SunAtmo2.depth.Dispose();\r\n               
     SunAtmo2.diffuse.Dispose();\r\n                SunAtmo2.specular.Dispose();\r\n               
     SunAtmo2.normal.Dispose();\r\n                SunAtmo2.ao.Dispose();\r\n               
-    SunAtmo2.motion.Dispose();\r\n                SunAtmo2.skyBox.Dispose();\r\n               
-    SunAtmo2.afterAtmo.Dispose();\r\n                SunAtmo2.sunBuffer.Dispose();\r\n               
-    SunAtmo2.Dispose();\r\n            }\r\n            // CullLight3\r\n           
-    {\r\n                CullLight3.lights.Dispose();\r\n                CullLight3.Dispose();\r\n           
-    }\r\n            // CombineColorDepth4\r\n            {\r\n                CombineColorDepth4.color.Dispose();\r\n               
-    CombineColorDepth4.depth.Dispose();\r\n                CombineColorDepth4.combined.Dispose();\r\n               
-    CombineColorDepth4.Dispose();\r\n            }\r\n            // SkyBoxIBL5\r\n           
-    {\r\n                SkyBoxIBL5.skyBox.Dispose();\r\n                SkyBoxIBL5.target.Dispose();\r\n               
-    SkyBoxIBL5.depth.Dispose();\r\n                SkyBoxIBL5.diffuse.Dispose();\r\n               
-    SkyBoxIBL5.specular.Dispose();\r\n                SkyBoxIBL5.normal.Dispose();\r\n               
-    SkyBoxIBL5.ao.Dispose();\r\n                SkyBoxIBL5.irradiance.Dispose();\r\n               
-    SkyBoxIBL5.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"
+    SunAtmo2.skyBox.Dispose();\r\n                SunAtmo2.afterAtmo.Dispose();\r\n               
+    SunAtmo2.sunBuffer.Dispose();\r\n                SunAtmo2.Dispose();\r\n           
+    }\r\n            // CullLight3\r\n            {\r\n                CullLight3.lights.Dispose();\r\n               
+    CullLight3.Dispose();\r\n            }\r\n            // CombineColorDepth4\r\n           
+    {\r\n                CombineColorDepth4.color.Dispose();\r\n                CombineColorDepth4.depth.Dispose();\r\n               
+    CombineColorDepth4.combined.Dispose();\r\n                CombineColorDepth4.Dispose();\r\n           
+    }\r\n            // SkyBoxIBL5\r\n            {\r\n                SkyBoxIBL5.skyBox.Dispose();\r\n               
+    SkyBoxIBL5.target.Dispose();\r\n                SkyBoxIBL5.depth.Dispose();\r\n               
+    SkyBoxIBL5.diffuse.Dispose();\r\n                SkyBoxIBL5.specular.Dispose();\r\n               
+    SkyBoxIBL5.normal.Dispose();\r\n                SkyBoxIBL5.ao.Dispose();\r\n               
+    SkyBoxIBL5.irradiance.Dispose();\r\n                SkyBoxIBL5.Dispose();\r\n           
+    }\r\n        }\r\n    }\r\n}\r\n"

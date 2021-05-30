@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace HypnosRenderPipeline
 {
@@ -126,8 +127,24 @@ namespace HypnosRenderPipeline
                 for (int renderIndex = 0; renderIndex < renderNum; renderIndex++)
                 {
 #endif
-
                     BeginCameraRendering(context, cam);
+
+                    if (cam.cameraType == CameraType.Game)
+                    {
+                        PostProcessLayer cameraPostProcessLayer = cam.GetComponent<PostProcessLayer>();
+                        bool hasPostProcessing = cameraPostProcessLayer != null;
+                        bool usePostProcessing = false;
+                        PostProcessRenderContext m_PostProcessRenderContext = null;
+                        if (hasPostProcessing)
+                        {
+                            m_PostProcessRenderContext = new PostProcessRenderContext() { };
+                            usePostProcessing = cameraPostProcessLayer.enabled;
+                        }
+                        if (usePostProcessing && cameraPostProcessLayer.antialiasingMode == PostProcessLayer.Antialiasing.TemporalAntialiasing)
+                        {
+                            cameraPostProcessLayer.temporalAntialiasing.ConfigureJitteredProjectionMatrix(new PostProcessRenderContext() { camera = cam });
+                        }
+                    }
 
                     context.SetupCameraProperties(cam);
 
@@ -195,7 +212,31 @@ namespace HypnosRenderPipeline
                             cb.DrawRenderers(rc.defaultCullingResult, ref a, ref b);
 
                             context.ExecuteCommandBuffer(vrender_cb[0]);
-                            cb.Blit(BuiltinRenderTextureType.CameraTarget, result);
+
+                            PostProcessLayer m_CameraPostProcessLayer = cam.GetComponent<PostProcessLayer>();
+                            bool hasPostProcessing = m_CameraPostProcessLayer != null;
+                            bool usePostProcessing = false;
+                            PostProcessRenderContext m_PostProcessRenderContext = null;
+                            if (hasPostProcessing)
+                            {
+                                m_PostProcessRenderContext = new PostProcessRenderContext() { };
+                                usePostProcessing = m_CameraPostProcessLayer.enabled;
+                            }
+                            if (usePostProcessing)
+                            {
+                                m_PostProcessRenderContext.Reset();
+                                m_PostProcessRenderContext.camera = cam;
+                                m_PostProcessRenderContext.source = BuiltinRenderTextureType.CameraTarget;
+                                m_PostProcessRenderContext.sourceFormat = RenderTextureFormat.DefaultHDR;
+                                m_PostProcessRenderContext.destination = result;
+                                m_PostProcessRenderContext.command = cb;
+                                m_PostProcessRenderContext.flip = false;
+                                m_CameraPostProcessLayer.Render(m_PostProcessRenderContext);
+                            }
+                            else
+                            {
+                                cb.Blit(BuiltinRenderTextureType.CameraTarget, result);
+                            }
                         }
                         else
                         {
@@ -343,11 +384,11 @@ namespace HypnosRenderPipeline
                 else
                     cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
 #endif
-
                     cb.ReleaseTemporaryRT(result);
                     context.ExecuteCommandBuffer(cb);
                     cb.Clear();
 
+                    cam.ResetProjectionMatrix();
                     EndCameraRendering(context, cam);
 #if UNITY_EDITOR
                 }

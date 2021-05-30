@@ -54,12 +54,12 @@ int EncodeHDR2Int(half3 hdr)
 	return (rgb.x << 24) +
 			(rgb.y << 16) +
 			(rgb.z << 8) +
-			int(min(1, log2(m) / 10) * 255);
+			int(min(1, log2(m) / 100) * 255);
 }
 half3 DecodeInt2HDR(int data)
 {
 	half3 rgb = (int3(data >> 24, data >> 16, data >> 8) & 0xFF) / 255.0f;
-	half mul = (data & 0xFF) / 255.0f * 10;
+	half mul = (data & 0xFF) / 255.0f * 100;
 	return rgb * exp2(mul);
 }
 

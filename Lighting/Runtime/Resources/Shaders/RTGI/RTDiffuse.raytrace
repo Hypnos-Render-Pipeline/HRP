@@ -38,7 +38,7 @@ float Luminance(float3 col) {
     return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
 }
 float3 ToneMap(float3 color) {
-    return color / (1 + Luminance(color));
+    return color / (6 + color);
 }
 int2 index2offset(const uint index) {
     uint2 index2offset[4] = { uint2(0, 0), uint2(1, 0), uint2(1, 1), uint2(0, 1) };
@@ -56,6 +56,8 @@ float3 L(float3 pos, float3 dir, inout int4 sampleState, out float3 nextPos, out
         nextPos = nextDir = 0;
     }
     else {
+        res = gbuffer.emission;
+
         float3 hitPos = gbuffer.dis * dir + pos;
         float4 ppos = mul(_VP, float4(hitPos, 1));
 

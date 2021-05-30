@@ -352,8 +352,8 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 
 	float3 F;
 	if (iridescence) {
-		float cosTheta2 = sqrt(1.0 - (1 - lh * lh) / max(0.0000001, eta_2 * eta_2));
-		F = IridescenceFresnel(lh, cosTheta2, eta_2, eta_3, kappa_3, dinc);
+		float cosTheta2 = sqrt(1.0 - (1 - nv * nv) / max(0.0000001, eta_2 * eta_2));
+		F = IridescenceFresnel(nv, cosTheta2, eta_2, eta_3, kappa_3, dinc);
 	}
 	else
 		F = specF ? specColor : FresnelTerm(specColor, lh) * (any(specColor) ? 1.0 : 0.0);

@@ -102,7 +102,7 @@ void DirecionalLight()
         float3 lres = PBS(PBS_FULLY, info, light.dir, light.radiance, view);
         [branch]
         if (any(lres > 0)) {
-            res += lres * TraceShadow_RTGI(spos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
+            res += lres * TraceShadow_RTGI(spos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.0001 * 9999);
         }
     }
     EndDirectionalLightsLoop;

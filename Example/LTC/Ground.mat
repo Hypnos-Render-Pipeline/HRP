@@ -9,8 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Ground
   m_Shader: {fileID: 4800000, guid: 5c7f5126902e04e4aa6ef1395bbd23cd, type: 3}
-  m_ShaderKeywords: _AOMAP _IRIDESCENCE _IRIDESCENCE_ON _IRIMAP _METALLICGLOSSMAP
-    _NORMALMAP
+  m_ShaderKeywords: _AOMAP _IRIDESCENCE _IRIDESCENCE_ON _IRIMAP _NORMALMAP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -55,13 +54,14 @@ Material:
         m_Scale: {x: 5, y: 5}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 10309, guid: 0000000000000000f000000000000000, type: 0}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ScatterProfile:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _AO: 1
     - _AOScale: 1
@@ -70,11 +70,11 @@ Material:
     - _BumpScale: 1
     - _ClearCoat: 0
     - _Cutoff: 0
-    - _Dinc: 1.69
+    - _Dinc: 1.99
     - _DstBlend: 0
     - _GlossMapScale: 0.836
-    - _Index: 1.25
-    - _Index2: 1
+    - _Index: 1.64
+    - _Index2: 1.257
     - _IndexRate: 0.5
     - _Iridescence: 1
     - _IridescentTile: 10

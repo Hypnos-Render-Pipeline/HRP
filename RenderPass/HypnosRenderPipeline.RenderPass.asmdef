@@ -1,10 +1,12 @@
 {
     "name": "HypnosRenderPipeline.RenderPass",
+    "rootNamespace": "",
     "references": [
         "GUID:d8b63aba1907145bea998dd612889d6b",
         "GUID:cdbf49ddc3622ac458d721851183674e",
         "GUID:df380645f10b7bc4b97d4f5eb6303d95",
-        "GUID:899fc01217e37d745b55404665eceada"
+        "GUID:899fc01217e37d745b55404665eceada",
+        "GUID:d60799ab2a985554ea1a39cd38695018"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

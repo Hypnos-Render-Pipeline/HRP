@@ -154,7 +154,7 @@ void RayGeneration()
 	float3 ex = (old.xyz * old.w + color) / old.w;
 	float3 ex2 = (rec * old.w + color * color) / old.w;
 
-	variance = dot(abs(ex2 - ex * ex), 1) / dot(ex2 + 0.1, 1); // actual value should divide by '(old.w + 1)', but it works better...
+	variance = dot(abs(ex2 - ex * ex) / (ex * ex + 0.01), 1) / (old.w + 1) * 10;
 
 	int count = min(old.w + 1, _Max_Frame);
 	if (old.w != 0 && frameIndex != 0) {

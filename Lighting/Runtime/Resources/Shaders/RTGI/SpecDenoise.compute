@@ -48,7 +48,7 @@ float3 ToneMap(float3 color) {
     return color / (1 + Luminance(color));
 }
 float3 UnToneMap(float3 color) {
-    return color / (1 - Luminance(color));
+    return color / (1 - color);
 }
 
 int offset2index(const uint2 offset) {
@@ -172,7 +172,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         maxC = max(minC, uc);
         minC = min(minC, uc);
 
-        float av_dis = (lc.w + dc.w + rc.w + uc.w + oc.w) / 5;
+        float av_dis = (lc.w + dc.w + rc.w + uc.w + oc.w * 2) / 6;
 
         float3 av_n = (buffer_1[bufferID.x][bufferID.y] +
             buffer_1[bufferID.x - 1][bufferID.y] + buffer_1[bufferID.x + 1][bufferID.y] +
@@ -213,9 +213,11 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
         float4 hc = _History.SampleLevel(linear_clamp_sampler, prevUV, 0);
 
-        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.95, 0.8, smooth * smooth * smooth);
-        mix_rate *= lerp(mix_rate, mix_rate - 0.5, min(1, length(_MotionTex[id]) * 10)) * weight;
-        hc = clamp(hc, minC - 0.5, maxC + 0.5);
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.95, 0.8, smooth * smooth);
+        mix_rate *= weight;
+        mix_rate = lerp(mix_rate, max(0, mix_rate - 0.05), min(1, length(_MotionTex[id]) * 100));
+        float cut = lerp(0.5, 0.1, min(1, length(_MotionTex[id]) * 100));
+        hc = clamp(hc, minC - cut, maxC + cut);
         float4 mixed = lerp(oc, hc, mix_rate);
         _Result[id] = mixed;
     }
