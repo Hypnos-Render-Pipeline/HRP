@@ -72,6 +72,8 @@ namespace HypnosRenderPipeline.RenderPass
             {
                 a = new DrawingSettings(new ShaderTagId("GBuffer_LEqual"), new SortingSettings(context.camera));
             }
+            a.enableInstancing = true;
+
             var b = FilteringSettings.defaultValue;
             b.renderQueueRange = RenderQueueRange.opaque;
 
