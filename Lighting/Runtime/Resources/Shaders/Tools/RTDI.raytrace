@@ -109,3 +109,72 @@ void DirecionalLight()
     
     RenderTarget[dispatchIdx] += float4(res, 0);
 }
+
+
+
+
+
+
+
+
+#define T T_TAB
+#include "../Includes/Atmo/Sun.hlsl"
+[shader("raygeneration")]
+void SunLight()
+{
+    uint2 dispatchIdx = DispatchRaysIndex().xy;
+    float2 uv = (dispatchIdx + 0.5) * _Pixel_WH.zw;
+
+    float d = _DepthTex[dispatchIdx];
+    if (d == 0) return;
+
+    float3 camPos = _V_Inv._m03_m13_m23;
+    float3 pos; 
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_VP_Inv, ndc);
+        pos = worldPos.xyz / worldPos.w;
+    }
+    float3 view = normalize(camPos - pos);
+
+    SurfaceInfo info = (SurfaceInfo)0;
+    info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _SpecTex[dispatchIdx],
+                            _NormalTex[dispatchIdx],
+                            _EmissionTex[dispatchIdx],
+                            _AOTex[dispatchIdx]);
+
+    float3 res = 0;
+    
+    float3 spos = pos + info.gnormal * 0.01 + view * 0.01;
+
+	int4 sampleState = int4(dispatchIdx, _Clock, 0);
+
+    #if 1           // trick for the sun disk size
+        float3 halfDir = normalize(view + sunDir);
+        float3 no = info.normal;
+        info.normal = normalize(lerp(halfDir, info.normal, 1 - dot(halfDir, info.normal) * 0.3 * (pow(sunAngle, 0.2) / pow(0.008726647, 0.2))));
+        res = PBS(PBS_SS_SPEC, info, sunDir, sunColor, view);
+        info.normal = no;
+        res += PBS(PBS_SS_DIFFUSE, info, sunDir, sunColor, view);
+    #else
+        res = PBS(PBS_FULLY, info, sunDir, sunColor, view);
+    #endif
+
+    
+    if (any(res > 0)) {
+        float shadow = 0;
+        float3 dis = float3(0, 150, 1);
+        int sampleNum = max(1, (sunAngle / 0.008726647) * 2);
+        for (int i = 0; i < sampleNum; i++) {
+            float3 dir = (sunDir + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * sunAngle / 2);
+            float2 trace_res = TraceShadowDistance_RTGI(spos + dir * dis.x, spos + dir * dis.y);
+            shadow += trace_res.x;
+            if (trace_res.x)
+                dis = float3(max(0, dis.x + trace_res.y - dis.z), trace_res.y + dis.z, dis.z / 2);
+        }
+        res *= shadow / sampleNum;
+    }
+
+    RenderTarget[dispatchIdx] += float4(res, 0);
+}

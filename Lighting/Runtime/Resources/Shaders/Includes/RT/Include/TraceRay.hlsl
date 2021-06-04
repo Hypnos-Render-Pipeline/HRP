@@ -222,6 +222,24 @@ bool TraceShadow_RTGI(const float3 start, const float3 end)
 	return rayIntersection.data1 & 1;
 }
 
+float2 TraceShadowDistance_RTGI(const float3 start, const float3 end)
+{
+	RayDesc rayDescriptor;
+	rayDescriptor.Origin = start;
+	rayDescriptor.Direction = end - start;
+	rayDescriptor.TMin = 0.001;
+	rayDescriptor.TMax = length(rayDescriptor.Direction) - 0.002;
+	rayDescriptor.Direction = normalize(rayDescriptor.Direction);
+
+	RayIntersection_RTGI rayIntersection;
+	rayIntersection.t = rayDescriptor.TMax;
+	rayIntersection.data1 = 1;
+
+	TraceRay(_RaytracingAccelerationStructure, RAY_FLAG_FORCE_NON_OPAQUE | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER, 0xFF, 0, 1, 0, rayDescriptor, rayIntersection);
+
+	return float2(rayIntersection.data1 & 1, rayIntersection.t);
+}
+
 GBuffer_RTGI TraceNext_RTGI(const float3 start, const float3 dir)
 {
 	RayDesc rayDescriptor;

@@ -196,6 +196,7 @@ namespace HypnosRenderPipeline.RenderPass
         {
             afterAtmo.atmo = null;
             contex.commandBuffer.SetBufferData(sunBuffer, sunLightClear);
+            contex.commandBuffer.SetGlobalConstantBuffer(sunBuffer, "_Sun", 0, sizeof(float) * 7);
         }
 
         public override void Execute(RenderContext context)
@@ -241,7 +242,8 @@ namespace HypnosRenderPipeline.RenderPass
 
                 int tempColor = Shader.PropertyToID("TempColor");
                 cb.GetTemporaryRT(tempColor, target.desc.basicDesc);
-                cb.Blit(target, tempColor, lightMat, 4); // directional sun light
+                cb.CopyTexture(target, tempColor);
+                //cb.Blit(target, tempColor, lightMat, 4); // directional sun light
 
                 atmo.RenderAtmoToRT(cb, tempColor, depth, target, applyAtmoFog);
 

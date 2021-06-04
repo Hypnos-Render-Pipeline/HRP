@@ -197,7 +197,8 @@ namespace HypnosRenderPipeline
         {
             cb.SetGlobalVector("_SunColor", sunColor);
             cb.SetComputeBufferParam(volumeScatter, 1, "_Sun_", sunBuffer);
-            cb.DispatchCompute(volumeScatter, 1, 1, 1, 1);     
+            cb.DispatchCompute(volumeScatter, 1, 1, 1, 1);
+            cb.SetGlobalConstantBuffer(sunBuffer, "_Sun", 0, sizeof(float) * 7);
         }
 
         /// <summary>

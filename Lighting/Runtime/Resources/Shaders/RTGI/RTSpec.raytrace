@@ -37,7 +37,7 @@ float Luminance(float3 col) {
     return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
 }
 float3 ToneMap(float3 color) {
-    return color / (1 + color);
+    return color / (5 + color);
 }
 int2 index2offset(const uint index) {
     uint2 index2offset[4] = { uint2(0, 0), uint2(1, 0), uint2(1, 1), uint2(0, 1) };

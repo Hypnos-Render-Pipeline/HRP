@@ -27,8 +27,8 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 3682.376
-      y: 2242.5
+      x: 4237.9644
+      y: 2248
       width: 300
       height: 105
     info: 
@@ -231,10 +231,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3330
-      y: 2204
+      x: 3885.9644
+      y: 2209
       width: 300
-      height: 191
+      height: 172
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   - nodeName: SkyBoxIBL
@@ -281,6 +281,35 @@ MonoBehaviour:
       height: 297
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SkyBoxIBL
+  - nodeName: PostProcess
+    parameters:
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: target
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 0
+    - name: motion
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 1
+    position:
+      serializedVersion: 2
+      x: 3446.0437
+      y: 2120.5
+      width: 300
+      height: 177
+    info: Image Post Process.
+    nodeType_str: HypnosRenderPipeline.RenderPass.PostProcess
   edgeRecs:
   - i: 0
     o: 4
@@ -338,46 +367,57 @@ MonoBehaviour:
     o: 1
     i_n: ao
     o_n: microAO
-  - i: 4
-    o: 5
-    i_n: color
-    o_n: target
   - i: 5
     o: 2
     i_n: target
     o_n: target
+  - i: 6
+    o: 5
+    i_n: target
+    o_n: target
+  - i: 6
+    o: 1
+    i_n: depth
+    o_n: depth
+  - i: 4
+    o: 6
+    i_n: color
+    o_n: target
   node_edgeRecs:
   - node: 4
-    in_edges: 010000000e000000
+    in_edges: 0100000011000000
     out_edge: 00000000
   - node: 0
     in_edges: 00000000
     out_edge: 
   - node: 1
     in_edges: 
-    out_edge: 010000000200000003000000040000000500000006000000090000000a0000000b0000000c0000000d000000
+    out_edge: 010000000200000003000000040000000500000006000000090000000a0000000b0000000c0000000d00000010000000
   - node: 2
     in_edges: 020000000300000004000000050000000600000007000000
-    out_edge: 080000000f000000
+    out_edge: 080000000e000000
   - node: 3
     in_edges: 
     out_edge: 07000000
   - node: 5
-    in_edges: 08000000090000000a0000000b0000000c0000000d0000000f000000
-    out_edge: 0e000000
+    in_edges: 08000000090000000a0000000b0000000c0000000d0000000e000000
+    out_edge: 0f000000
+  - node: 6
+    in_edges: 0f00000010000000
+    out_edge: 11000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
-    nodes: 000000000100000003000000020000000400000005000000
+    nodes: 00000000010000000300000002000000040000000500000006000000
   recompiled: 1
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Te_Executor : HRGExecutor\r\n   
     {\r\n        // Nodes:\r\n        // ----------------------------\r\n       
     OutputNode OutputNode0;\r\n        TerrainPass TerrainPass1;\r\n        SunAtmo
     SunAtmo2;\r\n        CullLight CullLight3;\r\n        CombineColorDepth CombineColorDepth4;\r\n       
-    SkyBoxIBL SkyBoxIBL5;\r\n        // ----------------------------\r\n        \r\n       
-    // ShaderIDs:\r\n        // ----------------------------\r\n        System.Int32
-    OutputNode0_result = Shader.PropertyToID(\"OutputNode0.result\");\r\n       
+    SkyBoxIBL SkyBoxIBL5;\r\n        PostProcess PostProcess6;\r\n        // ----------------------------\r\n       
+    \r\n        // ShaderIDs:\r\n        // ----------------------------\r\n       
+    System.Int32 OutputNode0_result = Shader.PropertyToID(\"OutputNode0.result\");\r\n       
     System.Int32 TerrainPass1_sunLight = Shader.PropertyToID(\"TerrainPass1.sunLight\");\r\n       
     System.Int32 TerrainPass1_depth = Shader.PropertyToID(\"TerrainPass1.depth\");\r\n       
     System.Int32 TerrainPass1_diffuse = Shader.PropertyToID(\"TerrainPass1.diffuse\");\r\n       
@@ -407,6 +447,9 @@ MonoBehaviour:
     System.Int32 SkyBoxIBL5_normal = Shader.PropertyToID(\"SkyBoxIBL5.normal\");\r\n       
     System.Int32 SkyBoxIBL5_ao = Shader.PropertyToID(\"SkyBoxIBL5.ao\");\r\n       
     System.Int32 SkyBoxIBL5_irradiance = Shader.PropertyToID(\"SkyBoxIBL5.irradiance\");\r\n       
+    System.Int32 PostProcess6_target = Shader.PropertyToID(\"PostProcess6.target\");\r\n       
+    System.Int32 PostProcess6_depth = Shader.PropertyToID(\"PostProcess6.depth\");\r\n       
+    System.Int32 PostProcess6_motion = Shader.PropertyToID(\"PostProcess6.motion\");\r\n       
     // ----------------------------\r\n        \r\n        public void Init()\r\n       
     {\r\n            OutputNode0 = new OutputNode();\r\n            OutputNode0.enabled
     = true;\r\n            TerrainPass1 = new TerrainPass();\r\n            TerrainPass1.gameCameraCull
@@ -421,6 +464,7 @@ MonoBehaviour:
     CullLight3.enabled = true;\r\n            CombineColorDepth4 = new CombineColorDepth();\r\n           
     CombineColorDepth4.TemporalAccumulate = false;\r\n            CombineColorDepth4.enabled
     = true;\r\n            SkyBoxIBL5 = new SkyBoxIBL();\r\n            SkyBoxIBL5.enabled
+    = true;\r\n            PostProcess6 = new PostProcess();\r\n            PostProcess6.enabled
     = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
     context, bool debug = false)\r\n        {\r\n            System.Int32 result
     = -1;\r\n            \r\n            //CullLight3\r\n            {\r\n               
@@ -499,10 +543,22 @@ MonoBehaviour:
     node\r\n                {\r\n                    SkyBoxIBL5.skyBox.ReleaseResourcces(context);\r\n                   
     SkyBoxIBL5.irradiance.ReleaseResourcces(context);\r\n                    SkyBoxIBL5.irradiance.connected
     = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //PostProcess6\r\n           
+    {\r\n                context.commandBuffer.name = \"PostProcess6\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    PostProcess6.target.connected = true;\r\n                    PostProcess6.target.Move(SkyBoxIBL5.target);\r\n                   
+    PostProcess6.depth.connected = true;\r\n                    PostProcess6.depth.Move(TerrainPass1.depth);\r\n                   
+    PostProcess6.motion.AllocateResourcces(context, PostProcess6_motion);\r\n                   
+    PostProcess6.motion.name = \"PostProcess6.motion\";\r\n                    //
+    outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                PostProcess6.Execute(context);\r\n                //
+    postprocess node\r\n                {\r\n                    PostProcess6.motion.ReleaseResourcces(context);\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //CombineColorDepth4\r\n           
     {\r\n                context.commandBuffer.name = \"CombineColorDepth4\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    CombineColorDepth4.color.connected = true;\r\n                    CombineColorDepth4.color.Move(SkyBoxIBL5.target);\r\n                   
+    CombineColorDepth4.color.connected = true;\r\n                    CombineColorDepth4.color.Move(PostProcess6.target);\r\n                   
     CombineColorDepth4.depth.connected = true;\r\n                    CombineColorDepth4.depth.Move(TerrainPass1.depth);\r\n                   
     // outputs\r\n                    CombineColorDepth4.combined.AllocateResourcces(context,
     CombineColorDepth4_combined);\r\n                    CombineColorDepth4.combined.name
@@ -541,4 +597,6 @@ MonoBehaviour:
     SkyBoxIBL5.diffuse.Dispose();\r\n                SkyBoxIBL5.specular.Dispose();\r\n               
     SkyBoxIBL5.normal.Dispose();\r\n                SkyBoxIBL5.ao.Dispose();\r\n               
     SkyBoxIBL5.irradiance.Dispose();\r\n                SkyBoxIBL5.Dispose();\r\n           
-    }\r\n        }\r\n    }\r\n}\r\n"
+    }\r\n            // PostProcess6\r\n            {\r\n                PostProcess6.target.Dispose();\r\n               
+    PostProcess6.depth.Dispose();\r\n                PostProcess6.motion.Dispose();\r\n               
+    PostProcess6.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"

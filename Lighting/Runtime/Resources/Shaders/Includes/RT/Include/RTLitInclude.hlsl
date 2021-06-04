@@ -371,7 +371,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			nextDir = reflect(-viewDir, n);
 			rayRoughness = 1 - surface.smoothness;
 
-			if (dot(nextDir, surface.normal) > 0) {
+			if (dot(nextDir, surface.normal) > 0 && dot(nextDir, IN.gN) > 0) {
 				float coat = surface.clearCoat;
 				surface.clearCoat = 0;
 				float3 coef = PBS(PBS_SPECULAR_F, surface, nextDir, 1.0, viewDir);
@@ -392,7 +392,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			nextDir = reflect(-viewDir, n);
 			rayRoughness = 1 - surface.smoothness;
 
-			if (dot(nextDir, surface.normal) > 0) {
+			if (dot(nextDir, surface.normal) > 0 && dot(nextDir, IN.gN) > 0) {
 				float coat = surface.clearCoat;
 				surface.clearCoat = 0;
 				surface.specular = min(1 - rayRoughness, 1);

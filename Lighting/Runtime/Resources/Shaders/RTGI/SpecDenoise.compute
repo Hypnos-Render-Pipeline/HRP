@@ -48,7 +48,7 @@ float3 ToneMap(float3 color) {
     return color / (1 + Luminance(color));
 }
 float3 UnToneMap(float3 color) {
-    return color / (1 - color);
+    return (5 * color) / (1 - color);
 }
 
 int offset2index(const uint2 offset) {
@@ -218,7 +218,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         mix_rate = lerp(mix_rate, max(0, mix_rate - 0.05), min(1, length(_MotionTex[id]) * 100));
         float cut = lerp(0.5, 0.1, min(1, length(_MotionTex[id]) * 100));
         hc = clamp(hc, minC - cut, maxC + cut);
-        float4 mixed = lerp(oc, hc, mix_rate);
+        float4 mixed = lerp(oc, hc, /*mix_rate*/mix_rate);
         _Result[id] = mixed;
     }
 }
@@ -230,6 +230,7 @@ float2 _ProcessRange;
 #define GROUPSHARED_COUNT (GROUPSHARED_SIZE * GROUPSHARED_SIZE)
 groupshared float4 buffer2_0[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
 groupshared float4 buffer2_1[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
+groupshared float  buffer2_2[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
 groupshared bool active;
 
 RWStructuredBuffer<int> _Indirect;
@@ -258,6 +259,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
                 if (any(texID < 0) || any(texID >= uint2(_WH.xy))) {
                     buffer2_0[offset.x][offset.y] = 0;
                     buffer2_1[offset.x][offset.y] = 0;
+                    buffer2_2[offset.x][offset.y] = 0;
                 }
                 else {
                     float4 newC = _Result[texID];
@@ -266,6 +268,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
                     float3 normal = DecodeNormal(n_m.xyz);
                     buffer2_0[offset.x][offset.y] = newC;
                     buffer2_1[offset.x][offset.y] = float4(normal, PD2VD(_DepthTex[texID]));
+                    buffer2_2[offset.x][offset.y] = _SpecTex[texID].w;
                 }
             }
         }
@@ -291,6 +294,7 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
             int2 baseID = groupThreadID + SPATIAL_RADIUS;
             float crd = buffer2_0[baseID.x][baseID.y].w;
             float4 cn_cd = buffer2_1[baseID.x][baseID.y];
+            float cr = buffer2_2[baseID.x][baseID.y];
             for (int i = -SPATIAL_RADIUS; i <= SPATIAL_RADIUS; i++)
             {
                 for (int j = -SPATIAL_RADIUS; j <= SPATIAL_RADIUS; j++)
@@ -299,8 +303,9 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
                     int2 id_in_shared = int2(baseID.x + i, baseID.y + j);
                     float4 n_d = buffer2_1[id_in_shared.x][id_in_shared.y];
                     float3 normal = n_d.xyz;
+                    float r = buffer2_2[id_in_shared.x][id_in_shared.y];
                     float4 l = buffer2_0[id_in_shared.x][id_in_shared.y];
-                    weight *= (l.w >= 0) * smoothstep(0.997, 1, dot(cn_cd.xyz, normal)) * max(0, 1 - abs(cn_cd.w - n_d.w));
+                    weight *= (l.w >= 0) * smoothstep(0.997, 1, dot(cn_cd.xyz, normal)) * max(0, 1 - abs(cn_cd.w - n_d.w)) * saturate(1 - 100 * abs(cr - r));
                     weight *= clamp(1 - abs(crd - l.w), 0.2, 1);
                     w += weight;
                     res += l * weight;
@@ -382,7 +387,6 @@ void UpSample(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         _FullSizeResult[id] = 0;
         return;
     }
-
     float4 res = 0;
     float w = 0;
     int2 baseID = floor(groupThreadID - 0.9) / 2 + 1;
@@ -396,11 +400,11 @@ void UpSample(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
             float4 nd = buffer3_1[texID.x][texID.y];
 
-            float depth_weight = max(0, 0.2 - abs(nd.w - cd)) + 0.1;
-            float normal_weight = smoothstep(0, 1, dot(cn, nd.xyz)) + 0.1;
+            float depth_weight = max(0, 0.2 - abs(nd.w - cd)) + 0.001;
+            float normal_weight = smoothstep(0, 1, dot(cn, nd.xyz)) + 0.001;
 
             float4 c = buffer3_0[texID.x][texID.y];
-            float weight = (c.w >= 0) * normal_weight * depth_weight;
+            float weight = (c.w > 0) * normal_weight * depth_weight;
             res += c * weight;
             w += weight;
         }
