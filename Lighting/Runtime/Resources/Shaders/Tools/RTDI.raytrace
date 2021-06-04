@@ -167,7 +167,7 @@ void SunLight()
         float3 dis = float3(0, 150, 1);
         int sampleNum = max(1, (sunAngle / 0.008726647) * 2);
         for (int i = 0; i < sampleNum; i++) {
-            float3 dir = (sunDir + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * sunAngle / 2);
+            float3 dir = (sunDir + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * sunAngle);
             float2 trace_res = TraceShadowDistance_RTGI(spos + dir * dis.x, spos + dir * dis.y);
             shadow += trace_res.x;
             if (trace_res.x)
