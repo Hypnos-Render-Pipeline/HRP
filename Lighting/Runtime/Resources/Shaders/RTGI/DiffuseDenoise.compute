@@ -467,7 +467,7 @@ void UpSample(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
             float4 nd = buffer3_1[texID.x][texID.y];
 
             float depth_weight = max(0, 0.2 - abs(nd.w - cd)) + 0.001;
-            float normal_weight = smoothstep(0, 1, dot(cn, nd.xyz)) + 0.001;
+            float normal_weight = smoothstep(0.9, 1, dot(cn, nd.xyz)) + 0.001;
 
             float4 c = buffer3_0[texID.x][texID.y];
             float weight = (c.w > 0) * bilinear_weight * normal_weight * depth_weight;
