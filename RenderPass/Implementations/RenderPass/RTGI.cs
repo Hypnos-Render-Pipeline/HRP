@@ -195,14 +195,14 @@ namespace HypnosRenderPipeline.RenderPass
 
             cb.CopyTexture(tempRef2, his1);
 
-            cb.SetGlobalVector("_ProcessRange", new Vector4(0.95f, 1f));
-            cb.SetBufferData(argsBuffer, clearArray);
-            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Variance", var0);
-            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Result", tempRef);
-            cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_Indirect", argsBuffer);
-            cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_NextBlock", blockBuffer);
-            cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_HalfIndexTex", halfIndex);
-            cb.DispatchCompute(denoise, CSPass.SFilter, halfDispatchSize.x, halfDispatchSize.y, 1);
+            // cb.SetGlobalVector("_ProcessRange", new Vector4(0.95f, 1f));
+            // cb.SetBufferData(argsBuffer, clearArray);
+            // cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Variance", var0);
+            // cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_Result", tempRef);
+            // cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_Indirect", argsBuffer);
+            // cb.SetComputeBufferParam(denoise, CSPass.SFilter, "_NextBlock", blockBuffer);
+            // cb.SetComputeTextureParam(denoise, CSPass.SFilter, "_HalfIndexTex", halfIndex);
+            // cb.DispatchCompute(denoise, CSPass.SFilter, halfDispatchSize.x, halfDispatchSize.y, 1);
 
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_History", his0);
@@ -217,7 +217,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.Blit(depth, hisDepth0);
 
             cb.SetComputeIntParam(denoise, "variance", 1);
-            DispatchSpatialFilter(cb, tempRef2, 0.85f, 0.95f);
+            // DispatchSpatialFilter(cb, tempRef2, 0.85f, 0.95f);
             DispatchSpatialFilter(cb, tempRef2, 0.75f, 0.85f);
             DispatchSpatialFilter(cb, tempRef2, 0.5f, 0.75f);
             DispatchSpatialFilter(cb, tempRef2, 0.25f, 0.5f);

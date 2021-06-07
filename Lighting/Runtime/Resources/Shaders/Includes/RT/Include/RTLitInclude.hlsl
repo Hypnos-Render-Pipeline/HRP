@@ -262,14 +262,13 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		bool all_reflect = length(next_dir) < 0.5;
 
 		float r_thre = IN.isFrontFace ? 0 : PhysicsFresnel(1.0 / IOR, viewDir, surface.normal);
+		rayRoughness = surface.index != 1 ? 1 - surface.smoothness : rayRoughness;
 		if (all_reflect) r_thre = 1;
 		if (rand_num.y < r_thre) {
 			nextDir = reflect(-viewDir, n);
-			rayRoughness = surface.smoothness;
 		}
 		else {
 			nextDir = next_dir;
-			rayRoughness = surface.smoothness;
 			weight *= IOR;
 			if (!IN.isFrontFace) {
 				directColor += weight.xyz * LightLuminanceCameraWithFog(IN.position, nextDir, sampleState);

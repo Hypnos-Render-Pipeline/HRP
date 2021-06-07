@@ -16,7 +16,7 @@ float4x4 _P, _P_Inv;
 float4x4 _VP, _VP_Inv;
 float4x4 _Last_VP, _Last_VP_Inv;
 
-Texture2D<float4> _SpecTex, _NormalTex, _AOTex, _SceneColor, _HistoryNormal;
+Texture2D<float4> _SpecTex, _NormalTex, _AOTex, _SceneColor;
 Texture2D<float4> _FilteredColor;
 Texture2D<float2> _MotionTex;
 Texture2D<float> _DepthTex, _HistoryDepth;
@@ -200,7 +200,6 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
             prevUV = lvpoint.xy;
         }
         float hd = _HistoryDepth.SampleLevel(point_clamp_sampler, prevUV, 0).x;
-        float3 hisN = DecodeNormal(_NormalTex.SampleLevel(point_clamp_sampler, prevUV, 0).xyz);
         float3 hwpos;
         {
             float4 ndc = float4(prevUV * 2 - 1, hd, 1);
@@ -208,17 +207,17 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
             hwpos = worldPos.xyz / worldPos.w;
         }
 
-        float weight = smoothstep(0.2, 0.5, dot(newN, hisN)) * max(0, 1 - distance(wpos, hwpos));
+        float weight = max(0, 1 - 0.5 * distance(wpos, hwpos));
         if (any(prevUV < 0) || any(prevUV > 1)) weight = 0;
 
         float4 hc = _History.SampleLevel(linear_clamp_sampler, prevUV, 0);
 
-        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.95, 0.8, smooth * smooth);
+        float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.97, 0.9, smooth * smooth);
         mix_rate *= weight;
-        mix_rate = lerp(mix_rate, max(0, mix_rate - 0.05), min(1, length(_MotionTex[id]) * 100));
+        mix_rate = clamp(lerp(mix_rate, max(0, mix_rate - 0.05), min(1, length(_MotionTex[id]) * 100)), 0.7, 0.99);
         float cut = lerp(0.5, 0.1, min(1, length(_MotionTex[id]) * 100));
         hc = clamp(hc, minC - cut, maxC + cut);
-        float4 mixed = lerp(oc, hc, /*mix_rate*/mix_rate);
+        float4 mixed = lerp(oc, hc, mix_rate);
         _Result[id] = mixed;
     }
 }

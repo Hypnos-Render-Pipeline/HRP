@@ -171,7 +171,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         float speed = saturate(length(motion));
         float2 prevUV = uv - motion;
 
-        float4 hc = _History.SampleLevel(point_clamp_sampler, prevUV, 0);
+        float4 hc = _History.SampleLevel(linear_clamp_sampler, prevUV, 0);
         float3 av_c = _Result[id].xyz;
         hc.xyz += 3 * av_c;
         hc = max(hc, 0);
@@ -212,13 +212,13 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
         float sampleNum = hc.w * weight + oc.w;
 
-        mix_rate *= saturate((sampleNum - 1) / sampleNum);
+        mix_rate *= clamp((sampleNum - 1) / sampleNum, 0.7, 0.99);
 
         float4 mixed = lerp(oc, hc, mix_rate);
 
         _Variance[id] = float2(max(0.2, 1 - sampleNum / 150), _Variance[id].y); //abs(av_c);// 
 
-        _Result[id] = float4(weight < 0.02 ? oc.xyz : mixed.xyz, sampleNum);
+        _Result[id] = float4(mixed.xyz, sampleNum);
     }
 }
 
@@ -291,14 +291,15 @@ void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
         {
             int2 baseID = groupThreadID + SPATIAL_RADIUS;
             float4 original = buffer2_0[baseID.x][baseID.y];
-            float normal_coef = 0.992;
-            if (var) normal_coef = _Variance[id].y ? 0.5 : 0.992;
-            if (!variance) normal_coef = 0;
-            normal_coef *= smoothstep(0, 10, gi.w);
             float distance_coef = lerp(5, 1, smoothstep(0, 10, gi.w));
             float4 cn_cd = buffer2_1[baseID.x][baseID.y];
             float3 cn = cn_cd.xyz;
             float cd = cn_cd.w;
+            float normal_coef = 0.992;
+            if (var) normal_coef = _Variance[id].y ? 0.5 : 0.992;
+            if (!variance) normal_coef = 0;
+            normal_coef *= smoothstep(0, 10, gi.w);
+            normal_coef *= max(0, 1 - 0.002 * (cd * cd));
             {
                 float L = 0;
                 float L2 = 0;

@@ -17,6 +17,13 @@ namespace HypnosRenderPipeline.VFX.ShaderGraph
                 BlockFields.VertexDescription.Position,
                 BlockFields.VertexDescription.Normal,
                 BlockFields.VertexDescription.Tangent,
+
+                BlockFields.SurfaceDescription.BaseColor,
+                BlockFields.SurfaceDescription.Metallic,
+                BlockFields.SurfaceDescription.Emission,
+                BlockFields.SurfaceDescription.Smoothness,
+                BlockFields.SurfaceDescription.Occlusion,
+                BlockFields.SurfaceDescription.Alpha,
             };
 
             GraphUtil.CreateNewGraphWithOutputs(new[] { target }, blockDescriptors);

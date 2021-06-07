@@ -155,7 +155,6 @@ namespace HypnosRenderPipeline.RenderPass
             desc.colorFormat = RenderTextureFormat.ARGBHalf;
             RenderTexture his0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec_History0"), desc);
             cb.GetTemporaryRT(tempTarget, desc);
-            RenderTexture hisNormal0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec_HistoryNormal0"), normal.desc.basicDesc);
             desc = depth.desc.basicDesc;
             desc.colorFormat = RenderTextureFormat.RFloat;
             RenderTexture hisDepth0 = context.resourcesPool.GetTexture(Shader.PropertyToID("_RTSpec__HistoryDepth0"), desc);
@@ -180,14 +179,12 @@ namespace HypnosRenderPipeline.RenderPass
 
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_History", his0);
-            cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HistoryNormal", hisNormal0);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HistoryDepth", hisDepth0);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_TempResult", tempRef);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_Result", tempRef2);
             cb.SetComputeTextureParam(denoise, CSPass.TTFilter, "_HalfIndexTex", halfIndex);
             cb.DispatchCompute(denoise, CSPass.TTFilter, halfDispatchSize.x, halfDispatchSize.y, 1);
 
-            cb.CopyTexture(normal, hisNormal0);
             cb.Blit(depth, hisDepth0);
 
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Variance", var0);

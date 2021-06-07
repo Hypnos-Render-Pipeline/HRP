@@ -9,6 +9,10 @@ $splice(Debug)
 
 HLSLPROGRAM
 
+#undef SAMPLE_DEPTH_TEXTURE
+#undef SAMPLE_DEPTH_TEXTURE_LOD
+#undef TRANSFORM_TEX
+
 $splice(PreGraphIncludes)
 $splice(PassKeywords)
 $splice(PassPragmas)

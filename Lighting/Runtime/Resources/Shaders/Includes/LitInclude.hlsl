@@ -1,8 +1,17 @@
 #ifndef LITINCLUDE_H_
 #define LITINCLUDE_H_
 
+#undef SAMPLE_DEPTH_TEXTURE
+#undef SAMPLE_DEPTH_TEXTURE_LOD
+#undef TRANSFORM_TEX
+
 #include "UnityShaderVariables.cginc"
 #include "UnityShaderUtilities.cginc"
+
+#undef SAMPLE_DEPTH_TEXTURE
+#undef SAMPLE_DEPTH_TEXTURE_LOD
+#undef TRANSFORM_TEX
+
 #define TRANSFORM_TEX(tex,name) (tex.xy * name##_ST.xy + name##_ST.zw)
 // Tranforms position from world to homogenous space
 inline float4 UnityWorldToClipPos(in float3 pos)

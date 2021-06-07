@@ -121,7 +121,7 @@ float3 L(float3 pos, float3 dir, inout int4 sampleState, out float3 nextPos, out
 
         float3 sl = PBS(PBS_FULLY, hitInfo, sunDir, sunColor, hitView);
             if (shadow && any(sl > 0)) {
-            sl *= TraceShadow_RTGI(hitPos, sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
+                sl *= TraceShadow_RTGI(hitPos, sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
         }
         res += sl;
     }
