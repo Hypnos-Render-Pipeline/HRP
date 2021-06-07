@@ -1462,26 +1462,7 @@ MonoBehaviour:
   opacity:
     overrideState: 0
     value: 1
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e6292b2c06870d4495f009f912b9600, type: 3}
-  m_Name: Main Camera Profile
-  m_EditorClassIdentifier: 
-  settings:
-  - {fileID: -6252544301746779903}
-  - {fileID: 53614427657840838}
-  - {fileID: -4158743442365478453}
-  - {fileID: -2554084799563925447}
-  - {fileID: -2773943248311506283}
-  - {fileID: -3114566147926877340}
---- !u!114 &53614427657840838
+--- !u!114 &-1790283808692082132
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1499,18 +1480,18 @@ MonoBehaviour:
     value: 1
   filtering:
     overrideState: 1
-    value: {x: 1.5084306, y: 99}
+    value: {x: 50, y: 95}
   minLuminance:
     overrideState: 1
-    value: -0.5
+    value: -0.6
   maxLuminance:
     overrideState: 1
-    value: 1.8
+    value: 1
   keyValue:
     overrideState: 0
-    value: 0.4
+    value: 1
   eyeAdaptation:
-    overrideState: 1
+    overrideState: 0
     value: 0
   speedUp:
     overrideState: 0
@@ -1518,3 +1499,22 @@ MonoBehaviour:
   speedDown:
     overrideState: 0
     value: 1
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e6292b2c06870d4495f009f912b9600, type: 3}
+  m_Name: Main Camera Profile
+  m_EditorClassIdentifier: 
+  settings:
+  - {fileID: -6252544301746779903}
+  - {fileID: -1790283808692082132}
+  - {fileID: -4158743442365478453}
+  - {fileID: -2554084799563925447}
+  - {fileID: -2773943248311506283}
+  - {fileID: -3114566147926877340}

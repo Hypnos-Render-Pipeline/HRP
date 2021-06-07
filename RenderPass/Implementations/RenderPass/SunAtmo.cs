@@ -231,14 +231,13 @@ namespace HypnosRenderPipeline.RenderPass
             {
                 bool LutSizeChanged = InitLut();
 
+                cb.SetGlobalFloat(PropertyIDs._Brightness, atmo.brightness);
+
                 atmo.GenerateLut(hash, cb, t_table, multiScatter_table, lum, dir, LutSizeChanged);
 
                 atmo.GenerateVolumeSkyTexture(cb, volumeScatter_table, sky_table, VolumeMaxDepth, context.frameIndex);
 
                 atmo.GenerateSunBuffer(cb, sunBuffer, sun.color * sun.radiance);
-
-                if (skyBox.connected)
-                    atmo.RenderAtmoToCubeMap(cb, skyBox);
 
                 int tempColor = Shader.PropertyToID("TempColor");
                 cb.GetTemporaryRT(tempColor, target.desc.basicDesc);
@@ -277,7 +276,7 @@ namespace HypnosRenderPipeline.RenderPass
                     his.filterMode = FilterMode.Point;
 
                     cb.SetGlobalTexture(TextureIDs._CloudMap, atmo.cloudMap == null ? Texture2D.whiteTexture : atmo.cloudMap);
-                    cb.SetGlobalTexture(TextureIDs._HighCloudMap, atmo.highCloudMap);
+                    cb.SetGlobalTexture(TextureIDs._HighCloudMap, atmo.highCloudMap == null ? Texture2D.blackTexture : atmo.highCloudMap);
                     cb.SetGlobalTexture(TextureIDs._SpaceMap, atmo.spaceMap);
 
                     if (atmo.quality == HRPAtmo.Quality.low)
@@ -428,7 +427,6 @@ namespace HypnosRenderPipeline.RenderPass
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._DownSampled_MinMax_Depth, TextureIDs._DownSampled_MinMax_Depth);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._History, his);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._SceneColorTex, tempColor);
-                        cb.SetComputeFloatParam(cloudCS, PropertyIDs._Brightness, atmo.brightness);
                         rgba16Desc.width = target_WH.x;
                         rgba16Desc.height = target_WH.y;
                         cb.GetTemporaryRT(TextureIDs._Cloud, rgba16Desc);
@@ -450,6 +448,8 @@ namespace HypnosRenderPipeline.RenderPass
                     }
                 }
 
+                if (skyBox.connected)
+                    atmo.RenderAtmoToCubeMap(cb, skyBox);
 
                 cb.ReleaseTemporaryRT(tempColor);
             }

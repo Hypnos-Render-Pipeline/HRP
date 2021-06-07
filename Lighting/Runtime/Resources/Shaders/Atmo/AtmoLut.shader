@@ -79,7 +79,7 @@ Shader "Hidden/AtmoLut"
                     float3 s = GetDir01(i.uv.x);
                     float3 x = float3(0, lerp(planet_radius, atmosphere_radius, i.uv.y), 0);
 
-                    return L2(x, s) * Fms(x, s);
+                    return L2(x, s) * (1 + Fms(x, s));
                 }
             ENDCG
         }
@@ -231,6 +231,7 @@ Shader "Hidden/AtmoLut"
 
                 #define T T_TAB
                 #include "../Includes/Atmo/Atmo.hlsl"
+                //#include "../Includes/Atmo/CloudMarching.hlsl"
 
                 int _RenderGround;
                 int _Slice;
@@ -264,14 +265,8 @@ Shader "Hidden/AtmoLut"
                     X_0(x, v, x_0);
 
                     float3 res = SkyBox(x, v, s) * _SunLuminance;
+                    //res += T_tab_fetch(x, v) * (1 - smoothstep(-0.05, 0, dot(normalize(x), _SunDir))) * Space(v) * _Multiplier;
 
-                    uint2 id = i.vertex.xy;
-                    int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
-                    int index = id.x % 4 + id.y % 4 * 4;
-                    float noise = hash12(id);
-                    if (noise * 16 > k[index]) {
-                        res += 0.1 / 255.;
-                    }
                     return res;
                 }
             ENDCG

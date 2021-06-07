@@ -7,6 +7,8 @@
 #pragma kernel LoadVolumeData
 #pragma kernel WriteCloudShadowMap
 
+float4 _Time;
+
 #define T T_TAB
 #include "../Includes/Atmo/CloudMarching.hlsl"
 
@@ -15,8 +17,6 @@ float4x4 _V, _V_Inv, _VP_Inv, _Last_VP;
 float4 _ZBufferParams;
 
 float4 _WH;
-
-float _Brightness;
 
 Texture2D _MotionTex; SamplerState sampler_MotionTex;
 Texture2D<float4> _SceneColorTex;
@@ -182,12 +182,11 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 
 	float3 present_point = p + v * cloud_dis;
 	float3 sunLight = Sunlight(present_point, _SunDir);
-	float3 ambd = Tu_L(p, _SunDir) * _SunLuminance;
-	float3 ambu = sunLight * 0.75 + SkyBox(present_point, normalize(present_point), _SunDir) * _SunLuminance * 2;
-	float3 amb = lerp(ambd, ambu, res.z * 0.7 + 0.3) * 1.5;
-	sunLight *= 5;
-
-	_Marching_Result_A[tile_id] = float4((res.x * sunLight + res.y * lerp(0.5, 1, res.z) * amb) * _Brightness, res.a);
+	float3 ambd = Tu_L(p, _SunDir) * _SunLuminance * 0.1;
+	float3 ambu = SkyBox(present_point, normalize(present_point), _SunDir) * _SunLuminance * (1 - res.z) * 3;
+	float3 amb = (lerp(ambd, ambu, res.z * 0.7 + 0.3) + sunLight * 0.5 * res.z) * 4;
+	
+	_Marching_Result_A[tile_id] = float4((res.x * sunLight + res.y * amb) * _Brightness, res.a);
 }
 
 groupshared float4 marching_Result[6][6];
