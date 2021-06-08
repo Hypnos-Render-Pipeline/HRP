@@ -105,6 +105,10 @@ float rescale01(float v, float a, float b) {
 	return (clamp(v, a, b) - a) / max(0.0001, b - a);
 }
 
+float3 rescale01(float3 v, float3 a, float3 b) {
+	return (clamp(v, a, b) - a) / max(0.0001, b - a);
+}
+
 float rescale10(float v, float a, float b) {
 	return 1 - (clamp(v, a, b) - a) / max(0.0001, b - a);
 }
@@ -131,12 +135,12 @@ float3 Space(float3 v) {
 }
 
 inline float4 HighCloud(const float3 p, const float3 v) {
-	float dis = IntersectSphere(p, v, float3(0, 0, 0), planet_radius + cloud_radi.y + 2000);
+	float dis = IntersectSphere(p, v, float3(0, 0, 0), planet_radius + cloud_radi.y + 100);
 
 	float3 hitP = p + dis * v;
 	float3 nom_p = normalize(hitP);
 
-	float data1 = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 200 + _Time.x * 0.02, 0, 0)).x;
+	float data1 = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 2000 + _Time.x * 0.02, 0, 0)).x;
 
 	float data2 = saturate(dis / 4000 - 1) * tex2Dlod(_HighCloudMap, float4(nom_p.xz * 100 + float2(-1, 1) * _Time.x * 0.01, 0, 0)).y;
 
@@ -284,7 +288,7 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 
 	}
 
-	return float3(final_cloud * HeightDensity(height_fraction, weather_data.y) * 0.05 * _CloudDensity * lerp(0.1, 1, weather_data.y), oh, lerp(1, 0.03, weather_data.z * _CloudDensity));
+	return float3(final_cloud * HeightDensity(height_fraction, weather_data.y) * 0.05 * _CloudDensity * lerp(0.1, 1, weather_data.y), oh, lerp(1, 0.01, weather_data.z * _CloudDensity));
 }
 
 #define Shading	\
@@ -310,11 +314,12 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	float light = energy;\
 	float msPhase = multiScatterPhase;\
 	sun += acc_response * msPhase * light * in_scatter_probability;\
-	amb += sample_sha.z * acc_response * lerp(0.2, 0.3 + 0.7 * smoothstep(0.2, 0.7, sample_sha.y), sunHeight) * lerp(1, in_scatter_probability, rescaledPdotS01);\
+	amb += sample_sha.z * acc_response * lerp(0, 0.3 + 0.7 * smoothstep(0.2, 0.7, sample_sha.y), sunHeight) * lerp(1, in_scatter_probability, rescaledPdotS01);\
 
 
-float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d = 9999999) {
+float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, out float cloud_occ, float d = 9999999) {
 	cloud_dis = 0;
+	cloud_occ = 1;
 	const float max_dis = lerp(8000, 24000, _Quality.w);
 	const float sample_num = _Quality.z;
 
@@ -351,24 +356,21 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 	d = min(d, dis);
 	dis = max_dis;
 
-	if (d < 0 || offset > 50000) return float4(0, 0, 0, 1);
+	if (d < 0) return float4(0, 0, 0, 1);
 
 	float3 s = _SunDir;
-	float3 s_t = normalize(cross(float3(0, -1, 0), s));
-	if (s_t.x < 0) s_t = -s_t;
-	float3 s_bt = cross(s, s_t);
 
 	float actual_sample_num = clamp(d / _Quality.x, sample_num * 0.2, sample_num);
-	actual_sample_num *= max(0.15, saturate(1 - (offset - 8000) / 28000));
-
-	float fade = saturate(1 - (offset - 8000) / 14000);
-
+	
+	float fade = clamp(1 - (offset - 2000) / 26000, 0.2, 1);
+	actual_sample_num *= fade;
 	float lod = (offset - 8000) / 14000 * 4;
 	
 	float sun = 0;
 	float amb = 0;
 	float trans = 1;
 	float2 av_dis = 0;
+	float2 av_occ = 0;
 	bool first_hit = true;
 	float2 hit_h = 0;
 	
@@ -448,6 +450,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 
 				hit_h += float2(sha.y * sha.z * response, response);
 				av_dis += float2(i * response, response);
+				av_occ += float2(sha.z * response, response);
 			}
 
 			if (trans <= alphaFallback) {
@@ -498,6 +501,7 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 
 				hit_h += float2(sha.y * sha.z * response, response);
 				av_dis += float2(i * response, response);
+				av_occ += float2(sha.z * response, response);
 			}
 			if (trans <= alphaFallback / 5) {
 				break;
@@ -513,10 +517,10 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, float d
 	float4 res = float4(sun, amb, 0, trans);
 
 	cloud_dis = av_dis.y != 0 ? start_index + (av_dis.x / max(0.0001, av_dis.y)) * stepLength + offset : 0;
-
-	fade = saturate(1 - (cloud_dis - 10000) / 40000);
-	res.xy *= fade;
-	res.a = 1 - rescale10(res.a, alphaFallback / 5, 1) * fade;
+	cloud_occ = av_occ.y != 0 ? (av_occ.x / max(0.0001, av_occ.y)) : 0;
+	//fade = saturate(1 - (cloud_dis - 10000) / 40000);
+	//res.xy *= fade;
+	res.a = 1 - rescale10(res.a, alphaFallback / 5, 1)/* * fade*/;
 	res.z = hit_h.y != 0 ? hit_h.x / hit_h.y : 0;
 
 	return res;

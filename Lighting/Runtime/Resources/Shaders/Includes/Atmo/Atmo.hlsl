@@ -291,7 +291,7 @@ const float3 T_tab(const float3 x, const float3 y) {
 }
 #endif
 
-const float3 J(const float3 y, const float3 v, const float3 s, const int sampleNum = 1) {
+const float3 J(const float3 y, const float3 v, const float3 s) {
 	float3 res = 0;
 
 	const float altitude = Altitude(y);
@@ -349,7 +349,7 @@ const float3 Scatter0(const float3 x, float3 x_0, const float3 s, const int dirS
 		const float layered_rnd = float(i /*+ SAMPLE1D*/) / dirSampleNum;
 		const float3 y = lerp(x, x_0, layered_rnd);
 		const float3 trans = T(x, y);
-		res += trans * J(y, v, s, 1);
+		res += trans * J(y, v, s);
 	}
 	res *= dis / dirSampleNum;
 
@@ -357,16 +357,13 @@ const float3 Scatter0(const float3 x, float3 x_0, const float3 s, const int dirS
 }
 
 const float3 Scatter1234_(const float3 x, const float3 s) {
-	const float altitude = Altitude(x);
-	const float3 beta_R = Beta_R_S(altitude);
-	const float3 beta_M = Beta_M_S(altitude);
 
 	float v = Altitude(x) / atmosphere_thickness;
 
 	float u = (dot(s, normalize(x)) + 1) / 2;
 	
 	float3 scatter = tex2Dlod(MS_table, float4(u, v, 0, 0)).xyz;
-	return (beta_R + beta_M) * scatter;
+	return scatter;
 }
 
 const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const int dirSampleNum = 128, bool includeTu = true) {
@@ -374,13 +371,12 @@ const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const
 	const float dis = distance(x, x_0);
 
 	float3 res = 0;
-	//return P_R(dot(s, v));
 	for (int i = 0; i < dirSampleNum; i++)
 	{
 		const float layered_rnd = float(i + SAMPLE1D) / dirSampleNum;
 		const float3 y = lerp(x, x_0, layered_rnd);
 		const float3 trans = T(x, y);
-		res += trans * (J(y, v, s, 1) + Scatter1234_(y, s) * _MultiScatterStrength);
+		res += trans * (J(y, v, s) + Scatter1234_(y, s) * _MultiScatterStrength);
 	}
 	res *= dis / dirSampleNum;
 
@@ -393,7 +389,7 @@ const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const
 	return res;
 }
 
-const float3 Lf(const float3 x, float3 x_0, const float3 s, const int dirSampleNum = 128) {
+const float3 Lf(const float3 x, float3 x_0, const int dirSampleNum = 128) {
 	x_0 = lerp(x, x_0, 0.99);
 	const float dis = distance(x, x_0);
 	const float3 v = normalize(x_0 - x);
@@ -417,21 +413,24 @@ const float3 Lf(const float3 x, float3 x_0, const float3 s, const int dirSampleN
 	return res;
 }
 
-const float3 Fms(const float3 x, const float3 s, const int sampleNum = 128) {
+const float3 Fms(const float3 x, const int sampleNum = 64) {
 	float3 res = 0;
 	for (int i = 0; i < sampleNum; i++)
 	{
 		float3 dir = UniformSampleSphere(Roberts2(i));
 		float3 x_0;
 		bool ground = X_0(x, dir, x_0);
-		res += Lf(x, x_0, s, 16);
+		res += Lf(x, x_0, 32);
 	}
-	res = res / sampleNum / (4 * pi);
+	res = res / sampleNum;
 	return 1 / (1 - res);
 }
 
 const float3 L2(const float3 x, const float3 s, const int sampleNum = 128) {
 	float3 res = 0;
+	const float altitude = Altitude(x);
+	const float3 beta_R = Beta_R_S(altitude);
+	const float3 beta_M = Beta_M_S(altitude);
 	for (int i = 0; i < sampleNum; i++)
 	{
 		float3 dir = UniformSampleSphere(Roberts2(i));
@@ -440,7 +439,7 @@ const float3 L2(const float3 x, const float3 s, const int sampleNum = 128) {
 		res += Scatter0(x, x_0, s, 16);
 		if (ground) res += T_tab_fetch(x, dir) * Tu_L(x_0, s);
 	}
-	res = res / sampleNum;
+	res = res / sampleNum * (beta_R + beta_M) ;
 	return res;
 }
 

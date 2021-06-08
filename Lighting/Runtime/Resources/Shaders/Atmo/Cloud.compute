@@ -178,15 +178,28 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 	depth = lerp(depth, 999999, far_clip_fade);
 
 	float cloud_dis;
-	float4 res = CloudRender(wcpos, p, v, cloud_dis, depth);
+	float av_occ;
+	float4 res = CloudRender(wcpos, p, v, cloud_dis, av_occ, depth);
 
-	float3 present_point = p + v * cloud_dis;
-	float3 sunLight = Sunlight(present_point, _SunDir);
-	float3 ambd = Tu_L(p, _SunDir) * _SunLuminance * 0.1;
-	float3 ambu = SkyBox(present_point, normalize(present_point), _SunDir) * _SunLuminance * (1 - res.z) * 3;
-	float3 amb = (lerp(ambd, ambu, res.z * 0.7 + 0.3) + sunLight * 0.5 * res.z) * 4;
-	
-	_Marching_Result_A[tile_id] = float4((res.x * sunLight + res.y * amb) * _Brightness, res.a);
+	float3 cloud = 0;
+
+	if (cloud_dis != 0) {
+
+		float3 present_point = p + v * cloud_dis;
+		float3 sunLight = Sunlight(present_point, _SunDir);
+		float3 ambd = Tu_L(p, _SunDir) * _SunLuminance * 0.1;
+		float3 sky = SkyBox(present_point, normalize(present_point), _SunDir) * _SunLuminance;
+		float3 ambu = sky * (1 - res.z) * 3;
+		float3 amb = (lerp(ambd, ambu, res.z * 0.7 + 0.3) + sunLight * 0.5 * res.z) * 4;
+		cloud = (res.x * sunLight + res.y * amb) * _Brightness;
+
+		float3 fog = SkyBox(p, v, _SunDir) * _SunLuminance * av_occ;
+		float3 trans = T(p, present_point);
+		trans = smoothstep(0.1, 0.97, trans);
+		cloud = cloud * trans + fog * (1 - trans) * (1 - res.a);
+	}
+
+	_Marching_Result_A[tile_id] = float4(cloud, res.a);
 }
 
 groupshared float4 marching_Result[6][6];

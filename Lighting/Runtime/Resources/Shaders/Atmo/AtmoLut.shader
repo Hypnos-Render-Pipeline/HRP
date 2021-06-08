@@ -79,7 +79,7 @@ Shader "Hidden/AtmoLut"
                     float3 s = GetDir01(i.uv.x);
                     float3 x = float3(0, lerp(planet_radius, atmosphere_radius, i.uv.y), 0);
 
-                    return L2(x, s) * (1 + Fms(x, s));
+                    return L2(x, s) * Fms(x);
                 }
             ENDCG
         }
@@ -142,7 +142,7 @@ Shader "Hidden/AtmoLut"
                         X_0(x, v, x_0);
                     }
 
-                    float3 res = Scatter(x, x_0, v, s, 32, _RenderGround);// *_SunLuminance;
+                    float3 res = Scatter(x, x_0, v, s, 32, _RenderGround);// _SunLuminance;
                     return res * _Multiplier;
                 }
             ENDCG
