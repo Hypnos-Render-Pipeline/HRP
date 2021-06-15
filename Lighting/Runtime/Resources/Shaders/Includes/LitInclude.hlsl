@@ -6,39 +6,46 @@
 #undef TRANSFORM_TEX
 
 #include "UnityShaderVariables.cginc"
-#include "UnityShaderUtilities.cginc"
 
 #undef SAMPLE_DEPTH_TEXTURE
 #undef SAMPLE_DEPTH_TEXTURE_LOD
 #undef TRANSFORM_TEX
 
+float4x4 _V, _V_Inv;
+float4x4 _P, _P_Inv;
+float4x4 _VP, _VP_, _VP_Inv;
+float4x4 _Last_VP, _Last_VP_Inv;
+
 #define TRANSFORM_TEX(tex,name) (tex.xy * name##_ST.xy + name##_ST.zw)
 // Tranforms position from world to homogenous space
 inline float4 UnityWorldToClipPos(in float3 pos)
 {
-	return mul(UNITY_MATRIX_VP, float4(pos, 1.0));
+	return mul(_VP, float4(pos, 1.0));
 }
 
 // Tranforms position from view to homogenous space
 inline float4 UnityViewToClipPos(in float3 pos)
 {
-	return mul(UNITY_MATRIX_P, float4(pos, 1.0));
+	return mul(_P, float4(pos, 1.0));
 }
 
 // Tranforms position from object to camera space
 inline float3 UnityObjectToViewPos(in float3 pos)
 {
-	return mul(UNITY_MATRIX_V, mul(unity_ObjectToWorld, float4(pos, 1.0))).xyz;
+	return mul(_V, mul(unity_ObjectToWorld, float4(pos, 1.0))).xyz;
 }
 inline float3 UnityObjectToViewPos(float4 pos) // overload for float4; avoids "implicit truncation" warning for existing shaders
 {
 	return UnityObjectToViewPos(pos.xyz);
 }
-
+inline float4 UnityObjectToClipPos(in float3 pos)
+{
+	return mul(_VP_, mul(unity_ObjectToWorld, float4(pos, 1.0)));
+}
 // Tranforms position from world to camera space
 inline float3 UnityWorldToViewPos(in float3 pos)
 {
-	return mul(UNITY_MATRIX_V, float4(pos, 1.0)).xyz;
+	return mul(_V, float4(pos, 1.0)).xyz;
 }
 
 // Transforms direction from object to world space
@@ -142,11 +149,6 @@ inline float4 ComputeScreenPos(float4 pos) {
 #include "./LTCLight.hlsl"
 #include "./PBS.hlsl"
 #include "./Atmo/Sun.hlsl"
-
-float4x4 _V,		_V_Inv;
-float4x4 _P,		_P_Inv;
-float4x4 _VP,		_VP_Inv;
-float4x4 _Last_VP,	_Last_VP_Inv;
 
 struct VertexInfo {
 	float3 oOffset;

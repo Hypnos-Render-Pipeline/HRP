@@ -34,7 +34,10 @@ namespace HypnosRenderPipeline.RenderPass
                 context.commandBuffer.GetTemporaryRT(tempTarget, target.desc.basicDesc);
                 context.commandBuffer.SetGlobalTexture("_CameraColorTexture", target);
                 context.commandBuffer.SetGlobalTexture("_CameraDepthTexture", depth);
-                context.commandBuffer.SetGlobalTexture("_CameraMotionVectorsTexture", motion);
+                if (motion.connected)
+                    context.commandBuffer.SetGlobalTexture("_CameraMotionVectorsTexture", motion);
+                else
+                    context.commandBuffer.SetGlobalTexture("_CameraMotionVectorsTexture", Texture2D.blackTexture);
                 m_PostProcessRenderContext.Reset();
                 m_PostProcessRenderContext.camera = context.camera;
                 m_PostProcessRenderContext.source = target;

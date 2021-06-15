@@ -161,7 +161,9 @@ void Diffuse()
                             0,
                             _NormalTex[fullResIndex],
                             0,
-                            1);
+                            _AOTex[fullResIndex]);
+
+    pos += info.gnormal * 0.01f;
 
 	int4 sampleState = int4(dispatchIdx, _Clock % 32, 0);
     

@@ -32,8 +32,8 @@ Shader "Hidden/CalculateMotion"
             SamplerState sampler_point_clamp;
 
             float4x4 _V_Inv;
-            float4x4 _VP_Inv;
-            float4x4 _Last_VP;
+            float4x4 _VP_Inv_NoJitter;
+            float4x4 _Last_VP_NoJitter;
 
             float2 frag (v2f i) : SV_Target
             {
@@ -43,10 +43,10 @@ Shader "Hidden/CalculateMotion"
                 float4 vpoint = float4(i.uv * 2 - 1, depth, 1);
 
                 float4 wpoint;
-                wpoint = mul(_VP_Inv, vpoint); wpoint /= wpoint.w;
+                wpoint = mul(_VP_Inv_NoJitter, vpoint); wpoint /= wpoint.w;
                 wpoint.xyz -= speed;
 
-                float4 lvpoint = mul(_Last_VP, wpoint);
+                float4 lvpoint = mul(_Last_VP_NoJitter, wpoint);
 
                 lvpoint /= lvpoint.w;
                 lvpoint = (lvpoint + 1) * 0.5;

@@ -17,6 +17,7 @@ namespace HypnosRenderPipeline
         class PerCameraData
         {
             public Matrix4x4 lastVP;
+            public Matrix4x4 lastVP_nojittered;
             public int clock;
         }
 
@@ -153,14 +154,19 @@ namespace HypnosRenderPipeline
                     cam.TryGetCullingParameters(out defaultCullingParams);
                     rc.defaultCullingResult = cb.Cull(ref defaultCullingParams);
 
-                    Matrix4x4 v = cam.worldToCameraMatrix, p = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false);
+                    Matrix4x4 v = cam.worldToCameraMatrix, p = GL.GetGPUProjectionMatrix(cam.projectionMatrix, false), np = GL.GetGPUProjectionMatrix(cam.nonJitteredProjectionMatrix, false);
                     cb.SetGlobalMatrix("_V", v);
                     cb.SetGlobalMatrix("_P", p);
+                    cb.SetGlobalMatrix("_P_NoJitter", np);
                     cb.SetGlobalMatrix("_V_Inv", cam.cameraToWorldMatrix);
                     cb.SetGlobalMatrix("_P_Inv", p.inverse);
                     var vp = p * v;
+                    var vpn = np * v;
                     cb.SetGlobalMatrix("_VP", vp);
+                    cb.SetGlobalMatrix("_VP_NoJitter", vpn);
+                    cb.SetGlobalMatrix("_VP_", GL.GetGPUProjectionMatrix(cam.projectionMatrix, true) * v);
                     cb.SetGlobalMatrix("_VP_Inv", vp.inverse);
+                    cb.SetGlobalMatrix("_VP_Inv_NoJitter", vpn.inverse);
                     if (clock.ContainsKey(cameraId))
                     {
                         cb.SetGlobalInt("_Clock", clock[cameraId].clock++);
@@ -175,7 +181,10 @@ namespace HypnosRenderPipeline
                     }
                     cb.SetGlobalMatrix("_Last_VP", clock[cameraId].lastVP);
                     cb.SetGlobalMatrix("_Last_VP_Inv", clock[cameraId].lastVP.inverse);
+                    cb.SetGlobalMatrix("_Last_VP_NoJitter", clock[cameraId].lastVP_nojittered);
+                    cb.SetGlobalMatrix("_Last_VP_Inv_NoJitter", clock[cameraId].lastVP_nojittered.inverse);
                     clock[cameraId].lastVP = vp;
+                    clock[cameraId].lastVP_nojittered = vpn;
                     RenderGraphResourcesPool pool;
                     if (!resourcesPool.ContainsKey(cameraId))
                     {
