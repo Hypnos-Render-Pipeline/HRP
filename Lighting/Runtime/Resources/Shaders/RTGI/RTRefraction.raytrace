@@ -12,6 +12,7 @@ RWTexture2D<float4> RenderTarget;
 float4x4 _VP_Inv, _VP, _V, _P;
 int _Clock;
 
+int _MaxDepth;
 int _UseRTShadow;
 
 float4 _WH;
@@ -22,9 +23,7 @@ Texture2D<float> _IndexTex;
 Texture2D<float2> _MotionTex;
 TextureCube<float3> _SkyBox;
 
-SamplerState point_clamp_sampler;
 SamplerState linear_clamp_sampler;
-SamplerState trilinear_clamp_sampler;
 
 RWTexture2D<float4> _TempResult;
 
@@ -37,7 +36,7 @@ float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState
     float3 res = 0;
 
     if (gbuffer.miss) {
-        res += _SkyBox.SampleLevel(trilinear_clamp_sampler, dir, 0);
+        res += _SkyBox.SampleLevel(linear_clamp_sampler, dir, 0);
     }
     else {
         res = gbuffer.emission;
@@ -155,8 +154,10 @@ void Refraction()
     GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, next_dir);
     pos += next_dir * gbuffer.dis;
     
-    int max_depth = 4;
+    float3 weight = info.diffuse * info.transparent * (1 - PhysicsFresnel(info.index, view, info.normal));
+    int max_depth = _MaxDepth;
     while (!gbuffer.miss && gbuffer.transparent != 0 && max_depth--) {
+        weight *= gbuffer.albedo * gbuffer.transparent;
 
         float3 viewDir = -next_dir;
         float3 n = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - gbuffer.smoothness));
@@ -169,7 +170,6 @@ void Refraction()
     
         float r_thre = gbuffer.front ? 0 : PhysicsFresnel(1.0 / IOR, viewDir, gbuffer.normal);
 	    if (all_reflect) {
-
 		    next_dir = reflect(-viewDir, n);
 	    }
 
@@ -179,6 +179,6 @@ void Refraction()
 
     float3 res = L(gbuffer, pos, next_dir, sampleState, _UseRTShadow);
 
-    _TempResult[dispatchIdx] = _SceneColor[dispatchIdx] + float4(res * info.diffuse * info.transparent * (1 - PhysicsFresnel(info.index, view, info.normal)), 0);
+    _TempResult[dispatchIdx] = _SceneColor[dispatchIdx] + float4(res * weight, 0);
     return;
 }

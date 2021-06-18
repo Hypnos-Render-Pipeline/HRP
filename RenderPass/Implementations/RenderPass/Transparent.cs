@@ -45,6 +45,9 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In)]
         public TexturePin skybox = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default) { dimension = TextureDimension.Cube }, sizeScale: SizeScale.Custom);
 
+        [Range(2, 16)]
+        public int maxDepth = 4;
+
         public bool useRTShadow = false;
 
         ComputeBuffer blockBuffer;
@@ -82,7 +85,8 @@ namespace HypnosRenderPipeline.RenderPass
 
             cb.SetGlobalVector("_WH", new Vector4(wh.x, wh.y, 1.0f / wh.x, 1.0f / wh.y));
             cb.SetGlobalInt("_UseRTShadow", useRTShadow ? 1 : 0);
-
+            cb.SetGlobalInt("_MaxDepth", maxDepth);
+            
 
             cb.SetGlobalTexture("_Sobol", bnsLoader.tex_sobol);
             cb.SetGlobalTexture("_ScramblingTile", bnsLoader.tex_scrambling);
