@@ -43,7 +43,7 @@ namespace HypnosRenderPipeline
                         break;
                     case HRPLightType.Point:
                         s.b.x = light.range / 10;
-                        s.b.y = 0.01f;
+                        s.b.y = 0;
                         break;
                     case HRPLightType.Sphere:
                         s.b.x = light.range / 10;

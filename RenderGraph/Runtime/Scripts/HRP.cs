@@ -90,6 +90,14 @@ namespace HypnosRenderPipeline
 
             var rc = new RenderContext() { context = context };
 
+            var acc = RTRegister.AccStruct();
+#if UNITY_2020_2_OR_NEWER
+            acc.Build();
+#else
+            acc.Update();
+#endif
+            rc.defaultAcc = acc;
+
             CommandBuffer cb = new CommandBuffer();
 
             BeginFrameRendering(context, cameras);

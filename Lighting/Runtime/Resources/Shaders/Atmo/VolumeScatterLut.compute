@@ -84,7 +84,7 @@ void WriteSunBuffer(uint3 id : SV_DispatchThreadID)
 {
     SunLight sl;
     sl.dir = _SunDir;
-    sl.color = _SunColor * Sunlight(float3(0, planet_radius + max(_WorldSpaceCameraPos.y, 95), 0), sl.dir);
+    sl.color = Sunlight(float3(0, planet_radius + max(_WorldSpaceCameraPos.y, 95), 0), sl.dir);
     sl.angle = _SunAngle;
     _Sun_[0] = sl;
 }

@@ -240,7 +240,7 @@ RWStructuredBuffer<uint> _NextBlock;
 void SFilter_(uint2 id, uint2 groupThreadID, uint2 groupID, bool var = false) {
     //return;
     uint2 fullResIndex = half2FullIndex(id);
-    float3 diffuse = _BaseColorTex[fullResIndex].xyz;
+    float3 diffuse = _BaseColorTex[fullResIndex].xyz * (1 - _BaseColorTex[fullResIndex].w);
     float4 gi = _Result[id];
     float4 di = _SceneColor[fullResIndex];
     float blur = clamp(gi.w / 150, 0, 0.8);
@@ -499,7 +499,7 @@ void FinalSynthesis(uint2 id : SV_DispatchThreadID)
     float4 res = _History[id];
     float4 sceneColor = _SceneColor[id];
     sceneColor.a = sceneColor.a != 0;
-    _Result[id] = sceneColor + sceneColor.a * float4(UnToneMap(res.xyz * _BaseColorTex[id].xyz), 0);
+    _Result[id] = sceneColor + sceneColor.a * float4(UnToneMap(res.xyz ) * _BaseColorTex[id].xyz * (1 - _BaseColorTex[id].w), 0);
 }
 
 

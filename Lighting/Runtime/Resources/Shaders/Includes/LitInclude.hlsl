@@ -214,7 +214,7 @@ void GBuffer_frag(Lit_v2f i, out fixed4 target0 : SV_Target0, out fixed4 target1
 
 	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent);
 
-	Encode2GBuffer(info.diffuse, 1 - info.smoothness, info.specular, info.normal, info.emission, 
+	Encode2GBuffer(info.diffuse, 0, 1 - info.smoothness, info.specular, info.normal, info.emission, 
 				i.normal, info.diffuseAO_specAO.x, target0, target1, target2, target3, target4
 #if _IRIDESCENCE
 		, true
@@ -227,75 +227,18 @@ Texture2D _ScreenColor;
 SamplerState trilinear_clamp_sampler;
 float4 _ScreenParameters;
 
-float4 Transparent_frag(Lit_v2f i) : SV_Target{
+void Transparent_frag(Lit_v2f i, out fixed4 target0 : SV_Target0, out fixed4 target1 : SV_Target1, out fixed4 target2 : SV_Target2, out fixed4 target3 : SV_Target3, out fixed4 target4 : SV_Target4, out fixed target5 : SV_Target5) {
 
 	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent);
 
-	float3 pos = i.wpos;
-	float3 camPos = _V_Inv._m03_m13_m23;
-	float3 view = normalize(camPos - pos);
-	float2 screenUV = i.spos.xy / i.spos.w;
+	Encode2GBuffer(info.diffuse, info.transparent, 1 - info.smoothness, info.specular, info.normal, info.emission,
+		i.normal, info.diffuseAO_specAO.x, info.index,
+		target0, target1, target2, target3, target4, target5
+#if _IRIDESCENCE
+		, true
+#endif
+	);
 
-	float3 res = 0;
-
-	BegineLocalLightsLoop(screenUV, pos, _VP_Inv);
-	{
-		res += PBS(PBS_FULLY, info, light.dir, light.radiance, view);
-	}
-	EndLocalLightsLoop;
-
-	res += PBS(PBS_FULLY, info, sunDir, sunColor, view);
-
-	for (int i = 0; i < _AreaLightCount; i++)
-	{
-		Light areaLight = _AreaLightBuffer[i];
-
-		float3 lightZ = areaLight.mainDirection_id.xyz;
-		float xz = sqrt(1 - areaLight.geometry.z * areaLight.geometry.z);
-		float3 lightX = float3(xz * cos(areaLight.geometry.w), areaLight.geometry.z, xz * sin(areaLight.geometry.w));
-		float3 lightY = cross(lightZ, lightX);
-
-		if (areaLight.radiance_type.w == TUBE) {
-			res += TubeLight(info, areaLight.radiance_type.xyz,
-								areaLight.position_range.xyz,
-								float4(lightZ, areaLight.geometry.x * 2),
-								float4(lightX, areaLight.geometry.y * 2),
-								pos, view);
-		}
-		else if (areaLight.radiance_type.w == QUAD) {
-			res += QuadLight(info, areaLight.radiance_type.xyz,
-								areaLight.position_range.xyz,
-								float4(-lightX, areaLight.geometry.x),
-								float4(lightY, areaLight.geometry.y),
-								pos, view);
-		}
-		else if (areaLight.radiance_type.w == DISC) {
-			res += DiscLight(info, areaLight.radiance_type.xyz,
-								areaLight.position_range.xyz,
-								float4(-lightX, areaLight.geometry.x * 2),
-								float4(lightY, areaLight.geometry.x * 2),
-								pos, view);
-		}
-	}
-
-	res += info.emission;
-
-	float3 result = 0;
-	float3 F = FresnelTerm(info.specular, dot(view, info.normal));
-	float3 trans = info.diffuse * info.transparent * (1 - F);
-
-	if (info.index != 1) {
-		float3 offset = refract(-view, info.normal, 1 / info.index);
-		offset = 2 * offset + view;
-		float4 p = mul(UNITY_MATRIX_VP, float4(pos + offset, 1));
-		p.xy /= p.w;
-		p.xy = p.xy / 2 + 0.5;
-		p.y = 1 - p.y;
-		float lod = lerp(0, 4, min(1, (info.index - 1) * 4) * (1 - info.smoothness));
-		return float4(res + _ScreenColor.SampleLevel(trilinear_clamp_sampler, p.xy, lod) * trans, 1);
-	}
-	else
-		return float4(res + _ScreenColor.SampleLevel(trilinear_clamp_sampler, screenUV, 0) * trans, 1);
 }
 
 #endif

@@ -194,10 +194,10 @@ Shader "HRP/Lit"
 		{
 			Name "Transparent"
 			Tags { "LightMode" = "Transparent" }
-			Blend off
-			ZTest on
-			ZWrite on
-			Cull back
+			//Blend off
+			//ZTest on
+			//ZWrite on
+			//Cull back
 			HLSLPROGRAM
 			#pragma vertex			Lit_vert
 			#pragma fragment		Transparent_frag
@@ -574,7 +574,7 @@ Shader "HRP/Lit"
 				//	IgnoreHit(); return;
 				//}
 				rayIntersection.data1 = 0;
-				AcceptHitAndEndSearch();
+				//AcceptHitAndEndSearch();
 			}
 
 			ENDCG

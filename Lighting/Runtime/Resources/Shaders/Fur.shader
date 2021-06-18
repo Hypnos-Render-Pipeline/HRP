@@ -389,7 +389,7 @@ Shader "HRP/Fur"
 				//	IgnoreHit(); return;
 				//}
 				rayIntersection.data1 = 0;
-				AcceptHitAndEndSearch();
+				//AcceptHitAndEndSearch();
 			}
 
 			ENDCG

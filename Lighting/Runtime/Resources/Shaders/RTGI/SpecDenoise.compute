@@ -213,8 +213,8 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
         float4 hc = _History.SampleLevel(linear_clamp_sampler, prevUV, 0);
 
         float mix_rate = (oc.w * hc.w == 0) ? 0 : lerp(0.97, 0.9, smooth * smooth);
-        mix_rate *= weight;
         mix_rate = clamp(lerp(mix_rate, max(0, mix_rate - 0.05), min(1, length(_MotionTex[id]) * 100)), 0.7, 0.99);
+        mix_rate *= weight;
         float cut = lerp(0.5, 0.1, min(1, length(_MotionTex[id]) * 100));
         hc = clamp(hc, minC - cut, maxC + cut);
         float4 mixed = lerp(oc, hc, mix_rate);

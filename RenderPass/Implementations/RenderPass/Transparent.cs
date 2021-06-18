@@ -1,4 +1,6 @@
+using HypnosRenderPipeline.Tools;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -6,6 +8,7 @@ namespace HypnosRenderPipeline.RenderPass
 {
     public class Transparent : BaseRenderPass
     {
+
         [NodePin(PinType.In, true)]
         public BufferPin<LightStructGPU> lightBuffer = new BufferPin<LightStructGPU>(1);
 
@@ -15,109 +18,89 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.In)]
         public LightListPin lights = new LightListPin();
 
-        [NodePin(PinType.InOut)]
-        public BufferPin<LightStructGPU> areaLightBuffer = new BufferPin<LightStructGPU>(1);
-
         [NodePin(PinType.In)]
-        [Tooltip("If has, use filtered screen color for refraction.")]
-        public TexturePin filterdScreenColor = new TexturePin(new RenderTextureDescriptor(1, 1));
+        public BufferPin<SunAtmo.SunLight> sun = new BufferPin<SunAtmo.SunLight>(1);
 
-        [NodePin(PinType.InOut)]
+        [NodePin(PinType.InOut, true)]
         public TexturePin target = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGBHalf));
 
-        [NodePin(PinType.In)]
+        [NodePin(PinType.In, true)]
         public TexturePin depth = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Depth, 24), colorCastMode: ColorCastMode.Fixed);
 
-        [Tooltip("Enable Area light for transparent objects are more expensive than opaque objects, please remember that.")]
-        public bool renderAreaLight = true;
+        [NodePin(PinType.In)]
+        public TexturePin motion = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RGFloat, 0), colorCastMode: ColorCastMode.Fixed);
 
-        static public int tempScreenColor = Shader.PropertyToID("_ScreenColor");
+        //[NodePin(PinType.In, true)]
+        //public TexturePin diffuse = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
-        static Texture2D TransformInv_Diffuse, TransformInv_Specular, AmpDiffAmpSpecFresnel, DiscClip;
+        [NodePin(PinType.In, true)]
+        public TexturePin specular = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
-        List<LightStructGPU> lightBufferCPU = new List<LightStructGPU>();
+        [NodePin(PinType.In, true)]
+        public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
-        public Transparent()
+        [NodePin(PinType.In)]
+        public TexturePin ao = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
+
+        [NodePin(PinType.In)]
+        public TexturePin skybox = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default) { dimension = TextureDimension.Cube }, sizeScale: SizeScale.Custom);
+
+        public bool useRTShadow = false;
+
+        ComputeBuffer blockBuffer;
+        ComputeBuffer blockBuffer_;
+        ComputeBuffer argsBuffer;
+        ComputeBuffer argsBuffer_;
+        int[] clearArray = new int[3] { 0, 1, 1 };
+
+        static RTShaderWithName rtShader = new RTShaderWithName("Shaders/RTGI/RTRefraction");
+
+        static BNSLoader bnsLoader = BNSLoader.instance;
+
+        List<LightStructGPU> lightBufferCPU;
+
+        struct CSPass
         {
-            AmpDiffAmpSpecFresnel = Resources.Load<Texture2D>("Textures/LTC Lut/AmpDiffAmpSpecFresnel");
-            TransformInv_Diffuse = Resources.Load<Texture2D>("Textures/LTC Lut/TransformInv_DisneyDiffuse");
-            TransformInv_Specular = Resources.Load<Texture2D>("Textures/LTC Lut/TransformInv_GGX");
-            DiscClip = Resources.Load<Texture2D>("Textures/LTC Lut/DiscClip");
+            public static int DownSampleDepth = 0;
+            public static int TTFilter = 1;
+            public static int SFilter = 2;
+            public static int SFilterIndirect = 3;
+            public static int UpSample = 4;
+            public static int FinalSynthesis = 5;
         }
 
         public override void Execute(RenderContext context)
         {
-            bool releaseTemp = false;
-            if (filterdScreenColor.connected)
-            {
-                context.commandBuffer.SetGlobalTexture(tempScreenColor, filterdScreenColor);
-            }
-            else if (target.connected)
-            {
-                var desc = target.desc.basicDesc;
-                desc.useMipMap = true;
-                desc.autoGenerateMips = true;
-                releaseTemp = true;
-                context.commandBuffer.GetTemporaryRT(tempScreenColor, desc, FilterMode.Trilinear);
-                context.commandBuffer.Blit(target, tempScreenColor);
-                context.commandBuffer.SetGlobalTexture(tempScreenColor, tempScreenColor);
-            }
-            else
-            {
-                context.commandBuffer.SetGlobalTexture(tempScreenColor, Texture2D.blackTexture);
-            }
+            var cb = context.commandBuffer;
 
-            context.commandBuffer.SetRenderTarget(color: target, depth: depth);
-            context.commandBuffer.ClearRenderTarget(!depth.connected, !target.connected, Color.clear);
+            cb.SetGlobalTexture("_SceneColor", target);
+            cb.SetGlobalTexture("_HiZDepthTex", depth);
 
-            bool area = false;
-            if (renderAreaLight)
-            {
-                if (lights.connected) {
-                    area = true;
-                    if (!areaLightBuffer.connected) {
-                        areaLightBuffer.ReSize(lights.handle.areas.Count);
-                        lightBufferCPU.Clear();
-                        foreach (var light in lights.handle.areas)
-                        {
-                            lightBufferCPU.Add(light.lightStructGPU);
-                        }
-                        context.commandBuffer.SetBufferData(areaLightBuffer, lightBufferCPU);
-                    }
-                }
-                else if (!areaLightBuffer.connected) {
-                    Debug.Log("Area light is enabled for transparent object, but pin \"lights\" and \"areaLightBuffer\" both are not connected.");
-                }
-                else {
-                    area = true;
-                }
+            cb.SetGlobalTexture("_SkyBox", skybox);
 
-                if (area)
-                {
-                    context.commandBuffer.SetGlobalTexture("_AmpDiffAmpSpecFresnel", AmpDiffAmpSpecFresnel);
-                    context.commandBuffer.SetGlobalTexture("_TransformInv_Diffuse", TransformInv_Diffuse);
-                    context.commandBuffer.SetGlobalTexture("_TransformInv_Specular", TransformInv_Specular);
-                    context.commandBuffer.SetGlobalTexture("_DiscClip", DiscClip);
+            int2 wh = new int2(target.desc.basicDesc.width, target.desc.basicDesc.height);
 
-                    context.commandBuffer.SetGlobalTexture("_LightDiffuseTex", Texture2D.whiteTexture);
-                    context.commandBuffer.SetGlobalTexture("_LightSpecTex", Texture2D.whiteTexture);
+            cb.SetGlobalVector("_WH", new Vector4(wh.x, wh.y, 1.0f / wh.x, 1.0f / wh.y));
+            cb.SetGlobalInt("_UseRTShadow", useRTShadow ? 1 : 0);
 
-                    context.commandBuffer.SetGlobalBuffer("_AreaLightBuffer", areaLightBuffer);
-                }
-            }
-            context.commandBuffer.SetGlobalInt("_AreaLightCount", area ? areaLightBuffer.desc : 0);
 
-            context.context.ExecuteCommandBuffer(context.commandBuffer);
-            context.commandBuffer.Clear();
+            cb.SetGlobalTexture("_Sobol", bnsLoader.tex_sobol);
+            cb.SetGlobalTexture("_ScramblingTile", bnsLoader.tex_scrambling);
+            cb.SetGlobalTexture("_RankingTile", bnsLoader.tex_rankingTile);
 
-            var a = new DrawingSettings(new ShaderTagId("Transparent"), new SortingSettings(context.camera) { criteria = SortingCriteria.CommonTransparent });
-            var b = FilteringSettings.defaultValue;
-            b.renderQueueRange = RenderQueueRange.transparent;
+            int tempRef = Shader.PropertyToID("_TempRefraction_");
+            var desc = target.desc.basicDesc;
+            desc.enableRandomWrite = true;
+            cb.GetTemporaryRT(tempRef, desc);
 
-            context.context.DrawRenderers(context.defaultCullingResult, ref a, ref b);
+            cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", context.defaultAcc);
+            cb.SetRayTracingShaderPass(rtShader, "RTGI");
+            cb.SetRayTracingTextureParam(rtShader, "_TempResult", tempRef);
+            cb.DispatchRays(rtShader, "Refraction", (uint)desc.width, (uint)desc.height, 1, context.camera);
 
-            if (releaseTemp)
-                context.commandBuffer.ReleaseTemporaryRT(tempScreenColor);
+            cb.CopyTexture(tempRef, target);
+
+            cb.ReleaseTemporaryRT(tempRef);
         }
     }
 }

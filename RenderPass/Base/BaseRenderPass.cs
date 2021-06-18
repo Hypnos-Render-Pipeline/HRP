@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
 using System.Collections.Generic;
+using UnityEngine.Experimental.Rendering;
 
 namespace HypnosRenderPipeline.RenderPass
 {
@@ -52,6 +53,7 @@ namespace HypnosRenderPipeline.RenderPass
         public CommandBuffer commandBuffer;
         public ScriptableRenderContext context;
         public CullingResults defaultCullingResult;
+        public RayTracingAccelerationStructure defaultAcc;
         public RenderGraphResourcesPool resourcesPool;
         public int frameIndex;
     }

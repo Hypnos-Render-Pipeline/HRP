@@ -140,12 +140,8 @@ namespace HypnosRenderPipeline.RenderPass
             desc.colorFormat = RenderTextureFormat.RGFloat;
             cb.GetTemporaryRT(var0, desc);
 
-            var acc = RTRegister.AccStruct();
-#if UNITY_2020_2_OR_NEWER
-                        acc.Build();
-#else
-            acc.Update();
-#endif
+            var acc = context.defaultAcc;
+
             cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", acc);
             cb.SetRayTracingShaderPass(rtShader, "RTGI");
             cb.SetRayTracingTextureParam(rtShader, "_TempResult", tempRef);

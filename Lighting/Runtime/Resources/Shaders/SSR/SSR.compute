@@ -338,9 +338,9 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
         float av_dis = (lc.w + dc.w + rc.w + uc.w + oc.w) / 5;
 
-        float3 av_n = buffer_1[bufferID.x][bufferID.y] + 
-                        buffer_1[bufferID.x - 1][bufferID.y] + buffer_1[bufferID.x + 1][bufferID.y] +
-                        buffer_1[bufferID.x][bufferID.y - 1] + buffer_1[bufferID.x][bufferID.y + 1];
+        float3 av_n = buffer_1[bufferID.x][bufferID.y].xyz + 
+                        buffer_1[bufferID.x - 1][bufferID.y].xyz + buffer_1[bufferID.x + 1][bufferID.y].xyz +
+                        buffer_1[bufferID.x][bufferID.y - 1].xyz + buffer_1[bufferID.x][bufferID.y + 1].xyz;
 
         float3 camPos = _V_Inv._m03_m13_m23;
 

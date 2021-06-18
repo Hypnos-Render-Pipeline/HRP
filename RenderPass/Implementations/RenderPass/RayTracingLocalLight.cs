@@ -62,7 +62,7 @@ namespace HypnosRenderPipeline.RenderPass
             desc.depthBufferBits = 0;
             cb.GetTemporaryRT(shadowRT, desc);
 
-            var acc = RTRegister.AccStruct();
+            var acc = context.defaultAcc;
             cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", acc);
 
             cb.SetGlobalTexture("_Sobol", bnsLoader.tex_sobol);

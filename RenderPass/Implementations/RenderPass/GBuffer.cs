@@ -44,6 +44,13 @@ namespace HypnosRenderPipeline.RenderPass
                                                                     SizeCastMode.Fixed,
                                                                     ColorCastMode.Fixed,
                                                                     SizeScale.Full);
+
+        [NodePin(PinType.Out)]
+        public TexturePin index = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.R8, 0),
+                                                            SizeCastMode.Fixed,
+                                                            ColorCastMode.Fixed,
+                                                            SizeScale.Full);
+
         [NodePin(PinType.Out)]
         public TexturePin motion = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.RGFloat, 0),
                                                                     SizeCastMode.Fixed,
@@ -64,7 +71,6 @@ namespace HypnosRenderPipeline.RenderPass
             var cb = context.commandBuffer;
 
             cb.SetRenderTarget(new RenderTargetIdentifier[]{diffuse.handle, specular, normal, emission, microAO }, depth);
-
             cb.ClearRenderTarget(!depth.connected, true, Color.clear);
 
             var a = new DrawingSettings(new ShaderTagId("GBuffer_Equal"), new SortingSettings(context.camera));
@@ -76,6 +82,19 @@ namespace HypnosRenderPipeline.RenderPass
 
             var b = FilteringSettings.defaultValue;
             b.renderQueueRange = RenderQueueRange.opaque;
+
+            cb.DrawRenderers(context.defaultCullingResult, ref a, ref b);
+
+
+            cb.SetRenderTarget(index);
+            cb.ClearRenderTarget(false, true, Color.clear);
+            cb.SetRenderTarget(new RenderTargetIdentifier[] { diffuse.handle, specular, normal, emission, microAO, index }, depth);
+
+            a = new DrawingSettings(new ShaderTagId("Transparent"), new SortingSettings(context.camera));
+            a.enableInstancing = true;
+
+            b = FilteringSettings.defaultValue;
+            b.renderQueueRange = RenderQueueRange.transparent;
 
             cb.DrawRenderers(context.defaultCullingResult, ref a, ref b);
 
@@ -91,6 +110,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetGlobalTexture("_NormalTex", normal);
             cb.SetGlobalTexture("_EmissionTex", emission);
             cb.SetGlobalTexture("_AOTex", microAO);
+            cb.SetGlobalTexture("_IndexTex", index);
             cb.SetGlobalTexture("_MotionTex", motion);
         }
     }

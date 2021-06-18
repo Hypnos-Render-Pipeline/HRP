@@ -13,15 +13,12 @@ float4x4 _VP_Inv, _VP, _V, _P;
 int _Clock;
 
 int _UseRTShadow;
-int _MaxDepth;
-int _SPP;
 
 float4 _WH;
 
 Texture2D<float> _DepthTex;
-Texture2D<float> _HalfIndexTex;
 Texture2D<float4> _BaseColorTex, _NormalTex, _AOTex, _SceneColor;
-Texture2D<float4> _FilteredColor;
+Texture2D<float> _IndexTex;
 Texture2D<float2> _MotionTex;
 TextureCube<float3> _SkyBox;
 
@@ -34,36 +31,18 @@ RWTexture2D<float4> _TempResult;
 float PD2VD(const float d) {
      return -_P._m23 / (d + _P._m22);
 }
-float Luminance(float3 col) {
-    return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
-}
-float3 ToneMap(float3 color) {
-    return color / (6 + color);
-}
-int2 index2offset(const uint index) {
-    uint2 index2offset[4] = { uint2(0, 0), uint2(1, 0), uint2(1, 1), uint2(0, 1) };
-    return index2offset[index];
-}
 
 
-float3 L(float3 pos, float3 dir, inout int4 sampleState, out float3 nextPos, out float3 nextDir, out float3 weight, bool shadow = false) {
+float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState, bool shadow = false) {
     float3 res = 0;
-    GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
 
     if (gbuffer.miss) {
         res += _SkyBox.SampleLevel(trilinear_clamp_sampler, dir, 0);
-        weight = -1;
-        nextPos = nextDir = 0;
     }
     else {
         res = gbuffer.emission;
 
-        float3 hitPos = gbuffer.dis * dir + pos;
         float4 ppos = mul(_VP, float4(hitPos, 1));
-
-        nextPos = hitPos;
-        weight = gbuffer.albedo * (1 - gbuffer.metallic);
-        nextDir = normalize(gbuffer.normal + UniformSampleSphere(float2(SAMPLE, SAMPLE)).xyz);
 
         SurfaceInfo hitInfo = (SurfaceInfo)0;
         hitInfo.diffuse = gbuffer.albedo;
@@ -129,25 +108,22 @@ float3 L(float3 pos, float3 dir, inout int4 sampleState, out float3 nextPos, out
     return res;
 }
 
-
-
-
-
 [shader("raygeneration")]
-void Diffuse()
+void Refraction()
 {
+
     uint2 dispatchIdx = DispatchRaysIndex().xy;
-    int index = _HalfIndexTex[dispatchIdx];
-    uint2 fullResIndex = dispatchIdx * 2 + index2offset(index);
 
-    float d = _DepthTex[fullResIndex];
+    float2 uv = (dispatchIdx + 0.5) * _WH.zw;
 
-    float2 uv = (fullResIndex + 0.5) * _WH.zw;
-
-    if (-PD2VD(d) > 1024  || _SceneColor[fullResIndex].a == 0) {
-        _TempResult[dispatchIdx] = float4(0,0,0,0);
+    float d = _DepthTex[dispatchIdx];
+    float4 baseColor_Trans = _BaseColorTex[dispatchIdx];
+    if (d == 0 || baseColor_Trans.w == 0) {
+        _TempResult[dispatchIdx] = _SceneColor[dispatchIdx];
         return;
     }
+
+    
     float3 camPos = _V_Inv._m03_m13_m23;
     float3 pos; 
     {
@@ -156,38 +132,53 @@ void Diffuse()
         pos = worldPos.xyz / worldPos.w;
     }
     float3 view = normalize(camPos - pos);
+    pos += view * 0.001;
 
     SurfaceInfo info = (SurfaceInfo)0;
-    info = DecodeGBuffer(_BaseColorTex[fullResIndex],
+    info = DecodeGBuffer(baseColor_Trans,
                             0,
-                            _NormalTex[fullResIndex],
+                            _NormalTex[dispatchIdx],
                             0,
-                            _AOTex[fullResIndex]);
-
-    pos += info.gnormal * 0.01f;
+                            _AOTex[dispatchIdx],
+                            _IndexTex[dispatchIdx]);
+    pos -= info.gnormal * 0.001;
 
 	int4 sampleState = int4(dispatchIdx, _Clock % 32, 0);
+
+    float3 n = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - info.smoothness));
+    n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
     
-    float3 res = 0;
 
-    int turn = _SPP;
-    while(turn-- > 0){
-        float3 p = pos;
-        float3 dir = normalize(info.normal + UniformSampleSphere(float2(SAMPLE, SAMPLE)).xyz);
-        int traceDepth = _MaxDepth;
-        float3 weight = 1;
+    float IOR = (1.0f / info.index);
+	float3 next_dir = refract(-view, n, IOR);
+
+    GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, next_dir);
+    pos += next_dir * gbuffer.dis;
+    
+    int max_depth = 4;
+    while (!gbuffer.miss && gbuffer.transparent != 0 && max_depth--) {
+
+        float3 viewDir = -next_dir;
+        float3 n = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - gbuffer.smoothness));
+        n = mul(n, GetMatrixFromNormal(gbuffer.normal)).xyz;
+    
         
-        while (any(weight > 0) && traceDepth-- > 0) {
-            float3 npos, ndir, nw;
-            float3 l = L(p, dir, sampleState, npos, ndir, nw, _UseRTShadow);
-            res += weight * l;
-            weight *= nw;
-            p = npos;
-            dir = ndir;
-        }
+        IOR = gbuffer.front ? (1.0f / gbuffer.index) : gbuffer.index;
+	    next_dir = refract(-viewDir, n, IOR);
+	    bool all_reflect = length(next_dir) < 0.5;
+    
+        float r_thre = gbuffer.front ? 0 : PhysicsFresnel(1.0 / IOR, viewDir, gbuffer.normal);
+	    if (all_reflect) {
 
+		    next_dir = reflect(-viewDir, n);
+	    }
+
+        gbuffer = TraceNext_RTGI(pos, next_dir);
+        pos += next_dir * gbuffer.dis;
     }
-    res /= _SPP;
 
-    _TempResult[dispatchIdx] = float4(ToneMap(res), 1);
+    float3 res = L(gbuffer, pos, next_dir, sampleState, _UseRTShadow);
+
+    _TempResult[dispatchIdx] = _SceneColor[dispatchIdx] + float4(res * info.diffuse * info.transparent * (1 - PhysicsFresnel(info.index, view, info.normal)), 0);
+    return;
 }
