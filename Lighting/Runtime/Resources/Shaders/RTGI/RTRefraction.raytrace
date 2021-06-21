@@ -150,14 +150,17 @@ void Refraction()
 
     float IOR = (1.0f / info.index);
 	float3 next_dir = refract(-view, n, IOR);
-
+    
+    float t = 0;
     GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, next_dir);
     pos += next_dir * gbuffer.dis;
-    
-    float3 weight = info.diffuse * info.transparent * (1 - PhysicsFresnel(info.index, view, info.normal));
+
+    t += gbuffer.dis;
+    float3 weight = (1 - PhysicsFresnel(info.index, view, info.normal));
     int max_depth = _MaxDepth;
-    while (!gbuffer.miss && gbuffer.transparent != 0 && max_depth--) {
-        weight *= gbuffer.albedo * gbuffer.transparent;
+    while (!gbuffer.miss && gbuffer.transparent != 0 && --max_depth) {
+        if (!gbuffer.front)
+            weight *= pow(max(0.01, gbuffer.albedo * gbuffer.transparent), gbuffer.dis);
 
         float3 viewDir = -next_dir;
         float3 n = ImportanceSampleGGX(float2(SAMPLE, SAMPLE), (1 - gbuffer.smoothness));
@@ -175,9 +178,10 @@ void Refraction()
 
         gbuffer = TraceNext_RTGI(pos, next_dir);
         pos += next_dir * gbuffer.dis;
+        t += gbuffer.miss ? 0 : gbuffer.dis;
     }
 
-    float3 res = L(gbuffer, pos, next_dir, sampleState, _UseRTShadow);
+    float3 res = gbuffer.miss ? 0 : L(gbuffer, pos, next_dir, sampleState, _UseRTShadow);
 
     _TempResult[dispatchIdx] = _SceneColor[dispatchIdx] + float4(res * weight, 0);
     return;

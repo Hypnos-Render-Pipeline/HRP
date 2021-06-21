@@ -1,0 +1,19 @@
+#pragma kernel CSMain
+
+
+struct OITOutput {
+    float3 SrcColor;
+    int alpha;
+};
+struct OITOutputList {
+    uint4 zs;
+    OITOutput datas[4];
+};
+
+RWStructuredBuffer<OITOutputList> _OITOutputList;
+
+[numthreads(64, 1, 1)]
+void CSMain(uint id : SV_DispatchThreadID)
+{
+    _OITOutputList[id].zs = uint4(3, 2, 1, 0);
+}

@@ -41,12 +41,10 @@ Shader "HRP/Lit"
 
 		_Sheen("Sheen", Range(0,1)) = 0
 
-		_Modified("Modified", int) = 0
-
-		[HideInInspector] _Mode("__mode", Float) = 0.0
-		[HideInInspector] _SrcBlend("__src", Float) = 1.0
-		[HideInInspector] _DstBlend("__dst", Float) = 0.0
-		[HideInInspector] _ZWrite("__zw", Float) = 1.0
+		[HideInInspector] _Trans("__trans", Float) = 0
+		[HideInInspector] _OIT("__oit", Float) = 0
+		[HideInInspector] _Cull("__cull", Float) = 2
+		[HideInInspector] _ZWrite("__zw", Float) = 1
     }
 
     // Rasterization Shader
@@ -153,6 +151,7 @@ Shader "HRP/Lit"
 			ColorMask 0
 			Name "PreZ"
 			Tags { "LightMode" = "PreZ" }
+			Cull [_Cull]
 			HLSLPROGRAM
 			#pragma vertex			PreZ_vert
 			#pragma fragment		PreZ_frag
@@ -162,6 +161,7 @@ Shader "HRP/Lit"
 		{
 			Name "GBuffer_Equal"
 			Tags { "LightMode" = "GBuffer_Equal" }
+			Cull [_Cull]
 			ZWrite off
 			ZTest Equal
 			HLSLPROGRAM
@@ -173,12 +173,14 @@ Shader "HRP/Lit"
 			#pragma shader_feature _METALLICGLOSSMAP
 			#pragma shader_feature _AOMAP
 			#pragma shader_feature _IRIDESCENCE
+			#pragma shader_feature _DOUBLE_SIDE
 			ENDHLSL
 		}
 		Pass
 		{
 			Name "GBuffer_LEqual"
 			Tags { "LightMode" = "GBuffer_LEqual" }
+			Cull [_Cull]
 			HLSLPROGRAM
 			#pragma vertex			Lit_vert
 			#pragma fragment		GBuffer_frag
@@ -188,25 +190,27 @@ Shader "HRP/Lit"
 			#pragma shader_feature _METALLICGLOSSMAP
 			#pragma shader_feature _AOMAP
 			#pragma shader_feature _IRIDESCENCE
+			#pragma shader_feature _DOUBLE_SIDE
 			ENDHLSL
 		}
 		Pass
 		{
 			Name "Transparent"
 			Tags { "LightMode" = "Transparent" }
-			//Blend off
-			//ZTest on
-			//ZWrite on
-			//Cull back
+			ZWrite [_ZWrite]
+			Cull   [_Cull]
 			HLSLPROGRAM
 			#pragma vertex			Lit_vert
 			#pragma fragment		Transparent_frag
+			#pragma target			5.0
 
 			#pragma shader_feature _NORMALMAP
 			#pragma shader_feature _EMISSION
 			#pragma shader_feature _METALLICGLOSSMAP
 			#pragma shader_feature _AOMAP
 			#pragma shader_feature _IRIDESCENCE
+			#pragma shader_feature _DOUBLE_SIDE
+			#pragma shader_feature _OIT			
 			ENDHLSL
 		}
     }
@@ -233,8 +237,8 @@ Shader "HRP/Lit"
 			#pragma shader_feature _CLEARCOAT
 			#pragma shader_feature _IRIDESCENCE
 			#pragma shader_feature _ENABLEFOG
+			#pragma shader_feature _OIT
 		
-
 			//If not define Shading, then use LitShading
 			//or un-comment next line to use custom shading function
 			//#define Shading Lambert
@@ -244,10 +248,11 @@ Shader "HRP/Lit"
 			//----------------------------------------------------------------------------------------
 			//------- Material data input ------------------------------------------------------------
 			//----------------------------------------------------------------------------------------
+			float		 _Trans;
 			float4       _Color;
 			Texture2D 	_MainTex; SamplerState sampler_MainTex;
 			float4      _MainTex_ST;
-			float _Cutoff;
+			float		_Cutoff;
 
 			#if _NORMALMAP
 
@@ -270,7 +275,7 @@ Shader "HRP/Lit"
 
 			#if _ANISOMAP
 
-			Texture2D _AnisoMap; SamplerState sampler_PointRepeat;
+			Texture2D	_AnisoMap; SamplerState sampler_PointRepeat;
 
 			#endif
 
@@ -288,25 +293,31 @@ Shader "HRP/Lit"
 			#endif // _AOMAP
 						
 			#if _IRIDESCENCE
-			float _Index2;
-			float _Dinc;
-			Texture2D _DincMap;
+			float		_Index2;
+			float		_Dinc;
+			Texture2D	_DincMap;
 			#endif
 
-			float _Index;
+			float		_Index;
 
-			float _ClearCoat;
-			float _Sheen;
-
-			float _MipScale;
+			float		_ClearCoat;
+			float		_Sheen;
 
 			//struct SurfaceInfo {
 			//	float3	diffuse;
+			//	float3	specular;
 			//	float	transparent;
-			//	float	metallic;
 			//	float	smoothness;
+			//	float   aniso;
 			//	float3	normal;
+			//	float3	tangent;
+			//	float3	gnormal;
 			//	float3	emission;
+			//	float2  diffuseAO_specAO;
+			//	bool	iridescence;
+			//	bool	specF;
+			//	float	index2;
+			//	float	dinc;
 			//	float	clearCoat;
 			//	float	sheen;
 			//	float	index;
@@ -320,7 +331,7 @@ Shader "HRP/Lit"
 				float4 diffuse = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
 				IN.diffuse = _Color * diffuse.xyz;
 
-				IN.transparent = 1 - diffuse.a * _Color.a;
+				IN.transparent = _Trans ? 1 - diffuse.a * _Color.a : 0;
 								
 				#if _METALLICGLOSSMAP
 					float4 m_s = SampleTex(_MetallicGlossMap, uv, 0);
@@ -475,10 +486,11 @@ Shader "HRP/Lit"
 			//----------------------------------------------------------------------------------------
 			//------- Material data input ------------------------------------------------------------
 			//----------------------------------------------------------------------------------------
+			float		 _Trans;
 			float4       _Color;
 			Texture2D 	_MainTex; SamplerState sampler_MainTex;
 			float4      _MainTex_ST;
-			float _Cutoff;
+			float		_Cutoff;
 
 			#if _NORMALMAP
 
@@ -510,20 +522,20 @@ Shader "HRP/Lit"
 			float		_AOScale;
 			#endif // _AOMAP
 
-			float _Index;
-			float _IndexRate;
+			float		_Index;
+			float		_IndexRate;
 
-			float _ClearCoat;
-			float _Sheen;
+			float		_ClearCoat;
+			float		_Sheen;
 
-			float _MipScale;
+			float		_MipScale;
 
 			void GetSurfaceInfo(inout FragInputs i, out float3 albedo, out float transparent, out float index, out float index_rate, out float metallic, out float smoothness, out float3 normal, out float3 emission) {
 				float2 uv = i.uv0.xy * _MainTex_ST.xy + _MainTex_ST.zw;
 				float4 diffuse = _MainTex.SampleLevel(sampler_MainTex, uv, 0);
 				albedo = _Color * diffuse.xyz;
 
-				transparent = 1 - diffuse.a * _Color.a;
+				transparent = _Trans ? 1 - diffuse.a * _Color.a : 0;
 
 				#if _METALLICGLOSSMAP
 					float4 m_s = SampleTex(_MetallicGlossMap, uv, 0);

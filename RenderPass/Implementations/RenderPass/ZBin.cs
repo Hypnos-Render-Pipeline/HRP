@@ -70,7 +70,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.DispatchCompute(zbin, 0, tileCount.x / 4, tileCount.y / 2, 1);
 
             cb.SetComputeBufferParam(zbin, 1, "_TileLights", tileLights);
-            cb.DispatchCompute(zbin, 1, tileCount.x / 2, tileCount.y / 2, tileCount.z / 8);
+            cb.DispatchCompute(zbin, 1, tileCount.x, tileCount.y, (tileCount.z + 31 / 32));
 
             cb.SetGlobalBuffer("_TileLights", tileLights);
 

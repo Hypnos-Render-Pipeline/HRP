@@ -382,7 +382,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     var input = input_value.Value.first;
 
                     var pin = input.GetValue(node_instance);
-                    set.Add(input.FieldType.Name);
+                    set.Add(input.Name);
 
                     input.FieldType.GetMethod("Dispose").Invoke(pin, new object[] { });
                 }
@@ -391,7 +391,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     var input = input_value.Value.first;
 
                     var pin = input.GetValue(node_instance);
-                    if (set.Contains(input.FieldType.Name)) continue;
+                    if (set.Contains(input.Name)) continue;
 
                     input.FieldType.GetMethod("Dispose").Invoke(pin, new object[] { });
                 }

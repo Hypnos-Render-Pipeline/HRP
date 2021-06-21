@@ -81,7 +81,7 @@ namespace HypnosRenderPipeline.RenderPass
             a.enableInstancing = true;
 
             var b = FilteringSettings.defaultValue;
-            b.renderQueueRange = RenderQueueRange.opaque;
+            b.renderQueueRange = new RenderQueueRange(2000, 2499);
 
             cb.DrawRenderers(context.defaultCullingResult, ref a, ref b);
 
@@ -90,11 +90,8 @@ namespace HypnosRenderPipeline.RenderPass
             cb.ClearRenderTarget(false, true, Color.clear);
             cb.SetRenderTarget(new RenderTargetIdentifier[] { diffuse.handle, specular, normal, emission, microAO, index }, depth);
 
-            a = new DrawingSettings(new ShaderTagId("Transparent"), new SortingSettings(context.camera));
-            a.enableInstancing = true;
-
-            b = FilteringSettings.defaultValue;
-            b.renderQueueRange = RenderQueueRange.transparent;
+            a.SetShaderPassName(0, new ShaderTagId("Transparent"));
+            b.renderQueueRange = new RenderQueueRange(2500, 2500);
 
             cb.DrawRenderers(context.defaultCullingResult, ref a, ref b);
 

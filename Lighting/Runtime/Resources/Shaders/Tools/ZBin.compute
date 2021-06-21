@@ -1,6 +1,8 @@
 #pragma kernel TileCulling
 #pragma kernel BinCulling
 
+#pragma use_dxc
+
 #define ZIBIN_COMPUTE
 #include "../Includes/Light.hlsl"
  
@@ -17,8 +19,6 @@ uint LaneScanExclude(uint laneNum, uint lanOffset, uint laneId, uint value) {
 
     bits[lanOffset + laneId] = value;
 
-    GroupMemoryBarrierWithGroupSync();
-
     uint res = 0;
     if (laneId == 0) {
         for (uint i = 0; i < laneNum; i++)
@@ -29,7 +29,7 @@ uint LaneScanExclude(uint laneNum, uint lanOffset, uint laneId, uint value) {
         }
     }
 
-    GroupMemoryBarrierWithGroupSync();
+    GroupMemoryBarrier();
 
     return bits[lanOffset + laneId];
 }
@@ -194,7 +194,7 @@ void TileCulling(uint2 id : SV_DispatchThreadID, uint3 gtid : SV_GroupThreadID)
         }
     }
 
-    uint offset = LaneScanExclude(4, gtid.x * 16 + gtid.y * 4, gtid.z, count);
+    uint offset = LaneScanExclude(4, gtid.x * 8 + gtid.y * 4, gtid.z, count);
 
     if (gtid.z == 3)
         _TileLights[start_offset] = offset + count;
@@ -207,13 +207,13 @@ void TileCulling(uint2 id : SV_DispatchThreadID, uint3 gtid : SV_GroupThreadID)
     }
 }
 
-[numthreads(2, 2, 8)]
+[numthreads(1, 1, 32)]
 void BinCulling(uint3 id : SV_DispatchThreadID)
 {
-    float3 tileSize;
-    tileSize.xy = 2.0f / _TileCount.xy;
-    tileSize.z = 0;
     uint4 tileCount = _TileCount;
+
+    if (id.z >= tileCount.z) return;
+
     uint2 tileId = id.xy;
     uint maxLightCount = tileCount.w;
     uint start_offset = (tileId.x + tileId.y * tileCount.x) * (maxLightCount + 1);
@@ -241,13 +241,16 @@ void BinCulling(uint3 id : SV_DispatchThreadID)
 
     for (uint j = 0; j < lightCount; j++)
     {
+        uint mask_active = mask_value;
         Light light = _LocalLightBuffer[_TileLights[start_offset + j] >> 24];
         if (light.radiance_type.w == POINT) { // point
-            if (!SphereIntersect(light.position_range, planes)) continue;
+            if (!SphereIntersect(light.position_range, planes)) mask_active = 0;
         }
         else { // spot
-            if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
+            if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) mask_active = 0;
         }
-        InterlockedAdd(_TileLights[start_offset + j], mask_value);
+        uint mask = WaveActiveSum(mask_active);
+        if (WaveIsFirstLane())
+            _TileLights[start_offset + j] += mask;
     }
 }

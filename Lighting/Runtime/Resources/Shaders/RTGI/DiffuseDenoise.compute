@@ -403,7 +403,7 @@ void SFilterIndirect(uint2 groupThreadID : SV_GroupThreadID, uint groupID : SV_G
     uint blockData = _Block[groupID];
     uint2 blockID = uint2(blockData >> 16, blockData & 0xFFFF);
     uint2 actual_groupID = blockID;
-    uint2 id = groupThreadID + actual_groupID * 8;
+    uint2 id = groupThreadID + (actual_groupID << 3);
 
     SFilter_(id, groupThreadID, actual_groupID, true);
 }

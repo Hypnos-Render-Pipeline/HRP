@@ -48,6 +48,8 @@ namespace HypnosRenderPipeline
 
         MaterialProperty index_rate = null;
 
+        MaterialProperty double_side = null;
+
         public void FindProperties(MaterialProperty[] props)
         {
             albedoMap = FindProperty("_MainTex", props);
@@ -88,6 +90,8 @@ namespace HypnosRenderPipeline
             index = FindProperty("_Index", props);
 
             index_rate = FindProperty("_IndexRate", props);
+
+            double_side = FindProperty("_Cull", props);
         }
 
         public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
@@ -96,13 +100,17 @@ namespace HypnosRenderPipeline
             m_MaterialEditor = materialEditor;
             Material material = materialEditor.target as Material;
 
-            Event e = Event.current;
-            if (EventType.KeyDown == e.type && KeyCode.L == e.keyCode)
-            {
-                material.SetInt("_EnableEdit", 1 - material.GetInt("_EnableEdit"));
-            }
-
             ShaderPropertiesGUI(material);
+        }
+
+        enum SurfaceType
+        {
+            Opaque, Transparent
+        }
+
+        enum TransparentType
+        {
+            Volume, Thin
         }
 
         public void ShaderPropertiesGUI(Material material)
@@ -114,6 +122,30 @@ namespace HypnosRenderPipeline
                 // Detect any changes to the material
                 EditorGUI.BeginChangeCheck();
                 {
+
+                    SurfaceType surfaceType = (SurfaceType)material.GetFloat("_Trans");
+                    SurfaceType surfaceType_ = (SurfaceType)EditorGUILayout.EnumPopup("Surface Type", surfaceType);
+                    if (surfaceType_ != surfaceType)
+                    {
+                        Undo.RecordObject(material, "Change Transparent Type");
+                        material.SetFloat("_Trans", (float)surfaceType_);
+                        SetMaterialKeywords(material);
+                        HypnosRenderPipeline.RTRegister.SceneChanged();
+                    }
+                    if (surfaceType_ == SurfaceType.Transparent)
+                    {
+                        TransparentType type = (TransparentType)material.GetFloat("_OIT");
+                        TransparentType type_ = (TransparentType)EditorGUILayout.EnumPopup("Transparent Type", type);
+                        if (type != type_)
+                        {
+                            Undo.RecordObject(material, "Change Transparent Type");
+                            material.SetFloat("_OIT", (float)type_);
+
+                            SetMaterialKeywords(material);
+                            HypnosRenderPipeline.RTRegister.SceneChanged();
+                        }
+                    }
+
                     // Primary properties
                     GUILayout.Label(Styles.primaryMapsText, EditorStyles.boldLabel);
                     DoAlbedoArea(material);
@@ -166,6 +198,20 @@ namespace HypnosRenderPipeline
                     m_MaterialEditor.ShaderProperty(index, Styles.indexText);
                     m_MaterialEditor.ShaderProperty(index_rate, Styles.indexRateText);
                 }
+
+                bool double_side_ = EditorGUILayout.Toggle("double side", double_side.floatValue == 0);
+                if ((double_side.floatValue == 0) != double_side_)
+                {
+                    Undo.RecordObject(material, "Change Double Side");
+                    material.SetInt("_Cull", (int)(double_side_ ? UnityEngine.Rendering.CullMode.Off : UnityEngine.Rendering.CullMode.Back));
+                    SetKeyword(material, "_DOUBLE_SIDE", double_side_);
+                }
+
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Queue", material.renderQueue.ToString());
+                EditorGUI.EndDisabledGroup();
+
                 if (EditorGUI.EndChangeCheck())
                 {
                     SetMaterialKeywords(material);
@@ -187,11 +233,11 @@ namespace HypnosRenderPipeline
             SetMaterialKeywords(material);
         }
 
-
-
         void DoAlbedoArea(Material material)
         {
             m_MaterialEditor.TexturePropertySingleLine(Styles.albedoText, albedoMap, albedoColor);
+
+            float alpha = material.GetColor("_Color").a;
         }
 
         void DoSpecularMetallicArea()
@@ -254,29 +300,28 @@ namespace HypnosRenderPipeline
             bool shouldEmissionBeEnabled = (material.globalIlluminationFlags & MaterialGlobalIlluminationFlags.EmissiveIsBlack) == 0;
             SetKeyword(material, "_EMISSION", shouldEmissionBeEnabled);
 
-            float alpha = material.GetColor("_Color").a;
+            float trans = material.GetFloat("_Trans");
+            float oit = material.GetFloat("_OIT");
 
-            if (alpha == 1)
+            SetKeyword(material, "_OIT", oit != 0);
+
+            if (trans != 0)
             {
-                material.SetOverrideTag("Quque", "Geometry");
-                material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-                material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
-                material.SetInt("_ZWrite", 1);
-                material.DisableKeyword("_ALPHATEST_ON");
-                material.DisableKeyword("_ALPHABLEND_ON");
-                material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                material.renderQueue = -1;
+                if (oit != 0)
+                {
+                    material.SetInt("_ZWrite", 0);
+                    material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                }
+                else
+                {
+                    material.SetInt("_ZWrite", 1);
+                    material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.GeometryLast;
+                }
             }
             else
             {
-                material.SetOverrideTag("Quque", "Transparent");
-                material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
-                material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                material.SetInt("_ZWrite", 0);
-                material.DisableKeyword("_ALPHATEST_ON");
-                material.DisableKeyword("_ALPHABLEND_ON");
-                material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
-                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                material.SetInt("_ZWrite", 1);
+                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Geometry;
             }
         }
 

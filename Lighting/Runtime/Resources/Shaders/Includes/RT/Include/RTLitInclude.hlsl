@@ -253,11 +253,17 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		float3 n = ImportanceSampleAnisoGGX(sample_2D, r2);
 		n = mul(n, IN.tangentToWorld);
 
-
-		float3 coef = diffuse * surface.transparent * (IN.isFrontFace ? (1 - F) : 1);
+#if _OIT
+		float3 coef = IN.isFrontFace ? (1 - F) : diffuse * surface.transparent;
+#else
+		float3 coef = IN.isFrontFace ? (1 - F) : pow(max(0.01, diffuse * surface.transparent), RayTCurrent());
+#endif
 		weight.xyz = coef / threashold.x;
 
 		float IOR = IN.isFrontFace ? (1.0f / surface.index) : surface.index;
+#if _OIT
+		IOR = 1;
+#endif
 		float3 next_dir = refract(-viewDir, n, IOR);
 		bool all_reflect = length(next_dir) < 0.5;
 
@@ -445,6 +451,12 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 		/*out*/rayIntersection.directColor, /*out*/rayIntersection.nextDir);
 }
 
+#if _OIT
+#define INDEX_COMPARE 1
+#else
+#define INDEX_COMPARE surface.index == 1
+#endif
+
 // because 'IgnoreHit' can only be call at AnyHit func, so we have to use macros.
 #if _SUBSURFACE
 #define LitAnyHit(rayIntersection, attributeData) CALCULATE_DATA(fragInput, viewDir);\
@@ -460,7 +472,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 				return;\
 			}\
 		}\
-		if (surface.index == 1) {\
+		if (INDEX_COMPARE) {\
 			float3 diffuse = surface.diffuse;\
 			rayIntersection.directColor *= surface.transparent * diffuse;\
 			if (max(rayIntersection.directColor.x, max(rayIntersection.directColor.y, rayIntersection.directColor.z)) == 0) {\
@@ -497,7 +509,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 				return;\
 			}\
 		}\
-		if (surface.index == 1) {\
+		if (INDEX_COMPARE) {\
 			float3 diffuse = surface.diffuse;\
 			rayIntersection.directColor *= surface.transparent * diffuse;\
 			if (max(rayIntersection.directColor.x, max(rayIntersection.directColor.y, rayIntersection.directColor.z)) == 0) {\
