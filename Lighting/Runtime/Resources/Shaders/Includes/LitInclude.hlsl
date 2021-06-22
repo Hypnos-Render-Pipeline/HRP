@@ -315,6 +315,13 @@ void Transparent_frag(Lit_v2f i
 	}
 	EndLocalLightsLoop;
 
+
+    BegineDirectionalLightsLoop(pos);
+    {
+        res += PBS(PBS_FULLY, info, light.dir, light.radiance, view);
+    }
+    EndDirectionalLightsLoop;
+
 	res += PBS(PBS_FULLY, info, sunDir, sunColor, view);
 
 	for (int lightIndex = 0; lightIndex < _AreaLightCount; lightIndex++)
