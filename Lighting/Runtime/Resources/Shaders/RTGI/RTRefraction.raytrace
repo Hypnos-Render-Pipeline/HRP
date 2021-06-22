@@ -131,7 +131,7 @@ void Refraction()
         pos = worldPos.xyz / worldPos.w;
     }
     float3 view = normalize(camPos - pos);
-    pos += view * 0.001;
+    pos -= view * 0.001;
 
     SurfaceInfo info = (SurfaceInfo)0;
     info = DecodeGBuffer(baseColor_Trans,
@@ -140,7 +140,7 @@ void Refraction()
                             0,
                             _AOTex[dispatchIdx],
                             _IndexTex[dispatchIdx]);
-    pos -= info.gnormal * 0.001;
+    pos -= info.gnormal * lerp(0.02, 0, dot(view, info.gnormal));
 
 	int4 sampleState = int4(dispatchIdx, _Clock % 32, 0);
 

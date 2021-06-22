@@ -75,7 +75,10 @@ void Specular()
                             sr,
                             _NormalTex[fullResIndex],
                             0,
-                            1);
+                            _AOTex[fullResIndex]);
+    info.diffuseAO_specAO = 1;
+    pos += info.gnormal * lerp(0.01, 0, dot(info.normal, view));
+    info.normal = normalize(info.normal - min(0, dot(info.normal, view)) * view);
 
     int period = lerp(32, 1, info.smoothness);
 	int4 sampleState = int4(dispatchIdx, _Clock % period, 0);
@@ -90,10 +93,7 @@ void Specular()
 
         n = mul(n, GetMatrixFromNormal(info.normal)).xyz;
     
-        view += max(0, 0.1 - dot(n, view)) * n;
-
         float3 dir = reflect(-view, n);
-        pos += (view + info.normal + dir) * saturate(1 - dot(dir, info.normal)) * 0.01;
 
         GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
 

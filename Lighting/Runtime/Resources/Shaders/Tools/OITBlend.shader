@@ -70,7 +70,7 @@ Shader "Hidden/OITBlend"
                     uint ualpha = o.alpha;
                     float3 alpha = (uint3(ualpha >> 16, ualpha >> 8, ualpha) & 0xFF) / 255.0f;
 
-                    res = lerp(res, o.srcColor, alpha);
+                    res = res * alpha + o.srcColor;
                 }
 
                 //return col;

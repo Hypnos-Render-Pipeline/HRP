@@ -351,10 +351,11 @@ void Transparent_frag(Lit_v2f i
 
 	res += info.emission;
 
-	float3 result = 0;
-	float3 F = FresnelTerm(info.specular, dot(view, info.normal));
-	float3 trans = 1 - info.diffuse * info.transparent * (1 - F);
-
+	float3 F = FresnelTerm(info.specular, max(0, dot(view, info.normal)));
+	float3 trans = info.diffuse * info.transparent * (1 - F) + F;
+															 // Currently, HRP has no solution for OIT Specular reflection,
+															 // 'F' here is simply assumes that the energy of spec reflection
+															 // is equal to transparent.
 	OITOutput o;
 	o.srcColor = res;
 	uint3 ualpha = uint3(trans * 255);

@@ -135,8 +135,8 @@ inline float PerceptualRoughnessToRoughness(const float perceptualRoughness)
 
 inline float SmithJointGGXVisibilityTerm(const float NdotL, const float NdotV, const float roughness)
 {
-	float k = (roughness + 0.1) * (roughness + 0.1) / 1.1 / 1.1 / 3;
-	return NdotL * NdotV / lerp(NdotL, 1, k) / lerp(NdotV, 1, k);
+	float k = (roughness + 0.01) * (roughness + 0.01) / 1.01 / 1.01 / 3;
+	return (1e-5f + NdotL * NdotV) / (1e-5f + lerp(NdotL, 1, k) * lerp(NdotV, 1, k));
 }
 
 inline float SmithJointGGXVisibilityTerm2(const float NdotL, const float NdotV, const float roughness)
