@@ -81,10 +81,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1468.9921
-      y: 1215.8007
+      x: 1468.9999
+      y: 1210.6497
       width: 300
-      height: 396
+      height: 420
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.GBuffer
   - nodeName: OutputNode
@@ -101,8 +101,8 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 6892.194
-      y: 1762.4998
+      x: 6892
+      y: 1756.6497
       width: 300
       height: 105
     info: 
@@ -136,8 +136,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1468.9998
-      y: 961.9999
+      x: 1468.9999
+      y: 956.6496
       width: 300
       height: 168
     info: 
@@ -185,8 +185,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 1825.2861
-      y: 923.28595
+      x: 1824.9999
+      y: 917.6496
       width: 300
       height: 261
     info: 
@@ -243,8 +243,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2187.9885
-      y: 1369.9999
+      x: 2188
+      y: 1364.6497
       width: 300
       height: 388
     info: 
@@ -274,8 +274,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 6548.0327
-      y: 1728.9998
+      x: 6548
+      y: 1723.6497
       width: 300
       height: 172
     info: 
@@ -318,8 +318,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 2605.2498
-      y: 1493.9999
+      x: 2605
+      y: 1488.6497
       width: 300
       height: 297
     info: 
@@ -398,10 +398,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 2982.3213
-      y: 1322
+      x: 2982
+      y: 1316.6497
       width: 300
-      height: 493
+      height: 469
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.SunAtmo
   - nodeName: HiDepth
@@ -421,8 +421,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 3399.0457
-      y: 1255.9999
+      x: 3399
+      y: 1250.6497
       width: 300
       height: 129
     info: 
@@ -482,8 +482,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 4633.5483
-      y: 1403
+      x: 4634
+      y: 1397.6497
       width: 300
       height: 412
     info: 
@@ -552,8 +552,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 3862.046
-      y: 1300.9999
+      x: 3862
+      y: 1295.6497
       width: 300
       height: 429
     info: 
@@ -575,8 +575,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 4239.046
-      y: 1435
+      x: 4239
+      y: 1429.6497
       width: 300
       height: 129
     info: 
@@ -601,8 +601,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 5411.187
-      y: 1487.5
+      x: 5411
+      y: 1482.6497
       width: 300
       height: 153
     info: Currently, PPS only support custom pp effects with srp.
@@ -630,8 +630,8 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 6177.362
-      y: 1718.4998
+      x: 6177
+      y: 1712.6497
       width: 300
       height: 177
     info: Image Post Process.
@@ -672,7 +672,7 @@ MonoBehaviour:
     position:
       serializedVersion: 2
       x: 3466
-      y: 1617
+      y: 1611.6497
       width: 300
       height: 273
     info: 
@@ -732,7 +732,7 @@ MonoBehaviour:
     position:
       serializedVersion: 2
       x: 5056
-      y: 1107
+      y: 1101.6497
       width: 300
       height: 387
     info: 
@@ -775,8 +775,8 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 5822.366
-      y: 1286.5
+      x: 5822
+      y: 1281.6497
       width: 300
       height: 297
     info: 

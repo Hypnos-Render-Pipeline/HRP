@@ -379,7 +379,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     }
                     catch (Exception e)
                     {
-                        throw new UnityEditor.Build.BuildFailedException("Compile HRG faild\n" + e.Message);
+                        throw new UnityEditor.Build.BuildFailedException("Compile HRG '" + HRG.name + "' faild\n" + e.Message);
                     }
                 }
             }
