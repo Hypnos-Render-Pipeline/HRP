@@ -19,7 +19,7 @@ Then:
 * Change ```Project settings->Player->Other Settings->Rendering->Auto Graphics API for Windows``` to **False**.
 * Change ```Project settings->Player->Other Settings->Rendering->Graphics APIs for Windows``` to **Direct2D12 (Experimental)**.
 * Change ```Project settings->Player->Other Settings->Configuration->Api Compatibility Level``` to **.NET 4**.
-* Go to ```Window->Package Manager->Add package from disk...```,  chose ```package.json``` in the root dictionary of this repository.
+* Go to ```Window->Package Manager->Add package from disk...```,  choose ```package.json``` in the root dictionary of this repository.
 * Switch ```Project settings->Graphics->Scriptable Render Pipeline Settings``` to the Asset of HRP.
 
 ## Features
