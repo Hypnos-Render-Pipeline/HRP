@@ -64,7 +64,7 @@ Only support metallic-smoothness workflow at present.
 
 Built-in **Render Nodes** of HRP. It will be richer in the future.
 
-## Authors
+## Developers
 
 568246876@qq.com
 
