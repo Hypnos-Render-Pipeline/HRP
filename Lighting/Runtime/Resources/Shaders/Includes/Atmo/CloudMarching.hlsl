@@ -305,7 +305,6 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 
 		// erode the base cloud shape with the distorted high frequency Worley noises.
 		final_cloud = rescale01(base_cloud_with_coverage, high_freq_noise_modifier * 0.5, 1.0);
-
 	}
 
 	return float3(final_cloud * HeightDensity(height_fraction, weather_data.y) * 0.05 * _CloudDensity * lerp(0.1, 1, weather_data.y), oh, lerp(1, 0.01, weather_data.z * _CloudDensity));
@@ -485,7 +484,7 @@ float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ,
 		{
 			float3 pos = v * (i + Rand()) + st;
 
-			float3 sha = Cloud(pos, fade, lod);
+			float3 sha = Cloud(pos, fade, lod, true);
 			float scatter = sha.x;
 			if (scatter != 0) {
 

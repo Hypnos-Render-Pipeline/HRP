@@ -42,6 +42,7 @@ namespace HypnosRenderPipeline
         [Range(0.01f, 1)]
         public float CloudDensity = 0.5f;
 
+        [Tooltip("Cloud Coverage (R)\nCloud Type (G)\nCumulonimbus Control (B)")]
         public Texture2D cloudMap;
         [Range(0.1f, 100)]
         public float cloudMapScale = 1;
