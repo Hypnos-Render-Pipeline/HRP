@@ -6,13 +6,14 @@
 #pragma kernel FullResolutionUpsample
 #pragma kernel LoadVolumeData
 #pragma kernel WriteCloudShadowMap
+#pragma kernel BlurCloudShadowMap
 
 float4 _Time;
 
 #define T T_TAB
 #include "../Includes/Atmo/CloudMarching.hlsl"
 
-float4x4 _V, _V_Inv, _VP_Inv, _Last_VP;
+float4x4 _V_Inv, _VP_Inv_NoJitter, _Last_VP_NoJitter;
 
 float4 _ZBufferParams;
 
@@ -36,7 +37,7 @@ RWTexture2D<float4> _HalfResResult;
 
 RWTexture2D<float4> _Cloud;
 
-RWTexture2D<float> _CloudSM;
+RWTexture2D<float4> _CloudSM;
 
 inline float LinearEyeDepth(float z)
 {
@@ -162,7 +163,7 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 	float3 pos;
 	{
 		float4 ndc = float4(uv_in_half_resolution * 2 - 1, 0, 1);
-		float4 worldPos = mul(_VP_Inv, ndc);
+		float4 worldPos = mul(_VP_Inv_NoJitter, ndc);
 		pos = worldPos.xyz / worldPos.w;
 	}
 	float3 v = normalize(pos - p);
@@ -179,12 +180,12 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 
 	float cloud_dis;
 	float av_occ;
-	float4 res = CloudRender(wcpos, p, v, cloud_dis, av_occ, depth);
+	float4 res = CloudRender(p, v, cloud_dis, av_occ, depth);
 
 	float3 cloud = 0;
 
 	if (cloud_dis != 0) {
-
+		// cloud shading
 		float3 present_point = p + v * cloud_dis;
 		float3 sunLight = Sunlight(present_point, _SunDir);
 		float3 ambd = Tu_L(p, _SunDir) * _SunLuminance * 0.1;
@@ -193,6 +194,7 @@ void MarchRay(const uint2 tile_id : SV_DispatchThreadID)
 		float3 amb = (lerp(ambd, ambu, res.z * 0.7 + 0.3) + sunLight * 0.5 * res.z) * 4;
 		cloud = (res.x * sunLight + res.y * amb) * _Brightness;
 
+		// apply atmo fog to cloud
 		float3 fog = SkyBox(p, v, _SunDir) * _SunLuminance * av_occ;
 		float3 trans = T(p, present_point);
 		trans = smoothstep(0.1, 0.97, trans);
@@ -228,8 +230,8 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 	float4 vpoint = float4(uv_in_half_resolution * 2 - 1, 0, 1);
 
 	float4 wpoint;
-	wpoint = mul(_VP_Inv, vpoint); wpoint /= wpoint.w;
-	float4 lvpoint = mul(_Last_VP, wpoint);
+	wpoint = mul(_VP_Inv_NoJitter, vpoint); wpoint /= wpoint.w;
+	float4 lvpoint = mul(_Last_VP_NoJitter, wpoint);
 	lvpoint /= lvpoint.w;
 	lvpoint = (lvpoint + 1) * 0.5;
 	float2 reproj_offset = uv_in_half_resolution - lvpoint.xy;
@@ -260,12 +262,12 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 	//_HalfResResult[id] = history; return;
 	if (any(id >= uint2(_WH.xy / 2))) return;
 	if (offset2index(id % 2) == int(_Ray_Index[id / 2].x)) {
-		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.05, 0.1, _Quality.w));
+		_HalfResResult[id] = lerp(clamp(history, aabb_low, aabb_high), marching_Result[groupshared_id.x][groupshared_id.y], lerp(0.5, 1, _Quality.w));
 		return;
 	}
 
 	if (weight < 1) { // sometime sill lost sample, prevent NAN by this
-		_HalfResResult[id] = lerp(history, marching_Result[groupshared_id.x][groupshared_id.y], 0.5);
+		_HalfResResult[id] = lerp(history, average_result, 0.5);
 	}
 	else {
 		_HalfResResult[id] = clamp(history, aabb_low, aabb_high);
@@ -336,7 +338,7 @@ void FullResolutionUpsample(const uint2 id : SV_DispatchThreadID, const uint2 gr
 	float3 pos;
 	{
 		float4 ndc = float4(uv * 2 - 1, 0, 1);
-		float4 worldPos = mul(_VP_Inv, ndc);
+		float4 worldPos = mul(_VP_Inv_NoJitter, ndc);
 		pos = worldPos.xyz / worldPos.w;
 	}
 	float3 v = normalize(pos - p);
@@ -351,46 +353,20 @@ void FullResolutionUpsample(const uint2 id : SV_DispatchThreadID, const uint2 gr
 
 		bool hitGround = IntersectSphere(p, v, float3(0, 0, 0), planet_radius) > 0;
 
-		float4 highCloud = 0;
 		if (!hitGround) {
-			highCloud = HighCloud(p, v);
-			sc.xyz += highCloud.x * (numericalMieFit(dot(_SunDir, v)) + numericalMieFitMultiScatter()) * Sunlight(highCloud.yzw, _SunDir) * T_tab_fetch(p, v) * 0.5 * res.a * res.a * smoothstep(0.05, 0.1, dot(normalize(p), v)) * _Brightness;
-			sc.xyz += T_tab_fetch(p, v) * (1 - smoothstep(-0.05, 0, dot(normalize(p), _SunDir))) * Space(v) * res.a * res.a * _Brightness;
+			sc.xyz += T_tab_fetch(p, v) * (1 - smoothstep(-0.05, 0, dot(normalize(p), _SunDir))) * Space(v) * res.a * _Brightness * 50;
+
+			float3 coef = (numericalMieFit(dot(_SunDir, v)) + 0.25) * _Brightness;
+
+			float4 highCloud = HighCloud(p, v);
+			sc.xyz += coef * Sunlight(highCloud.yzw, _SunDir) * T(p, highCloud.yzw) * highCloud.x;
+
+			float4 flowCloud = FlowCloud(p, v);
+			sc.xyz += 2 * coef * Sunlight(flowCloud.yzw, _SunDir) * T(p, flowCloud.yzw) * flowCloud.x;
 		}
 	}
 
-	_Cloud[id] = float4(/*aces_tonemap*/((res.xyz + res.a * sc.xyz)), sc.a);
-	//tex3Dlod(_WorleyPerlinVolume, float4(uv, 0, 0)).xyzw;
-	//RandSeed(id);
-
-	//float raw_d = _Depth[id];
-	//float d = LinearEyeDepth(raw_d);
-	//float max_depth = (1.0 / _ZBufferParams.w) * 0.998;
-	//float far_clip_fade = smoothstep(0.9, 1, d / max_depth);
-	//d = lerp(d, 999999, far_clip_fade);
-
-	//float2 uv = (id + 0.5) * _WH.zw;
-
-	//float3 wcpos = _V_Inv._m03_m13_m23;
-	//float3 p = wcpos;
-	//float3 pos;
-	//{
-	//	float4 ndc = float4(uv * 2 - 1, 0, 1);
-	//	float4 worldPos = mul(_VP_Inv, ndc);
-	//	pos = worldPos.xyz / worldPos.w;
-	//}
-	//float3 v = normalize(pos - p);
-
-	//p.y = max(p.y, 95) + planet_radius;
-
-	//float3 sky = 0;
-	//float4 sc = _SceneColorTex[id];
-	//if (raw_d == 0) {
-	//	_Cloud[id] = float4(aces_tonemap(CloudRender(wcpos, p, v, d).xxx * 10), 1);
-	//}
-	//else {
-	//	_Cloud[id] = float4(aces_tonemap(sc.xyz + sc.a * Scatter(p, v, d, _SunDir)), sc.a);
-	//}
+	_Cloud[id] = float4(res.xyz + res.a * sc.xyz, sc.a);
 }
 
 
@@ -415,12 +391,107 @@ void WriteCloudShadowMap(const uint2 id : SV_DispatchThreadID)
 {
 	float2 uv = (id + 0.5) / 1024;
 
-	float3 cloud_space_pos = mul(_CloudMat_Inv, float4(uv, 0, 1)).xyz;
+	float3 pos = mul(_CloudMat_Inv, float4(uv, 0, 1)).xyz;
 
 	float3 s = _SunDir;
-	s = s.y < -0.05 ? -s : s;
-	cloud_space_pos += s * 1000000;
-	cloud_space_pos += -s * IntersectSphere(cloud_space_pos, -s, float3(0, 0, 0), planet_radius + cloud_radi.x);
 
-	//_CloudSM[id] = GetT(0.1, cloud_space_pos, s);
+	float max_offset = planet_radius + cloud_radi.y;
+
+	float2 offset;
+	float2 offset_ = IntersectSphere2(pos + s * max_offset, -s, float3(0, 0, 0), planet_radius + cloud_radi.y);
+	offset.x = offset_.x;
+	offset.y = IntersectSphere(pos + s * max_offset, -s, float3(0, 0, 0), planet_radius + cloud_radi.x);
+	if (offset.y == 0) {
+		offset.y = offset_.y;
+	}
+
+	if (offset.x == 0) {
+		_CloudSM[id] = float4(0, 0, 0, 1);
+		return;
+	}
+
+	offset -= max_offset;
+
+	float3 wcpos = _V_Inv._m03_m13_m23;
+	wcpos.y = max(wcpos.y, 95) + planet_radius;
+
+	float l = offset.y - offset.x;
+
+	int sample_num = _Quality.y;
+
+	float delta_l = l / sample_num;
+
+	float t = offset.x + delta_l * _BlueNoise[id % 1024];
+
+	float scatter = 0;
+
+	float2 t2 = offset.yx;
+
+	for (int i = 0; i < sample_num; i++)
+	{
+		float3 sample_pos = pos - s * t;
+		float cam_dis = distance(sample_pos, wcpos);
+		float fade = clamp(1 - (cam_dis - 2000) / 26000, 0.2, 1);
+		float lod = max(0, (cam_dis - 8000) / 14000 * 4);
+
+		float3 sha = Cloud(sample_pos, fade, lod);
+
+		if (sha.x != 0) {
+			t2.x = min(t, t2.x);
+			t2.y = max(t, t2.y);
+			scatter += sha.x;
+		}
+
+		t += delta_l;
+	}
+
+	scatter /= sample_num;
+
+	_CloudSM[id] = float4(scatter, t2.x, t2.y - t2.x, scatter == 0 ? 1 : exp(-scatter * (t2.y - t2.x)));
+}
+
+
+groupshared float4 datas[16][17];
+
+[numthreads(8, 8, 1)]
+void BlurCloudShadowMap(int2 id : SV_DispatchThreadID, int2 groupThreadID : SV_GroupThreadID, int2 groupID : SV_GroupID)
+{
+	{
+		uint thread_id = groupThreadID.x + groupThreadID.y * 8;
+		int2 lbID = groupID * 8 + groupThreadID - 4;
+
+		datas[groupThreadID.x][groupThreadID.y] = _CloudSM[clamp(lbID, 0, 1023)];
+
+		int2 offset = int2(8, 0);
+		datas[groupThreadID.x + offset.x][groupThreadID.y + offset.y] = _CloudSM[clamp(lbID + offset, 0, 1023)];
+
+		offset = int2(0, 8);
+		datas[groupThreadID.x + offset.x][groupThreadID.y + offset.y] = _CloudSM[clamp(lbID + offset, 0, 1023)];
+
+		offset = int2(8, 8);
+		datas[groupThreadID.x + offset.x][groupThreadID.y + offset.y] = _CloudSM[clamp(lbID + offset, 0, 1023)];
+
+		GroupMemoryBarrierWithGroupSync();
+	}
+
+	float4 result = 0;
+	float w = 0;
+
+	int2 center = groupThreadID + 4;
+	for (int i = -4; i <= 4; i++)
+	{
+
+		for (int j = -4; j <= 4; j++)
+		{
+			float4 s = datas[center.x + i][center.y + j];
+			if (s.w != 1) {
+				result += s;
+				w += 1;
+			}
+		}
+	}
+
+	result = w == 0 ? float4(0, 0, 0, 1) : result / w;
+
+	_CloudSM[id] = result;
 }

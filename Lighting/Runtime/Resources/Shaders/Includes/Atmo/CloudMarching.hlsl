@@ -29,7 +29,7 @@ float _Brightness;
 #ifndef planet_radius
 #define planet_radius 6371e3
 #endif
-static float2 cloud_radi = float2(1500, 3750);
+static float2 cloud_radi = float2(1500, 4500);
 
 uint sampleIndex = 0;
 float rand_offset = 0;
@@ -90,6 +90,11 @@ float2 IntersectSphere2(float3 p, float3 v, float3 o, float r)
 	float q = (-b + ((b < 0.0) ? -sqrt(disc) : sqrt(disc))) / 2.0;
 	float t0 = q;
 	float t1 = c / q;
+	if (t0 > t1) {
+		float temp = t0;
+		t0 = t1;
+		t1 = temp;
+	}
 	return float2(t0, t1);
 }
 
@@ -134,19 +139,36 @@ float3 Space(float3 v) {
 	return tex2Dlod(_SpaceMap, float4(float2(0.5, 1.0) - sphereCoords, 0, 0)).xyz * 0.2;
 }
 
+float CloudShadow(float3 p) {
+	float3 cloud_uv = mul(_CloudMat, float4(p, 1)).xyz;
+	if (any(cloud_uv.xy > 1) || any(cloud_uv.xy < 0)) return 0;
+	float4 shadow = tex2Dlod(_CloudShadowMap, float4(cloud_uv.xy, 0, 0));
+
+	return shadow.a == 1 ? 1 : exp(-shadow.x * clamp(cloud_uv.z - shadow.y, 0, shadow.z));
+}
+
 inline float4 HighCloud(const float3 p, const float3 v) {
-	float dis = IntersectSphere(p, v, float3(0, 0, 0), planet_radius + cloud_radi.y + 100);
+	float dis = IntersectSphere(p, v, float3(0, 0, 0), planet_radius + cloud_radi.y + 2000);
 
 	float3 hitP = p + dis * v;
 	float3 nom_p = normalize(hitP);
 
-	float data1 = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 2000 + _Time.x * 0.02, 0, 0)).x;
-
-	float data2 = saturate(dis / 4000 - 1) * tex2Dlod(_HighCloudMap, float4(nom_p.xz * 100 + float2(-1, 1) * _Time.x * 0.01, 0, 0)).y;
+	float data1 = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 300 + _Time.x * 0.02, 0, 0)).x;
 
 	float control = tex2Dlod(_HighCloudMap, float4(nom_p.xz * 300 - _Time.x * 0.02, 0, 0)).z;
 
-	return float4(max(data1 * control, data2), hitP);
+	return float4(data1 * control, hitP);
+}
+
+inline float4 FlowCloud(const float3 p, const float3 v) {
+	float dis = IntersectSphere(p, v, float3(0, 0, 0), planet_radius + cloud_radi.y + 200);
+
+	float3 hitP = p + dis * v;
+	float3 nom_p = normalize(hitP);
+
+	float data2 = saturate(dis / 4000 - 1) * tex2Dlod(_HighCloudMap, float4(nom_p.xz * 200 + float2(-1, 1) * _Time.x * 0.01, 0, 0)).y;
+
+	return float4(data2, hitP);
 }
 
 inline float HeightDensity(float h, float y) {
@@ -154,7 +176,6 @@ inline float HeightDensity(float h, float y) {
 }
 
 inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
-
 	// get height fraction  (be sure to create a cloud_min_max variable)
 	float height_fraction = Cloud_H(p);
 	float oh = height_fraction;
@@ -175,7 +196,7 @@ inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
 	p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
 
 	float3 nom_p = normalize(p);
-	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, lod).rgb;
+	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, 0).rgb;
 
 	// read the low frequency Perlin-Worley and Worley noises
 	float4 low_frequency_noises = tex3Dlod(_WorleyPerlinVolume, float4(p * .00009333, lod));
@@ -209,7 +230,6 @@ inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
 }
 
 inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false) {
-
 	// get height fraction  (be sure to create a cloud_min_max variable)
 	float height_fraction = Cloud_H(p);
 	float oh = height_fraction;
@@ -230,7 +250,7 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
 
 	float3 nom_p = normalize(p);
-	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, lod).rgb;
+	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, 0).rgb;
 
 	// read the low frequency Perlin-Worley and Worley noises
 	float4 low_frequency_noises = tex3Dlod(_WorleyPerlinVolume, float4(p * .00009333, lod));
@@ -292,24 +312,15 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 }
 
 #define Shading	\
-	float depth_probability = pow(max(0, sample_sha.x * 150), remap(sample_sha.y, 0.3, 0.85, 0.3, 2));\
-	float vertical_probability = pow(remap(sample_sha.y, 0.07, 0.14, 0.1, 1.0), 0.8);\
+	float depth_probability = pow(max(0, sample_sha.x * 150), remap(sample_sha.y, 0.3, 0.85, 0.3, 1));\
+	float vertical_probability = remap(sample_sha.y, 0.07, 0.14, 0.1, 1.0);\
 	float in_scatter_probability = depth_probability * vertical_probability;\
 	float energy;\
 	{\
-		float shadowLength = 1200;\
-		float shadowScatter = 0;\
-		float inv_sample_num = 1.0 / shadow_sample_num;\
-		shadowLength *= inv_sample_num;\
-		float3 v_ = s * shadowLength;\
-		for (int j = 0; j < shadow_sample_num; j++)\
-		{\
-			float3 lpos_ = v_ * (j + Rand()) + sample_pos;\
-			shadowScatter += Cloud(lpos_, fade, max(lod, (float)j / shadow_sample_num * 4)).x;\
-		}\
-		float forward_scatter = exp(-shadowScatter * shadowLength);\
+		float shadow = CloudShadow(sample_pos);\
+		float forward_scatter = shadow;\
 		energy = forward_scatter * 10 * (1 - InvVDotS01);\
-		energy += lerp(0.3, 1, sample_sha.z) * 2 * lerp(smoothstep(0.2, 0.7, sample_sha.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(exp(-0.2 * shadowScatter * shadowLength) * 0.7, forward_scatter);\
+		energy += lerp(0.3, 1, sample_sha.z) * 2 * lerp(smoothstep(0.2, 0.7, sample_sha.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(pow(abs(shadow), 0.2) * 0.7, forward_scatter);\
 	}\
 	float light = energy;\
 	float msPhase = multiScatterPhase;\
@@ -317,7 +328,7 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	amb += sample_sha.z * acc_response * lerp(0, 0.3 + 0.7 * smoothstep(0.2, 0.7, sample_sha.y), sunHeight) * lerp(1, in_scatter_probability, rescaledPdotS01);\
 
 
-float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, out float cloud_occ, float d = 9999999) {
+float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ, float d = 9999999) {
 	cloud_dis = 0;
 	cloud_occ = 1;
 	const float max_dis = lerp(8000, 24000, _Quality.w);
@@ -415,7 +426,6 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, out flo
 	}
 	float skip_rate = 0.0001;// lerp(0.1, 0.03, _Quality.w);
 	{
-		int shadow_sample_num = _Quality.y * 2;
 		find_hit = false;
 
 		float3 sample_sha;
@@ -466,7 +476,6 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, out flo
 	}
 	if (find_hit)
 	{
-		int shadow_sample_num = _Quality.y / 2;
 		float3 sample_sha;
 		float3 sample_pos;
 		float acc_response = 0;
@@ -524,12 +533,6 @@ float4 CloudRender(float3 camP, float3 p, float3 v, out float cloud_dis, out flo
 	res.z = hit_h.y != 0 ? hit_h.x / hit_h.y : 0;
 
 	return res;
-}
-
-float CloudShadow(float3 p) {
-	float2 cloud_uv = mul(_CloudMat, float4(p, 1)).xy;
-	if (any(cloud_uv > 1) || any(cloud_uv < 0)) return 1;
-	return tex2Dlod(_CloudShadowMap, float4(cloud_uv, 0, 0)).x;
 }
 
 float VolumeLight(float depth, float3 x, float3 x_0, float3 x_1, float3 x_2) {

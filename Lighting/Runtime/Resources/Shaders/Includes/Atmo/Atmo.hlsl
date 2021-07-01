@@ -83,8 +83,10 @@ inline const float valid(const float x) {
 
 #define atmosphere_radius (planet_radius + atmosphere_thickness)
 
-#define H_R atmosphere_thickness
+#define H_R (atmosphere_thickness / 10)
 #define H_M (H_R / (8.0 / 1.2))
+#define H_O (atmosphere_thickness / 3.2)
+#define H_O_T (atmosphere_thickness / 5.33)
 #define beta_M_S_0 (float3(4e-6, 4e-6, 4e-6) * _MeiScatter)
 #define beta_M_A_0 (float3(8.4e-6, 8.4e-6, 8.4e-6) * _MeiScatter)
 #define beta_R_S_0 (_RayleighScatter * 33.1e-6)
@@ -190,7 +192,7 @@ inline float P_M(const float mu) {
 }
 
 inline const float3 Beta_OZO_A(const float h) {
-	return lerp(beta_OZO_0 * exp(-h / H_R), 0, saturate(h / atmosphere_thickness * 6 - 5));
+	return lerp(beta_OZO_0 * max(0, 1 - abs(h - H_O) / H_O_T), 0, saturate(h / atmosphere_thickness * 6 - 5));
 }
 
 

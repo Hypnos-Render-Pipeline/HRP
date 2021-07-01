@@ -10,7 +10,7 @@ namespace HypnosRenderPipeline
         [Min(10000)]
         public float planetRadius = 6371e3f;
         [Min(100)]
-        public float AtmosphereThickness = 8e3f;
+        public float AtmosphereThickness = 8e4f;
 
         [Range(0.01f, 100f)]
         public float brightness = 1;

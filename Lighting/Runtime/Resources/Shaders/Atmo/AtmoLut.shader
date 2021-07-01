@@ -216,7 +216,7 @@ Shader "Hidden/AtmoLut"
                     float noise = hash12(id);
 
                     if (noise * 16 > k[index]) {
-                        output.xyz += 0.2/255.;
+                        output.xyz += 0.2/255. * output;
                     }
                     return output;
                 }

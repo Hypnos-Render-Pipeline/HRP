@@ -1,4 +1,5 @@
 using Unity.Mathematics;
+using static Unity.Mathematics.math;
 using UnityEngine;
 using UnityEngine.Rendering;
 using HypnosRenderPipeline.Tools;
@@ -17,6 +18,9 @@ namespace HypnosRenderPipeline.RenderPass
         public Vector3Int VolumeResolution = new Vector3Int(32, 32, 32);
 
         public float VolumeMaxDepth = 32000;
+
+        [Range(8000, 160000)]
+        public float CloudShadowDistance = 16000;
 
         public bool applyAtmoFog = true;
 
@@ -44,6 +48,9 @@ namespace HypnosRenderPipeline.RenderPass
 
         [NodePin(PinType.Out)]
         public TexturePin skyBox = new TexturePin(new RenderTextureDescriptor(128, 128, RenderTextureFormat.ARGBHalf) { dimension = TextureDimension.Cube, useMipMap = true }, sizeScale: SizeScale.Custom);
+
+        [NodePin(PinType.Out)]
+        public TexturePin cloudShadowMap = new TexturePin(new RenderTextureDescriptor(1024, 1024, RenderTextureFormat.ARGBFloat, 0) { enableRandomWrite = true }, sizeScale: SizeScale.Custom);
 
         [NodePin(PinType.Out)]
         public AfterAtmo afterAtmo = new AfterAtmo();
@@ -95,6 +102,7 @@ namespace HypnosRenderPipeline.RenderPass
             public static int _SpaceMap = Shader.PropertyToID(nameof(_SpaceMap));
 
             public static int _CloudShadowMap = Shader.PropertyToID(nameof(_CloudShadowMap));
+            public static int _CloudSM = Shader.PropertyToID(nameof(_CloudSM));            
         }
         struct PropertyIDs
         {
@@ -128,6 +136,7 @@ namespace HypnosRenderPipeline.RenderPass
             FullResolutionUpsample,
             LoadVolumeData,
             WriteCloudShadowMap,
+            BlurCloudShadowMap,
         }
 
 
@@ -281,19 +290,19 @@ namespace HypnosRenderPipeline.RenderPass
 
                     if (atmo.quality == HRPAtmo.Quality.low)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(80, 5, 96, 0));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(80, 8, 64, 0));
                     }
                     else if (atmo.quality == HRPAtmo.Quality.medium)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(50, 7, 164, 0.2f));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(40, 12, 128, 0.2f));
                     }
                     else if (atmo.quality == HRPAtmo.Quality.high)
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(40, 9, 256, 0.66f));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(20, 16, 256, 0.66f));
                     }
                     else
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(20, 12, 512, 1));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(10, 24, 512, 1));
                     }
 
 #if UNITY_EDITOR
@@ -363,16 +372,34 @@ namespace HypnosRenderPipeline.RenderPass
 
                         cb.SetGlobalVector(PropertyIDs._WH, _WH);
 
-                        //var cloudTrans = ConstructCloudTransform(cam, light);
-                        //cb.SetGlobalMatrix(Properties._CloudMat, cloudTrans);
-                        //cb.SetGlobalMatrix(Properties._CloudMat_Inv, cloudTrans.inverse);
 
 
+                        float3 sunX;
+                        if (abs(dir.y) != 1)
+                        {
+                            sunX = normalize(cross(dir, Vector3.up));
+                        }
+                        else
+                        {
+                            sunX = Vector3.left;
+                        }
 
-                        cb.GetTemporaryRT(TextureIDs._CloudShadowMap, r16Desc, FilterMode.Bilinear);
-                        //cb.SetComputeTextureParam(cloudCS, (int)CloudPass.WriteCloudShadowMap, TextureIDs._CloudSM, TextureIDs._CloudSM);
-                        //cb.DispatchCompute(cloudCS, (int)CloudPass.WriteCloudShadowMap, 1024 / 8, 1024 / 8, 1);
-                        cb.SetGlobalTexture(TextureIDs._CloudShadowMap, TextureIDs._CloudShadowMap);
+                        float3 sunY = cross(sunX, dir);
+                        float3 sunZ = -dir;
+                        float3 sunP = context.camera.transform.position;
+                        sunP.y = atmo.planetRadius + 3000;
+
+                        float CloudShadowDistance2 = CloudShadowDistance * 2;
+                        float4x4 cloudMat_Inv = float4x4(float4(sunX * CloudShadowDistance2, 0), float4(sunY * CloudShadowDistance2, 0), float4(sunZ, 0), float4(sunP - (sunX + sunY) * CloudShadowDistance, 1));
+                        float4x4 cloudMat = inverse(cloudMat_Inv);
+
+                        cb.SetGlobalMatrix(PropertyIDs._CloudMat, cloudMat);
+                        cb.SetGlobalMatrix(PropertyIDs._CloudMat_Inv, cloudMat_Inv);
+                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.WriteCloudShadowMap, TextureIDs._CloudSM, cloudShadowMap);
+                        cb.DispatchCompute(cloudCS, (int)CloudPass.WriteCloudShadowMap, 1024 / 8, 1024 / 8, 1);
+                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.BlurCloudShadowMap, TextureIDs._CloudSM, cloudShadowMap);
+                        cb.DispatchCompute(cloudCS, (int)CloudPass.BlurCloudShadowMap, 1024 / 8, 1024 / 8, 1);
+                        cb.SetGlobalTexture(TextureIDs._CloudShadowMap, cloudShadowMap);
 
 
 
@@ -444,7 +471,6 @@ namespace HypnosRenderPipeline.RenderPass
                         cb.ReleaseTemporaryRT(TextureIDs._Ray_Index);
                         cb.ReleaseTemporaryRT(TextureIDs._DownSampled_MinMax_Depth);
                         cb.ReleaseTemporaryRT(TextureIDs._Cloud);
-                        cb.ReleaseTemporaryRT(TextureIDs._CloudShadowMap);
                     }
                 }
 
