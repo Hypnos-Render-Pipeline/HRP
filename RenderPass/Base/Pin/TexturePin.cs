@@ -117,9 +117,15 @@ namespace HypnosRenderPipeline.RenderPass
         {
             var from = pin.handle;
 
-            if ((pin as TexturePin).desc.basicDesc.colorFormat == RenderTextureFormat.Depth)
+            var texDesc = (pin as TexturePin).desc.basicDesc;
+
+            if (texDesc.colorFormat == RenderTextureFormat.Depth)
             {
                 renderContext.commandBuffer.BlitDepth(from, handle);
+            }
+            else if (texDesc.dimension == TextureDimension.Cube)
+            {
+                renderContext.commandBuffer.BlitSkybox(from, handle, null, 0);
             }
             else
             {

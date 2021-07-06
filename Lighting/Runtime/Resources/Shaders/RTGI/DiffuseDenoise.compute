@@ -226,11 +226,11 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 int variance;
 float2 _ProcessRange;
 
-#define SPATIAL_RADIUS 7
+#define SPATIAL_RADIUS 6
 #define GROUPSHARED_SIZE (8 + SPATIAL_RADIUS * 2)
 #define GROUPSHARED_COUNT (GROUPSHARED_SIZE * GROUPSHARED_SIZE)
-groupshared float4 buffer2_0[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
-groupshared float4 buffer2_1[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
+groupshared float4 buffer2_0[GROUPSHARED_SIZE][33];
+groupshared float4 buffer2_1[GROUPSHARED_SIZE][33];
 groupshared bool active;
 
 RWStructuredBuffer<int> _Indirect;

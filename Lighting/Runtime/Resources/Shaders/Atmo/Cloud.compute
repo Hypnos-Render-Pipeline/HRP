@@ -432,7 +432,7 @@ void WriteCloudShadowMap(const uint2 id : SV_DispatchThreadID)
 		float3 sample_pos = pos - s * t;
 		float cam_dis = distance(sample_pos, wcpos);
 		float fade = clamp(1 - (cam_dis - 2000) / 26000, 0.2, 1);
-		float lod = max(0, (cam_dis - 8000) / 14000 * 4);
+		float lod = saturate((cam_dis - 4000) / 4000) * 6;
 
 		float3 sha = Cloud(sample_pos, fade, lod);
 
@@ -451,7 +451,7 @@ void WriteCloudShadowMap(const uint2 id : SV_DispatchThreadID)
 }
 
 
-groupshared float4 datas[16][17];
+groupshared float4 datas[16][33];
 
 [numthreads(8, 8, 1)]
 void BlurCloudShadowMap(int2 id : SV_DispatchThreadID, int2 groupThreadID : SV_GroupThreadID, int2 groupID : SV_GroupID)

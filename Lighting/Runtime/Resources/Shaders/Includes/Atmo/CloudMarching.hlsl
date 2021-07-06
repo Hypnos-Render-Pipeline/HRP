@@ -18,9 +18,9 @@ sampler2D _CloudShadowMap;
 Texture2D _CloudMap;		SamplerState Bilinear_Mirror_Sampler;
 sampler2D _HighCloudMap;
 sampler2D _SpaceMap;
-sampler3D _WorleyPerlinVolume;
-sampler3D _WorleyVolume;
-sampler2D _CurlNoise;
+Texture3D _WorleyPerlinVolume; SamplerState Trilinear_Repeat_Sampler;
+Texture3D _WorleyVolume;
+Texture2D _CurlNoise;
 Texture2D<float> _BlueNoise;
 
 int _Clock;
@@ -199,7 +199,7 @@ inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
 	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, 0).rgb;
 
 	// read the low frequency Perlin-Worley and Worley noises
-	float4 low_frequency_noises = tex3Dlod(_WorleyPerlinVolume, float4(p * .00009333, lod));
+	float4 low_frequency_noises = _WorleyPerlinVolume.SampleLevel(Trilinear_Repeat_Sampler, p * .00009333, lod);
 
 	// build an fBm out of  the low frequency Worley noises that can be used to add detail to the Low frequency Perlin-Worley noise
 	float low_freq_fBm = dot(low_frequency_noises.gba, float3(0.625, 0.25, 0.125));
@@ -253,7 +253,7 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, 0).rgb;
 
 	// read the low frequency Perlin-Worley and Worley noises
-	float4 low_frequency_noises = tex3Dlod(_WorleyPerlinVolume, float4(p * .00009333, lod));
+	float4 low_frequency_noises = _WorleyPerlinVolume.SampleLevel(Trilinear_Repeat_Sampler, p * .00009333, lod);
 
 	// build an fBm out of  the low frequency Worley noises that can be used to add detail to the Low frequency Perlin-Worley noise
 	float low_freq_fBm = dot(low_frequency_noises.gba, float3(0.625, 0.25, 0.125));
@@ -291,11 +291,11 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	{
 
 		// add some turbulence to bottoms of clouds using curl noise.  Ramp the effect down over height and scale it by some value (200 in this example)
-		float2 curl_noise = tex2Dlod(_CurlNoise, float4(p.xz * 0.000528, 0, 0)).rg;
+		float2 curl_noise = _CurlNoise.SampleLevel(Trilinear_Repeat_Sampler, p.xz * 0.000528, 0).rg;
 		p.xz += curl_noise * (1.0 - height_fraction) * 240;
 
 		// sample high-frequency noises
-		float3 high_frequency_noises = tex3Dlod(_WorleyVolume, float4 (p * 0.002, lod)).rgb;
+		float3 high_frequency_noises = _WorleyVolume.SampleLevel(Trilinear_Repeat_Sampler, p * 0.002, lod).rgb;
 
 		// build High frequency Worley noise fBm
 		float high_freq_fBm = dot(high_frequency_noises, float3(0.625, 0.25, 0.125));
@@ -311,20 +311,20 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 }
 
 #define Shading	\
-	float depth_probability = pow(max(0, sample_sha.x * 150), remap(sample_sha.y, 0.3, 0.85, 0.3, 1));\
-	float vertical_probability = remap(sample_sha.y, 0.07, 0.14, 0.1, 1.0);\
+	float depth_probability = pow(max(0, sha.x * 150), remap(sha.y, 0.3, 0.85, 0.3, 1));\
+	float vertical_probability = remap(sha.y, 0.07, 0.14, 0.1, 1.0);\
 	float in_scatter_probability = depth_probability * vertical_probability;\
 	float energy;\
 	{\
-		float shadow = CloudShadow(sample_pos);\
+		float shadow = CloudShadow(pos);\
 		float forward_scatter = shadow;\
 		energy = forward_scatter * 10 * (1 - InvVDotS01);\
-		energy += lerp(0.3, 1, sample_sha.z) * 2 * lerp(smoothstep(0.2, 0.7, sample_sha.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(pow(abs(shadow), 0.2) * 0.7, forward_scatter);\
+		energy += lerp(0.3, 1, sha.z) * 2 * lerp(smoothstep(0.2, 0.7, sha.y) * 0.5 + 0.5, 1, smoothstep(0, 0.7, InvVDotS01)) * max(pow(abs(shadow), 0.2) * 0.7, forward_scatter);\
 	}\
 	float light = energy;\
 	float msPhase = multiScatterPhase;\
-	sun += acc_response * msPhase * light * in_scatter_probability;\
-	amb += sample_sha.z * acc_response * lerp(0, 0.3 + 0.7 * smoothstep(0.2, 0.7, sample_sha.y), sunHeight) * lerp(1, in_scatter_probability, rescaledPdotS01);\
+	sun += response * msPhase * light * in_scatter_probability;\
+	amb += sha.z * response * lerp(0, 0.3 + 0.7 * smoothstep(0.2, 0.7, sha.y), sunHeight) * lerp(1, in_scatter_probability, rescaledPdotS01);\
 
 
 float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ, float d = 9999999) {
@@ -374,7 +374,7 @@ float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ,
 	
 	float fade = clamp(1 - (offset - 2000) / 26000, 0.2, 1);
 	actual_sample_num *= fade;
-	float lod = (offset - 8000) / 14000 * 4;
+	float lod = saturate((offset - 4000) / 4000) * 6;
 	
 	float sun = 0;
 	float amb = 0;
@@ -427,9 +427,6 @@ float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ,
 	{
 		find_hit = false;
 
-		float3 sample_sha;
-		float3 sample_pos;
-		float acc_response = 0;
 		[loop]
 		for (int i = start_index; i < actual_sample_num; i++)
 		{
@@ -444,18 +441,8 @@ float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ,
 				scatter = 1 - scatter;
 
 				float response = trans * scatter;
-				acc_response += response;
-				if (Rand() < response / acc_response) {
-					sample_sha = sha;
-					sample_pos = pos;
-				}
 
-				if (acc_response > skip_rate) {
-					
-					Shading;
-					
-					acc_response = 0;
-				}
+				Shading;
 
 				hit_h += float2(sha.y * sha.z * response, response);
 				av_dis += float2(i * response, response);
@@ -468,23 +455,16 @@ float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ,
 				break;
 			}
 		}
-		if (acc_response != 0)
-		{
-			Shading;
-		}
 	}
 	if (find_hit)
 	{
-		float3 sample_sha;
-		float3 sample_pos;
-		float acc_response = 0;
 		int skip_num = 0;
 		[loop]
 		for (int i = start_index; i < actual_sample_num; i++)
 		{
 			float3 pos = v * (i + Rand()) + st;
 
-			float3 sha = Cloud(pos, fade, lod, true);
+			float3 sha = Cloud(pos, fade, lod);
 			float scatter = sha.x;
 			if (scatter != 0) {
 
@@ -494,18 +474,7 @@ float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ,
 
 				float response = trans * scatter;
 
-				acc_response += response;
-				if (Rand() < response / acc_response) {
-					sample_sha = sha;
-					sample_pos = pos;
-				}
-
-				if (acc_response > skip_rate)
-				{
-					Shading;
-
-					acc_response = 0;
-				}
+				Shading;
 
 				hit_h += float2(sha.y * sha.z * response, response);
 				av_dis += float2(i * response, response);
@@ -514,10 +483,6 @@ float4 CloudRender(float3 p, float3 v, out float cloud_dis, out float cloud_occ,
 			if (trans <= alphaFallback / 5) {
 				break;
 			}
-		}
-		if (acc_response != 0)
-		{
-			Shading;
 		}
 	}
 

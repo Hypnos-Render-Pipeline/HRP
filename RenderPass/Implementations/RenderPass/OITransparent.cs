@@ -76,6 +76,8 @@ namespace HypnosRenderPipeline.RenderPass
 
             cb.DrawRenderers(context.defaultCullingResult, ref a, ref b);
 
+            cb.ClearRandomWriteTargets();
+
             var tmp_color = Shader.PropertyToID("_TempColor");
             cb.GetTemporaryRT(tmp_color, target.desc.basicDesc);
             cb.Blit(target, tmp_color, OITBlend, 0);

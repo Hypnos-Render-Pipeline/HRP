@@ -39,7 +39,7 @@ namespace HypnosRenderPipeline.RenderPass
         public TexturePin normal = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.ARGB32, 0));
 
         [NodePin(PinType.In)]
-        public TexturePin skybox = new TexturePin(new RenderTextureDescriptor(1, 1, RenderTextureFormat.Default) { dimension = TextureDimension.Cube }, sizeScale: SizeScale.Custom);
+        public TexturePin skybox = new TexturePin(new RenderTextureDescriptor(2, 2, RenderTextureFormat.Default) { dimension = TextureDimension.Cube }, sizeScale: SizeScale.Custom);
 
         public bool useRTShadow = false;
         [Range(1, 8)]

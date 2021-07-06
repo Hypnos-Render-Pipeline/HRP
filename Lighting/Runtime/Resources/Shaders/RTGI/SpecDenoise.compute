@@ -227,9 +227,9 @@ float2 _ProcessRange;
 #define SPATIAL_RADIUS 3
 #define GROUPSHARED_SIZE (8 + SPATIAL_RADIUS * 2)
 #define GROUPSHARED_COUNT (GROUPSHARED_SIZE * GROUPSHARED_SIZE)
-groupshared float4 buffer2_0[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
-groupshared float4 buffer2_1[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
-groupshared float  buffer2_2[GROUPSHARED_SIZE][GROUPSHARED_SIZE];
+groupshared float4 buffer2_0[GROUPSHARED_SIZE][17];
+groupshared float4 buffer2_1[GROUPSHARED_SIZE][17];
+groupshared float  buffer2_2[GROUPSHARED_SIZE][17];
 groupshared bool active;
 
 RWStructuredBuffer<int> _Indirect;

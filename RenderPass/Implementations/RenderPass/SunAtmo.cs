@@ -20,7 +20,7 @@ namespace HypnosRenderPipeline.RenderPass
         public float VolumeMaxDepth = 32000;
 
         [Range(8000, 160000)]
-        public float CloudShadowDistance = 16000;
+        public float CloudShadowDistance = 32000;
 
         public bool applyAtmoFog = true;
 

@@ -231,7 +231,7 @@ Shader "Hidden/AtmoLut"
 
                 #define T T_TAB
                 #include "../Includes/Atmo/Atmo.hlsl"
-                //#include "../Includes/Atmo/CloudMarching.hlsl"
+                #include "../Includes/Atmo/CloudMarching.hlsl"
 
                 int _RenderGround;
                 int _Slice;
@@ -239,7 +239,8 @@ Shader "Hidden/AtmoLut"
                 fixed3 frag(v2f i) : SV_Target
                 {
                     float3 s = normalize(_SunDir);
-                    float3 x = float3(0, planet_radius + max(95, _WorldSpaceCameraPos.y), 0);
+                    float3 x = _WorldSpaceCameraPos;
+                    x.y = planet_radius + max(95, x.y);
                     float3 v = 0;
 
                     if (_Slice == 0) {
@@ -265,7 +266,49 @@ Shader "Hidden/AtmoLut"
                     X_0(x, v, x_0);
 
                     float3 res = SkyBox(x, v, s) * _SunLuminance;
-                    //res += T_tab_fetch(x, v) * (1 - smoothstep(-0.05, 0, dot(normalize(x), _SunDir))) * Space(v) * _Multiplier;
+
+                    RandSeed(i.vertex.xy);
+
+                    float cloud_dis;
+                    float av_occ;
+                    _Quality = float4(80, 8, 64, 0);
+                    float4 marching_res = CloudRender(x, v, cloud_dis, av_occ);
+
+                    float3 cloud = 0;
+
+                    if (cloud_dis != 0) {
+                        // cloud shading
+                        float3 present_point = x + v * cloud_dis;
+                        float3 sunLight = Sunlight(present_point, s);
+                        float3 ambd = Tu_L(x, s) * _SunLuminance * 0.1;
+                        float3 sky = SkyBox(present_point, normalize(present_point), s) * _SunLuminance;
+                        float3 ambu = sky * (1 - marching_res.z) * 3;
+                        float3 amb = (lerp(ambd, ambu, marching_res.z * 0.7 + 0.3) + sunLight * 0.5 * marching_res.z) * 4;
+                        cloud = (marching_res.x * sunLight + marching_res.y * amb) * _Brightness;
+
+                        // apply atmo fog to cloud
+                        float3 fog = res * av_occ;
+                        float3 trans = T(x, present_point);
+                        trans = smoothstep(0.1, 0.97, trans);
+                        cloud = cloud * trans + fog * (1 - trans) * (1 - marching_res.a);
+                    }
+
+
+                    bool hitGround = IntersectSphere(x, v, float3(0, 0, 0), planet_radius) > 0;
+
+                    if (!hitGround) {
+                        res.xyz += T_tab_fetch(x, v) * (1 - smoothstep(-0.05, 0, dot(normalize(x), s))) * Space(v) * _Brightness * 50;
+
+                        float3 coef = (numericalMieFit(dot(s, v)) + 0.25) * _Brightness;
+
+                        float4 highCloud = HighCloud(x, v);
+                        res.xyz += coef * Sunlight(highCloud.yzw, s) * T(x, highCloud.yzw) * highCloud.x;
+
+                        float4 flowCloud = FlowCloud(x, v);
+                        res.xyz += 2 * coef * Sunlight(flowCloud.yzw, s) * T(x, flowCloud.yzw) * flowCloud.x;
+                    }
+
+                    res = lerp(cloud, res, marching_res.a);
 
                     return res;
                 }
