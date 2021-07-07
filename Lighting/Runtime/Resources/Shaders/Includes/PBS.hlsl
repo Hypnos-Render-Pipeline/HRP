@@ -135,19 +135,8 @@ inline float PerceptualRoughnessToRoughness(const float perceptualRoughness)
 
 inline float SmithJointGGXVisibilityTerm(const float NdotL, const float NdotV, const float roughness)
 {
-	float k = (roughness + 0.01) * (roughness + 0.01) / 1.01 / 1.01 / 3;
+	float k = (roughness + 0.01) * (roughness + 0.01) / 1.01 / 1.01 / 2;
 	return (1e-5f + NdotL * NdotV) / (1e-5f + lerp(NdotL, 1, k) * lerp(NdotV, 1, k));
-}
-
-inline float SmithJointGGXVisibilityTerm2(const float NdotL, const float NdotV, const float roughness)
-{
-	float k = roughness + 1;
-	k *= k / 8;
-	float a = NdotV + 1e-5;
-	float b = NdotL + 1e-5;
-	float G_1 = 1 / (a*(1-k) + k);
-	float G_2 = 1 / (b*(1-k) + k);
-	return G_1 * G_2;
 }
 
 inline float GGXTerm(const float NdotH, const float roughness)
@@ -363,11 +352,10 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	DFG = F * lerp(DFG, DFG + coatDG, clearCoat);
 	
 	if (type == 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
-	else if (type == 2) return (G * M_1_PI * F) * lightSatu * ao.y;
+	else if (type == 2) return G * M_1_PI * F * lightSatu * ao.y;
 	else if (type == 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
 	else if (type == 8) return nl * DFG * ao.y * lightSatu;
 	else if (type == 16) return nl * diffuseTerm * diffColor * ao.x * lightSatu;
-	else if (type == 32) return F * lightSatu * ao.y;
 	else return 0;
 }
  
@@ -377,7 +365,6 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 #define PBS_FULLY (4)
 #define PBS_SS_SPEC (8)
 #define PBS_SS_DIFFUSE (16)
-#define PBS_SPECULAR_F (32)
 
 float CalculateDiffuseAO(float ao, float3 L, float3 gN) {
 	float NdotL = max(0, dot(normalize(L), gN));

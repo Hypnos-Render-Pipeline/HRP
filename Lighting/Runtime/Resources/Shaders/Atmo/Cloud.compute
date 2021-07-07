@@ -267,7 +267,7 @@ void CheckboardUpsample(const uint2 id : SV_DispatchThreadID, const uint2 group_
 	}
 
 	if (weight < 1) { // sometime sill lost sample, prevent NAN by this
-		_HalfResResult[id] = lerp(history, average_result, 0.5);
+		_HalfResResult[id] = history;
 	}
 	else {
 		_HalfResResult[id] = clamp(history, aabb_low, aabb_high);

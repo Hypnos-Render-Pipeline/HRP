@@ -184,8 +184,7 @@ namespace HypnosRenderPipeline.RenderPass
 
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_Variance", var0);
             cb.SetComputeTextureParam(denoise, CSPass.SFilterIndirect, "_HalfIndexTex", halfIndex);
-            DispatchSpatialFilter(cb, tempRef2, 0.9f, 0.95f);
-            DispatchSpatialFilter(cb, tempRef2, 0.8f, 0.9f);
+            DispatchSpatialFilter(cb, tempRef2, 0.8f, 0.95f);
             DispatchSpatialFilter(cb, tempRef2, 0.6f, 0.8f);
             DispatchSpatialFilter(cb, tempRef2, 0.3f, 0.6f);
             DispatchSpatialFilter(cb, tempRef2, 0, 0.3f);

@@ -13,6 +13,9 @@ namespace HypnosRenderPipeline.RenderGraph
         public bool useCompliedCodeInEditor = false;
 #endif
 
+        [Tooltip("Todo")]
+        public bool enableDLSS = false;
+
         public HypnosRenderGraph hypnosRenderPipelineGraph;
 
         public HRPMaterialResources materialResources;

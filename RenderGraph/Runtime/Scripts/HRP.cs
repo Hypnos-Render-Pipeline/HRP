@@ -133,10 +133,29 @@ namespace HypnosRenderPipeline
                 {
                     renderNum = 2;
                 }
+
+
+
                 for (int renderIndex = 0; renderIndex < renderNum; renderIndex++)
                 {
 #endif
                     BeginCameraRendering(context, cam);
+
+                    RenderTexture original_target_tex = null;
+                    RenderTexture place_holder_tex = null;
+                    if (m_asset.enableDLSS
+#if UNITY_EDITOR
+                    && cam.cameraType == CameraType.Game
+#endif
+                    )
+                    {
+                        place_holder_tex = RenderTexture.GetTemporary(new RenderTextureDescriptor(cam.pixelWidth / 2, cam.pixelHeight / 2, RenderTextureFormat.DefaultHDR));
+                        original_target_tex = cam.targetTexture;
+                        cam.targetTexture = place_holder_tex;
+                        rc.enableDLSS = true;
+                    }
+                    else
+                        rc.enableDLSS = false;
 
                     if (cam.cameraType == CameraType.Game)
                     {
@@ -152,6 +171,11 @@ namespace HypnosRenderPipeline
                         if (usePostProcessing && cameraPostProcessLayer.antialiasingMode == PostProcessLayer.Antialiasing.TemporalAntialiasing)
                         {
                             cameraPostProcessLayer.temporalAntialiasing.ConfigureJitteredProjectionMatrix(new PostProcessRenderContext() { camera = cam });
+                            rc.jitter = cameraPostProcessLayer.temporalAntialiasing.jitter;
+                        }
+                        else
+                        {
+                            rc.jitter = Vector2.zero;
                         }
                     }
 
@@ -367,6 +391,17 @@ namespace HypnosRenderPipeline
                     }
 #endif
 
+                    if (m_asset.enableDLSS
+#if UNITY_EDITOR
+                    && cam.cameraType == CameraType.Game
+#endif
+                    )
+                    {
+                        cb.Blit(place_holder_tex, BuiltinRenderTextureType.CameraTarget);
+                        cam.targetTexture = original_target_tex;
+                        RenderTexture.ReleaseTemporary(place_holder_tex);
+                    }
+
 #if UNITY_EDITOR
                     if (cam.cameraType == CameraType.SceneView)
                     {
@@ -396,11 +431,12 @@ namespace HypnosRenderPipeline
                             cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
                     }
 #else
-                if (cam.targetTexture != null)
-                    cb.Blit(result, cam.targetTexture);
-                else
-                    cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
+                    if (cam.targetTexture != null)
+                        cb.Blit(result, cam.targetTexture);
+                    else
+                        cb.Blit(result, BuiltinRenderTextureType.CameraTarget);
 #endif
+
                     cb.ReleaseTemporaryRT(result);
                     context.ExecuteCommandBuffer(cb);
                     cb.Clear();

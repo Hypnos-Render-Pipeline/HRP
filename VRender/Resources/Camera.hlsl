@@ -83,12 +83,12 @@ void RayGeneration()
 	float2 roberts = Roberts2(sample_turn);
 	int4 sampleState = int4(dispatchIdx + int2(roberts * 128), frameIndex, 0);
 
-	float rnd = Roberts1(frameIndex);
+	//float rnd = Roberts1(frameIndex);
 
-	if (rnd > variance && old.w * sqrt_spp > 256) {
-		Target[dispatchIdx] = 0;
-		return;
-	}
+	//if (rnd > variance && old.w * sqrt_spp > 256) {
+	//	Target[dispatchIdx] = 0;
+	//	return;
+	//}
 
 	for (int i = 0; i < spp; i++) {
 		float2 offset = Roberts2(frameIndex * spp + i);

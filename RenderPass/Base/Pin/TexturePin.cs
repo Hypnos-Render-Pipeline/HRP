@@ -8,7 +8,7 @@ namespace HypnosRenderPipeline.RenderPass
 
     public enum SizeCastMode { ResizeToInput = 0, Fixed };
     public enum ColorCastMode { FitToInput = 0, Fixed };
-    public enum SizeScale { Full = 1, Half = 2, Quater = 4, Eighth = 8, Custom = 0 };
+    public enum SizeScale { Full = 0, Half = 1, Quater = 2, Eighth = 3, Custom = 4, Double = -1, Quadra = -2 };
     public struct TexturePinDesc
     {
         public RenderTextureDescriptor basicDesc;
@@ -54,8 +54,9 @@ namespace HypnosRenderPipeline.RenderPass
 
             if (desc.sizeScale != SizeScale.Custom)
             {
-                desc.basicDesc.width = wh.x / (int)desc.sizeScale;
-                desc.basicDesc.height = wh.y / (int)desc.sizeScale;
+                int bits = (int)desc.sizeScale;
+                desc.basicDesc.width = (wh.x >> bits) | (wh.x << -bits);
+                desc.basicDesc.height = (wh.y >> bits) | (wh.y << -bits);
             }
 
             if (srcPin != null && desc.colorMode != ColorCastMode.Fixed)

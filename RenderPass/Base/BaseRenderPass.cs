@@ -56,6 +56,8 @@ namespace HypnosRenderPipeline.RenderPass
         public RayTracingAccelerationStructure defaultAcc;
         public RenderGraphResourcesPool resourcesPool;
         public int frameIndex;
+        public Vector2 jitter;
+        public bool enableDLSS;
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
@@ -92,7 +94,7 @@ namespace HypnosRenderPipeline.RenderPass
     {
         [NodePin(PinType.In, true)]
         [Tooltip("Output to screen")]
-        public TexturePin result = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1,1, RenderTextureFormat.DefaultHDR), SizeCastMode.Fixed, ColorCastMode.Fixed, SizeScale.Full));
+        public TexturePin result = new TexturePin(new RenderTextureDescriptor(1,1, RenderTextureFormat.DefaultHDR), colorCastMode: ColorCastMode.Fixed);
 
         public override void Execute(RenderContext context) { }
     }

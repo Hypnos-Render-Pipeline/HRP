@@ -154,7 +154,7 @@ class VRenderForScene
     {
         Handles.BeginGUI();
         EditorGUI.DrawPreviewTexture(new Rect(0, 1, instance.rtxon.width / 2, instance.rtxon.height / 2), instance.rtxon, instance.mat, ScaleMode.ScaleToFit);
-        GUILayoutUtility.GetRect(instance.rtxon.width / 2, instance.rtxon.height / 2 - 19, new GUILayoutOption[] { GUILayout.ExpandWidth(false) });
+        GUILayoutUtility.GetRect(instance.rtxon.width / 2, instance.rtxon.height / 2 + 5, new GUILayoutOption[] { GUILayout.ExpandWidth(false) });
         var rect = EditorGUILayout.BeginVertical(new GUILayoutOption[] { GUILayout.Width(instance.flodout ? 270 : 60), GUILayout.Height(instance.flodout ? 160 : 20) });
 
         GUIStyle fontStyle = new GUIStyle();

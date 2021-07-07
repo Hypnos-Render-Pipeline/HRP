@@ -3,7 +3,7 @@
   "description": "Hypnos render pipeline",
   "version": "0.1.1",
   "unity": "2021.2",
-  "unityRelease": "0a13",
+  "unityRelease": "0b1",
   "displayName": "HRP",
   "type": "library",
   "dependencies": {
@@ -11,6 +11,7 @@
     "com.unity.visualeffectgraph": "12.0.0",
     "com.unity.shadergraph": "12.0.0",
     "com.unity.render-pipelines.core": "12.0.0",
-    "com.unity.postprocessing": "3.1.1"
+    "com.unity.postprocessing": "3.1.1",
+    "com.unity.modules.nvidia": "1.0.0"
   }
 }

@@ -229,6 +229,7 @@ namespace HypnosRenderPipeline
         /// </summary>
         public void RenderAtmoToCubeMap(CommandBuffer cb, int target)
         {
+            cb.SetGlobalInt("_RenderCloudToSkybox", quality != Quality.none ? 1 : 0);
             cb.SetRenderTarget(target, 0, CubemapFace.PositiveX); 
             cb.SetGlobalInt("_Slice", 0);
             cb.Blit(null, BuiltinRenderTextureType.CurrentActive, lutMat, 4);

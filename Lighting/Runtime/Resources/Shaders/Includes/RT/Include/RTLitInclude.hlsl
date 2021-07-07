@@ -212,7 +212,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		nextDir = reflect(-viewDir, n);
 
 		if (dot(nextDir, surface.normal) > 0) {
-			directColor += PBS(PBS_SPECULAR_F, surface, nextDir, LightLuminanceCameraWithFog(IN.position, nextDir, sampleState), viewDir);
+			directColor += PBS(PBS_SPECULAR, surface, nextDir, LightLuminanceCameraWithFog(IN.position, nextDir, sampleState), viewDir);
 		}
 	}
 #endif
@@ -379,7 +379,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			if (dot(nextDir, surface.normal) > 0 && dot(nextDir, IN.gN) > 0) {
 				float coat = surface.clearCoat;
 				surface.clearCoat = 0;
-				float3 coef = PBS(PBS_SPECULAR_F, surface, nextDir, 1.0, viewDir);
+				float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
 
 				weight.xyz = coef * (1 - coat) / refr_diff_refl_coat.z;
 			}
@@ -402,7 +402,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				surface.clearCoat = 0;
 				surface.specular = min(1 - rayRoughness, 1);
 				surface.diffuse = min(1 - rayRoughness, 1);
-				float3 coef = PBS(PBS_SPECULAR_F, surface, nextDir, 1.0, viewDir);
+				float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
 
 				weight.xyz = coef * coat / refr_diff_refl_coat.w;
 			}

@@ -101,10 +101,10 @@ MonoBehaviour:
     outputs: []
     position:
       serializedVersion: 2
-      x: 6892
-      y: 1756.6497
+      x: 7313.879
+      y: 1746
       width: 300
-      height: 105
+      height: 104
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OutputNode
   - nodeName: CullLight
@@ -274,10 +274,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 6548
-      y: 1723.6497
+      x: 6969.879
+      y: 1713
       width: 300
-      height: 172
+      height: 170
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.CombineColorDepth
   - nodeName: AreaLight
@@ -490,10 +490,10 @@ MonoBehaviour:
       mustConnect: 1
     position:
       serializedVersion: 2
-      x: 4634
-      y: 1397.6497
+      x: 4656.1274
+      y: 1379
       width: 300
-      height: 412
+      height: 410
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.RTSpecular
   - nodeName: RTGI
@@ -690,7 +690,7 @@ MonoBehaviour:
     - name: maxDepth
       info: 
       type_str: System.Int32
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e323c2f696e743e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e31363c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     - name: useRTShadow
       info: 
@@ -789,6 +789,41 @@ MonoBehaviour:
       height: 297
     info: 
     nodeType_str: HypnosRenderPipeline.RenderPass.OITransparent
+  - nodeName: DLSSPass
+    parameters:
+    - name: sharpness
+      info: 
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e303c2f666c6f61743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: input
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: motion
+      info: 
+      mustConnect: 1
+    outputs:
+    - name: output
+      info: 
+      mustConnect: 0
+    position:
+      serializedVersion: 2
+      x: 6601.549
+      y: 1527.1625
+      width: 300
+      height: 199
+    info: DLSS support must be enabled on the Pipeline Asset to make this node work
+      correctly.
+    nodeType_str: HypnosRenderPipeline.RenderPass.DLSSPass
   edgeRecs:
   - i: 3
     o: 2
@@ -1022,10 +1057,6 @@ MonoBehaviour:
     o: 14
     i_n: target
     o_n: target
-  - i: 5
-    o: 13
-    i_n: color
-    o_n: target
   - i: 15
     o: 3
     i_n: lightBuffer
@@ -1102,34 +1133,50 @@ MonoBehaviour:
     o: 7
     i_n: target
     o_n: target
+  - i: 17
+    o: 13
+    i_n: input
+    o_n: target
+  - i: 17
+    o: 6
+    i_n: depth
+    o_n: depth
+  - i: 17
+    o: 0
+    i_n: motion
+    o_n: motion
+  - i: 5
+    o: 17
+    i_n: color
+    o_n: output
   node_edgeRecs:
   - node: 2
     in_edges: 
-    out_edge: 00000000010000000a0000000f0000001b000000240000003d00000047000000
+    out_edge: 00000000010000000a0000000f0000001b000000240000003c00000046000000
   - node: 3
     in_edges: 00000000
-    out_edge: 0200000003000000190000001a00000022000000230000003b0000003c0000004500000046000000
+    out_edge: 0200000003000000190000001a00000022000000230000003a0000003b0000004400000045000000
   - node: 4
     in_edges: 010000000200000003000000040000000500000006000000070000000800000016000000
     out_edge: 2f000000
   - node: 0
     in_edges: 
-    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e0000001100000012000000130000001600000017000000180000001d0000001e0000001f0000002000000026000000270000002800000031000000350000003600000037000000380000004100000042000000
+    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e0000001100000012000000130000001600000017000000180000001d0000001e0000001f00000020000000260000002700000028000000310000003500000036000000370000003800000040000000410000004f000000
   - node: 5
-    in_edges: 090000003a000000
+    in_edges: 0900000050000000
     out_edge: 32000000
   - node: 6
     in_edges: 0a0000000b0000000c0000000d0000000e000000170000002f000000
-    out_edge: 1000000014000000150000002a0000002e0000003000000034000000400000004a000000
+    out_edge: 1000000014000000150000002a0000002e00000030000000340000003f000000490000004e000000
   - node: 7
     in_edges: 0f000000100000001100000012000000130000001400000018000000
-    out_edge: 1c000000210000002500000029000000330000003e00000043000000480000004d000000
+    out_edge: 1c000000210000002500000029000000330000003d00000042000000470000004c000000
   - node: 8
     in_edges: 15000000
     out_edge: 
   - node: 9
     in_edges: 190000001a0000001b0000001c0000001d0000001e0000001f00000020000000210000002c0000002d0000002e000000
-    out_edge: 3f000000
+    out_edge: 3e000000
   - node: 10
     in_edges: 22000000230000002400000025000000260000002700000028000000290000002a00000039000000
     out_edge: 2b0000002d000000
@@ -1137,27 +1184,30 @@ MonoBehaviour:
     in_edges: 2b000000
     out_edge: 2c000000
   - node: 12
-    in_edges: 3000000044000000
-    out_edge: 49000000
+    in_edges: 3000000043000000
+    out_edge: 48000000
   - node: 13
-    in_edges: 310000004b0000004c000000
-    out_edge: 3a000000
+    in_edges: 310000004a0000004b000000
+    out_edge: 4d000000
   - node: 1
     in_edges: 32000000
     out_edge: 
   - node: 14
-    in_edges: 3300000034000000350000003600000037000000380000004d000000
+    in_edges: 3300000034000000350000003600000037000000380000004c000000
     out_edge: 39000000
   - node: 15
-    in_edges: 3b0000003c0000003d0000003e0000003f00000040000000410000004200000043000000
-    out_edge: 44000000
+    in_edges: 3a0000003b0000003c0000003d0000003e0000003f000000400000004100000042000000
+    out_edge: 43000000
   - node: 16
-    in_edges: 45000000460000004700000048000000490000004a000000
-    out_edge: 4b0000004c000000
+    in_edges: 440000004500000046000000470000004800000049000000
+    out_edge: 4a0000004b000000
+  - node: 17
+    in_edges: 4d0000004e0000004f000000
+    out_edge: 50000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
-    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f00000010000000
+    nodes: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f0000001000000011000000
   recompiled: 0
   code: "using HypnosRenderPipeline.RenderPass;\r\nusing UnityEngine;\r\n\r\nnamespace
     HypnosRenderPipeline.RenderGraph\r\n{\r\n    public class HRG_Graph_Executor
@@ -1167,17 +1217,18 @@ MonoBehaviour:
     AreaLight AreaLight6;\r\n        SunAtmo SunAtmo7;\r\n        RTSpecular RTSpecular8;\r\n       
     RTGI RTGI9;\r\n        PyramidColor PyramidColor10;\r\n        OpaquePost OpaquePost11;\r\n       
     PostProcess PostProcess12;\r\n        RTSunLight RTSunLight13;\r\n        RTRefraction
-    RTRefraction14;\r\n        OITransparent OITransparent15;\r\n        // ----------------------------\r\n       
-    \r\n        // ShaderIDs:\r\n        // ----------------------------\r\n       
-    System.Int32 GBuffer0_depth = Shader.PropertyToID(\"GBuffer0.depth\");\r\n       
-    System.Int32 GBuffer0_diffuse = Shader.PropertyToID(\"GBuffer0.diffuse\");\r\n       
-    System.Int32 GBuffer0_specular = Shader.PropertyToID(\"GBuffer0.specular\");\r\n       
-    System.Int32 GBuffer0_normal = Shader.PropertyToID(\"GBuffer0.normal\");\r\n       
-    System.Int32 GBuffer0_emission = Shader.PropertyToID(\"GBuffer0.emission\");\r\n       
-    System.Int32 GBuffer0_microAO = Shader.PropertyToID(\"GBuffer0.microAO\");\r\n       
-    System.Int32 GBuffer0_index = Shader.PropertyToID(\"GBuffer0.index\");\r\n       
-    System.Int32 GBuffer0_motion = Shader.PropertyToID(\"GBuffer0.motion\");\r\n       
-    System.Int32 OutputNode1_result = Shader.PropertyToID(\"OutputNode1.result\");\r\n       
+    RTRefraction14;\r\n        OITransparent OITransparent15;\r\n        DLSSPass
+    DLSSPass16;\r\n        // ----------------------------\r\n        \r\n       
+    // ShaderIDs:\r\n        // ----------------------------\r\n        System.Int32
+    GBuffer0_depth = Shader.PropertyToID(\"GBuffer0.depth\");\r\n        System.Int32
+    GBuffer0_diffuse = Shader.PropertyToID(\"GBuffer0.diffuse\");\r\n        System.Int32
+    GBuffer0_specular = Shader.PropertyToID(\"GBuffer0.specular\");\r\n        System.Int32
+    GBuffer0_normal = Shader.PropertyToID(\"GBuffer0.normal\");\r\n        System.Int32
+    GBuffer0_emission = Shader.PropertyToID(\"GBuffer0.emission\");\r\n        System.Int32
+    GBuffer0_microAO = Shader.PropertyToID(\"GBuffer0.microAO\");\r\n        System.Int32
+    GBuffer0_index = Shader.PropertyToID(\"GBuffer0.index\");\r\n        System.Int32
+    GBuffer0_motion = Shader.PropertyToID(\"GBuffer0.motion\");\r\n        System.Int32
+    OutputNode1_result = Shader.PropertyToID(\"OutputNode1.result\");\r\n       
     System.Int32 CullLight2_lights = Shader.PropertyToID(\"CullLight2.lights\");\r\n       
     System.Int32 ZBin3_lights = Shader.PropertyToID(\"ZBin3.lights\");\r\n       
     System.Int32 ZBin3_depth = Shader.PropertyToID(\"ZBin3.depth\");\r\n        System.Int32
@@ -1268,6 +1319,10 @@ MonoBehaviour:
     System.Int32 OITransparent15_target = Shader.PropertyToID(\"OITransparent15.target\");\r\n       
     System.Int32 OITransparent15_depth = Shader.PropertyToID(\"OITransparent15.depth\");\r\n       
     System.Int32 OITransparent15_oitOutput = Shader.PropertyToID(\"OITransparent15.oitOutput\");\r\n       
+    System.Int32 DLSSPass16_input = Shader.PropertyToID(\"DLSSPass16.input\");\r\n       
+    System.Int32 DLSSPass16_depth = Shader.PropertyToID(\"DLSSPass16.depth\");\r\n       
+    System.Int32 DLSSPass16_motion = Shader.PropertyToID(\"DLSSPass16.motion\");\r\n       
+    System.Int32 DLSSPass16_output = Shader.PropertyToID(\"DLSSPass16.output\");\r\n       
     // ----------------------------\r\n        \r\n        public void Init()\r\n       
     {\r\n            GBuffer0 = new GBuffer();\r\n            GBuffer0.a = 1f;\r\n           
     GBuffer0.b = false;\r\n            GBuffer0.c = new Vector2(1.10973f, 2f);\r\n           
@@ -1299,14 +1354,15 @@ MonoBehaviour:
     = true;\r\n            PostProcess12 = new PostProcess();\r\n            PostProcess12.enabled
     = true;\r\n            RTSunLight13 = new RTSunLight();\r\n            RTSunLight13.enabled
     = true;\r\n            RTRefraction14 = new RTRefraction();\r\n            RTRefraction14.maxDepth
-    = 2;\r\n            RTRefraction14.useRTShadow = false;\r\n            RTRefraction14.enabled
+    = 16;\r\n            RTRefraction14.useRTShadow = false;\r\n            RTRefraction14.enabled
     = true;\r\n            OITransparent15 = new OITransparent();\r\n           
-    OITransparent15.enabled = true;\r\n        }\r\n        \r\n        public int
-    Execute(RenderContext context, bool debug = false)\r\n        {\r\n           
-    System.Int32 result = -1;\r\n            \r\n            //GBuffer0\r\n           
-    {\r\n                context.commandBuffer.name = \"GBuffer0\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    GBuffer0.depth.AllocateResourcces(context, GBuffer0_depth);\r\n                   
+    OITransparent15.enabled = true;\r\n            DLSSPass16 = new DLSSPass();\r\n           
+    DLSSPass16.sharpness = 0f;\r\n            DLSSPass16.enabled = true;\r\n       
+    }\r\n        \r\n        public int Execute(RenderContext context, bool debug
+    = false)\r\n        {\r\n            System.Int32 result = -1;\r\n           
+    \r\n            //GBuffer0\r\n            {\r\n                context.commandBuffer.name
+    = \"GBuffer0\";\r\n                // preprocess node\r\n                {\r\n                   
+    // inputs\r\n                    GBuffer0.depth.AllocateResourcces(context, GBuffer0_depth);\r\n                   
     GBuffer0.depth.name = \"GBuffer0.depth\";\r\n                    // outputs\r\n                   
     GBuffer0.diffuse.AllocateResourcces(context, GBuffer0_diffuse);\r\n                   
     GBuffer0.diffuse.name = \"GBuffer0.diffuse\";\r\n                    GBuffer0.diffuse.connected
@@ -1543,10 +1599,23 @@ MonoBehaviour:
     PostProcess12.Execute(context);\r\n                // postprocess node\r\n               
     {\r\n                    PostProcess12.depth.ReleaseResourcces(context);\r\n               
     }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //DLSSPass16\r\n           
+    {\r\n                context.commandBuffer.name = \"DLSSPass16\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    DLSSPass16.input.connected = true;\r\n                    DLSSPass16.input.Move(PostProcess12.target);\r\n                   
+    DLSSPass16.depth.connected = true;\r\n                    DLSSPass16.depth.Move(AreaLight6.depth);\r\n                   
+    DLSSPass16.motion.connected = true;\r\n                    DLSSPass16.motion.Move(GBuffer0.motion);\r\n                   
+    // outputs\r\n                    DLSSPass16.output.AllocateResourcces(context,
+    DLSSPass16_output);\r\n                    DLSSPass16.output.name = \"DLSSPass16.output\";\r\n                   
+    DLSSPass16.output.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                DLSSPass16.Execute(context);\r\n                // postprocess
+    node\r\n                {\r\n                    DLSSPass16.input.ReleaseResourcces(context);\r\n                   
+    DLSSPass16.output.connected = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //CombineColorDepth5\r\n           
     {\r\n                context.commandBuffer.name = \"CombineColorDepth5\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    CombineColorDepth5.color.connected = true;\r\n                    CombineColorDepth5.color.Move(PostProcess12.target);\r\n                   
+    CombineColorDepth5.color.connected = true;\r\n                    CombineColorDepth5.color.Move(DLSSPass16.output);\r\n                   
     CombineColorDepth5.depth.connected = true;\r\n                    CombineColorDepth5.depth.Move(GBuffer0.depth);\r\n                   
     // outputs\r\n                    CombineColorDepth5.combined.AllocateResourcces(context,
     CombineColorDepth5_combined);\r\n                    CombineColorDepth5.combined.name
@@ -1629,4 +1698,7 @@ MonoBehaviour:
     OITransparent15.tiledLights.Dispose();\r\n                OITransparent15.lights.Dispose();\r\n               
     OITransparent15.sun.Dispose();\r\n                OITransparent15.target.Dispose();\r\n               
     OITransparent15.depth.Dispose();\r\n                OITransparent15.oitOutput.Dispose();\r\n               
-    OITransparent15.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"
+    OITransparent15.Dispose();\r\n            }\r\n            // DLSSPass16\r\n           
+    {\r\n                DLSSPass16.input.Dispose();\r\n                DLSSPass16.depth.Dispose();\r\n               
+    DLSSPass16.motion.Dispose();\r\n                DLSSPass16.output.Dispose();\r\n               
+    DLSSPass16.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"

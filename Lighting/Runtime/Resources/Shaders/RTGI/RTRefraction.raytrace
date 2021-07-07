@@ -72,7 +72,10 @@ float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState
             }
             EndAllLocalLightsLoop;  
         }
-        else{           
+        else{
+            if (abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) < 0.1) {                
+                return _SceneColor.SampleLevel(linear_clamp_sampler, uv, 0);
+            }
             BegineLocalLightsLoop(uv, hitPos, _VP_Inv); // use zbin to cull light.
             {
                 sampleState.w = 0;
@@ -103,6 +106,9 @@ float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState
                 sl *= TraceShadow_RTGI(hitPos, sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
         }
         res += sl;
+        
+        // trick skybox ibl, remove in future.
+        res += PBS(PBS_FULLY, hitInfo, hitInfo.normal, _SkyBox.SampleLevel(linear_clamp_sampler, hitInfo.normal, 6), hitView) * 3.14 / 2;
     }
     return res;
 }
@@ -181,7 +187,7 @@ void Refraction()
         t += gbuffer.miss ? 0 : gbuffer.dis;
     }
 
-    float3 res = gbuffer.miss ? 0 : L(gbuffer, pos, next_dir, sampleState, _UseRTShadow);
+    float3 res = L(gbuffer, pos, next_dir, sampleState, _UseRTShadow);
 
     _TempResult[dispatchIdx] = _SceneColor[dispatchIdx] + float4(res * weight, 0);
     return;

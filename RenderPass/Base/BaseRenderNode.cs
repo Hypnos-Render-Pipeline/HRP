@@ -77,8 +77,8 @@ namespace HypnosRenderPipeline.RenderGraph
         /// <summary>
         /// This will be called when node is disabled.
         /// </summary>
-        /// <param name="contex"></param>
-        public virtual void DisExecute(RenderContext contex) { }
+        /// <param name="context"></param>
+        public virtual void DisExecute(RenderContext context) { }
 
         public virtual void Dispose() { }
     }

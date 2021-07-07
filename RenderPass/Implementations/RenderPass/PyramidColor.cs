@@ -74,7 +74,7 @@ namespace HypnosRenderPipeline.RenderPass
             context.context.ExecuteCommandBuffer(context.commandBuffer);
             context.commandBuffer.Clear();
 
-            int2 ScreenSize = new int2(context.camera.pixelWidth, context.camera.pixelHeight);
+            int2 ScreenSize = new int2(filterTarget.desc.basicDesc.width, filterTarget.desc.basicDesc.height);
             context.commandBuffer.Blit(filterTarget, pyramidColor);
 
             ColorPyramidUpdate(ScreenSize, pyramidColor, context.commandBuffer);
