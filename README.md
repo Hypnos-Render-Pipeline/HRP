@@ -1,5 +1,7 @@
 # Hypnos Render Pipeline
 
+<video controls autoplay src="./Doc/Pics/TOD.MP4">【您的浏览器可能不支持此视频】</video>
+
 ## About HRP
 
 **HRP** (Hypnos Render Pipeline) is a **Hybrid Render Pipeline** that combines **Rasterization** and **RayTracing** features. It based on **HRG** (Hypnos Render Graph), thus render features can be easily removed or plug in.
