@@ -1,6 +1,6 @@
 # Hypnos Render Pipeline
 
-<video controls autoplay src="./Doc/Pics/TOD.MP4">【您的浏览器可能不支持此视频】</video>
+![pic0](./Doc/Pics/TOD.gif)
 
 ## About HRP
 
