@@ -6,7 +6,7 @@
 
 > HRP is based on [GNU GENERAL PUBLIC LICENSE](./LICENSE). This means that if you are using HRP, you must also publish your product in open source form. If you don't want this to happen, you can choose to use a commercial license instead.
 >
-> **Please note that this project is an experimental work, and it should not be considered production-ready.** Many parts of it will or already have better solutions. If you want to use it in actual products, you'd better connect the [developers](#Authors) for assistance.
+> **Please note that this project is an experimental work, and it should not be considered production-ready.** Many parts of it will or already have better solutions. If you want to use it in actual products, you'd better connect the [developers](#Developers) for assistance.
 
 ## Install
 
