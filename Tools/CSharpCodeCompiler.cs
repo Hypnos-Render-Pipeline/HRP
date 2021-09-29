@@ -63,6 +63,7 @@ namespace HypnosRenderPipeline.Tools
             string toPath = t.Substring(0, t.LastIndexOf("/")).Replace("/", "\\") + "\\MonoBleedingEdge";
             CopyDic(fromPath + "\\bin", toPath + "\\bin");
             CopyDic(fromPath + "\\lib\\mono\\4.5", toPath + "\\lib\\mono\\4.5", true);
+            CopyDic(fromPath + "\\lib\\mono\\net_4_x-win32", toPath + "\\lib\\mono\\net_4_x-win32", true);
         }
         static void CopyDic(string sourceDir, string toDir, bool ban = false)
         {
@@ -368,7 +369,10 @@ namespace HypnosRenderPipeline.Tools
                     foreach (string s in sc)
                         sb.Append(s + Environment.NewLine);
 
-                    throw new Exception("Compiler failed to produce the assembly. Output: '" + sb.ToString() + "'");
+                    StringBuilder es = new StringBuilder();
+                    foreach (CompilerError e in results.Errors)
+                        sb.Append(e.FileName + " line" + e.Line + ": " + e.ErrorText + Environment.NewLine);
+                    throw new Exception("Compiler failed to produce the assembly. Output: '" + sb.ToString() + "'\nError code: " + es.ToString() + "\n" + mcs_output + "\n" + mcs_stdout + "\nEnd Exception\n");
                 }
 
                 if (options.GenerateInMemory)

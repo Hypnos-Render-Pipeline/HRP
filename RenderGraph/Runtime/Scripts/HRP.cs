@@ -18,6 +18,7 @@ namespace HypnosRenderPipeline
         {
             public Matrix4x4 lastVP;
             public Matrix4x4 lastVP_nojittered;
+            public Vector2 lastJitter;
             public int clock;
         }
 
@@ -215,6 +216,8 @@ namespace HypnosRenderPipeline
                     cb.SetGlobalMatrix("_Last_VP_Inv", clock[cameraId].lastVP.inverse);
                     cb.SetGlobalMatrix("_Last_VP_NoJitter", clock[cameraId].lastVP_nojittered);
                     cb.SetGlobalMatrix("_Last_VP_Inv_NoJitter", clock[cameraId].lastVP_nojittered.inverse);
+                    cb.SetGlobalVector("_JitterOffset", rc.jitter - clock[cameraId].lastJitter);
+                    clock[cameraId].lastJitter = rc.jitter;
                     clock[cameraId].lastVP = vp;
                     clock[cameraId].lastVP_nojittered = vpn;
                     RenderGraphResourcesPool pool;

@@ -12,8 +12,8 @@ struct OITOutputList {
 
 RWStructuredBuffer<OITOutputList> _OITOutputList;
 
-[numthreads(64, 1, 1)]
-void CSMain(uint id : SV_DispatchThreadID)
+[numthreads(64, 2, 1)]
+void CSMain(uint2 id : SV_DispatchThreadID)
 {
-    _OITOutputList[id].zs = uint4(3, 2, 1, 0);
+    _OITOutputList[id.x * 2 + id.y].zs = uint4(3, 2, 1, 0);
 }

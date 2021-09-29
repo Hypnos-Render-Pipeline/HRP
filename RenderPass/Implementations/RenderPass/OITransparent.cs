@@ -63,7 +63,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.ClearRenderTarget(false, true, Color.clear);
 
             cb.SetComputeBufferParam(initOITDepth, 0, "_OITOutputList", oitOutput);
-            cb.DispatchCompute(initOITDepth, 0, (desc.width * desc.height + 63) / 64, 1, 1);
+            cb.DispatchCompute(initOITDepth, 0, (desc.width * desc.height + 127) / 128, 1, 1);
 
             cb.SetGlobalInt("_ScreenWidth", desc.width);
 

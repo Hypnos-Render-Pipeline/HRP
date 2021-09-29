@@ -31,7 +31,6 @@ Shader "Hidden/CalculateMotion"
             Texture2D _DepthTex;
             SamplerState sampler_point_clamp;
 
-            float4x4 _V_Inv;
             float4x4 _VP_Inv_NoJitter;
             float4x4 _Last_VP_NoJitter;
 
