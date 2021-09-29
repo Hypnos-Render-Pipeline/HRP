@@ -331,7 +331,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 		X = cross(normal, Y);
 		float2 r2 = CalculateAnisoRoughness(roughness, aniso);
 		D = AnisoGGXTerm(nh, r2, floatDir, X, Y);
-		G = SmithJointAniso(r2, nv, nl, viewDir, lightDir, X, Y);
+		G = SmithJointAniso(r2, nv, nl, viewDir, lightDir, X, Y) * M_PI;
 	}
 	else{
 		roughness = max(roughness, 0.008);
