@@ -22,6 +22,8 @@ namespace HypnosRenderPipeline.RenderPass
         [Range(8000, 160000)]
         public float CloudShadowDistance = 32000;
 
+        public bool doSharp = true;
+
         public bool applyAtmoFog = true;
 
         // pins
@@ -87,6 +89,7 @@ namespace HypnosRenderPipeline.RenderPass
             public static int _HistoryDepth = Shader.PropertyToID(nameof(_HistoryDepth));
             public static int _HalfResResult = Shader.PropertyToID(nameof(_HalfResResult));
             public static int _Cloud = Shader.PropertyToID(nameof(_Cloud));
+            public static int _TempTarget = Shader.PropertyToID(nameof(_TempTarget));
             public static int _ShadowMapTexture = Shader.PropertyToID(nameof(_ShadowMapTexture));
             public static int _CloudMap = Shader.PropertyToID(nameof(_CloudMap));
             public static int T_table = Shader.PropertyToID(nameof(T_table));
@@ -106,6 +109,8 @@ namespace HypnosRenderPipeline.RenderPass
         }
         struct PropertyIDs
         {
+            public static int _Sharp = Shader.PropertyToID(nameof(_Sharp));
+            
             public static int _WH = Shader.PropertyToID(nameof(_WH));
 
             public static int _LightTransform = Shader.PropertyToID(nameof(_LightTransform));
@@ -134,6 +139,7 @@ namespace HypnosRenderPipeline.RenderPass
             CheckboardUpsample,
             BlitToHistory,
             FullResolutionUpsample,
+            Sharp,
             LoadVolumeData,
             WriteCloudShadowMap,
             BlurCloudShadowMap,
@@ -302,7 +308,7 @@ namespace HypnosRenderPipeline.RenderPass
                     }
                     else
                     {
-                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(10, 24, 512, 1));
+                        cb.SetGlobalVector(PropertyIDs._Quality, new Vector4(20, 24, 512, 1));
                     }
 
 #if UNITY_EDITOR
@@ -390,7 +396,7 @@ namespace HypnosRenderPipeline.RenderPass
                         sunP.y = atmo.planetRadius + 3000;
 
                         float CloudShadowDistance2 = CloudShadowDistance * 2;
-                        float4x4 cloudMat_Inv = float4x4(float4(sunX * CloudShadowDistance2, 0), float4(sunY * CloudShadowDistance2, 0), float4(sunZ, 0), float4(sunP - (sunX + sunY) * CloudShadowDistance, 1));
+                        float4x4 cloudMat_Inv = float4x4(float4(sunX * CloudShadowDistance2, 0), float4(sunY * CloudShadowDistance2 * max(0.1f,abs(dir.y)), 0), float4(sunZ, 0), float4(sunP - (sunX + sunY* max(0.1f, abs(dir.y))) * CloudShadowDistance, 1));
                         float4x4 cloudMat = inverse(cloudMat_Inv);
 
                         cb.SetGlobalMatrix(PropertyIDs._CloudMat, cloudMat);
@@ -449,11 +455,9 @@ namespace HypnosRenderPipeline.RenderPass
                         //cb.DispatchCompute(cloudCS, (int)CloudPass.BlitToHistory, dispatch_size_half.x, dispatch_size_half.y, 1);
 
 
-                        cb.CopyTexture(target, tempColor);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._Depth, depth);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._DownSampled_MinMax_Depth, TextureIDs._DownSampled_MinMax_Depth);
                         cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._History, his);
-                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.FullResolutionUpsample, TextureIDs._SceneColorTex, tempColor);
                         rgba16Desc.width = target_WH.x;
                         rgba16Desc.height = target_WH.y;
                         cb.GetTemporaryRT(TextureIDs._Cloud, rgba16Desc);
@@ -461,16 +465,22 @@ namespace HypnosRenderPipeline.RenderPass
                         cb.DispatchCompute(cloudCS, (int)CloudPass.FullResolutionUpsample, dispatch_size_full.x, dispatch_size_full.y, 1);
 
 
+                        cb.GetTemporaryRT(TextureIDs._TempTarget, rgba16Desc);
+                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.Sharp, TextureIDs._Cloud, TextureIDs._Cloud);
+                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.Sharp, TextureIDs._Depth, depth);
+                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.Sharp, TextureIDs._SceneColorTex, target);
+                        cb.SetComputeTextureParam(cloudCS, (int)CloudPass.Sharp, TextureIDs._TempTarget, TextureIDs._TempTarget);
+                        cb.SetComputeIntParam(cloudCS, PropertyIDs._Sharp, doSharp ? 1 : 0); 
+                        cb.DispatchCompute(cloudCS, (int)CloudPass.Sharp, dispatch_size_full.x, dispatch_size_full.y, 1);
 
-                        cb.SetGlobalTexture(TextureIDs._Cloud, TextureIDs._Cloud);
-                        cb.CopyTexture(TextureIDs._Cloud, target);
-
+                        cb.CopyTexture(TextureIDs._TempTarget, target);
 
                         cb.ReleaseTemporaryRT(TextureIDs._HalfResResult);
                         cb.ReleaseTemporaryRT(TextureIDs._Marching_Result_A);
                         cb.ReleaseTemporaryRT(TextureIDs._Ray_Index);
                         cb.ReleaseTemporaryRT(TextureIDs._DownSampled_MinMax_Depth);
                         cb.ReleaseTemporaryRT(TextureIDs._Cloud);
+                        cb.ReleaseTemporaryRT(TextureIDs._TempTarget);
                     }
                 }
 

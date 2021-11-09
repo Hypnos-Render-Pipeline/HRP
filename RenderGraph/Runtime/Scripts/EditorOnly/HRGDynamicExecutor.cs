@@ -52,28 +52,58 @@ namespace HypnosRenderPipeline.RenderGraph
                         if (node.nodeType == typeof(TextureDebug))
                         {
                             var debugNode = renderNode as TextureDebug;
-                            if (node.debugTex == null)
+                            if (debugNode.cubeTex.connected)
                             {
-                                var desc = debugNode.tex.desc.basicDesc;
-                                node.debugTexDesc = desc;
-                                desc.colorFormat = RenderTextureFormat.ARGBHalf;
-                                desc.enableRandomWrite = false;
-                                desc.useMipMap = false;
-                                node.debugTex = new RenderTexture(desc);
-                            }
-                            else
-                            {
-                                var desc1 = node.debugTexDesc;
-                                var desc2 = debugNode.tex.desc.basicDesc;
-                                if (desc1.width != desc2.width || desc1.height != desc2.height || desc1.colorFormat != desc2.colorFormat)
+                                if (node.debugTex == null)
                                 {
-                                    var desc = desc2;
+                                    var desc = new RenderTextureDescriptor(1024, 512, debugNode.cubeTex.desc.basicDesc.colorFormat);
+                                    node.debugTexDesc = desc;
                                     desc.colorFormat = RenderTextureFormat.ARGBHalf;
                                     desc.enableRandomWrite = false;
                                     desc.useMipMap = false;
-                                    node.debugTex.Release();
                                     node.debugTex = new RenderTexture(desc);
-                                    node.debugTexDesc = desc2;
+                                }
+                                else
+                                {
+                                    var desc1 = node.debugTexDesc;
+                                    var desc2 = debugNode.cubeTex.desc.basicDesc;
+                                    if (desc1.width != 1024 || desc1.height != 512 || desc1.colorFormat != desc2.colorFormat)
+                                    {
+                                        var desc = new RenderTextureDescriptor(1024, 512, desc2.colorFormat);
+                                        node.debugTexDesc = desc;
+                                        desc.colorFormat = RenderTextureFormat.ARGBHalf;
+                                        desc.enableRandomWrite = false;
+                                        desc.useMipMap = false;
+                                        node.debugTex.Release();
+                                        node.debugTex = new RenderTexture(desc);
+                                    }
+                                }
+                            }
+                            else if (debugNode.tex.connected)
+                            {
+                                if (node.debugTex == null)
+                                {
+                                    var desc = debugNode.tex.desc.basicDesc;
+                                    node.debugTexDesc = desc;
+                                    desc.colorFormat = RenderTextureFormat.ARGBHalf;
+                                    desc.enableRandomWrite = false;
+                                    desc.useMipMap = false;
+                                    node.debugTex = new RenderTexture(desc);
+                                }
+                                else
+                                {
+                                    var desc1 = node.debugTexDesc;
+                                    var desc2 = debugNode.tex.desc.basicDesc;
+                                    if (desc1.width != desc2.width || desc1.height != desc2.height || desc1.colorFormat != desc2.colorFormat)
+                                    {
+                                        var desc = desc2;
+                                        desc.colorFormat = RenderTextureFormat.ARGBHalf;
+                                        desc.enableRandomWrite = false;
+                                        desc.useMipMap = false;
+                                        node.debugTex.Release();
+                                        node.debugTex = new RenderTexture(desc);
+                                        node.debugTexDesc = desc2;
+                                    }
                                 }
                             }
                             node.debugTex.name = debugNode.tex.name;

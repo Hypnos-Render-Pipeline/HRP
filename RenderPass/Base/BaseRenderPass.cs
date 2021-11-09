@@ -109,6 +109,10 @@ namespace HypnosRenderPipeline.RenderPass
         [PinColor(1,0,1,1)]
         public TexturePin tex = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(1, 1)));
 
+        [NodePin(type: PinType.In)]
+        [PinColor(1, 0, 1, 1)]
+        public TexturePin cubeTex = new TexturePin(new TexturePinDesc(new RenderTextureDescriptor(2, 2) { dimension = TextureDimension.Cube }, sizeCastMode: SizeCastMode.ResizeToInput, sizeScale: SizeScale.Custom));
+
         [Range(0.1f, 10)]
         public float multiplier = 1;
 
@@ -134,7 +138,14 @@ namespace HypnosRenderPipeline.RenderPass
                 context.commandBuffer.SetGlobalInt("_Checkboard", checkboard ? 1 : 0);
                 context.commandBuffer.SetGlobalFloat("_Aspect", (float)tex.desc.basicDesc.width / tex.desc.basicDesc.height);
                 context.commandBuffer.SetGlobalInt("_Lod", lod);
-                context.commandBuffer.Blit(tex.handle, texture, MaterialWithName.debugBlit);
+                context.commandBuffer.SetGlobalTexture("_DebugTex", tex.handle);
+                if (cubeTex.connected)
+                {
+                    context.commandBuffer.SetGlobalTexture("_DebugTex", cubeTex.handle);
+                    context.commandBuffer.Blit(null, texture, MaterialWithName.debugBlit, 1);
+                }
+                else
+                    context.commandBuffer.Blit(null, texture, MaterialWithName.debugBlit, 0);
             }
         }
     }

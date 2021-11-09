@@ -49,7 +49,17 @@ const float3 AtmoTrans(const float3 x, const float3 y) {
 	return min(1.0, a / b);
 }
 
-const float3 Atmo(float3 x, const float3 v, const float3 s) {
+const float3 Atmo(float3 x, float3 v, float3 s) {
+
+	float3x3 rot;
+	rot._m10_m11_m12 = normalize(x);
+	rot._m00_m01_m02 = normalize(cross(rot._m10_m11_m12, float3(0, 1, 1)));
+	rot._m20_m21_m22 = normalize(cross(rot._m10_m11_m12, rot._m00_m01_m02));
+
+	x = mul(rot, x);
+	v = mul(rot, v);
+	s = mul(rot, s);
+
 	float phi = acos(clamp(dot(normalize(v.xz), normalize(s.xz)), -1, 1)) / 3.14159265359;
 
 	float rho;
@@ -65,14 +75,14 @@ const float3 Atmo(float3 x, const float3 v, const float3 s) {
 			float ahoriz = length(x);
 			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
 			if (v.y > ahoriz) rho = -1;
-			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
+			else rho = pow((v.y - horiz) / (ahoriz - horiz), 0.5) * 0.5 + 0.5;
 		}
 		else {
 			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
 		}
 	}
 
-	float3 scatter = rho >= 0 ? _Skybox.SampleLevel(sampler_Skybox, float2(phi, rho), 0).xyz : 0;
+	float3 scatter = rho >= 0 ? _Skybox.SampleLevel(sampler_Skybox, float2(phi, rho), 0).xyz * 1e-5 : 0;
 
 	// prevent error
 	scatter = max(0, scatter);

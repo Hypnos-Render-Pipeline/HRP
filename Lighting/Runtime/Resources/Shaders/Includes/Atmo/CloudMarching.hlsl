@@ -14,7 +14,7 @@ float4x4 _CloudMat_Inv;
 float4x4 _LightTransform;
 
 float	  _CloudMapScale;
-sampler2D _CloudShadowMap;
+Texture2D _CloudShadowMap; SamplerState Bilinear_Clamp_Sampler;
 Texture2D _CloudMap;		SamplerState Bilinear_Mirror_Sampler;
 sampler2D _HighCloudMap;
 sampler2D _SpaceMap;
@@ -142,9 +142,11 @@ float3 Space(float3 v) {
 float CloudShadow(float3 p) {
 	float3 cloud_uv = mul(_CloudMat, float4(p, 1)).xyz;
 	if (any(cloud_uv.xy > 1) || any(cloud_uv.xy < 0)) return 0;
-	float4 shadow = tex2Dlod(_CloudShadowMap, float4(cloud_uv.xy, 0, 0));
+	float4 shadow = _CloudShadowMap.SampleLevel(Bilinear_Clamp_Sampler, cloud_uv.xy, 0);
 
-	return shadow.a == 1 ? 1 : exp(-shadow.x * clamp(cloud_uv.z - shadow.y, 0, shadow.z));
+	cloud_uv = min(cloud_uv, 1 - cloud_uv);
+	float sat = min(cloud_uv.x, cloud_uv.y) * 2;
+	return (shadow.a == 1 ? 1 : exp(-shadow.x * clamp(cloud_uv.z - shadow.y, 0, shadow.z))) * sat;
 }
 
 inline float4 HighCloud(const float3 p, const float3 v) {
@@ -193,7 +195,7 @@ inline float Cloud_Shape(float3 p, float fade = 1, float lod = 0) {
 	p += height_fraction * wind_direction * cloud_top_offset;
 
 	//animate clouds in wind direction and add a small upward bias to the wind direction
-	p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
+	//p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
 
 	float3 nom_p = normalize(p);
 	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, 0).rgb;
@@ -247,7 +249,7 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	p += height_fraction * wind_direction * cloud_top_offset;
 
 	//animate clouds in wind direction and add a small upward bias to the wind direction
-	p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
+	//p += (wind_direction + float3(0.0, 0.1, 0.0)) * _Time.x * cloud_speed;
 
 	float3 nom_p = normalize(p);
 	float3 weather_data = _CloudMap.SampleLevel(Bilinear_Mirror_Sampler, nom_p.xz * 20 * _CloudMapScale + 0.5, 0).rgb;
@@ -291,11 +293,11 @@ inline float3 Cloud(float3 p, float fade = 1, float lod = 0, bool simple = false
 	{
 
 		// add some turbulence to bottoms of clouds using curl noise.  Ramp the effect down over height and scale it by some value (200 in this example)
-		float2 curl_noise = _CurlNoise.SampleLevel(Trilinear_Repeat_Sampler, p.xz * 0.000528, 0).rg;
-		p.xz += curl_noise * (1.0 - height_fraction) * 240;
+		float2 curl_noise = _CurlNoise.SampleLevel(Trilinear_Repeat_Sampler, p.xz * 0.00128, 0).rg;
+		p.xz += curl_noise * (1.0 - height_fraction) * (1.0 - height_fraction) * 400;
 
 		// sample high-frequency noises
-		float3 high_frequency_noises = _WorleyVolume.SampleLevel(Trilinear_Repeat_Sampler, p * 0.002, lod).rgb;
+		float3 high_frequency_noises = _WorleyVolume.SampleLevel(Trilinear_Repeat_Sampler, p * 0.0025, lod).rgb;
 
 		// build High frequency Worley noise fBm
 		float high_freq_fBm = dot(high_frequency_noises, float3(0.625, 0.25, 0.125));

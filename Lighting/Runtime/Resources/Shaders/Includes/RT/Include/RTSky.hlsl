@@ -49,7 +49,7 @@ void SkyLight(inout RayIntersection rayIntersection, const int distance = 10000)
 	if (_Procedural == 0) {
 		float2 tc = ToRadialCoords(RotateAroundYInDegrees(WorldRayDirection(), -_Rotation));
 		float3 x = mul(_V_Inv, float4(0, 0, 0, 1));
-		x = float3(0, _PlanetRadius + max(95, x.y), 0);
+		x.y += _PlanetRadius;
 		rayIntersection.directColor = Atmo(x, WorldRayDirection(), _SunDir);
 	}
 	else if (_Procedural == 1) {

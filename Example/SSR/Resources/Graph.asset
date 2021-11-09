@@ -339,7 +339,7 @@ MonoBehaviour:
     - name: MSLutResolution
       info: 
       type_str: UnityEngine.Vector2Int
-      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c566563746f7232496e7420786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c783e33323c2f783e0d0a20203c793e33323c2f793e0d0a3c2f566563746f7232496e743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c566563746f7232496e7420786d6c6e733a7873643d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612220786d6c6e733a7873693d22687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d612d696e7374616e6365223e0d0a20203c783e33323c2f783e0d0a20203c793e36343c2f793e0d0a3c2f566563746f7232496e743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     - name: VolumeResolution
       info: 
@@ -355,6 +355,11 @@ MonoBehaviour:
       info: 
       type_str: System.Single
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e33323030303c2f666c6f61743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: doSharp
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
     - name: applyAtmoFog
       info: 
@@ -822,10 +827,10 @@ MonoBehaviour:
       mustConnect: 0
     position:
       serializedVersion: 2
-      x: 6601.549
-      y: 1527.1625
+      x: 6621.5513
+      y: 1527.0002
       width: 300
-      height: 199
+      height: 219
     info: DLSS support must be enabled on the Pipeline Asset to make this node work
       correctly.
     nodeType_str: HypnosRenderPipeline.RenderPass.DLSSPass
@@ -1346,16 +1351,16 @@ MonoBehaviour:
     = new AreaLight();\r\n            AreaLight6.enabled = true;\r\n            SunAtmo7
     = new SunAtmo();\r\n            SunAtmo7.TLutResolution = new Vector2Int(128,
     128);\r\n            SunAtmo7.SkyLutResolution = new Vector2Int(64, 224);\r\n           
-    SunAtmo7.MSLutResolution = new Vector2Int(32, 32);\r\n            SunAtmo7.VolumeResolution
+    SunAtmo7.MSLutResolution = new Vector2Int(32, 64);\r\n            SunAtmo7.VolumeResolution
     = new Vector3Int(32, 32, 32);\r\n            SunAtmo7.VolumeMaxDepth = 32000f;\r\n           
-    SunAtmo7.CloudShadowDistance = 32000f;\r\n            SunAtmo7.applyAtmoFog =
-    true;\r\n            SunAtmo7.enabled = true;\r\n            RTSpecular8 = new
-    RTSpecular();\r\n            RTSpecular8.useRTShadow = true;\r\n            RTSpecular8.enabled
-    = true;\r\n            RTGI9 = new RTGI();\r\n            RTGI9.useRTShadow =
-    true;\r\n            RTGI9.maxDepth = 2;\r\n            RTGI9.spp = 1;\r\n           
-    RTGI9.showVariance = false;\r\n            RTGI9.enabled = true;\r\n           
-    PyramidColor10 = new PyramidColor();\r\n            PyramidColor10.enabled =
-    true;\r\n            OpaquePost11 = new OpaquePost();\r\n            OpaquePost11.enabled
+    SunAtmo7.CloudShadowDistance = 32000f;\r\n            SunAtmo7.doSharp = true;\r\n           
+    SunAtmo7.applyAtmoFog = true;\r\n            SunAtmo7.enabled = true;\r\n           
+    RTSpecular8 = new RTSpecular();\r\n            RTSpecular8.useRTShadow = true;\r\n           
+    RTSpecular8.enabled = true;\r\n            RTGI9 = new RTGI();\r\n           
+    RTGI9.useRTShadow = true;\r\n            RTGI9.maxDepth = 2;\r\n            RTGI9.spp
+    = 1;\r\n            RTGI9.showVariance = false;\r\n            RTGI9.enabled
+    = true;\r\n            PyramidColor10 = new PyramidColor();\r\n            PyramidColor10.enabled
+    = true;\r\n            OpaquePost11 = new OpaquePost();\r\n            OpaquePost11.enabled
     = true;\r\n            PostProcess12 = new PostProcess();\r\n            PostProcess12.enabled
     = true;\r\n            RTSunLight13 = new RTSunLight();\r\n            RTSunLight13.enabled
     = true;\r\n            RTRefraction14 = new RTRefraction();\r\n            RTRefraction14.maxDepth

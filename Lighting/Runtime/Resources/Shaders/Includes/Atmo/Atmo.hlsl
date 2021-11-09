@@ -256,7 +256,6 @@ const float3 T_cal(const float3 x, const float3 y, const int sampleNum = 1e4) {
 	return exp(-res);
 }
 #endif
-
 #define zip_order 4
 float unzip(float x) {
 	return x < 0.5 ? (x * pow(abs(2 * x), zip_order - 1)) : ((1 - x) * pow(2 * x - 2, zip_order - 1) + 1);
@@ -293,7 +292,7 @@ const float3 T_tab(const float3 x, const float3 y) {
 }
 #endif
 
-const float3 J(const float3 y, const float3 v, const float3 s) {
+const float4 J(const float3 y, const float3 v, const float3 s) {
 	float3 res = 0;
 
 	const float altitude = Altitude(y);
@@ -305,7 +304,8 @@ const float3 J(const float3 y, const float3 v, const float3 s) {
 	float3 approximate_int_1 = 0;
 	float horiz = length(y);
 	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
-	if (dot(normalize(y), s) > horiz) {
+	bool unshadow = dot(normalize(y), s) > horiz;
+	if (unshadow){
 		approximate_int_1 = T_tab_fetch(y, s);
 	}
 
@@ -315,7 +315,7 @@ const float3 J(const float3 y, const float3 v, const float3 s) {
 
 	res = approximate_int_0 * approximate_int_1 * (p_R * beta_R + p_M * beta_M);
 
-	return res * 4 * pi;
+	return float4(res * 4 * pi, unshadow ? 1 : 0);
 }
 
 const float3 Tu_L(const float3 x_0, const float3 s) {
@@ -445,7 +445,16 @@ const float3 L2(const float3 x, const float3 s, const int sampleNum = 128) {
 	return res;
 }
 
-const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool includeTu = true) {
+const float3 ScatterTable(float3 x, float3 v, float3 s, const bool includeTu = true) {
+
+	float3x3 rot;
+	rot._m10_m11_m12 = normalize(x);
+	rot._m00_m01_m02 = normalize(cross(rot._m10_m11_m12, float3(0, 1, 1)));
+	rot._m20_m21_m22 = normalize(cross(rot._m10_m11_m12, rot._m00_m01_m02));
+
+	x = mul(rot, x);
+	v = mul(rot, v);
+	s = mul(rot, s);
 
 	float phi = acos(clamp(dot(normalize(v.xz), normalize(s.xz)), -1, 1)) / pi;
 
@@ -454,42 +463,42 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
 
 	if (v.y < horiz) {
-		rho = pow((v.y + 1) / (horiz + 1), 2) * 0.5;
+		rho = zip((v.y + 1) / (horiz + 1)) * 0.5;
 	}
 	else {
 		if (length(x) > atmosphere_radius) {
 			float ahoriz = length(x);
 			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
 			if (v.y > ahoriz) rho = -1;
-			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
+			else rho = pow((v.y - horiz) / (ahoriz - horiz), 0.5) * 0.5 + 0.5;
 		}
 		else {
 			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
 		}
 	}
-	float3 scatter = rho >= 0 ? tex2Dlod(S_table, float4(phi, rho, 0, 0)).xyz : 0;
+	float3 scatter = rho >= 0 ? tex2Dlod(S_table, float4(phi, rho, 0, 0)).xyz * 1e-5 : 0;
 
-	float coef = 1 - 4.0f / _SLutResolution.y;
-	if (rho > coef) {
-		float3 x_0;
-		X_0(x, v, x_0);
-		scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, includeTu) * _Multiplier, (rho - coef) / (1 - coef));
-	}
-	else if (rho < 1 - coef) {
-		float3 x_0;
-		if (x.y > atmosphere_radius - 1) {
-			float2 dis; 
-			X_Up(x, v, dis);
-			x_0 = x + dis.y * v;
-			x = x + dis.x * v;
-			scatter = Scatter(x, x_0, v, s, 128, includeTu) * _Multiplier;
-		}
-		// usualy we don't need this
-		//else {
-		//	X_0(x, v, x_0);
-		//	scatter = Scatter(x, x_0, v, s, 128, includeTu) *_Multiplier;
-		//}
-	}
+	//float coef = 1 - 3.0f / _SLutResolution.y;
+	//if (rho > coef) {
+	//	float3 x_0;
+	//	X_0(x, v, x_0);
+	//	scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, includeTu) * _Multiplier, (rho - coef) / (1 - coef));
+	//}
+	//else if (rho < 1 - coef) {
+	//	float3 x_0;
+	//	if (x.y > atmosphere_radius - 1) {
+	//		float2 dis; 
+	//		X_Up(x, v, dis);
+	//		x_0 = x + dis.y * v;
+	//		x = x + dis.x * v;
+	//		scatter = lerp(scatter, Scatter(x, x_0, v, s, 128, includeTu) * _Multiplier, (1 - coef - rho) / (1 - coef)); //Scatter(x, x_0, v, s, 128, includeTu) * _Multiplier;
+	//	}
+	//	// usualy we don't need this
+	//	else {
+	//		X_0(x, v, x_0);
+	//		scatter = Scatter(x, x_0, v, s, 32, includeTu) *_Multiplier;
+	//	}
+	//}
 	// prevent error
 	scatter = max(0, scatter);
 
@@ -512,7 +521,16 @@ const float3 ScatterTable(float3 x, const float3 v, const float3 s, const bool i
 }
 
 
-const float3 SkyBox(float3 x, const float3 v, const float3 s) {
+const float3 SkyBox(float3 x, float3 v, float3 s) {
+
+	float3x3 rot;
+	rot._m10_m11_m12 = normalize(x);
+	rot._m00_m01_m02 = normalize(cross(rot._m10_m11_m12, float3(0, 1, 1)));
+	rot._m20_m21_m22 = normalize(cross(rot._m10_m11_m12, rot._m00_m01_m02));
+
+	x = mul(rot, x);
+	v = mul(rot, v);
+	s = mul(rot, s);
 
 	float phi = acos(clamp(dot(normalize(v.xz), normalize(s.xz)), -1, 1)) / pi;
 
@@ -528,13 +546,13 @@ const float3 SkyBox(float3 x, const float3 v, const float3 s) {
 			float ahoriz = length(x);
 			ahoriz = -sqrt(ahoriz * ahoriz - atmosphere_radius * atmosphere_radius) / ahoriz;
 			if (v.y > ahoriz) rho = -1;
-			else rho = (v.y - horiz) / (ahoriz - horiz) * 0.5 + 0.5;
+			else rho = pow((v.y - horiz) / (ahoriz - horiz), 0.5) * 0.5 + 0.5;
 		}
 		else {
 			rho = pow((v.y - horiz) / (1 - horiz), 0.5) * 0.5 + 0.5;
 		}
 	}
-	float3 scatter = rho >= 0 ? tex2Dlod(S_table, float4(phi, rho, 0, 0)).xyz : 0;
+	float3 scatter = rho >= 0 ? tex2Dlod(S_table, float4(phi, rho, 0, 0)).xyz * 1e-5 : 0;
 
 	float coef = 1 - 4.0f / _SLutResolution.y;
 	if (rho > coef) {

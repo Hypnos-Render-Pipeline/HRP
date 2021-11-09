@@ -211,7 +211,7 @@ public class VRender : IDisposable
 
         TLut = new RenderTexture(512, 513, 0, RenderTextureFormat.ARGBFloat);
         MSLut = new RenderTexture(128, 128, 0, RenderTextureFormat.ARGBFloat);
-        SkyLut = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGBFloat);
+        SkyLut = new RenderTexture(128, 4096, 0, RenderTextureFormat.ARGBFloat);
         VolumeLut = new RenderTexture(1, 1, 0, RenderTextureFormat.ARGBFloat);
         VolumeLut.enableRandomWrite = true;
         VolumeLut.dimension = TextureDimension.Tex3D;

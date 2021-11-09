@@ -121,7 +121,7 @@ namespace HypnosRenderPipeline.RenderGraph
                     if (Node.nodeType == typeof(TextureDebug))
                     {
                         var tex = Node.debugTex;
-                        if (tex != null && inputs[0].connected)
+                        if (tex != null && (inputs[0].connected || inputs[1].connected))
                         {
                             image.image = tex;
                             var rt = tex as RenderTexture;
