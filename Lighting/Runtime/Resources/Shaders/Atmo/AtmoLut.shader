@@ -95,83 +95,6 @@ Shader "Hidden/AtmoLut"
 
                 int _RenderGround;
 
-                const float3 Scatter_(const float3 x, float3 x_0, float3 v, const float3 s, const int sampleNum = 32, bool includeTu = true) {
-                    x_0 = lerp(x, x_0, 0.995);
-                    float dis = distance(x, x_0);
-
-                    float3 px = x - s * dot(x, s);
-                    float3 pv = normalize(v - s * dot(v, s));
-
-                    float mid_dis = -dot(px, pv);
-                    float k = length(px + pv * mid_dis);
-                    float t0 = 0, t1 = 0;
-                    if (k < planet_radius) {
-                        t0 = sqrt(planet_radius * planet_radius - k * k);
-                        float sdotv = dot(s, v);
-                        float sinsv = sqrt(1 - sdotv * sdotv);
-                        t1 = (mid_dis + t0) / sinsv;
-                        t0 = (mid_dis - t0) / sinsv;
-                        if (t0 > dis)
-                            t1 = t0 = dis;
-                        t0 = clamp(t0,0,dis);
-                        t1 = clamp(t1,0,dis);
-                        if (dot(x + v * t0, s) > 0)
-                            t1 = t0 = dis;
-                    }
-
-                    float ext = 1;
-
-                    float w0 = t0 / dis; (1 - exp(-ext * t0 / dis)) / (1 - exp(-ext));
-                    float w1 = (dis - t1) / dis; 1 - (1 - exp(-ext * t1 / dis)) / (1 - exp(-ext));
-                    int loop_num = sampleNum+1;
-
-                    int sampleNum0 = max(1, sampleNum * w0 / (w0 + w1));
-                    int sampleNum1 = sampleNum - sampleNum0;
-
-                    float delta0 = t0 / sampleNum0;
-                    float delta1 = (dis - t1) / sampleNum1;
-                    
-                    float t = 0;
-                    t += delta0 * SAMPLE1D;
-                    float3 res = 0;
-                    float4 res2 = 0;
-                    while (t < t0 && loop_num-->0)
-                    {
-                        const float3 y = lerp(x, x_0, t / dis);
-                        const float3 trans = T(x, y);
-                        res2 += float4(trans, 1) * J(y, v, s);
-                        t += delta0;
-                    }
-                    res += res2 * t0 / max(1, res2.w);
-                    res2 = 0;
-                    t = t1 + delta1 * SAMPLE1D;
-                    loop_num = sampleNum + 1;
-                    while (t < dis && loop_num-->0)
-                    {
-                        const float3 y = lerp(x, x_0, t / dis);
-                        const float3 trans = T(x, y);
-                        res2 += float4(trans, 1) * J(y, v, s);
-                        t += delta1;
-                    }
-                    res += res2 * (dis - t1) / max(1, res2.w);
-                    res2 = 0;
-                    for (int i = 0; i < sampleNum / 2; i++)
-                    {
-                        const float3 y = lerp(x, x_0, (i + 0.5) / sampleNum * 2);
-                        const float3 trans = T(x, y);
-                        res2 += float4(trans * Scatter1234_(y, s) * _MultiScatterStrength, 1);
-                    }
-                    res += res2 * dis / max(1, res2.w);
-
-                    float horiz = length(x);
-                    horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
-
-                    if (includeTu && dot(normalize(x), v) < horiz)
-                        res += Tu_L(x_0, s) / pi * T_tab_fetch(x_0, v);
-
-                    return res;
-                }
-
                 fixed3 frag(v2f i) : SV_Target
                 {
                     float3 s = normalize(_SunDir);
@@ -226,8 +149,7 @@ Shader "Hidden/AtmoLut"
                         X_0(x, v, x_0);
                     }
 
-                    //int sample_num = distance(x, x_0) / 100;
-                    float3 res = Scatter_(x, x_0, v, s, 32, _RenderGround);// _SunLuminance;
+                    float3 res = Scatter(x, x_0, v, s, 32, _RenderGround);// _SunLuminance;
                     return res * 1e5 * _Multiplier;
                 }
             ENDCG
@@ -278,11 +200,6 @@ Shader "Hidden/AtmoLut"
                     float3 dir = normalize(mul(_V_Inv, float4(0, 0, -1, 0)));
                     float dotvc = -dot(normalize(_V_Inv._m02_m12_m22), v);
                     depth /= dotvc;
-                    
-                    //float3 x_0;
-                    //X_0(x, v, x_0);
-                    //float skyDepth = distance(x, x_0);
-                    //depth = lerp(depth, skyDepth, smoothstep(0.9, 1, depth / LinearEyeDepth(0)));
 
                     float4 sceneColor = tex2Dlod(_MainTex, float4(i.uv, 0, 0));
 
@@ -294,8 +211,7 @@ Shader "Hidden/AtmoLut"
                     else {
                         output = float4(sky_occ ? sceneColor.xyz : ScatterTable(x, v, s, _RenderGround) * _SunLuminance, sceneColor.a);
                     }
-//output = float4(Scatter(x, v, _MaxDepth, s),0);
-//output = float4(ScatterTable(x, v, s, _RenderGround) * _SunLuminance, 0);
+
                     uint2 id = i.vertex.xy;
                     int k[16] = { 15,7,13,5,3,11,1,9,12,4,14,6,0,8,2,10 };
                     int index = id.x % 4 + id.y % 4 * 4;
@@ -305,8 +221,6 @@ Shader "Hidden/AtmoLut"
                         output.xyz += 0.2/255. * output;
                     }
 
-                    //return tex2Dlod(S_table, float4(i.uv, 0, 0)) * float4(_SunLuminance, 1) * 1e-5;
-                    //return float4(ScatterTable(x, v, s, _RenderGround),1);
                     return output;
                 }
             ENDCG

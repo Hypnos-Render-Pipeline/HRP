@@ -368,7 +368,8 @@ const float3 Scatter1234_(const float3 x, const float3 s) {
 	return scatter;
 }
 
-const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const int dirSampleNum = 128, bool includeTu = true) {
+// obsolete
+const float3 __Scatter__(const float3 x, float3 x_0, float3 v, const float3 s, const int dirSampleNum = 256, bool includeTu = true) {
 	x_0 = lerp(x, x_0, 0.99);
 	const float dis = distance(x, x_0);
 
@@ -381,6 +382,82 @@ const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const
 		res += trans * (J(y, v, s) + Scatter1234_(y, s) * _MultiScatterStrength);
 	}
 	res *= dis / dirSampleNum;
+
+	float horiz = length(x);
+	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
+
+	if (includeTu && dot(normalize(x), v) < horiz)
+		res += Tu_L(x_0, s) / pi * T_tab_fetch(x_0, v);
+
+	return res;
+}
+
+// semi analytical integration
+const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const int sampleNum = 32, bool includeTu = true) {
+	x_0 = lerp(x, x_0, 0.995);
+	float dis = distance(x, x_0);
+
+	float3 px = x - s * dot(x, s);
+	float3 pv = normalize(v - s * dot(v, s));
+
+	float mid_dis = -dot(px, pv);
+	float k = length(px + pv * mid_dis);
+	float t0 = 0, t1 = 0;
+	if (k < planet_radius) {
+		t0 = sqrt(planet_radius * planet_radius - k * k);
+		float sdotv = dot(s, v);
+		float sinsv = sqrt(1 - sdotv * sdotv);
+		t1 = (mid_dis + t0) / sinsv;
+		t0 = (mid_dis - t0) / sinsv;
+		if (t0 > dis)
+			t1 = t0 = dis;
+		t0 = clamp(t0, 0, dis);
+		t1 = clamp(t1, 0, dis);
+		if (dot(x + v * t0, s) > 0)
+			t1 = t0 = dis;
+	}
+
+	//float ext = 1;
+	float w0 = t0 / dis; //(1 - exp(-ext * t0 / dis)) / (1 - exp(-ext));
+	float w1 = (dis - t1) / dis; //1 - (1 - exp(-ext * t1 / dis)) / (1 - exp(-ext));
+	int loop_num = sampleNum + 1;
+
+	int sampleNum0 = max(1, sampleNum * w0 / (w0 + w1));
+	int sampleNum1 = sampleNum - sampleNum0;
+
+	float delta0 = t0 / sampleNum0;
+	float delta1 = (dis - t1) / sampleNum1;
+
+	float t = 0;
+	t += delta0 * SAMPLE1D;
+	float3 res = 0;
+	float4 res2 = 0;
+	while (t < t0 && loop_num-->0)
+	{
+		const float3 y = lerp(x, x_0, t / dis);
+		const float3 trans = T(x, y);
+		res2 += float4(trans, 1) * J(y, v, s);
+		t += delta0;
+	}
+	res += res2 * t0 / max(1, res2.w);
+	res2 = 0;
+	t = t1 + delta1 * SAMPLE1D;
+	while (t < dis && loop_num-->0)
+	{
+		const float3 y = lerp(x, x_0, t / dis);
+		const float3 trans = T(x, y);
+		res2 += float4(trans, 1) * J(y, v, s);
+		t += delta1;
+	}
+	res += res2 * (dis - t1) / max(1, res2.w);
+	res2 = 0;
+	for (int i = 0; i < sampleNum / 2; i++)
+	{
+		const float3 y = lerp(x, x_0, (i + 0.5) / sampleNum * 2);
+		const float3 trans = T(x, y);
+		res2 += float4(trans * Scatter1234_(y, s) * _MultiScatterStrength, 1);
+	}
+	res += res2 * dis / max(1, res2.w);
 
 	float horiz = length(x);
 	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
@@ -478,27 +555,6 @@ const float3 ScatterTable(float3 x, float3 v, float3 s, const bool includeTu = t
 	}
 	float3 scatter = rho >= 0 ? tex2Dlod(S_table, float4(phi, rho, 0, 0)).xyz * 1e-5 : 0;
 
-	//float coef = 1 - 3.0f / _SLutResolution.y;
-	//if (rho > coef) {
-	//	float3 x_0;
-	//	X_0(x, v, x_0);
-	//	scatter = lerp(scatter, Scatter(x, x_0, v, s, 32, includeTu) * _Multiplier, (rho - coef) / (1 - coef));
-	//}
-	//else if (rho < 1 - coef) {
-	//	float3 x_0;
-	//	if (x.y > atmosphere_radius - 1) {
-	//		float2 dis; 
-	//		X_Up(x, v, dis);
-	//		x_0 = x + dis.y * v;
-	//		x = x + dis.x * v;
-	//		scatter = lerp(scatter, Scatter(x, x_0, v, s, 128, includeTu) * _Multiplier, (1 - coef - rho) / (1 - coef)); //Scatter(x, x_0, v, s, 128, includeTu) * _Multiplier;
-	//	}
-	//	// usualy we don't need this
-	//	else {
-	//		X_0(x, v, x_0);
-	//		scatter = Scatter(x, x_0, v, s, 32, includeTu) *_Multiplier;
-	//	}
-	//}
 	// prevent error
 	scatter = max(0, scatter);
 
