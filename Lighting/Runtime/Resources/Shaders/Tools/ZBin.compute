@@ -66,54 +66,39 @@ inline bool ConeInsidePlane(float4 position_range, float3 dir, float angle, floa
     float3 Q = position_range.xyz + dir * position_range.w + normalize(m) * position_range.w * angle;
     return PointInsidePlane(position_range.xyz, plane) || PointInsidePlane(Q, plane);
 }
-bool IntersectTriangle(float3 o, float3 d, float3 v0, float3 v1, float3 v2)
-{
-    float3  E1 = v1 - v0;
-    float3  E2 = v2 - v0;
-    float3  P = cross(d, E2);
-    float det = dot(E1, P);
-    float3  T;
-    if (det > 0) {
-        T = o - v0;
-    }
-    else {
-        T = v0 - o;
-        det = -det;
-    }
-    if (det < 0)
-        return false;
-    float u = dot(T, P);
-    if (u < -1 || u > det + 1)
-        return false;
-    float3  Q = cross(T, E1);
-    float v = dot(d, Q);
-    if (v < -1 || u + v > det + 1)
-        return false;
-    return true;
-}
 
 inline bool ConeConeTest(float3 p, float3 v, float t, float3 p1, float3 v1, float d1, float t1) {
+    t1 += lerp(0.02, 0, min(1,t1));
     float3 pp1 = p - p1;
     float lpp1 = length(pp1);
     float pp1dotv1 = dot(p - p1, v1);
-    if (pp1dotv1 > sqrt(1 - t1 * t1) * lpp1 && pp1dotv1 < d1)return true;
+    float dv = dot(v1, v);
 
-    float3 fp = p1 + v1 * d1;
-    float3 v_ = normalize(normalize(cross(cross(v, fp - p), v)) * t + v);
-    float dis = dot(fp - p, v1) / dot(v_, v1);
-    if (distance(dis * v_ + p, fp) < d1 * t1 + dis * t) return true;
+    p1 -= v1 * lpp1 * t * 2;
+    d1 += lpp1 * t * lerp(4, 2, abs(dv));
 
+    pp1 = p - p1;
+    pp1dotv1 = dot(p - p1, v1);
 
-    float3 ta = normalize(cross(v1, v));
-    float3 n = normalize(cross(ta, v1));
-    dis = (d1 + 1) * t1;
-    p1 -= v1;
-    float3 p2 = fp + ta * (dis + 1);
-    float3 p3 = fp - ta * (dis * 1);
+    pp1 = p - p1;
+    pp1dotv1 = dot(p - p1, v1);
+    float cos2 = 1 / (1 + t1 * t1);
+    float a = dv * dv - cos2;
+    float b = 2 * (dv * pp1dotv1 - dot(v, pp1) * cos2);
+    float c = pp1dotv1 * pp1dotv1 - dot(pp1, pp1) * cos2;
 
-    if (IntersectTriangle(p, v, p1, p2, p3)) return true;
+    float dt = b * b - 4 * a * c;
+    if (dt < 0) return false;
 
-    return false;
+    float ax = -b / (2 * a);
+    float dx = sqrt(dt) / (2 * a);
+    float x0 = ax-dx;
+    float x1 = ax+dx;
+    x0 = dot(p + v * x0 - p1, v1);
+    x1 = dot(p + v * x1 - p1, v1);
+    if ((x0 > d1 || x0 < 0)&& (x1 > d1 || x1 < 0)) return false;
+    
+    return true;
 }
 
 bool ConeIntersect(float4 position_range, float3 dir, float angle, float4x4 planes)
@@ -186,7 +171,7 @@ void TileCulling(uint2 id : SV_DispatchThreadID, uint3 gtid : SV_GroupThreadID)
                 if (sqrt(1 - cosl * cosl) * ldis - light.position_range.w - cosl * ldis * max_tan > 0) continue;
             }
             else { // spot
-                if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
+                //if (!ConeIntersect(light.position_range, light.mainDirection_id.xyz, light.geometry.x, planes)) continue;
                 // This Version perform more accurate soft rasterization culling, but cost more time.
                 if (!ConeConeTest(cam, cdir, max_tan, light.position_range.xyz, light.mainDirection_id.xyz, light.position_range.w, light.geometry.x)) continue;
             }

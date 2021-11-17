@@ -123,6 +123,11 @@ MonoBehaviour:
       type_str: System.Single
       value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e33323030303c2f666c6f61743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
       obj_ref: {fileID: 0}
+    - name: doSharp
+      info: 
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
     - name: applyAtmoFog
       info: 
       type_str: System.Boolean
@@ -467,18 +472,19 @@ MonoBehaviour:
     SunAtmo2.SkyLutResolution = new Vector2Int(64, 224);\r\n            SunAtmo2.MSLutResolution
     = new Vector2Int(32, 32);\r\n            SunAtmo2.VolumeResolution = new Vector3Int(32,
     32, 32);\r\n            SunAtmo2.VolumeMaxDepth = 32000f;\r\n            SunAtmo2.CloudShadowDistance
-    = 32000f;\r\n            SunAtmo2.applyAtmoFog = true;\r\n            SunAtmo2.enabled
-    = true;\r\n            CullLight3 = new CullLight();\r\n            CullLight3.cullingType
-    = CullLight.CullingType.Frustum;\r\n            CullLight3.radius = 200f;\r\n           
-    CullLight3.faraway = 100f;\r\n            CullLight3.enabled = true;\r\n           
-    CombineColorDepth4 = new CombineColorDepth();\r\n            CombineColorDepth4.TemporalAccumulate
-    = false;\r\n            CombineColorDepth4.enabled = true;\r\n            SkyBoxIBL5
-    = new SkyBoxIBL();\r\n            SkyBoxIBL5.enabled = true;\r\n            PostProcess6
-    = new PostProcess();\r\n            PostProcess6.enabled = true;\r\n        }\r\n       
-    \r\n        public int Execute(RenderContext context, bool debug = false)\r\n       
-    {\r\n            System.Int32 result = -1;\r\n            \r\n            //CullLight3\r\n           
-    {\r\n                context.commandBuffer.name = \"CullLight3\";\r\n               
-    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    = 32000f;\r\n            SunAtmo2.doSharp = true;\r\n            SunAtmo2.applyAtmoFog
+    = true;\r\n            SunAtmo2.enabled = true;\r\n            CullLight3 = new
+    CullLight();\r\n            CullLight3.cullingType = CullLight.CullingType.Frustum;\r\n           
+    CullLight3.radius = 200f;\r\n            CullLight3.faraway = 100f;\r\n           
+    CullLight3.enabled = true;\r\n            CombineColorDepth4 = new CombineColorDepth();\r\n           
+    CombineColorDepth4.TemporalAccumulate = false;\r\n            CombineColorDepth4.enabled
+    = true;\r\n            SkyBoxIBL5 = new SkyBoxIBL();\r\n            SkyBoxIBL5.enabled
+    = true;\r\n            PostProcess6 = new PostProcess();\r\n            PostProcess6.enabled
+    = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
+    context, bool debug = false)\r\n        {\r\n            System.Int32 result
+    = -1;\r\n            \r\n            //CullLight3\r\n            {\r\n               
+    context.commandBuffer.name = \"CullLight3\";\r\n                // preprocess
+    node\r\n                {\r\n                    // inputs\r\n                   
     // outputs\r\n                    CullLight3.lights.AllocateResourcces(context,
     CullLight3_lights);\r\n                    CullLight3.lights.name = \"CullLight3.lights\";\r\n                   
     CullLight3.lights.connected = true;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   

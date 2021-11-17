@@ -1,4 +1,5 @@
 using HypnosRenderPipeline.Tools;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -37,6 +38,10 @@ namespace HypnosRenderPipeline.RenderPass
         [NodePin(PinType.Out)]
         public BufferPin<OITOutputList> oitOutput = new BufferPin<OITOutputList>(1);
 
+        [NodePin(PinType.Out)]
+        public BufferPin<LightStructGPU> areaLightBuffer = new BufferPin<LightStructGPU>(1);
+
+        List<LightStructGPU> areaLightBufferCPU = new List<LightStructGPU>();
 
         ComputeShaderWithName initOITDepth = new ComputeShaderWithName("Shaders/Tools/ClearOITBuffer");
         MaterialWithName OITBlend = new MaterialWithName("Hidden/OITBlend");
@@ -73,6 +78,22 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetRandomWriteTarget(2, oitOutput);
             cb.SetGlobalTexture("_Lock", _LockTex);
             cb.SetGlobalBuffer("_OITOutputList", oitOutput);
+
+            if (lights.connected)
+            {
+                int count = lights.handle.areas.Count;
+                cb.SetGlobalInt("_AreaLightCount", count);
+                areaLightBuffer.ReSize(count);
+                areaLightBufferCPU.Clear();
+                foreach (var light in lights.handle.areas)
+                    areaLightBufferCPU.Add(light.lightStructGPU);
+                cb.SetBufferData(areaLightBuffer, areaLightBufferCPU, 0, 0, count);
+                cb.SetGlobalBuffer("_AreaLightBuffer", areaLightBuffer);
+            }
+            else
+            {
+                cb.SetGlobalInt("_AreaLightCount", 0);
+            }
 
             cb.DrawRenderers(context.defaultCullingResult, ref a, ref b);
 
