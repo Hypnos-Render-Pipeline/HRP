@@ -786,6 +786,9 @@ MonoBehaviour:
     - name: oitOutput
       info: 
       mustConnect: 0
+    - name: areaLightBuffer
+      info: 
+      mustConnect: 0
     position:
       serializedVersion: 2
       x: 5822
@@ -834,6 +837,50 @@ MonoBehaviour:
     info: DLSS support must be enabled on the Pipeline Asset to make this node work
       correctly.
     nodeType_str: HypnosRenderPipeline.RenderPass.DLSSPass
+  - nodeName: FrustumFog
+    parameters:
+    - name: screenGridSize
+      info: 
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e31363c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: depthSliceNum
+      info: 
+      type_str: System.Int32
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c696e743e36343c2f696e743e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: maxDepth
+      info: 
+      type_str: System.Single
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c666c6f61743e33323c2f666c6f61743e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    - name: enabled
+      info: Should this node be excuted.
+      type_str: System.Boolean
+      value_bytes: 3c3f786d6c2076657273696f6e3d22312e30223f3e0d0a3c626f6f6c65616e3e747275653c2f626f6f6c65616e3e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      obj_ref: {fileID: 0}
+    inputs:
+    - name: target
+      info: 
+      mustConnect: 1
+    - name: depth
+      info: 
+      mustConnect: 1
+    - name: skyIrradiance
+      info: 
+      mustConnect: 0
+    outputs:
+    - name: target
+      info: 
+      mustConnect: 1
+    position:
+      serializedVersion: 2
+      x: 6177.001
+      y: 1957.7003
+      width: 300
+      height: 245
+    info: 
+    nodeType_str: HypnosRenderPipeline.RenderPass.FrustumFog
   edgeRecs:
   - i: 3
     o: 2
@@ -1129,10 +1176,6 @@ MonoBehaviour:
     o_n: depth
   - i: 13
     o: 16
-    i_n: target
-    o_n: target
-  - i: 13
-    o: 16
     i_n: depth
     o_n: depth
   - i: 14
@@ -1159,6 +1202,18 @@ MonoBehaviour:
     o: 4
     i_n: target
     o_n: lightingResult
+  - i: 18
+    o: 16
+    i_n: target
+    o_n: target
+  - i: 18
+    o: 16
+    i_n: depth
+    o_n: depth
+  - i: 13
+    o: 18
+    i_n: target
+    o_n: target
   node_edgeRecs:
   - node: 2
     in_edges: 
@@ -1168,19 +1223,19 @@ MonoBehaviour:
     out_edge: 0200000003000000190000001a0000002200000023000000390000003a0000004300000044000000
   - node: 4
     in_edges: 010000000200000003000000040000000500000006000000070000000800000016000000
-    out_edge: 50000000
+    out_edge: 4f000000
   - node: 0
     in_edges: 
-    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e0000001100000012000000130000001600000017000000180000001d0000001e0000001f0000002000000026000000270000002800000030000000340000003500000036000000370000003f000000400000004e000000
+    out_edge: 0400000005000000060000000700000008000000090000000b0000000c0000000d0000000e0000001100000012000000130000001600000017000000180000001d0000001e0000001f0000002000000026000000270000002800000030000000340000003500000036000000370000003f000000400000004d000000
   - node: 5
-    in_edges: 090000004f000000
+    in_edges: 090000004e000000
     out_edge: 31000000
   - node: 6
-    in_edges: 0a0000000b0000000c0000000d0000000e0000001700000050000000
-    out_edge: 1000000014000000150000002a0000002e0000002f000000330000003e000000480000004d000000
+    in_edges: 0a0000000b0000000c0000000d0000000e000000170000004f000000
+    out_edge: 1000000014000000150000002a0000002e0000002f000000330000003e000000480000004c000000
   - node: 7
     in_edges: 0f000000100000001100000012000000130000001400000018000000
-    out_edge: 1c000000210000002500000029000000320000003c00000041000000460000004b000000
+    out_edge: 1c000000210000002500000029000000320000003c00000041000000460000004a000000
   - node: 8
     in_edges: 15000000
     out_edge: 
@@ -1197,23 +1252,26 @@ MonoBehaviour:
     in_edges: 2f00000042000000
     out_edge: 47000000
   - node: 13
-    in_edges: 30000000490000004a000000
-    out_edge: 4c000000
+    in_edges: 300000004900000052000000
+    out_edge: 4b000000
   - node: 1
     in_edges: 31000000
     out_edge: 
   - node: 14
-    in_edges: 3200000033000000340000003500000036000000370000004b000000
+    in_edges: 3200000033000000340000003500000036000000370000004a000000
     out_edge: 38000000
   - node: 15
     in_edges: 390000003a0000003b0000003c0000003d0000003e0000003f0000004000000041000000
     out_edge: 42000000
   - node: 16
     in_edges: 430000004400000045000000460000004700000048000000
-    out_edge: 490000004a000000
+    out_edge: 490000005000000051000000
   - node: 17
-    in_edges: 4c0000004d0000004e000000
-    out_edge: 4f000000
+    in_edges: 4b0000004c0000004d000000
+    out_edge: 4e000000
+  - node: 18
+    in_edges: 5000000051000000
+    out_edge: 52000000
   groupRecs:
   - name: Pipeline
     color: {r: 0.09803922, g: 0.09803922, b: 0.09803922, a: 0.4}
@@ -1228,17 +1286,17 @@ MonoBehaviour:
     RTGI RTGI9;\r\n        PyramidColor PyramidColor10;\r\n        OpaquePost OpaquePost11;\r\n       
     PostProcess PostProcess12;\r\n        RTSunLight RTSunLight13;\r\n        RTRefraction
     RTRefraction14;\r\n        OITransparent OITransparent15;\r\n        DLSSPass
-    DLSSPass16;\r\n        // ----------------------------\r\n        \r\n       
-    // ShaderIDs:\r\n        // ----------------------------\r\n        System.Int32
-    GBuffer0_depth = Shader.PropertyToID(\"GBuffer0.depth\");\r\n        System.Int32
-    GBuffer0_diffuse = Shader.PropertyToID(\"GBuffer0.diffuse\");\r\n        System.Int32
-    GBuffer0_specular = Shader.PropertyToID(\"GBuffer0.specular\");\r\n        System.Int32
-    GBuffer0_normal = Shader.PropertyToID(\"GBuffer0.normal\");\r\n        System.Int32
-    GBuffer0_emission = Shader.PropertyToID(\"GBuffer0.emission\");\r\n        System.Int32
-    GBuffer0_microAO = Shader.PropertyToID(\"GBuffer0.microAO\");\r\n        System.Int32
-    GBuffer0_index = Shader.PropertyToID(\"GBuffer0.index\");\r\n        System.Int32
-    GBuffer0_motion = Shader.PropertyToID(\"GBuffer0.motion\");\r\n        System.Int32
-    OutputNode1_result = Shader.PropertyToID(\"OutputNode1.result\");\r\n       
+    DLSSPass16;\r\n        FrustumFog FrustumFog17;\r\n        // ----------------------------\r\n       
+    \r\n        // ShaderIDs:\r\n        // ----------------------------\r\n       
+    System.Int32 GBuffer0_depth = Shader.PropertyToID(\"GBuffer0.depth\");\r\n       
+    System.Int32 GBuffer0_diffuse = Shader.PropertyToID(\"GBuffer0.diffuse\");\r\n       
+    System.Int32 GBuffer0_specular = Shader.PropertyToID(\"GBuffer0.specular\");\r\n       
+    System.Int32 GBuffer0_normal = Shader.PropertyToID(\"GBuffer0.normal\");\r\n       
+    System.Int32 GBuffer0_emission = Shader.PropertyToID(\"GBuffer0.emission\");\r\n       
+    System.Int32 GBuffer0_microAO = Shader.PropertyToID(\"GBuffer0.microAO\");\r\n       
+    System.Int32 GBuffer0_index = Shader.PropertyToID(\"GBuffer0.index\");\r\n       
+    System.Int32 GBuffer0_motion = Shader.PropertyToID(\"GBuffer0.motion\");\r\n       
+    System.Int32 OutputNode1_result = Shader.PropertyToID(\"OutputNode1.result\");\r\n       
     System.Int32 CullLight2_lights = Shader.PropertyToID(\"CullLight2.lights\");\r\n       
     System.Int32 ZBin3_lights = Shader.PropertyToID(\"ZBin3.lights\");\r\n       
     System.Int32 ZBin3_depth = Shader.PropertyToID(\"ZBin3.depth\");\r\n        System.Int32
@@ -1329,10 +1387,14 @@ MonoBehaviour:
     System.Int32 OITransparent15_target = Shader.PropertyToID(\"OITransparent15.target\");\r\n       
     System.Int32 OITransparent15_depth = Shader.PropertyToID(\"OITransparent15.depth\");\r\n       
     System.Int32 OITransparent15_oitOutput = Shader.PropertyToID(\"OITransparent15.oitOutput\");\r\n       
+    System.Int32 OITransparent15_areaLightBuffer = Shader.PropertyToID(\"OITransparent15.areaLightBuffer\");\r\n       
     System.Int32 DLSSPass16_input = Shader.PropertyToID(\"DLSSPass16.input\");\r\n       
     System.Int32 DLSSPass16_depth = Shader.PropertyToID(\"DLSSPass16.depth\");\r\n       
     System.Int32 DLSSPass16_motion = Shader.PropertyToID(\"DLSSPass16.motion\");\r\n       
     System.Int32 DLSSPass16_output = Shader.PropertyToID(\"DLSSPass16.output\");\r\n       
+    System.Int32 FrustumFog17_target = Shader.PropertyToID(\"FrustumFog17.target\");\r\n       
+    System.Int32 FrustumFog17_depth = Shader.PropertyToID(\"FrustumFog17.depth\");\r\n       
+    System.Int32 FrustumFog17_skyIrradiance = Shader.PropertyToID(\"FrustumFog17.skyIrradiance\");\r\n       
     // ----------------------------\r\n        \r\n        public void Init()\r\n       
     {\r\n            GBuffer0 = new GBuffer();\r\n            GBuffer0.a = 1f;\r\n           
     GBuffer0.b = false;\r\n            GBuffer0.c = new Vector2(1.10973f, 2f);\r\n           
@@ -1368,7 +1430,10 @@ MonoBehaviour:
     = true;\r\n            OITransparent15 = new OITransparent();\r\n           
     OITransparent15.enabled = true;\r\n            DLSSPass16 = new DLSSPass();\r\n           
     DLSSPass16.sharpness = 0.5f;\r\n            DLSSPass16.quality = DLSSPass.Quality.Utra;\r\n           
-    DLSSPass16.enabled = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
+    DLSSPass16.enabled = true;\r\n            FrustumFog17 = new FrustumFog();\r\n           
+    FrustumFog17.screenGridSize = 16;\r\n            FrustumFog17.depthSliceNum =
+    64;\r\n            FrustumFog17.maxDepth = 32f;\r\n            FrustumFog17.enabled
+    = true;\r\n        }\r\n        \r\n        public int Execute(RenderContext
     context, bool debug = false)\r\n        {\r\n            System.Int32 result
     = -1;\r\n            \r\n            //GBuffer0\r\n            {\r\n               
     context.commandBuffer.name = \"GBuffer0\";\r\n                // preprocess node\r\n               
@@ -1593,22 +1658,37 @@ MonoBehaviour:
     // outputs\r\n                    OITransparent15.oitOutput.AllocateResourcces(context,
     OITransparent15_oitOutput);\r\n                    OITransparent15.oitOutput.name
     = \"OITransparent15.oitOutput\";\r\n                    OITransparent15.oitOutput.connected
+    = false;\r\n                    OITransparent15.areaLightBuffer.AllocateResourcces(context,
+    OITransparent15_areaLightBuffer);\r\n                    OITransparent15.areaLightBuffer.name
+    = \"OITransparent15.areaLightBuffer\";\r\n                    OITransparent15.areaLightBuffer.connected
     = false;\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
     context.commandBuffer.Clear();\r\n                }\r\n                // perform
     node\r\n                OITransparent15.Execute(context);\r\n               
     // postprocess node\r\n                {\r\n                    OITransparent15.oitOutput.ReleaseResourcces(context);\r\n                   
-    OITransparent15.oitOutput.connected = true;\r\n                }\r\n               
-    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    OITransparent15.areaLightBuffer.ReleaseResourcces(context);\r\n                   
+    OITransparent15.oitOutput.connected = true;\r\n                    OITransparent15.areaLightBuffer.connected
+    = true;\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    context.commandBuffer.Clear();\r\n            }\r\n            //FrustumFog17\r\n           
+    {\r\n                context.commandBuffer.name = \"FrustumFog17\";\r\n               
+    // preprocess node\r\n                {\r\n                    // inputs\r\n                   
+    FrustumFog17.target.connected = true;\r\n                    FrustumFog17.target.Move(OITransparent15.target);\r\n                   
+    FrustumFog17.depth.connected = true;\r\n                    FrustumFog17.depth.Move(OITransparent15.depth);\r\n                   
+    FrustumFog17.skyIrradiance.AllocateResourcces(context, FrustumFog17_skyIrradiance);\r\n                   
+    FrustumFog17.skyIrradiance.name = \"FrustumFog17.skyIrradiance\";\r\n                   
+    // outputs\r\n                    context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n                   
+    context.commandBuffer.Clear();\r\n                }\r\n                // perform
+    node\r\n                FrustumFog17.Execute(context);\r\n                //
+    postprocess node\r\n                {\r\n                    FrustumFog17.skyIrradiance.ReleaseResourcces(context);\r\n               
+    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //PostProcess12\r\n           
     {\r\n                context.commandBuffer.name = \"PostProcess12\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
-    PostProcess12.target.connected = true;\r\n                    PostProcess12.target.Move(OITransparent15.target);\r\n                   
+    PostProcess12.target.connected = true;\r\n                    PostProcess12.target.Move(FrustumFog17.target);\r\n                   
     PostProcess12.depth.connected = true;\r\n                    PostProcess12.depth.Move(OITransparent15.depth);\r\n                   
     PostProcess12.motion.connected = true;\r\n                    PostProcess12.motion.Move(GBuffer0.motion);\r\n                   
     // outputs\r\n                }\r\n                // perform node\r\n               
     PostProcess12.Execute(context);\r\n                // postprocess node\r\n               
-    {\r\n                    PostProcess12.depth.ReleaseResourcces(context);\r\n               
-    }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
+    {\r\n                }\r\n                context.context.ExecuteCommandBuffer(context.commandBuffer);\r\n               
     context.commandBuffer.Clear();\r\n            }\r\n            //DLSSPass16\r\n           
     {\r\n                context.commandBuffer.name = \"DLSSPass16\";\r\n               
     // preprocess node\r\n                {\r\n                    // inputs\r\n                   
@@ -1708,7 +1788,10 @@ MonoBehaviour:
     OITransparent15.tiledLights.Dispose();\r\n                OITransparent15.lights.Dispose();\r\n               
     OITransparent15.sun.Dispose();\r\n                OITransparent15.target.Dispose();\r\n               
     OITransparent15.depth.Dispose();\r\n                OITransparent15.oitOutput.Dispose();\r\n               
-    OITransparent15.Dispose();\r\n            }\r\n            // DLSSPass16\r\n           
-    {\r\n                DLSSPass16.input.Dispose();\r\n                DLSSPass16.depth.Dispose();\r\n               
-    DLSSPass16.motion.Dispose();\r\n                DLSSPass16.output.Dispose();\r\n               
-    DLSSPass16.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"
+    OITransparent15.areaLightBuffer.Dispose();\r\n                OITransparent15.Dispose();\r\n           
+    }\r\n            // DLSSPass16\r\n            {\r\n                DLSSPass16.input.Dispose();\r\n               
+    DLSSPass16.depth.Dispose();\r\n                DLSSPass16.motion.Dispose();\r\n               
+    DLSSPass16.output.Dispose();\r\n                DLSSPass16.Dispose();\r\n           
+    }\r\n            // FrustumFog17\r\n            {\r\n                FrustumFog17.target.Dispose();\r\n               
+    FrustumFog17.depth.Dispose();\r\n                FrustumFog17.skyIrradiance.Dispose();\r\n               
+    FrustumFog17.Dispose();\r\n            }\r\n        }\r\n    }\r\n}\r\n"

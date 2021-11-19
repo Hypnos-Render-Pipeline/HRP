@@ -287,7 +287,7 @@ namespace HypnosRenderPipeline.VFX.ShaderGraph
                 // patch render type and render queue from pass declaration:
                 var patchedSubShader = subShader;
                 patchedSubShader.pipelineTag = "HypnosRenderPipeline";
-                patchedSubShader.renderQueue = "Geometry";
+                patchedSubShader.renderQueue = renderQueue;
                 patchedSubShader.renderType = "Geometry";
                 context.AddSubShader(patchedSubShader);
             }

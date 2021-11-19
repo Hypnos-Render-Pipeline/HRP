@@ -14,18 +14,18 @@ namespace HypnosRenderPipeline
 
         MaterialProperty wc = null;
 
+        MaterialProperty Density = null;
         MaterialProperty Scatter = null;
-        MaterialProperty Absorb = null;
         MaterialProperty G = null;
 
         public void FindProperties(MaterialProperty[] props)
         {
-            tex = FindProperty("_Volume", props);
+            tex = FindProperty("_VolumeTex", props);
             res = FindProperty("_SliceNum", props);
             wc = FindProperty("_AtlasWidthCount", props);
 
+            Density = FindProperty("_Density", props);
             Scatter = FindProperty("_Scatter", props);
-            Absorb = FindProperty("_Absorb", props);
             G = FindProperty("_G", props);
         }
 
@@ -69,8 +69,8 @@ namespace HypnosRenderPipeline
 
                 EditorGUILayout.Space(10);
 
+                m_MaterialEditor.ShaderProperty(Density, "Density");
                 m_MaterialEditor.ShaderProperty(Scatter, "Scatter");
-                m_MaterialEditor.ShaderProperty(Absorb, "Absorb");
                 m_MaterialEditor.ShaderProperty(G, "G");
 
                 EditorGUILayout.LabelField("MaterialID", material.GetInt("_MaterialID").ToString());

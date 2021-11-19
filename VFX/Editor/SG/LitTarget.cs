@@ -25,7 +25,7 @@ namespace HypnosRenderPipeline.VFX.ShaderGraph
         protected override string customInspector => "";
 
         protected override string renderType => "Lit";
-        protected override string renderQueue => "Common";
+        protected override string renderQueue => "Geometry";
 
         // Refraction
         public static FieldDescriptor Refraction = new FieldDescriptor(string.Empty, "Refraction", "");

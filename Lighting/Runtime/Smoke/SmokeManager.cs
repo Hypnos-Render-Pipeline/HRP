@@ -27,11 +27,6 @@ namespace HypnosRenderPipeline
 
     public sealed class SmokeManager
     {
-        /// <summary>
-        /// Sun smoke of the scene.
-        /// </summary>
-        static public Smoke sunLight;
-
         private class Nested { static Nested() { } internal static readonly SmokeManager instance = new SmokeManager(); }
         private static SmokeManager instance { get { return Nested.instance; } }
 
@@ -87,7 +82,7 @@ namespace HypnosRenderPipeline
 
         void __GetSmokeAtlas__(out ComputeBuffer buffer, out RenderTexture texture)
         {
-            var smokes = GameObject.FindObjectsOfType<Smoke>();
+            var smokes = GameObject.FindObjectsOfType<HRPSmoke>();
 
             matsList.Clear();
 
@@ -197,8 +192,10 @@ namespace HypnosRenderPipeline
                     var width = mat.GetInt("_AtlasWidthCount");
                     var h = z / width + (z % width != 0 ? 1 : 0);
                     info.scale = tex_scale[mat] / math.float2(width, h);
-                    info.scatter = mat.GetFloat("_Scatter");
-                    info.absorb = mat.GetFloat("_Absorb");
+                    float density = mat.GetFloat("_Density");
+                    float scatter = mat.GetFloat("_Scatter");
+                    info.scatter = density * scatter;
+                    info.absorb = density * (1 - scatter);
                     info.width = (z << 16) + (width & 0xFFFF);
                     info.g = mat.GetFloat("_G") * 0.9f;
                     matInfo[material_index] = info;

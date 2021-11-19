@@ -1,0 +1,28 @@
+#pragma kernel Clear
+#pragma kernel Combine
+
+
+RWTexture3D<int> _Volume0;
+RWTexture3D<int> _Volume1;
+RWTexture3D<int> _Volume2;
+
+RWTexture3D<float4> _Volume;
+
+float4 _FogVolumeSize;
+
+[numthreads(4,4,4)]
+void Clear(uint3 id : SV_DispatchThreadID)
+{
+    _Volume0[id] = 0;
+    _Volume1[id] = 0;
+    _Volume2[id] = 0;
+}
+
+
+[numthreads(4, 4, 4)]
+void Combine(uint3 id : SV_DispatchThreadID)
+{
+    float3 data = float3(_Volume0[id], _Volume1[id], _Volume2[id]) / 10000;
+
+    _Volume[id] = float4(data.x, data.x != 0 ? data.yz / data.x : 0, 0);
+}

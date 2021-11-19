@@ -18,7 +18,7 @@ namespace HypnosRenderPipeline
 
         private List<HRPLight> rtLights;
 
-        private List<Smoke> smokes;
+        private List<HRPSmoke> smokes;
 
         private RTRegister()
         {
