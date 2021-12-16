@@ -41,8 +41,8 @@ Pass
 		IN.clearCoat = 0;
 		IN.sheen = 0;
 
-		IN.emission = 0;
-		IN.diffuseAO_specAO = (1).xx;
+		IN.emission = res.Emission;
+		IN.diffuseAO_specAO = res.Occlusion.xx;
 
 		IN.index = 1;
 

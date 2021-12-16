@@ -10,6 +10,7 @@ namespace HypnosRenderPipeline.RenderGraph
         [MenuItem("HypnosRenderPipeline/Pipeline Graph/Editor")]
         public static RenderGraphViewWindow Create()
         {
+            EditorPrefs.SetString("Playmode tint", "Playmode tint;1;1;1;1");
             var window = GetWindow<RenderGraphViewWindow>();
             window.minSize = new Vector2(800, 500);
             window.name = "RenderGraph";
@@ -17,6 +18,19 @@ namespace HypnosRenderPipeline.RenderGraph
             return window;
         }
 
+        RenderGraphViewWindow()
+        {
+            EditorApplication.playModeStateChanged += OnChangeState;
+        }
+
+        static void OnChangeState(PlayModeStateChange playModeState)
+        {
+            if (playModeState == PlayModeStateChange.ExitingEditMode)
+            {
+                if (HasOpenInstances<RenderGraphViewWindow>())
+                    GetWindow<RenderGraphViewWindow>().rootVisualElement.Clear();
+            }
+        }
 
         [MenuItem("HypnosRenderPipeline/Pipeline Graph/Set Graph")]
         public static void Exe()

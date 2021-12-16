@@ -240,8 +240,8 @@ float3 TraceShadowWithFog(const float3 start, const float3 end,
 }
 
 float3 TraceShadowWithFog_PreventSelfShadow(const float3 start, const float3 end,
-	inout int4 sampleState) {
-	float3 shadow = TraceShadow_PreventSelfShadow(start, end, sampleState);
+	inout int4 sampleState, int id = -1) {
+	float3 shadow = TraceShadow_PreventSelfShadow(start, end, sampleState, id);
 
 #ifdef _ENABLEFOG
 	if (any(shadow != 0)) {

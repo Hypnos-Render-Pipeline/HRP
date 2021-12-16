@@ -30,7 +30,7 @@
                 return o;
             }
 
-            sampler2D   _DebugTex;
+            Texture2D   _DebugTex; SamplerState linear_clamp_sampler;
             float       _Multiplier;
             int         _Channel;
             int         _Checkboard;
@@ -39,7 +39,7 @@
 
             float4 frag (v2f i) : SV_Target
             {
-                float4 col = tex2Dlod(_DebugTex, float4(i.uv, 0, _Lod));
+                float4 col = _DebugTex.SampleLevel(linear_clamp_sampler, i.uv, _Lod);
                 col.rgb *= _Multiplier;
 
                 if (_Channel) {
@@ -84,7 +84,7 @@
                 return o;
             }
 
-            samplerCUBE _DebugTex;
+            TextureCube _DebugTex; SamplerState linear_clamp_sampler;
             float       _Multiplier;
             int         _Channel;
             int         _Checkboard;
@@ -105,7 +105,7 @@
                 v.y = ps;
                 //return float4(v, 1);
 
-                float4 col = texCUBElod(_DebugTex, float4(v, _Lod));
+                float4 col = _DebugTex.SampleLevel(linear_clamp_sampler, v, _Lod);
                 col.rgb *= _Multiplier;
 
                 if (_Channel) {

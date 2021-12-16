@@ -11,11 +11,11 @@ namespace HypnosRenderPipeline
             bool dif = false;
             dif |= a.autoGenerateMips != b.autoGenerateMips;
             dif |= a.bindMS != b.bindMS;
-            dif |= a.colorFormat != b.colorFormat;
+            dif |= a.colorFormat != ((int)b.colorFormat == 29 ? RenderTextureFormat.Depth : b.colorFormat);
             dif |= a.depthBufferBits != b.depthBufferBits;
             dif |= a.dimension != b.dimension;
             dif |= a.enableRandomWrite != b.enableRandomWrite;
-            dif |= a.graphicsFormat != b.graphicsFormat;
+            //dif |= a.graphicsFormat != b.graphicsFormat;
             dif |= a.height != b.height;
             dif |= a.memoryless != b.memoryless;
             dif |= a.mipCount != b.mipCount;

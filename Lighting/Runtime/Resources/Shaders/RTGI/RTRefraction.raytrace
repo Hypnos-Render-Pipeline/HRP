@@ -32,7 +32,7 @@ float PD2VD(const float d) {
 }
 
 
-float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState, bool shadow = false) {
+float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState, bool shadow = false, float dis = 1) {
     float3 res = 0;
 
     if (gbuffer.miss) {
@@ -108,7 +108,7 @@ float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState
         res += sl;
         
         // trick skybox ibl, remove in future.
-        res += PBS(PBS_FULLY, hitInfo, hitInfo.normal, _SkyBox.SampleLevel(linear_clamp_sampler, hitInfo.normal, 6), hitView) * 3.14 / 2;
+        res += saturate(dis) * PBS(PBS_FULLY, hitInfo, hitInfo.normal, _SkyBox.SampleLevel(linear_clamp_sampler, hitInfo.normal, 6), hitView) * 3.14 / 2;
     }
     return res;
 }
@@ -164,6 +164,7 @@ void Refraction()
     t += gbuffer.dis;
     float3 weight = (1 - PhysicsFresnel(info.index, view, info.normal));
     int max_depth = _MaxDepth;
+    float last_dis = 1;
     while (!gbuffer.miss && gbuffer.transparent != 0 && --max_depth) {
         if (!gbuffer.front)
             weight *= pow(max(0.01, gbuffer.albedo * gbuffer.transparent), gbuffer.dis);
@@ -183,11 +184,12 @@ void Refraction()
 	    }
 
         gbuffer = TraceNext_RTGI(pos, next_dir);
+        last_dis = gbuffer.dis;
         pos += next_dir * gbuffer.dis;
         t += gbuffer.miss ? 0 : gbuffer.dis;
     }
 
-    float3 res = L(gbuffer, pos, next_dir, sampleState, _UseRTShadow);
+    float3 res = L(gbuffer, pos, next_dir, sampleState, _UseRTShadow, last_dis);
 
     _TempResult[dispatchIdx] = _SceneColor[dispatchIdx] + float4(res * weight, 0);
     return;

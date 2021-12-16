@@ -24,7 +24,6 @@ namespace HypnosRenderPipeline.RenderGraph
         {
             m_editorWindow = editorWindow;
             m_renderGraphInfo = ScriptableObject.CreateInstance<HypnosRenderGraph>();
-            Undo.undoRedoPerformed += UndoRedoCallback;
 
             StyleLoader.Load(this);
 
@@ -93,10 +92,6 @@ namespace HypnosRenderPipeline.RenderGraph
             m_graphView.style.unityBackgroundImageTintColor = new StyleColor(new Color(0.7f, 0.7f, 0.8f));
 
             AutoLoad();
-        }
-
-        void UndoRedoCallback()
-        {
         }
 
         public void New()

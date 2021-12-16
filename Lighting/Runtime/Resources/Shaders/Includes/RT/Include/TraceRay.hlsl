@@ -33,7 +33,7 @@ float3 TraceShadow(const float3 start, const float3 end,
 }
 
 float3 TraceShadow_PreventSelfShadow(const float3 start, const float3 end,
-	inout int4 sampleState) {
+	inout int4 sampleState, int id = -1) {
 
 	RayDesc rayDescriptor;
 	rayDescriptor.Origin = start;
@@ -44,7 +44,7 @@ float3 TraceShadow_PreventSelfShadow(const float3 start, const float3 end,
 
 	RayIntersection rayIntersection;
 	rayIntersection.t = rayDescriptor.TMax;
-	rayIntersection.weight = float4(InstanceID(), PrimitiveIndex(), 0, TRACE_SHADOW);
+	rayIntersection.weight = float4(InstanceID(), id == -1 ? PrimitiveIndex() : id, 0, TRACE_SHADOW);
 	rayIntersection.sampleState = sampleState;
 	rayIntersection.directColor = 1;
 
@@ -148,13 +148,14 @@ float4 TraceNextWithBackFace_ForceTrace(const float3 start, const float3 dir,
 
 struct SubsurfaceHitInfo {
 	float3 albedo;
-	float3 normal;
+	int id;
 	float4 t;
+	float3 normal;
 };
 
 float4 TraceSelf(const float3 start, const float3 dir, const float max_dis,
 					inout int4 sampleState,
-					out int num, out float3 albedo, out float3 normal) {
+					out int num, out float3 albedo, out float3 normal, out int id) {
 	RayDesc rayDescriptor;
 	rayDescriptor.Origin = start;
 	rayDescriptor.Direction = normalize(dir);
@@ -181,6 +182,7 @@ float4 TraceSelf(const float3 start, const float3 dir, const float max_dis,
 		infos[num].albedo = rayIntersection.directColor;
 		infos[num].normal = rayIntersection.normal;
 		infos[num].t = rayIntersection.t;
+		infos[num].id = rayIntersection.weight.y;
 
 		rayDescriptor.Origin = rayIntersection.t.yzw;
 		rayDescriptor.TMin = 0.01;
@@ -196,6 +198,7 @@ float4 TraceSelf(const float3 start, const float3 dir, const float max_dis,
 	
 	albedo = infos[pick].albedo;
 	normal = infos[pick].normal;
+	id = infos[pick].id;
 	return infos[pick].t;
 }
 

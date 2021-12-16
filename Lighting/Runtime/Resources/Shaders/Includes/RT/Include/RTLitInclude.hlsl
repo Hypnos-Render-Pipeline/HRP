@@ -69,7 +69,7 @@ float3 SampleRd(float v, float2 E) {
 
 void SampleSS(float3 E, float3 ns, float3 ss, float3 ts, float3 p, float Ld,
 					inout float3 diffuse, inout int4 sampleState,
-					out float pdf, out float3 hitP, out float3 hitN) {
+					out float pdf, out float3 hitP, out float3 hitN, out int id) {
 
 	// Choose projection axis for BSSRDF sampling
 	float3 vx, vy, vz;
@@ -112,7 +112,7 @@ void SampleSS(float3 E, float3 ns, float3 ss, float3 ts, float3 p, float Ld,
 	int hitNum;
 	float4 t = TraceSelf(pos, vz, l,
 							sampleState,
-							hitNum, albedo, hitN);
+							hitNum, albedo, hitN, id);
 
 	if (hitNum == 0) {
 		pdf = 1;
@@ -189,7 +189,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 #endif
 			[branch]
 			if (in_light_range && dot(direct_light_without_shadow, 1) > 0) {
-				float3 position_offset = IN.position;
+				float3 position_offset = IN.position + IN.gN * 0.001 / max(0.1, dot(IN.gN, lightDir));
 
 				float3 shadow = TraceShadowWithFog_PreventSelfShadow(position_offset, end_point,
 					/*inout*/sampleState);
@@ -287,10 +287,10 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			float pdf = 1;
 
 			float3x3 mat = GetMatrixFromNormal(surface.normal, float2(SAMPLE, SAMPLE));
-
+			int id;
 			SampleSS(float3(SAMPLE, SAMPLE, SAMPLE), mat[2], mat[0], mat[1], IN.position, surface.Ld, 
 				surface.diffuse, sampleState,
-				pdf, position, surface.normal);
+				pdf, position, surface.normal, id);
 
 			{
 				float3 direct_light = 0;
@@ -316,8 +316,9 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 					[branch]
 					if (in_light_range && dot(direct_light_without_shadow, 1) > 0) {
+						float3 position_offset = position + surface.normal * 0.001 / max(0.1, dot(surface.normal, lightDir));
 						float3 shadow = TraceShadowWithFog_PreventSelfShadow(position, end_point,
-							/*inout*/sampleState);
+							/*inout*/sampleState, id);
 
 						direct_light += shadow * direct_light_without_shadow * light_count;
 					}
@@ -357,7 +358,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		weight.xyz *= 1 - surface.clearCoat;
 	} 
 	else { // 反射
-
+		float remian = IN.isFrontFace ? 1 : 1 - surface.transparent;
 		float2 sample_2D;
 		sample_2D.x = SAMPLE;
 		sample_2D.y = SAMPLE;
@@ -381,7 +382,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				surface.clearCoat = 0;
 				float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
 
-				weight.xyz = coef * (1 - coat) / refr_diff_refl_coat.z;
+				weight.xyz = remian * coef * (1 - coat) / refr_diff_refl_coat.z;
 			}
 			else {
 				weight = END_TRACE;
@@ -404,7 +405,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 				surface.diffuse = min(1 - rayRoughness, 1);
 				float3 coef = PBS(PBS_SPECULAR, surface, nextDir, 1.0, viewDir);
 
-				weight.xyz = coef * coat / refr_diff_refl_coat.w;
+				weight.xyz = remian * coef * coat / refr_diff_refl_coat.w;
 			}
 			else {
 				weight = END_TRACE;
@@ -441,6 +442,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 		// surface info is based on face front properties, so flip it back.
 		rayIntersection.nextDir = fragInput.gN * (fragInput.isFrontFace ? 1 : -1);
 		rayIntersection.normal = surface.normal * (fragInput.isFrontFace ? 1 : -1);
+		rayIntersection.weight.y = PrimitiveIndex();
 		return;
 	}
 #endif
@@ -460,6 +462,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 // because 'IgnoreHit' can only be call at AnyHit func, so we have to use macros.
 #if _SUBSURFACE
 #define LitAnyHit(rayIntersection, attributeData) CALCULATE_DATA(fragInput, viewDir);\
+	float3 n = fragInput.tangentToWorld[2];\
 	SurfaceInfo surface = GetSurfaceInfo(fragInput);\
 	if (surface.discarded || rayIntersection.weight.w < TRACE_SHADOW) {\
 		IgnoreHit();\
@@ -467,7 +470,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 	}\
 	if (rayIntersection.weight.w == TRACE_SHADOW) {\
 		if (rayIntersection.weight.x == InstanceID()) {\
-			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(surface.normal, WorldRayDirection())) < 0.14) {\
+			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(n, WorldRayDirection())) < 0.14) {\
 				IgnoreHit();\
 				return;\
 			}\
@@ -497,6 +500,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 	}
 #else
 #define LitAnyHit(rayIntersection, attributeData) CALCULATE_DATA(fragInput, viewDir);\
+	float3 n = fragInput.tangentToWorld[2];\
 	SurfaceInfo surface = GetSurfaceInfo(fragInput);\
 	if (surface.discarded || rayIntersection.weight.w < TRACE_SHADOW) {\
 		IgnoreHit();\
@@ -504,7 +508,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 	}\
 	if (rayIntersection.weight.w == TRACE_SHADOW) {\
 		if (rayIntersection.weight.x == InstanceID()) {\
-			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(surface.normal, WorldRayDirection())) < 0.14) {\
+			if (rayIntersection.weight.y == PrimitiveIndex() || abs(dot(n, WorldRayDirection())) < 0.14) {\
 				IgnoreHit();\
 				return;\
 			}\
