@@ -54,24 +54,31 @@ public class VRenderParameters
     [System.Serializable]
     public struct LightSetting
     {
+        public bool enableCaustic;
         [Tooltip("Disable this to Use physical attenuation.")]
         public bool useAttenuationCurve;
         public AnimationCurve attenuationCurve;
         [HideInInspector]
         Keyframe[] frames;
         bool lastUse;
+        bool lastenableCaustic;
         Texture2D attTex;
 
         public void Set(LightSetting setting)
         {
             useAttenuationCurve = setting.useAttenuationCurve;
             attenuationCurve = setting.attenuationCurve;
+            enableCaustic = setting.enableCaustic;
         }
 
         public bool Refresh(CommandBuffer cb)
         {
             bool changeUse = lastUse != useAttenuationCurve;
+            changeUse |= enableCaustic != lastenableCaustic;
             lastUse = useAttenuationCurve;
+            lastenableCaustic = enableCaustic;
+
+            cb.SetGlobalInt("_EnableCaustic", enableCaustic ? 1 : 0);
 
             cb.SetGlobalTexture("_AttenuationTex", attTex);
             if (!useAttenuationCurve)

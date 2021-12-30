@@ -203,6 +203,7 @@ class VRenderForScene
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Light settings");
 
+            instance.lightSetting.enableCaustic = EditorGUILayout.Toggle("  Enable Caustic", instance.lightSetting.enableCaustic);
             instance.lightSetting.useAttenuationCurve = EditorGUILayout.Toggle("  Use Attenuation Cureve", instance.lightSetting.useAttenuationCurve);
             if (instance.lightSetting.useAttenuationCurve)
                 instance.lightSetting.attenuationCurve = EditorGUILayout.CurveField("  Attenuation Cureve", instance.lightSetting.attenuationCurve);

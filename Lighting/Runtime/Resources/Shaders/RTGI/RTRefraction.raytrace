@@ -102,8 +102,8 @@ float3 L(GBuffer_RTGI gbuffer, float3 hitPos, float3 dir, inout int4 sampleState
     
 
         float3 sl = PBS(PBS_FULLY, hitInfo, sunDir, sunColor, hitView);
-            if (shadow && any(sl > 0)) {
-                sl *= TraceShadow_RTGI(hitPos, sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
+        if (shadow && any(sl > 0)) {
+            sl *= TraceShadow_RTGI(hitPos, hitPos + sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
         }
         res += sl;
         
@@ -146,7 +146,7 @@ void Refraction()
                             0,
                             _AOTex[dispatchIdx],
                             _IndexTex[dispatchIdx]);
-    pos -= info.gnormal * lerp(0.02, 0, dot(view, info.gnormal));
+    pos -= info.gnormal * lerp(0.02, 0.01, dot(view, info.gnormal));
 
 	int4 sampleState = int4(dispatchIdx, _Clock % 32, 0);
 

@@ -24,6 +24,7 @@ struct Light
 	int mask;
 };
 
+int _EnableCaustic;
 
 int _LightCount;
 StructuredBuffer<Light> _LightList;

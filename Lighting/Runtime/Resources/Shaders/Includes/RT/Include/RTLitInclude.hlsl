@@ -149,7 +149,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 	SurfaceInfo surface = GetSurfaceInfo(IN);
 
 	// increase bias but remove many flare points.
-	surface.smoothness = min(1 - rayRoughness, surface.smoothness);
+	if (!_EnableCaustic) surface.smoothness = min(1 - rayRoughness, surface.smoothness);
 
 
 	directColor = surface.emission;
