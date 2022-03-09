@@ -20,7 +20,7 @@ Pass
         IN.tangent = i.tangentToWorld[1];
 		IN.gnormal = i.tangentToWorld[2];
 
-        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, IN.normal, float4(IN.tangent, 1), 0, i.uv0));
+        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, IN.normal, float4(IN.tangent, 1), 0, i.uv0, i.color.xyz));
 				
 		IN.normal = normalize(mul(res.NormalTS * float3(-1,-1,1), i.tangentToWorld));
 		i.tangentToWorld[2] = IN.normal;

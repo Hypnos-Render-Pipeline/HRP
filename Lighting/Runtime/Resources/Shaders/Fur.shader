@@ -35,7 +35,7 @@ Shader "HRP/Fur"
 				return info;
 			}
 
-			SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 normal, float4 tangent) {
+			SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 normal, float4 tangent, float3 vColor) {
 				SurfaceInfo info = (SurfaceInfo)0;
 
 				fixed4 diffuse = _Color * tex2D(_MainTex, uv);

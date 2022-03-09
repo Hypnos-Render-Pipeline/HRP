@@ -155,10 +155,11 @@ struct VertexInfo {
 	float3 oNormal;
 	float4 oTangent;
 	float2 uv;
+	float3 vcolor;
 };
 
 VertexInfo GetVertexInfo(float2 uv, float4 vertex, float3 oNormal, float4 oTangent, float4 color);
-SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 wNormal, float4 wTangent);
+SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 wNormal, float4 wTangent, float3 vColor);
 
 half3 UnpackScaleNormal(half4 packednormal, half bumpScale)
 {
@@ -183,11 +184,12 @@ struct Lit_a2v {
 
 struct Lit_v2f {
 	float4 vertex : SV_POSITION;
+	float3 vcolor : COLOR;
 	float3 normal : NORMAL;
 	float4 tangent : TANGENT;
 	float2 uv : TEXCOORD0;
 	float3 wpos : TEXCOORD1;
-	float4 spos : TEXCOORD2;
+	float4 spos : TEXCOORD2; 
 };
 
 float4 PreZ_vert(Lit_a2v i) : SV_POSITION {
@@ -207,6 +209,7 @@ Lit_v2f Lit_vert(Lit_a2v i) {
 	o.uv = info.uv; 
 	o.wpos = mul(unity_ObjectToWorld, i.vertex);
 	o.spos = ComputeScreenPos(o.vertex);
+	o.vcolor = info.vcolor;
 	return o;
 }
 
@@ -300,7 +303,7 @@ void Transparent_frag(Lit_v2f i
 ) {
 #endif
 
-	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent);
+	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent, i.vcolor);
 
 	float3 pos = i.wpos;
 	float3 camPos = _V_Inv._m03_m13_m23;
@@ -385,7 +388,7 @@ void GBuffer_frag(Lit_v2f i, out fixed4 target0 : SV_Target0, out fixed4 target1
 ) {
 #endif
 
-	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent);
+	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent, i.vcolor);
 
 	Encode2GBuffer(info.diffuse, 0, 1 - info.smoothness, info.specular, info.normal, info.emission,
 		i.normal, info.diffuseAO_specAO.x, target0, target1, target2, target3, target4
@@ -405,7 +408,7 @@ void Transparent_frag(Lit_v2f i, out fixed4 target0 : SV_Target0, out fixed4 tar
 ) {
 #endif
 
-	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent);
+	SurfaceInfo info = GetSurfaceInfo(i.uv, i.wpos, i.spos, i.normal, i.tangent, i.vcolor);
 
 	Encode2GBuffer(info.diffuse, info.transparent, 1 - info.smoothness, info.specular, info.normal, info.emission,
 		i.normal, info.diffuseAO_specAO.x, info.index,

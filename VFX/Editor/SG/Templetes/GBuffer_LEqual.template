@@ -13,13 +13,14 @@ Pass
         info.oNormal = res.Normal;
 		info.oTangent = float4(res.Tangent, oTangent.w);
 		info.uv = uv;
+		info.vcolor = color;
         return info;
 	}
     
-	SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 normal, float4 tangent) {
+	SurfaceInfo GetSurfaceInfo(float2 uv, float3 wPos, float4 screenPos, float3 normal, float4 tangent, float3 vColor) {
 		SurfaceInfo info = (SurfaceInfo)0;
 
-        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(wPos, normal, tangent, screenPos, uv));
+        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(wPos, normal, tangent, screenPos, uv, vColor));
 
 		info.diffuse = res.BaseColor;
 		info.transparent = 1 - res.Alpha;

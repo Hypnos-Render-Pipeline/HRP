@@ -1,3 +1,7 @@
+$VertexDescriptionInputs.VertexColor: #define VERTEX_COLOR
+$SurfaceDescriptionInputs.VertexColor: #ifndef  VERTEX_COLOR
+$SurfaceDescriptionInputs.VertexColor: #define VERTEX_COLOR
+$SurfaceDescriptionInputs.VertexColor: #endif
 
 
 struct VertexDescriptionInputs {
@@ -11,13 +15,15 @@ struct VertexDescriptionInputs {
 	$VertexDescriptionInputs.uv1:						float4 uv1;
 	$VertexDescriptionInputs.uv2:						float4 uv2;
 	$VertexDescriptionInputs.uv3:						float4 uv3;
-	$VertexDescriptionInputs.VertexColor:				float4 VertexColor;
+	#ifdef VERTEX_COLOR
+		float3 VertexColor;
+	#endif
 	$VertexDescriptionInputs.TimeParameters:			float4 TimeParameters;
 };
 
 
 
-VertexDescriptionInputs Convert2VertexGraph(float2 uv, float4 vertex, float3 oNormal, float4 oTangent, float4 color) {
+VertexDescriptionInputs Convert2VertexGraph(float2 uv, float4 vertex, float3 oNormal, float4 oTangent, float3 color) {
 
 	VertexDescriptionInputs to_vert_graph = (VertexDescriptionInputs)0;
 	$VertexDescriptionInputs.ObjectSpacePosition:	to_vert_graph.ObjectSpacePosition = vertex;
@@ -30,7 +36,9 @@ VertexDescriptionInputs Convert2VertexGraph(float2 uv, float4 vertex, float3 oNo
 	$VertexDescriptionInputs.uv1:					to_vert_graph.uv1 = float4(uv, 0, 0);
 	$VertexDescriptionInputs.uv2:					to_vert_graph.uv2 = float4(uv, 0, 0);
 	$VertexDescriptionInputs.uv3:					to_vert_graph.uv3 = float4(uv, 0, 0);
-	$VertexDescriptionInputs.VertexColor:			to_vert_graph.VertexColor = color;
+	#ifdef VERTEX_COLOR
+		to_vert_graph.VertexColor = color;
+	#endif
 	$VertexDescriptionInputs.TimeParameters:		to_vert_graph.TimeParameters = float4(_Time.y, sin(_Time.y), cos(_Time.y), 0);
 
 	return to_vert_graph;
