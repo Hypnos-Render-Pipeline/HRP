@@ -10,6 +10,10 @@
 >
 > **Please note that this project is an experimental work, and it should not be considered production-ready.** Many parts of it will or already have better solutions. If you want to use it in actual products, you'd better connect the [developers](#Developers) for assistance.
 
+## Update Note
+
+> * 2022.6   Add ReSTIR GI.  [paper](https://d1qx31qr3h6wln.cloudfront.net/publications/ReSTIR%20GI.pdf)
+
 ## Install
 
 Ensure that your graphic card supports hardware ray tracing acceleration. You may need at least an NV RTX2080 or higher to get a better user experience.
