@@ -90,15 +90,13 @@ namespace HypnosRenderPipeline.RenderPass
             blockBuffer_.Release();
         }
 
-
-        static SunAtmo.SunLight[] sunLightClear = new SunAtmo.SunLight[] { new SunAtmo.SunLight() { dir = 0, color = 0, angle = 0 } };
         public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
 
             if (!sun.connected)
             {
-                cb.SetBufferData(sun, sunLightClear);
+                cb.SetBufferData(sun, SunAtmo.SunLight.sunLightClear);
             }
 
             cb.SetGlobalTexture("_SceneColor", target);
@@ -148,6 +146,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetRayTracingTextureParam(rtShader, "_HalfIndexTex", halfIndex);
             cb.SetRayTracingIntParam(rtShader, "_MaxDepth", maxDepth);
             cb.SetRayTracingIntParam(rtShader, "_SPP", spp);
+            cb.SetRayTracingConstantBufferParam(rtShader, "_Sun", sun, 0, SunAtmo.SunLight.size);
             cb.DispatchRays(rtShader, "Diffuse", (uint)desc.width, (uint)desc.height, 1, context.camera);
 
             desc.width = wh.x;

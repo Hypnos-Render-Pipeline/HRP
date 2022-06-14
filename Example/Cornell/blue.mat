@@ -73,10 +73,12 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _Modified: 0
+    - _OIT: 0
     - _Sheen: 0
     - _Smoothness: 0.5
     - _SrcBlend: 1
     - _Subsurface: 0
+    - _Trans: 0
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 0, g: 0, b: 1, a: 1}

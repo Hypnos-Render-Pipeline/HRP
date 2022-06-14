@@ -143,8 +143,7 @@ inline float GGXTerm(const float NdotH, const float roughness)
 {
 	float a2 = roughness * roughness;
 	float d = (NdotH * a2 - NdotH) * NdotH + 1.0f; // 2 mad
-	return M_1_PI * a2 / (d * d + 1e-7f); // This function is not intended to be running on Mobile,
-										  // therefore epsilon is smaller than what can be represented by float
+	return M_1_PI * a2 / (d * d + 1e-7f);
 }
 
 inline float AnisoGGXTerm(const float NoH, const float2 roughness, float3 H, float3 X, float3 Y)
@@ -353,7 +352,7 @@ float3 BRDF(const int type, const float3 diffColor, const float3 specColor, cons
 	
 	if (type == 1) return (diffuseTerm * diffColor) * lightSatu * ao.x;
 	else if (type == 2) return G * M_1_PI * F * lightSatu * ao.y;
-	else if (type == 4) return nl * (diffuseTerm * diffColor * ao.x + DFG * ao.y) * lightSatu;
+	else if (type == 4) return (nl * diffuseTerm * diffColor * ao.x + nh * DFG * ao.y) * lightSatu;
 	else if (type == 8) return nl * DFG * ao.y * lightSatu;
 	else if (type == 16) return nl * diffuseTerm * diffColor * ao.x * lightSatu;
 	else return 0;

@@ -10,7 +10,7 @@ Pass
 
         normal = i.tangentToWorld[2];
         float3 tangent = i.tangentToWorld[1];
-        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, normal, float4(tangent, 1), 0, i.uv0));
+        SurfaceDescription res = SurfaceDescriptionFunction(Convert2PixelGraph(i.position.xyz, normal, float4(tangent, 1), 0, i.uv0, i.color));
 
         albedo = res.BaseColor;
         transparent = 1 - res.Alpha;

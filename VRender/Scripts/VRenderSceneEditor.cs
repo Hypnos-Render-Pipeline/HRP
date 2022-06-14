@@ -117,10 +117,8 @@ class VRenderForScene
         instance.vRender.parameters.denosieMode = instance.denoiseMode;
         instance.vRender.parameters.removeFlare = instance.realtime ? 1 : instance.removeFlare;
         instance.vRender.Render();
-
         SceneView.lastActiveSceneView.Repaint();
     }
-
     [MenuItem("HypnosRenderPipeline/VRender/Enable VRender on scene view %#V")]
     static void EnableVRender()
     {

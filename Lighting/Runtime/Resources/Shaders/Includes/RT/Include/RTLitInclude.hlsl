@@ -228,8 +228,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 	float3 diffuse = surface.diffuse;
 
 	float3 F = FresnelTerm(specular, saturate(dot(viewDir, surface.normal)));
-	float3 diff = diffuse;
-	float max_diffuse = max(max(diff.x, diff.y), diff.z);
+	float max_diffuse = max(max(diffuse.x, diffuse.y), diffuse.z);
 	float max_ref = max(max(F.x, F.y), F.z);
 				  
 	float4 refr_diff_refl_coat;
@@ -335,7 +334,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 				float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
-				weight.xyz = (1 - surface.transparent) * coef / refr_diff_refl_coat.y / (rayRoughness == 0 ?  pdf : 1);
+				weight.xyz = coef / refr_diff_refl_coat.y / (rayRoughness == 0 ?  pdf : 1);
 				rayRoughness = 1;
 			}
 		}
@@ -350,7 +349,7 @@ void LitShading(FragInputs IN, const float3 viewDir,
 
 			float3 coef = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir);
 
-			weight.xyz = (1 - surface.transparent) * coef / refr_diff_refl_coat.y;
+			weight.xyz = coef / refr_diff_refl_coat.y;
 
 #if _SUBSURFACE
 		}

@@ -59,6 +59,7 @@ Material:
     - _AutoDesk: 0
     - _BumpScale: 1
     - _ClearCoat: 0
+    - _Cull: 2
     - _Cutoff: 0
     - _Dinc: 1
     - _DstBlend: 0
@@ -71,10 +72,12 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _Modified: 0
+    - _OIT: 0
     - _Sheen: 0
     - _Smoothness: 1
     - _SrcBlend: 1
     - _Subsurface: 1
+    - _Trans: 0
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

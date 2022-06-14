@@ -189,7 +189,7 @@ Shader "Hidden/ACES"
 
             float4 frag(v2f i) : SV_Target
             {
-                float4 col = lerp(tex2Dlod(_MainTex, float4(i.uv, 0, 0)), tex2Dlod(_History_Final_Result, float4(i.uv, 0, 0)), 0.9);
+                float4 col = lerp(tex2Dlod(_MainTex, float4(i.uv, 0, 0)), tex2Dlod(_History_Final_Result, float4(i.uv, 0, 0)), 0.95);
                 return col;
             }
             ENDCG

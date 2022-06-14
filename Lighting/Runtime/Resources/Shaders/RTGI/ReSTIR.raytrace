@@ -1,0 +1,406 @@
+RWTexture2D<float4> RenderTarget;
+
+#pragma max_recursion_depth 1
+
+#include "../Includes/RT/Include/RayTracingCommon.hlsl"
+#include "../Includes/RT/Include/TraceRay.hlsl"
+#include "../Includes/Light.hlsl"
+#include "../Includes/GBuffer.hlsl"
+#include "../Includes/PBS.hlsl"
+#include "../Includes/Atmo/Sun.hlsl"
+
+float4x4 _VP_Inv, _Last_VP_Inv, _VP, _V, _P;
+int _Clock;
+
+int _UseRTShadow;
+int _MaxDepth;
+
+float4 _WH;
+float4 _HalfWH;
+
+Texture2D<float> _DepthTex, _HistoryDepth;
+Texture2D<float4> _BaseColorTex, _SpecTex, _NormalTex, _AOTex, _MotionTex, _SceneColor, _History;
+TextureCube<float3> _SkyBox;
+
+SamplerState linear_clamp_sampler, point_clamp_sampler;
+
+RWTexture2D<float4> _TempResult;
+RWTexture2D<int4> _TReservoir;
+RWTexture2D<int4> _SReservoir, _SReservoir2;
+
+float PD2VD(const float d) {
+     return -_P._m23 / (d + _P._m22);
+}
+
+float3 ToneMap(float3 color) {
+    return color / (1 + color);
+}
+
+void SampleDir(inout int4 sampleState, const SurfaceInfo surface, const float3 viewDir, out float3 nextDir, out float3 weight, out float invPDF) {
+    float2 rand_num = float2(SAMPLE, SAMPLE);
+				
+    // choice tracing type based on surface data
+    float3 specular = surface.specular;
+    float3 diffuse = surface.diffuse * (1 - surface.transparent);
+
+    float3 F = FresnelTerm(specular, saturate(dot(viewDir, surface.normal)));
+    float max_diffuse = max(max(diffuse.x, diffuse.y), diffuse.z);
+	float max_ref = max(max(F.x, F.y), F.z);
+				  
+	float2 diff_refl = float2(max_diffuse, max_ref);
+	float sum_w = dot(diff_refl, 1);
+	diff_refl /= sum_w;
+
+    if (rand_num.x < diff_refl.x) {
+        float2 sample_2D = frac(float2(SAMPLE, SAMPLE) + Roberts2(sampleState.z));
+	    float4 n = CosineSampleHemisphere_InvPDF(sample_2D, surface.normal);
+        nextDir = n.xyz;
+        
+        weight = PBS(PBS_DIFFUSE, surface, nextDir, 1, viewDir) / diff_refl.x;
+	    invPDF = n.w * M_1_PI;
+    }
+    else {
+        int max_spec_sample_retry = 4;
+        do {
+            float2 sample_2D = float2(SAMPLE, SAMPLE);
+		    float4 n = ImportanceSampleGGX_invPDF(sample_2D, 1 - surface.smoothness);
+            n.xyz = mul(n.xyz, GetMatrixFromNormal(surface.normal)).xyz;
+
+		    nextDir = reflect(-viewDir, n);
+	        invPDF = n.w * M_1_PI;
+            weight = PBS(PBS_SPECULAR, surface, nextDir, 1, viewDir) / diff_refl.y;
+            if (dot(nextDir, surface.normal) < 0 || dot(nextDir, surface.gnormal) < 0) {
+                invPDF = 0;
+            }
+        }
+        while(max_spec_sample_retry-- > 0 && invPDF == 0);
+    }
+}
+
+float3 L(bool useColorBuffer, float3 pos, float3 dir, inout int4 sampleState, out float3 nextPos, out float3 nextDir, out float3 weight) {
+    float3 res = 0;
+    GBuffer_RTGI gbuffer = TraceNext_RTGI(pos, dir);
+
+    if (gbuffer.miss) {
+        res += _SkyBox.SampleLevel(linear_clamp_sampler, dir, 0);
+        weight = -1;
+        nextPos = nextDir = 0;
+    }
+    else {
+        res = gbuffer.emission;
+
+        float3 hitPos = gbuffer.dis * dir + pos;
+        float4 ppos = mul(_VP, float4(hitPos, 1));
+
+        SurfaceInfo hitInfo = (SurfaceInfo)0;
+        hitInfo.diffuse = gbuffer.albedo;
+        hitInfo.smoothness = gbuffer.smoothness;
+        float3 metallic = gbuffer.metallic;
+        hitInfo.gnormal = hitInfo.normal = gbuffer.normal;
+        hitInfo.transparent = gbuffer.transparent;
+        hitInfo.diffuseAO_specAO = 1;
+        hitInfo.diffuse = DiffuseAndSpecularFromMetallic(hitInfo.diffuse, metallic, /*out*/ hitInfo.specular);
+        
+        float3 hitView = -dir;
+        float invPDF;
+        nextPos = hitPos;
+        float nw;
+        SampleDir(sampleState, hitInfo, hitView, nextDir, weight, invPDF);
+
+        float2 uv = ppos.xy / ppos.w;
+        uv = (uv + 1) * 0.5;
+        bool offscreen = any(uv < 0) || any(uv > 1);
+        bool illegal = offscreen || abs(mul(_V, float4(hitPos, 1)).z - PD2VD(_DepthTex[uv * _WH.xy])) > 0.1;
+
+        [branch]
+        if (offscreen) {   
+            BegineAllLocalLightsLoop(uv, hitPos, _VP_Inv);
+            {
+                sampleState.w = 0;
+                float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+                [branch]
+                if (any(lres > 0)) {
+                    lres *= TraceShadow_RTGI(hitPos, light.end);
+                }
+                res += lres;
+            }
+            EndAllLocalLightsLoop;  
+        }
+        else if (max(hitInfo.specular.x, max(hitInfo.specular.y, hitInfo.specular.z)) < 0.1 && !illegal && 1) {
+            res = _History.SampleLevel(point_clamp_sampler, uv, 0);
+            weight = -1;
+            return res;
+        }
+        else {       
+            BegineLocalLightsLoop(uv, hitPos, _VP_Inv); // use zbin to cull light.
+            {
+                sampleState.w = 0;
+                float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+                [branch]
+                if (any(lres > 0)) {
+                    lres *=  TraceShadow_RTGI(hitPos, light.end);
+                }
+                res += lres;
+            }
+            EndLocalLightsLoop;
+        }
+	    BegineDirectionalLightsLoop(hitPos);
+	    {
+	        sampleState.w = 0;
+	        float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
+	        [branch]
+	        if (any(lres > 0)) {
+	            res += lres * TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
+	        }
+            res += lres;
+	    }
+	    EndDirectionalLightsLoop;
+    
+
+        float3 sl = PBS(PBS_FULLY, hitInfo, sunDir, sunColor, hitView);
+        if (any(sl > 0)) {
+                sl *= TraceShadow_RTGI(hitPos, hitPos + sunDir * 9999 + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 9999 * sin(sunAngle));
+        }
+        res += sl;
+    }
+    return res;
+}
+
+float3 L(inout int4 sampleState, float3 pos, float3 dir, int depth){
+    float3 weight = 1;
+    float3 res = 0;
+    while (any(weight > 0) && depth-- > 0) {
+        float3 npos, ndir, nw;
+        float3 l = L(false, pos, dir, sampleState, npos, ndir, nw);
+        res += weight * l;
+        weight *= nw;
+        pos = npos;
+        dir = ndir;
+    }
+    return res;
+}
+
+struct Reservoir {
+    float3 dir;
+    float w;
+    float W_sum;
+    int M;
+    float rand_offset;
+    int sampleIndex;
+    float rand() {
+        float p = frac(sampleIndex++ * .1031);
+        p *= p + 33.33;
+        p *= p + p;
+        return frac(p + rand_offset);
+    }
+    float4 Pack(int sampleNum = 1024) {
+        RescaleTo(sampleNum);
+        int r = f32tof16(dir.x) + (f32tof16(dir.y) << 16);
+        int g = f32tof16(dir.z) + (M << 16);
+        int b = asint(W_sum);
+        int a = f32tof16(w) + (sampleIndex << 16);
+        return int4(r, g, b, a);
+    }
+
+    void RescaleTo(int sampleNum){
+        float scale_M = min(1, float(sampleNum) / max(1, M));
+        M = min(M, sampleNum);
+        W_sum *= scale_M;
+    }
+
+    float TargetPDF(float3 color) {
+        return 1e-2 + dot(color, float3(0.299, 0.587, 0.114));
+    }
+
+    void Update(float3 d, float tw, float sw) {
+        sw *= tw;
+        M++;
+        W_sum += sw;
+        if (rand() < sw / max(1e-4, W_sum)) 
+        {
+            dir = d;
+            w = tw;
+        }
+    }    
+    void Update(Reservoir re) {
+        if (re.M == 0 || re.w == 0 || re.W_sum == 0) return;
+        W_sum += re.W_sum;
+        if (rand() < re.W_sum / max(1e-4, W_sum)) 
+        {
+            dir = re.dir;
+            w = re.w;
+        }
+        M += re.M;
+    }
+};
+Reservoir UnPack(int4 value) {
+    Reservoir re;
+    int r = value.r;
+    int g = value.g;
+    int b = value.b;
+    int a = value.a;
+    re.dir = float3(f16tof32(r), f16tof32(r>>16), f16tof32(g));
+    re.M = (g>>16) & 0xFFFF;
+    re.W_sum = asfloat(b);
+    re.w = f16tof32(a);
+    re.sampleIndex = (a >> 16) & 0xFFFF;
+    if (isnan(re.W_sum) || isnan(re.w)) {
+        re.dir = 0;
+        re.W_sum = 0;
+        re.w = 0;
+        re.M = 0;
+    }
+    return re;
+}
+
+[shader("raygeneration")]
+void PT0()
+{
+    uint2 dispatchIdx = DispatchRaysIndex().xy;
+
+    float d = _DepthTex[dispatchIdx];
+    
+    if (d == 0 || _SceneColor[dispatchIdx].a == 0) {
+        _TempResult[dispatchIdx] = 0;
+        return;
+    }
+    
+    float2 uv = (dispatchIdx + 0.5) * _WH.zw;
+    float2 motion = _MotionTex[dispatchIdx];
+    float speed = saturate(length(motion));
+    float2 prevUV = uv - motion;
+    
+    float hd = _HistoryDepth.SampleLevel(point_clamp_sampler, prevUV, 0).x;
+
+    float3 wpos;
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_VP_Inv, ndc);
+        wpos = worldPos.xyz / worldPos.w;
+    }
+    float3 hwpos;
+    {
+        float4 ndc = float4(prevUV * 2 - 1, hd, 1);
+        float4 worldPos = mul(_Last_VP_Inv, ndc);
+        hwpos = worldPos.xyz / worldPos.w;
+    }
+
+    float distance_weight = any(prevUV < 0 || prevUV > 1) ? 0 : saturate(1.1 - distance(wpos, hwpos));
+
+    Reservoir re = UnPack(_TReservoir[prevUV * _HalfWH.xy]);
+    re.rand_offset = BNDSample(int4(dispatchIdx, 0, 0));
+    re.RescaleTo(re.M * distance_weight);
+
+    float3 camPos = _V_Inv._m03_m13_m23;
+    float3 pos = wpos;
+    float3 view = normalize(camPos - pos);
+
+    SurfaceInfo info = (SurfaceInfo)0;
+    info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _SpecTex[dispatchIdx],
+                            _NormalTex[dispatchIdx],
+                            0,
+                            _AOTex[dispatchIdx]);
+
+    pos += info.gnormal * 0.01f;
+
+	int4 sampleState = int4(dispatchIdx, _Clock, 0);
+    
+    float3 dir;
+    float invPDF;
+    float3 weight;
+    SampleDir(sampleState, info, view, dir, weight, invPDF);
+    invPDF = max(0, invPDF);
+    
+    float3 Lum = L(sampleState, pos, dir, _MaxDepth);
+    
+    float3 radiance = PBS(PBS_FULLY, info, dir, Lum, view);
+    
+    float3 res = radiance * invPDF;
+        
+    //if(re.M < 2)
+    re.Update(dir, re.TargetPDF(lerp(Lum, radiance, info.smoothness)), invPDF); // paper told to use ir rather than ra as target, since nei may need it;
+                                                                                // However, we choos to use radiance for those smooth surface.
+    
+
+    _TReservoir[dispatchIdx] = re.Pack(64);
+    
+    Reservoir sre = UnPack(_SReservoir[dispatchIdx]);
+    sre.rand_offset = BNDSample(int4(dispatchIdx, 0, 0));
+    sre.Update(re);
+    _SReservoir2[dispatchIdx] = _SReservoir[dispatchIdx] = sre.Pack();
+    _TempResult[dispatchIdx] = float4(res, 0);
+}
+
+float2 hash21(float p)
+{
+	float3 p3 = frac(p * float3(.1031, .1030, .0973));
+	p3 += dot(p3, p3.yzx + 33.33);
+    return frac((p3.xx+p3.yz)*p3.zy);
+
+}
+
+[shader("raygeneration")]
+void PT1()
+{
+    uint2 dispatchIdx = DispatchRaysIndex().xy;
+        
+    Reservoir re = UnPack(_SReservoir[dispatchIdx]);
+    re.rand_offset = BNDSample(int4(dispatchIdx, 0, 0));
+
+    float d = _DepthTex[dispatchIdx];
+
+    float2 uv = (dispatchIdx + 0.5) * _WH.zw;
+
+    if (d == 0 || _SceneColor[dispatchIdx].a == 0) {
+        _TempResult[dispatchIdx] = 0;
+        return;
+    }
+    float3 camPos = _V_Inv._m03_m13_m23;
+    float3 pos; 
+    {
+        float4 ndc = float4(uv * 2 - 1, d, 1);
+        float4 worldPos = mul(_VP_Inv, ndc);
+        pos = worldPos.xyz / worldPos.w;
+    }
+    float3 view = normalize(camPos - pos);
+
+    SurfaceInfo info = (SurfaceInfo)0;
+    info = DecodeGBuffer(_BaseColorTex[dispatchIdx],
+                            _SpecTex[dispatchIdx],
+                            _NormalTex[dispatchIdx],
+                            0,
+                            _AOTex[dispatchIdx]);
+
+    pos += info.gnormal * 0.01f;
+
+	int4 sampleState = int4(dispatchIdx, _Clock, 0);    
+    float2 offset = float2(SAMPLE, SAMPLE);
+
+    float radi = 36;
+    int max_iter = 8;
+    for (int i = 0; i < max_iter; i++)
+    {
+        float2 s = radi * NonUniformSampleDisk(frac(hash21(i)+offset));
+        Reservoir neighbour = UnPack(_SReservoir[dispatchIdx + round(s)]);
+        neighbour.RescaleTo(4);
+        if (dot(neighbour.dir, info.normal) < 0) continue;
+        re.Update(neighbour);
+    }
+
+    float3 res = 0;
+    if (re.W_sum > 0) {
+        float3 radiance = PBS(PBS_FULLY, info, re.dir, L(sampleState, pos, re.dir, _MaxDepth), view);
+        res = radiance * re.W_sum / (re.M * re.w);
+    }
+    
+    float smooth_metallic = max(info.specular.x, max(info.specular.y, info.specular.z)) * info.smoothness;
+
+    float mix_rate =  min(0.99, re.M / float(re.M+1));
+    mix_rate *= (1 - smooth_metallic);
+    res = lerp(_TempResult[dispatchIdx].xyz, res, mix_rate);
+    //res = _TempResult[dispatchIdx].xyz;
+    //res = re.M / 100.0f;
+    _TempResult[dispatchIdx] = float4(saturate(ToneMap(res)), 0);
+    _SReservoir2[dispatchIdx] = re.Pack(1);
+}

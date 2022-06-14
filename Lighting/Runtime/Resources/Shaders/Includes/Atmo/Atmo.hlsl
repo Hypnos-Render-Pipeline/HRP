@@ -463,7 +463,7 @@ const float3 Scatter(const float3 x, float3 x_0, float3 v, const float3 s, const
 	horiz = -sqrt(horiz * horiz - planet_radius * planet_radius) / horiz;
 
 	if (includeTu && dot(normalize(x), v) < horiz)
-		res += Tu_L(x_0, s) / pi * T_tab_fetch(x_0, v);
+		res += Tu_L(x_0, s) / pi * T_tab_fetch(x, v);
 
 	return res;
 }

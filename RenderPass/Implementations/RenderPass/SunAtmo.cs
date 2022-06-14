@@ -62,6 +62,8 @@ namespace HypnosRenderPipeline.RenderPass
             public float3 dir;
             public float angle;
             public float3 color;
+            static public int size = 28;
+            static public SunAtmo.SunLight[] sunLightClear = new SunAtmo.SunLight[] { new SunAtmo.SunLight() { dir = 0, color = 0, angle = 0 } };
         }
 
         [NodePin(PinType.Out)]
@@ -497,7 +499,7 @@ namespace HypnosRenderPipeline.RenderPass
                 if (sunBuffer.connected)
                     cb.SetBufferData(sunBuffer, sunLightClear);
             }
-            cb.SetGlobalConstantBuffer(sunBuffer, "_Sun", 0, 28);
+            cb.SetGlobalConstantBuffer(sunBuffer, "_Sun", 0, SunAtmo.SunLight.size);
         }
 
         bool TestRTChange(ref RenderTexture rt, RenderTextureFormat format, Vector2Int wh)

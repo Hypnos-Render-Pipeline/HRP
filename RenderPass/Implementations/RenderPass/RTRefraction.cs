@@ -69,9 +69,15 @@ namespace HypnosRenderPipeline.RenderPass
             public static int FinalSynthesis = 5;
         }
 
+
         public override void Execute(RenderContext context)
         {
             var cb = context.commandBuffer;
+
+            if (!sun.connected)
+            {
+                cb.SetBufferData(sun, SunAtmo.SunLight.sunLightClear);
+            }
 
             cb.SetGlobalTexture("_SceneColor", target);
             cb.SetGlobalTexture("_HiZDepthTex", depth);
@@ -97,6 +103,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetRayTracingAccelerationStructure(rtShader, "_RaytracingAccelerationStructure", context.defaultAcc);
             cb.SetRayTracingShaderPass(rtShader, "RTGI");
             cb.SetRayTracingTextureParam(rtShader, "_TempResult", tempRef);
+            cb.SetRayTracingConstantBufferParam(rtShader, "_Sun", sun, 0, SunAtmo.SunLight.size);
             cb.DispatchRays(rtShader, "Refraction", (uint)desc.width, (uint)desc.height, 1, context.camera);
 
             cb.CopyTexture(tempRef, target);

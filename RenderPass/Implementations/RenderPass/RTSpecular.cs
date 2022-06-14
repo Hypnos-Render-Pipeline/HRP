@@ -94,6 +94,11 @@ namespace HypnosRenderPipeline.RenderPass
         {
             var cb = context.commandBuffer;
 
+            if (!sun.connected)
+            {
+                cb.SetBufferData(sun, SunAtmo.SunLight.sunLightClear);
+            }
+
             if (filteredColor.connected)
                 cb.SetGlobalTexture("_FilteredColor", filteredColor);
             else
@@ -143,6 +148,7 @@ namespace HypnosRenderPipeline.RenderPass
             cb.SetRayTracingShaderPass(rtShader, "RTGI");
             cb.SetRayTracingTextureParam(rtShader, "_TempResult", tempRef);
             cb.SetRayTracingTextureParam(rtShader, "_HalfIndexTex", halfIndex);
+            cb.SetRayTracingConstantBufferParam(rtShader, "_Sun", sun, 0, SunAtmo.SunLight.size);
             cb.DispatchRays(rtShader, "Specular", (uint)desc.width, (uint)desc.height, 1, context.camera);
 
             desc.width = wh.x;

@@ -2,10 +2,8 @@
 #define SAMPLER_H_
 
 
-#ifndef PI
-#define PI 3.14159265359
-#endif
-
+#include "../../PBS.hlsl"
+#define PI M_PI
 
 Texture2D<int> _Sobol; //256x256
 Texture3D<int> _ScramblingTile; //128*128*8
@@ -67,7 +65,7 @@ float2 Roberts2(uint n) {
 #endif
 
 float4 UniformSampleSphere(float2 E) {
-	float Phi = 2 * PI * E.x;
+	float Phi = 2 * M_PI * E.x;
 	float CosTheta = 1 - 2 * E.y;
 	float SinTheta = sqrt(1 - CosTheta * CosTheta);
 
@@ -76,13 +74,13 @@ float4 UniformSampleSphere(float2 E) {
 	H.y = SinTheta * sin(Phi);
 	H.z = CosTheta;
 
-	float PDF = 1 / (4 * PI);
+	float PDF = 1 / (4 * M_PI);
 
 	return float4(H, PDF);
 }
 
 float4 CosineSampleHemisphere(float2 E) {
-	float Phi = 2 * PI * E.x;
+	float Phi = 2 * M_PI * E.x;
 	float CosTheta = sqrt(E.y);
 	float SinTheta = sqrt(1 - CosTheta * CosTheta);
 
@@ -91,12 +89,17 @@ float4 CosineSampleHemisphere(float2 E) {
 	H.y = SinTheta * sin(Phi);
 	H.z = CosTheta;
 
-	float PDF = CosTheta / PI;
+	float PDF = CosTheta * M_1_PI;
 	return float4(H, PDF);
 }
 
 float3 CosineSampleHemisphere(float2 E, float3 N) {
 	return normalize(UniformSampleSphere(E).xyz + N);
+}
+float4 CosineSampleHemisphere_InvPDF(float2 E, float3 N) {
+	float4 n = UniformSampleSphere(E);
+	float3 dir = normalize(n.xyz + N);
+	return float4(dir, M_PI / dot(dir, N));
 }
 
 float3x3 GetMatrixFromNormal(float3 v1) {
@@ -128,9 +131,10 @@ float3x3 GetMatrixFromNormal(float3 v1, float2 E) {
 
 float3 ImportanceSampleGGX(float2 E, float Roughness) {
 	float m = Roughness * Roughness;
+	m = max(m, 0.008);
 	float m2 = m * m;
 
-	float Phi = 2 * PI * E.x;
+	float Phi = 2 * M_PI * E.x;
 	float CosTheta = sqrt((1 - E.y) / (1 + (m2 - 1) * E.y));
 	float SinTheta = sqrt(1 - CosTheta * CosTheta);
 
@@ -141,10 +145,29 @@ float3 ImportanceSampleGGX(float2 E, float Roughness) {
 	return H;
 }
 
+float4 ImportanceSampleGGX_invPDF(float2 E, float Roughness) {
+	float m = Roughness * Roughness;
+	m = max(m, 0.008);
+	float m2 = m * m;
+
+	float Phi = 2 * M_PI * E.x;
+	float CosTheta = sqrt((1 - E.y) / (1 + (m2 - 1) * E.y));
+	float SinTheta = sqrt(1 - CosTheta * CosTheta);
+
+	float3 H;
+	H.x = SinTheta * cos(Phi);
+	H.y = SinTheta * sin(Phi);
+	H.z = CosTheta;
+
+	float invPDF = 1 / (CosTheta * GGXTerm(CosTheta, m));
+
+	return float4(H, invPDF);
+}
+
 float3 ImportanceSampleAnisoGGX(float2 E, float2 Roughness) {
 	float2 m = Roughness * Roughness;
 
-	float Phi = 2 * PI * E.x;
+	float Phi = 2 * M_PI * E.x;
 	float2 cs = float2(cos(Phi), sin(Phi));
 	float2 xy = sqrt(E.y) * cs * m;
 	float z = sqrt(1 - E.y);
@@ -157,7 +180,7 @@ float3 ImportanceSampleAnisoVGGX(float2 E, float3 v, float2 Roughness) {
 
 	float3 Ve = normalize(v * float3(m, 1));
 
-	float Phi = 2 * PI * E.x;
+	float Phi = 2 * M_PI * E.x;
 	float2 cs = float2(cos(Phi), sin(Phi));
 	float2 xy = sqrt(E.y) * cs;
 
@@ -171,14 +194,20 @@ float3 ImportanceSampleAnisoVGGX(float2 E, float3 v, float2 Roughness) {
 }
 
 float2 UniformSampleDisk(float2 Random) {
-	const float Theta = 2.0f * (float)PI * Random.x;
+	const float Theta = 2.0f * (float)M_PI * Random.x;
 	const float Radius = sqrt(Random.y);
+	return float2(Radius * cos(Theta), Radius * sin(Theta));
+}
+
+float2 NonUniformSampleDisk(float2 Random) {
+	const float Theta = 2.0f * (float)M_PI * Random.x;
+	const float Radius = Random.y;
 	return float2(Radius * cos(Theta), Radius * sin(Theta));
 }
 
 float2 UniformSampleRegularPolygon(int sides, float2 Random) {
 	float inv_sides = 1.0f / sides;
-	float theta = 2 * PI * inv_sides;
+	float theta = 2 * M_PI * inv_sides;
 	int triangle_index = floor(Random.x * sides);
 	float2 a; sincos(theta * triangle_index + theta / 2, a.y, a.x);
 	float2 b; sincos(theta * (triangle_index + 1) + theta / 2, b.y, b.x);
@@ -196,13 +225,13 @@ float3 dFromALd(float Ld, float3 A) {
  
 Texture2D _RdLut; SamplerState sampler_RdLut;
 float3 ImportanceSampleRd(float2 Random) {
-	const float Theta = 2.0f * (float)PI * Random.x;
+	const float Theta = 2.0f * (float)M_PI * Random.x;
 	const float Radius = _RdLut.SampleLevel(sampler_RdLut, float2(Random.y, 0.5), 0).x;
 	return float3(Radius * cos(Theta), Radius * sin(Theta), Radius);
 }
 
 float3 PdfRd(float3 r, float d) {
-	return (exp(- r/ d) + exp(- r / 3 / d)) / (8 * PI * d * r);
+	return (exp(- r/ d) + exp(- r / 3 / d)) / (8 * M_PI * d * r);
 }
 
 #endif
