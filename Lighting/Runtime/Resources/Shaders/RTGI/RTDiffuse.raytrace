@@ -191,3 +191,7 @@ void Diffuse()
 
     _TempResult[dispatchIdx] = float4(ToneMap(res), 1);
 }
+
+
+[shader("miss")]
+void Miss(inout RayIntersection_RTGI rayIntersection : SV_RayPayload) { }

@@ -177,3 +177,7 @@ void Specular()
      l = l / (info.specular == 0 ? 1 : info.specular) / spp;
     _TempResult[dispatchIdx] = float4(ToneMap(l), min(av_d / spp, 10));
 }
+
+
+[shader("miss")]
+void Miss(inout RayIntersection_RTGI rayIntersection : SV_RayPayload) { }

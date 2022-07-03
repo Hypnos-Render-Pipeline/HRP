@@ -66,3 +66,6 @@ void LocalLightShadow()
     RenderTarget[dispatchIdx] = LocalLightShadow_(dispatchIdx);
 }
 
+
+[shader("miss")]
+void Miss(inout RayIntersection_RTGI rayIntersection : SV_RayPayload) { }

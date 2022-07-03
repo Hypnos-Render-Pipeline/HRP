@@ -404,3 +404,7 @@ void PT1()
     _TempResult[dispatchIdx] = float4(saturate(ToneMap(res)), 0);
     _SReservoir2[dispatchIdx] = re.Pack(1);
 }
+
+
+[shader("miss")]
+void Miss(inout RayIntersection_RTGI rayIntersection : SV_RayPayload) { }
