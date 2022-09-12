@@ -190,7 +190,7 @@ void TTFilter(uint2 id : SV_DispatchThreadID, uint2 groupThreadID : SV_GroupThre
 
         float4 spec = _SpecTex[id];
         float smooth_metallic = max(spec.xyz) * (1 - spec.w);
-        float mix_rate = lerp(0.9, 0.2, speed) * lerp(0.25, 1, min(1 - smooth_metallic, weight));
+        float mix_rate = lerp(0.9, 0.2, speed) * lerp(0, 1, min(1 - smooth_metallic, weight));
 
         float4 mixed = lerp(oc, hc, mix_rate);
 

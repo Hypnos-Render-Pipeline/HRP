@@ -150,7 +150,7 @@ float3 L(bool useColorBuffer, float3 pos, float3 dir, inout int4 sampleState, ou
 	        float3 lres = PBS(PBS_FULLY, hitInfo, light.dir, light.radiance, hitView);
 	        [branch]
 	        if (any(lres > 0)) {
-	            res += lres * TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
+	            lres *= TraceShadow_RTGI(hitPos, light.end + UniformSampleSphere(float2(SAMPLE, SAMPLE)) * 0.01 * 9999);
 	        }
             res += lres;
 	    }
@@ -317,13 +317,15 @@ void PT0()
     float3 radiance = PBS(PBS_FULLY, info, dir, Lum, view);
     
     float3 res = radiance * invPDF;
+    
+    float smooth_metallic = max(info.specular.x, max(info.specular.y, info.specular.z)) * info.smoothness;
         
     //if(re.M < 2)
-    re.Update(dir, re.TargetPDF(lerp(Lum, radiance, info.smoothness)), invPDF); // paper told to use ir rather than ra as target, since nei may need it;
+    re.Update(dir, re.TargetPDF(lerp(Lum, radiance, smooth_metallic)), invPDF); // paper told to use ir rather than ra as target, since nei may need it;
                                                                                 // However, we choos to use radiance for those smooth surface.
     
 
-    _TReservoir[dispatchIdx] = re.Pack(64);
+    _TReservoir[dispatchIdx] = re.Pack(20);
     
     Reservoir sre = UnPack(_SReservoir[dispatchIdx]);
     sre.rand_offset = BNDSample(int4(dispatchIdx, 0, 0));
@@ -377,14 +379,16 @@ void PT1()
 	int4 sampleState = int4(dispatchIdx, _Clock, 0);    
     float2 offset = float2(SAMPLE, SAMPLE);
 
-    float radi = 36;
-    int max_iter = 8;
+    float radi = 20;
+    int max_iter = 3;
     for (int i = 0; i < max_iter; i++)
     {
         float2 s = radi * NonUniformSampleDisk(frac(hash21(i)+offset));
         Reservoir neighbour = UnPack(_SReservoir[dispatchIdx + round(s)]);
         neighbour.RescaleTo(4);
         if (dot(neighbour.dir, info.normal) < 0) continue;
+        float3 brdf = PBS(PBS_FULLY, info, neighbour.dir, 1, view);
+        if (all(brdf <= 0.01)) continue;
         re.Update(neighbour);
     }
 
