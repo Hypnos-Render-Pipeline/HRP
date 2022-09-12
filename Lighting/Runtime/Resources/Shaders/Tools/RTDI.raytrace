@@ -178,3 +178,7 @@ void SunLight()
 
     RenderTarget[dispatchIdx] += float4(res, 0);
 }
+
+
+[shader("miss")]
+void Miss(inout RayIntersection_RTGI rayIntersection : SV_RayPayload) { }

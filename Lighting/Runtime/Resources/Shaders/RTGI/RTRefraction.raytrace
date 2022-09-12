@@ -194,3 +194,7 @@ void Refraction()
     _TempResult[dispatchIdx] = _SceneColor[dispatchIdx] + float4(res * weight, 0);
     return;
 }
+
+
+[shader("miss")]
+void Miss(inout RayIntersection_RTGI rayIntersection : SV_RayPayload) { }
