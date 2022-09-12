@@ -140,11 +140,11 @@ SurfaceInfo GetSurfaceInfo(inout FragInputs i);
 
 void Shading(FragInputs IN, const float3 viewDir,
 	inout int4 sampleState, inout float4 weight, inout float3 position, inout float rayRoughness,
-	out float3 directColor, out float3 nextDir);
+	out float3 directColor, out float3 nextDir, out float3 normal);
 
 void LitShading(FragInputs IN, const float3 viewDir, 
 				inout int4 sampleState, inout float4 weight, inout float3 position, inout float rayRoughness,
-				out float3 directColor, out float3 nextDir)
+				out float3 directColor, out float3 nextDir, out float3 normal)
 {
 	SurfaceInfo surface = GetSurfaceInfo(IN);
 
@@ -216,6 +216,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 		}
 	}
 #endif
+
+	normal = surface.normal;
 
 	//----------------------------------------------------------------------------------------
 	//--------- indirect light ---------------------------------------------------------------
@@ -376,6 +378,8 @@ void LitShading(FragInputs IN, const float3 viewDir,
 			nextDir = reflect(-viewDir, n);
 			rayRoughness = 1 - surface.smoothness;
 
+			normal = n;
+
 			if (dot(nextDir, surface.normal) > 0 && dot(nextDir, IN.gN) > 0) {
 				float coat = surface.clearCoat;
 				surface.clearCoat = 0;
@@ -449,7 +453,7 @@ void LitClosestHit(inout RayIntersection rayIntersection, AttributeData attribut
 	float3 new_position = rayIntersection.t.yzw;
 	Shading(fragInput, viewDir,
 		/*inout*/rayIntersection.sampleState, /*inout*/rayIntersection.weight, /*inout*/rayIntersection.t.yzw, /*inout*/rayIntersection.roughness,
-		/*out*/rayIntersection.directColor, /*out*/rayIntersection.nextDir);
+		/*out*/rayIntersection.directColor, /*out*/rayIntersection.nextDir, /*out*/rayIntersection.normal);
 }
 
 #if _OIT

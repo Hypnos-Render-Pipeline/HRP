@@ -7,13 +7,25 @@
 #include "../Include/RTFog.hlsl"
 #include "../Include/RTSky.hlsl"
 #include "../Include/IrradianceCache.hlsl"
-                  
+
+struct PathTracerOutput
+{
+	float3 res;
+	float3 albedo;
+	float3 normal;
+	float depth;
+};
+
+
 //----------------------------------------------------
 //---------Native path tracer-------------------------
 //----------------------------------------------------
-float3 PathTracer(const int maxDepth,
+PathTracerOutput PathTracer(const int maxDepth,
 	const float3 origin, const float3 direction,
 	inout int4 sampleState, bool traceFog = false, bool includeDirectional = false, float roughness = 0) {
+
+	PathTracerOutput o = (PathTracerOutput)0;
+	bool recordHit = true;
 
 	int depth = min(max(maxDepth, 1), 16);
 	float3 res = 0;
@@ -34,12 +46,21 @@ float3 PathTracer(const int maxDepth,
 		nextWeight = weight;
 		float3 directColor;
 		float3 nextDir;
+		float3 normal;
 		nextWeight.xyz *= cutoff;
 		cutoff *= 0.8;
 		 
 		float4 t = TraceNextWithBackFace(pos, dir,
 											/*inout*/sampleState, nextWeight, roughness,
-											/*out*/directColor, nextDir);
+											/*out*/directColor, nextDir, normal);
+
+		if (recordHit)
+		{
+			o.albedo = max(0, nextWeight);
+			recordHit = false;
+			o.normal = normal;
+			o.depth = t.x;
+		}
 
 		float3 fogColor, fogNextPos, fogNextDir; 
 		float4 fogWeight = 1;
@@ -76,17 +97,22 @@ float3 PathTracer(const int maxDepth,
 		}
 	}
 
-	return res;
+	o.res = res;
+
+	return o;
 }
        
 
 //----------------------------------------------------
 //---------Path tracer with Irr cache-----------------
 //----------------------------------------------------            
-float3 PathTracer_IrrCache(const int maxDepth,
+PathTracerOutput PathTracer_IrrCache(const int maxDepth,
 	const float3 origin, const float3 direction,
 	inout int4 sampleState, 
     bool traceFog = false, bool includeDirectional = false, bool debug = false, float roughness = 0) {
+
+	PathTracerOutput o = (PathTracerOutput)0;
+	bool recordHit = true;
 
 	int depth = min(max(maxDepth, 1), 12);
 	float3 res = 0;
@@ -110,13 +136,22 @@ float3 PathTracer_IrrCache(const int maxDepth,
 		nextWeight = weight;
 		float3 directColor;
 		float3 nextDir;
+		float3 normal;
 		float r = roughness;
 		nextWeight.xyz *= cutoff;
 		cutoff *= 0.8;
 
 		float4 t = TraceNextWithBackFace(pos, dir,
 			/*inout*/sampleState, nextWeight, roughness,
-			/*out*/directColor, nextDir);
+			/*out*/directColor, nextDir, normal);
+
+		if (recordHit)
+		{
+			recordHit = false;
+			o.albedo = max(0, nextWeight);
+			o.normal = normal;
+			o.depth = t.x;
+		}
 
 		if (firstHit.w == 0)
 		{
@@ -184,9 +219,13 @@ float3 PathTracer_IrrCache(const int maxDepth,
 	if (firstHit.w != 0)
 		SetIrr(firstHit, res - firstLight);
 
+
+	o.res = res;
+
 	if (debug)
-		return GetIrr(firstHit.xyz);
-	return res;
+		o.res = GetIrr(firstHit.xyz);
+
+	return o;
 }
 
 

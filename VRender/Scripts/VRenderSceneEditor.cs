@@ -215,6 +215,12 @@ class VRenderForScene
             if (instance.denoiseMode == VRenderParameters.DenoiseMode.QuikDenoise)
                 instance.removeFlare = EditorGUILayout.Slider("  Remove flare", instance.removeFlare, 1, 10);
             instance.layer = DrawLayerMaskField(instance.layer);
+
+            EditorGUILayout.Space(10);
+            if (GUILayout.Button("Save"))
+            {
+                instance.vRender.OutputImage(SceneView.lastActiveSceneView, "Scene Camera");
+            }
         }
         EditorGUILayout.EndFoldoutHeaderGroup();
 

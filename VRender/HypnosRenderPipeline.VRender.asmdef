@@ -1,5 +1,6 @@
 {
     "name": "HypnosRenderPipeline.VRender",
+    "rootNamespace": "",
     "references": [
         "GUID:d8b63aba1907145bea998dd612889d6b",
         "GUID:899fc01217e37d745b55404665eceada"

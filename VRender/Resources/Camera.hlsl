@@ -20,6 +20,8 @@ RWTexture2D<float4> History;
 RWTexture2D<float4> Record;
 RWTexture2D<float4> Length;
 
+RWTexture2D<float4> Albedo;
+RWTexture2D<float4> DepthNormal;
 
 float Luminance(float3 col) {
 	return col.r * 0.299 + col.g * 0.587 + col.b * 0.114;
@@ -90,6 +92,8 @@ void RayGeneration()
 	//	return;
 	//}
 
+	float3 albedo = 0, normal = 0;
+	float depth = 0;
 	for (int i = 0; i < spp; i++) {
 		float2 offset = Roberts2(frameIndex * spp + i);
 
@@ -128,21 +132,32 @@ void RayGeneration()
 
 		float3 ori_offset = origin + _NearPlane / dotCV * direction;
 
+		PathTracerOutput o;
 		if (_CacheIrradiance != 0)
 		{
-			color += response * PathTracer_IrrCache(_Max_depth,
+			o = PathTracer_IrrCache(_Max_depth,
 				ori_offset, direction,
 				/*inout*/pixelSampleState,
 				true, true, _CacheIrradiance == 2);
 		}
 		else {
-			color += response * PathTracer(_Max_depth,
+			o = PathTracer(_Max_depth,
 				ori_offset, direction,
 				/*inout*/pixelSampleState,
 				true, true);
 		}
+		color += response * o.res;
+		albedo += o.albedo;
+		normal += o.normal;
+		depth += o.depth;
+
+		float3 albedo = 0, normal = 0;
+		float depth = 0;
 	}
 	color /= spp;
+	albedo /= spp;
+	normal /= spp;
+	depth /= spp;
 
 	if (any(isnan(color))) color = float3(100000, 0, 100000);
 
@@ -158,12 +173,19 @@ void RayGeneration()
 
 	int count = min(old.w + 1, _Max_Frame);
 	if (old.w != 0 && frameIndex != 0) {
-		History[dispatchIdx] = float4((old.xyz * old.w + color) / (old.w + 1), count);
-		Record[dispatchIdx] = float4((rec.xyz * old.w + color * color) / (old.w + 1), variance);
+		float blendRate = rcp(old.w + 1);
+		History[dispatchIdx] = float4(lerp(old.xyz, color, blendRate), count);
+		Record[dispatchIdx] = float4(lerp(rec.xyz, color * color, blendRate), variance);
+
+		Albedo[dispatchIdx] = lerp(Albedo[dispatchIdx], float4(albedo, 1), blendRate);
+		DepthNormal[dispatchIdx] = lerp(DepthNormal[dispatchIdx], float4(normal, depth), blendRate);
 	}
 	else {
 		History[dispatchIdx] = float4(color, 1);
 		Record[dispatchIdx] = float4(color * color, 1);
+
+		Albedo[dispatchIdx] = float4(albedo, 0);
+		DepthNormal[dispatchIdx] = float4(normal, depth);
 	}
 
 }

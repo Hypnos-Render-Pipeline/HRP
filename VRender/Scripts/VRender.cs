@@ -131,7 +131,7 @@ public class VRenderParameters
 
 
     [System.Serializable]
-    public enum DebugMode { none, varience, /*albedo, normal,*/ irradianceCache, /*allInDock */};
+    public enum DebugMode { none, varience, albedo, normal, irradianceCache, allInDock };
 
     [Space(10.0f)]
 
@@ -174,7 +174,8 @@ public class VRender : IDisposable
     CommandBuffer cb;
     ComputeBuffer cb_LightList;
 
-    RenderTexture frameSamples;
+    RenderTexture frameSamples; 
+    RenderTexture albedo, normal;
 
     ComputeBuffer sampleHistogram;
 
@@ -198,6 +199,8 @@ public class VRender : IDisposable
     {
         cb = GetCB(cam, "RayTrace", CameraEvent.BeforeImageEffects);
         cam.depthTextureMode |= DepthTextureMode.DepthNormals | DepthTextureMode.Depth;
+        
+        outputer = new OutputImage();
 
         rtShader_fog = Resources.Load<RayTracingShader>("Camera_Fog");
         rtShader_nofog = Resources.Load<RayTracingShader>("Camera");
@@ -294,6 +297,16 @@ public class VRender : IDisposable
             denoised.Release();
             denoised = null;
         }
+        if (albedo != null)
+        {
+            albedo.Release();
+            albedo = null;
+        }
+        if (normal != null)
+        {
+            normal.Release();
+            normal = null;
+        }
         if (sampleHistogram != null)
         {
             sampleHistogram.Release();
@@ -371,6 +384,8 @@ public class VRender : IDisposable
         cb.SetRayTracingVectorParam(rtShader, "_IVScale", Vector4.one * parameters.IrradianceVolumeScale);
         cb.SetRayTracingTextureParam(rtShader, "_IrrVolume", tex3D_iv);
         cb.SetRayTracingTextureParam(rtShader, "Target", frameSamples);
+        cb.SetRayTracingTextureParam(rtShader, "Albedo", albedo);
+        cb.SetRayTracingTextureParam(rtShader, "DepthNormal", normal);
         cb.SetRayTracingTextureParam(rtShader, "History", history);
         cb.SetRayTracingTextureParam(rtShader, "Record", record);
         cb.SetRayTracingIntParam(rtShader, "_Frame_Index", FrameIndex++);
@@ -400,20 +415,21 @@ public class VRender : IDisposable
             case VRenderParameters.DebugMode.varience:
                 cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 0);
                 break;
-            //case VRenderParameters.DebugMode.albedo:
-            //    cb.Blit(new RenderTargetIdentifier(BuiltinRenderTextureType.GBuffer0), new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
-            //    break;
-            //case VRenderParameters.DebugMode.normal:
-            //    cb.Blit(null, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 1);
-            //    break;
-            //case VRenderParameters.DebugMode.allInDock:
-            //    BlitResultToScreen(history);
-            //    cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 2);
-            //    cb.Blit(new RenderTargetIdentifier(BuiltinRenderTextureType.GBuffer0), albedo);
-            //    cb.Blit(albedo, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 3);
-            //    cb.Blit(null, normal, blitMat, 1);
-            //    cb.Blit(normal, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 4);
-            //    break;
+            case VRenderParameters.DebugMode.albedo:
+                cb.Blit(albedo, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                break;
+            case VRenderParameters.DebugMode.normal:
+                cb.Blit(normal, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                break;
+            case VRenderParameters.DebugMode.allInDock:
+                BlitResultToScreen(history);
+                cb.SetGlobalFloat("_YOffset", 0.8f);
+                cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 1);
+                cb.SetGlobalFloat("_YOffset", 0.4f);
+                cb.Blit(albedo, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 2);
+                cb.SetGlobalFloat("_YOffset", 0.0f);
+                cb.Blit(normal, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 2);
+                break;
             default:
                 break;
         }
@@ -690,6 +706,18 @@ public class VRender : IDisposable
         }
     }
 
+    OutputImage outputer;
+    public void OutputImage(MonoBehaviour host, string name)
+    {
+        if (host == null) return;
+        host.StartCoroutine(outputer.SaveAOVs(cam, name, albedo, normal, record));
+    }
+    public void OutputImage(EditorWindow host, string name)
+    {
+        if (host == null) return;
+        host.StartCoroutine(outputer.SaveAOVs(cam, name, albedo, normal, record));
+    }
+
     void SetupFrameSamplesBuffer(MonoBehaviour host, CommandBuffer cb, int w, int h)
     {
         if (frameSamples == null || w != frameSamples.width || h != frameSamples.height)
@@ -705,6 +733,16 @@ public class VRender : IDisposable
             denoised.enableRandomWrite = true;
             denoised.useMipMap = false;
             denoised.Create();
+
+            albedo = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32, 0);
+            albedo.enableRandomWrite = true;
+            albedo.useMipMap = false;
+            albedo.Create();
+
+            normal = new RenderTexture(w, h, 0, RenderTextureFormat.ARGBHalf, 0);
+            normal.enableRandomWrite = true;
+            normal.useMipMap = false;
+            normal.Create();
 
             if (sampleHistogram != null) sampleHistogram.Release();
             sampleHistogram = new ComputeBuffer(w * h, sizeof(float) * 32);

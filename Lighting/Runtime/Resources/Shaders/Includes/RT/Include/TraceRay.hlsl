@@ -55,7 +55,7 @@ float3 TraceShadow_PreventSelfShadow(const float3 start, const float3 end,
 
 float4 TraceNext(const float3 start, const float3 dir,
 	inout int4 sampleState, inout float4 weight, inout float roughness,
-	out float3 directColor, out float3 nextDir) {
+	out float3 directColor, out float3 nextDir, out float3 normal) {
 	sampleState.w++;
 	float rnd_num = SAMPLE;
 	float importance = min(max(weight.x, max(weight.y, weight.z)), 1);
@@ -79,6 +79,7 @@ float4 TraceNext(const float3 start, const float3 dir,
 		roughness = rayIntersection.roughness;
 		directColor = rayIntersection.directColor / importance;
 		nextDir = rayIntersection.nextDir;
+		normal = rayIntersection.normal;
 		return rayIntersection.t;
 	}
 	directColor = 0;
@@ -88,7 +89,7 @@ float4 TraceNext(const float3 start, const float3 dir,
    
 float4 TraceNextWithBackFace(const float3 start, const float3 dir, 
 								inout int4 sampleState, inout float4 weight, inout float roughness,
-								out float3 directColor, out float3 nextDir) {
+								out float3 directColor, out float3 nextDir, out float3 normal) {
 	sampleState.w++;
 	float rnd_num = SAMPLE;
 	float importance = min(max(weight.x, max(weight.y, weight.z)), 1);
@@ -112,6 +113,7 @@ float4 TraceNextWithBackFace(const float3 start, const float3 dir,
 		roughness = rayIntersection.roughness;
 		directColor = rayIntersection.directColor / importance;
 		nextDir = rayIntersection.nextDir;
+		normal = rayIntersection.normal;
 		return rayIntersection.t;
 	}
 	directColor = 0;
@@ -122,7 +124,7 @@ float4 TraceNextWithBackFace(const float3 start, const float3 dir,
 
 float4 TraceNextWithBackFace_ForceTrace(const float3 start, const float3 dir,
 								inout int4 sampleState, inout float4 weight, inout float roughness,
-								out float3 directColor, out float3 nextDir)
+								out float3 directColor, out float3 nextDir, out float3 normal)
 {
     RayDesc rayDescriptor;
     rayDescriptor.Origin = start;
@@ -143,6 +145,7 @@ float4 TraceNextWithBackFace_ForceTrace(const float3 start, const float3 dir,
     roughness = rayIntersection.roughness;
     directColor = rayIntersection.directColor;
     nextDir = rayIntersection.nextDir;
+	normal = rayIntersection.normal;
     return rayIntersection.t;
 }
 

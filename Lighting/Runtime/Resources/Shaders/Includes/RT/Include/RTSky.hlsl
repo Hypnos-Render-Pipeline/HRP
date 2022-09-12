@@ -41,6 +41,7 @@ inline float2 ToRadialCoords(float3 coords)
 //----------Expensive Version------------------
 //---------------------------------------------
 void SkyLight(inout RayIntersection rayIntersection, const int distance = 10000) {
+	rayIntersection.normal = 0;
 	if(rayIntersection.weight.w < 0){
 		return;
 	}
