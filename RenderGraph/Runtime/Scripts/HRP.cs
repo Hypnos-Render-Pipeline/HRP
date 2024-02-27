@@ -85,6 +85,15 @@ namespace HypnosRenderPipeline
             }
         }
 
+        bool EnableVRender(Camera cam)
+        {
+#if UNITY_EDITOR
+            var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
+            if (vrender_cb.Length > 0 && vrender_cb[0].sizeInBytes > 0) return true;
+#endif
+            return false;
+        }
+
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
             CommandBufferExtension.SetupContext(context);
@@ -147,9 +156,12 @@ namespace HypnosRenderPipeline
 
                     RenderTexture original_target_tex = null;
                     RenderTexture place_holder_tex = null;
+
+
+
                     if (m_asset.enableDLSS
 #if UNITY_EDITOR
-                    && cam.cameraType == CameraType.Game
+                    && cam.cameraType == CameraType.Game && !EnableVRender(cam)
 #endif
                     )
                     {
@@ -242,21 +254,24 @@ namespace HypnosRenderPipeline
                     int result = -1;
 
                     {
+#if UNITY_EDITOR
                         var vrender_cb = cam.GetCommandBuffers(CameraEvent.BeforeImageEffects);
-                        if (vrender_cb.Length != 0)
+                        if (vrender_cb.Length > 0 && vrender_cb[0].sizeInBytes > 0)
                         {
 
                             result = Shader.PropertyToID("_TempResult");
                             cb.GetTemporaryRT(result, cam.pixelWidth, cam.pixelHeight, 24, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
                             cb.SetRenderTarget(result);
                             cb.ClearRenderTarget(true, true, Color.clear);
-                            cb.SetRenderTarget(result);
 
                             var a = new DrawingSettings(new ShaderTagId("PreZ"), new SortingSettings(cam));
                             var b = FilteringSettings.defaultValue;
                             b.renderQueueRange = RenderQueueRange.all;
 
                             cb.DrawRenderers(rc.defaultCullingResult, ref a, ref b);
+
+                            context.ExecuteCommandBuffer(cb);
+                            cb.Clear();
 
                             context.ExecuteCommandBuffer(vrender_cb[0]);
 
@@ -273,7 +288,10 @@ namespace HypnosRenderPipeline
                             {
                                 m_PostProcessRenderContext.Reset();
                                 m_PostProcessRenderContext.camera = cam;
-                                m_PostProcessRenderContext.source = BuiltinRenderTextureType.CameraTarget;
+                                if (cam.cameraType == CameraType.SceneView)
+                                    m_PostProcessRenderContext.source = BuiltinRenderTextureType.CameraTarget;
+                                else
+                                    m_PostProcessRenderContext.source = result;
                                 m_PostProcessRenderContext.sourceFormat = RenderTextureFormat.DefaultHDR;
                                 m_PostProcessRenderContext.destination = result;
                                 m_PostProcessRenderContext.command = cb;
@@ -286,6 +304,7 @@ namespace HypnosRenderPipeline
                             }
                         }
                         else
+#endif
                         {
                             if (m_hypnosRenderPipelineGraph != m_asset.hypnosRenderPipelineGraph
 #if UNITY_EDITOR
@@ -397,7 +416,7 @@ namespace HypnosRenderPipeline
                     }
 #endif
 
-                    if (m_asset.enableDLSS
+                    if (rc.enableDLSS
 #if UNITY_EDITOR
                     && cam.cameraType == CameraType.Game
 #endif

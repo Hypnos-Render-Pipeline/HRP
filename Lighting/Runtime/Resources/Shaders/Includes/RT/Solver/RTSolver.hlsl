@@ -14,6 +14,7 @@ struct PathTracerOutput
 	float3 albedo;
 	float3 normal;
 	float depth;
+	float alpha;
 };
 
 
@@ -60,15 +61,7 @@ PathTracerOutput PathTracer(const int maxDepth,
 			recordHit = false;
 			o.normal = normal;
 			o.depth = t.x;
-
-			float2 sample_2D;
-			sample_2D.x = SAMPLE;
-			sample_2D.y = SAMPLE;
-
-			float3 bentTraceDir = CosineSampleHemisphere(sample_2D, normal);
-			bool shadow = TraceShadow(t.yzw, t.yzw + bentTraceDir * 1000, sampleState);
-			res = shadow * bentTraceDir;
-			break;
+			o.alpha = t.w > 10000 ? 0 : 1;
 		}
 
 		float3 fogColor, fogNextPos, fogNextDir; 
@@ -160,6 +153,7 @@ PathTracerOutput PathTracer_IrrCache(const int maxDepth,
 			o.albedo = max(0, nextWeight);
 			o.normal = normal;
 			o.depth = t.x;
+			o.alpha = t.w > 10000 ? 0 : 1;
 		}
 
 		if (firstHit.w == 0)

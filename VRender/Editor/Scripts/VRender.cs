@@ -26,7 +26,7 @@ public class VRenderParameters
     public float nearPlane = 0.0f;
     public bool preferFrameRate = false;
     [Min(1)]
-    public int temporalFrameNum = 8;
+    public int temporalFrameNum = 4096;
     [Range(1, 4)]
     public int sqrtSamplePerPixel = 1;
     [Range(1, 16)]
@@ -413,22 +413,22 @@ public class VRender : IDisposable
                 BlitResultToScreen(history);
                 break;
             case VRenderParameters.DebugMode.varience:
-                cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 0);
+                cb.Blit(record, new RenderTargetIdentifier(finalTarget), blitMat, 0);
                 break;
             case VRenderParameters.DebugMode.albedo:
-                cb.Blit(albedo, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                cb.Blit(albedo, new RenderTargetIdentifier(finalTarget));
                 break;
             case VRenderParameters.DebugMode.normal:
-                cb.Blit(normal, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                cb.Blit(normal, new RenderTargetIdentifier(finalTarget));
                 break;
             case VRenderParameters.DebugMode.allInDock:
                 BlitResultToScreen(history);
                 cb.SetGlobalFloat("_YOffset", 0.8f);
-                cb.Blit(record, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 1);
+                cb.Blit(record, new RenderTargetIdentifier(finalTarget), blitMat, 1);
                 cb.SetGlobalFloat("_YOffset", 0.4f);
-                cb.Blit(albedo, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 2);
+                cb.Blit(albedo, new RenderTargetIdentifier(finalTarget), blitMat, 2);
                 cb.SetGlobalFloat("_YOffset", 0.0f);
-                cb.Blit(normal, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), blitMat, 2);
+                cb.Blit(normal, new RenderTargetIdentifier(finalTarget), blitMat, 2);
                 break;
             default:
                 break;
@@ -476,7 +476,14 @@ public class VRender : IDisposable
         return res;
     }
 
-
+    BuiltinRenderTextureType finalTarget
+    {
+        get 
+        {
+            if (cam.cameraType == CameraType.SceneView) return BuiltinRenderTextureType.CameraTarget;
+            return BuiltinRenderTextureType.CurrentActive;
+        }
+    }
 
     void BlitResultToScreen(RenderTexture res)
     {
@@ -486,44 +493,57 @@ public class VRender : IDisposable
                 if (parameters.halfResolution)
                 {
                     if (parameters.upsample)
-                        cb.Blit(res, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), denoiseMaterial, 1);
+                        cb.Blit(res, new RenderTargetIdentifier(finalTarget), denoiseMaterial, 1);
                     else
-                        cb.Blit(res, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                        cb.Blit(res, new RenderTargetIdentifier(finalTarget));
                 }
                     
                 else
-                    cb.Blit(res, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                    cb.Blit(res, new RenderTargetIdentifier(finalTarget));
                 break;
             case VRenderParameters.DenoiseMode.QuikDenoise:
                 {
-                    cb.SetGlobalFloat("_DenoiseStrength", parameters.strength * 0.1f);
-                    int k = Shader.PropertyToID("_VRenderTempDenoise");
-                    cb.GetTemporaryRT(k, res.descriptor);
-                    cb.SetGlobalFloat("_Flare", parameters.removeFlare);
-                    cb.Blit(res, k, denoiseMaterial, 2);
-                    cb.Blit(k, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), denoiseMaterial, 0);
-                    cb.ReleaseTemporaryRT(k);
+                    if (cam.cameraType == CameraType.SceneView)
+                    {
+                        cb.SetGlobalFloat("_DenoiseStrength", parameters.strength * 0.1f);
+                        int k = Shader.PropertyToID("_VRenderTempDenoise");
+                        cb.GetTemporaryRT(k, res.descriptor);
+                        cb.SetGlobalFloat("_Flare", parameters.removeFlare);
+                        cb.Blit(res, k, denoiseMaterial, 2);
+                        cb.Blit(k, new RenderTargetIdentifier(finalTarget), denoiseMaterial, 0);
+                        cb.ReleaseTemporaryRT(k);
+                    }
+                    else
+                    {
+                        cb.Blit(res, new RenderTargetIdentifier(finalTarget));
+                    }
                 }
                 break;
             case VRenderParameters.DenoiseMode.HisogramDenoise:
                 {
                     int2 resolution = (int2)(math.float2(cam.pixelWidth, cam.pixelHeight) * (parameters.halfResolution ? 0.5f : 1));
 
-                    int k = Shader.PropertyToID("_VRenderTempDenoise");
-                    cb.GetTemporaryRT(k, res.descriptor);
-                    cb.SetGlobalFloat("_Flare", 2);
-                    cb.Blit(res, k, denoiseMaterial, 2);
+                    RenderTargetIdentifier rfRes = res;
+                    int rfResID = Shader.PropertyToID("_VRenderTempDenoise");
+                    if (cam.cameraType == CameraType.SceneView)
+                    {
+                        cb.GetTemporaryRT(rfResID, res.descriptor);
+                        cb.SetGlobalFloat("_Flare", 2);
+                        cb.Blit(res, rfResID, denoiseMaterial, 2);
+                        rfRes = rfResID;
+                    }
 
                     cb.SetComputeTextureParam(cs_histoDenoise, 2, "_Variance", record);
                     cb.SetComputeTextureParam(cs_histoDenoise, 2, "_Denoised", denoised);
-                    cb.SetComputeTextureParam(cs_histoDenoise, 2, "_History", k);
+                    cb.SetComputeTextureParam(cs_histoDenoise, 2, "_History", rfRes);
                     cb.SetComputeBufferParam(cs_histoDenoise, 2, "_HistogramBuffer", sampleHistogram);
                     cb.SetComputeIntParam(cs_histoDenoise, "_SubFrameIndex", subFrameIndex);
                     resolution = resolution / 4 + int2(resolution % 4 != 0);
                     cb.DispatchCompute(cs_histoDenoise, 2, (resolution.x / 8) + (resolution.x % 8 != 0 ? 1 : 0), (resolution.y / 8) + (resolution.y % 8 != 0 ? 1 : 0), 1);
 
-                    cb.ReleaseTemporaryRT(k);
-                    cb.Blit(denoised, new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));
+                    if (cam.cameraType == CameraType.SceneView)
+                        cb.ReleaseTemporaryRT(rfResID);
+                    cb.Blit(denoised, new RenderTargetIdentifier(finalTarget));
                 }
                 break;
             default:

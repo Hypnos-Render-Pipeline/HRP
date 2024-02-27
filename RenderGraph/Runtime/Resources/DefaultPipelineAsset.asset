@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: NewAssembly::HypnosRenderPipelineAsset
   useCompliedCodeInEditor: 0
   enableDLSS: 1
-  hypnosRenderPipelineGraph: {fileID: 11400000, guid: b078a5512d8bb0d4ca71139e1116f25c, type: 2}
+  hypnosRenderPipelineGraph: {fileID: 11400000, guid: 7902b10f3d3ad8449be07d17939b5ddd, type: 2}
   materialResources: {fileID: 11400000, guid: 7198c7ce62b96034191bf467226244b1, type: 2}
